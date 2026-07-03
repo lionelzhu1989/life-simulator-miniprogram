@@ -4092,6 +4092,11 @@ function openThread(id){
   if(thread.status==='unread'){thread.status='reading';thread.readMonth=G.totalMonths;}
   G._openThreadId=id;
   renderChat();
+  // v3.9.2: 显示模板选项，隐藏AI输入框
+  const opts=document.getElementById('chatOpts');
+  const area=document.getElementById('chatInputArea');
+  if(opts)opts.style.display='flex';
+  if(area)area.style.display='none';
   document.getElementById('chatOverlay').classList.add('show');
   updatePhoneBadge();
 }
@@ -4913,10 +4918,12 @@ function setupChatInputListener(){
   }
 }
 
-// Show chat input area
+// Show chat input area (for AI chat mode)
 function showChatInputArea(show){
   const area=document.getElementById('chatInputArea');
   const opts=document.getElementById('chatOpts');
+  // show=true: AI聊天模式，显示输入框隐藏选项
+  // show=false: 模板消息模式，显示选项隐藏输入框
   if(area)area.style.display=show?'flex':'none';
   if(opts)opts.style.display=show?'none':'flex';
 }
