@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>offer含金量 v3.12.8</title>
+<title>offer含金量 v3.12.11</title>
 <style>
 
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -1546,6 +1546,7 @@ function migrateSave(){
   if(G.spouse===undefined)G.spouse=null;
 }
 function startGame(){
+  console.log('[v3.12.11] startGame called, G type:', typeof G, 'G value:', G);
   if(loadGame()&&!G.gameOver){
     migrateSave();
     document.getElementById('welcomePage').style.display='none';
