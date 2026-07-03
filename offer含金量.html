@@ -3732,8 +3732,6 @@ function renderContacts(){
   });
   // 动态联系人
   injectDynamicContacts();
-  // v3.12.0: Show system notifications at bottom of messages list (read-only)
-  _renderNotificationsInMessages(html);
   (G.socialContacts||[]).forEach(function(c){
     var p=NPC_PERSONALITIES[c.id];
     if(!p) return;
@@ -3753,8 +3751,6 @@ function renderContacts(){
 function openProactiveChat(npcId){
   initChatHistory();
   injectDynamicContacts();
-  // v3.12.0: Show system notifications at bottom of messages list (read-only)
-  _renderNotificationsInMessages(html);
   const p=NPC_PERSONALITIES[npcId];if(!p)return;
   G._openProactiveNpc=npcId;
   // Set header
@@ -4264,8 +4260,6 @@ function renderPhoneList(){
   }
   // v3.12.0: Show contacts at bottom (clickable, open AI chat)
   injectDynamicContacts();
-  // v3.12.0: Show system notifications at bottom of messages list (read-only)
-  _renderNotificationsInMessages(html);
   const contacts=Object.keys(NPC_PERSONALITIES);
   if(contacts.length>0){
     html+='<div style="padding:8px 16px;font-size:11px;color:#999;border-top:1px solid #f0f0f0;margin-top:8px;">💬 联系人（点击开始聊天）</div>';
@@ -5060,8 +5054,6 @@ function recordMoneyHistory(npcId,playerMsg,npcMsg,amount,moneyType){
 // Send player message
 async function sendPlayerMessage(){
   injectDynamicContacts();
-  // v3.12.0: Show system notifications at bottom of messages list (read-only)
-  _renderNotificationsInMessages(html);
   const input=document.getElementById('chatInputField');
   const sendBtn=document.getElementById('chatInputSend');
   const msg=input.value.trim();
@@ -6482,7 +6474,15 @@ function notifyAsMessage(npcId,text){
 }
 
 // v3.12.0: Stub for compatibility - notifications are rendered via _getNotificationsHTML in renderPhoneList
-function _renderNotificationsInMessages(html){}
+function _renderNotificationsInMessages(html){
+  // 将系统通知追加到消息列表
+  const el=document.getElementById('phone-messages');
+  if(!el)return;
+  const notifHTML=_getNotificationsHTML();
+  if(notifHTML){
+    el.innerHTML+=notifHTML;
+  }
+}
 // v3.12.2: Debug helper - force-add test moments
 function _debugAddTestMoments(){
   if(!G||!G.phone){alert('G.phone不存在');return;}
