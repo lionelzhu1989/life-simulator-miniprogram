@@ -3928,7 +3928,7 @@ function renderPhoneList(){
   G.phone.threads.forEach(t=>{
     const round=t.rounds[t.currentRound];
     let preview='[对话进行中]';
-    if(round&&round.npcMsgs&&round.npcMsgs.length>0)preview=round.npcMsgs[round.npcMsgs.length-1].substring(0,32);
+    if(round&&round.npcMsgs&&round.npcMsgs.length>0)preview=round.npcMsgs[round.npcMsgs.length-1].replace(/\[GIVE:\d+\]/g,'').replace(/\[TREAT:\d+\]/g,'').replace(/\[ASK:\d+:.+?\]/g,'').trim().substring(0,32);
     if(round&&round.npc&&round.npc.length>0)preview=round.npc[round.npc.length-1].substring(0,32);
     if(t.status==='replied')preview='[已回复]';
     // Count unread rounds
@@ -3969,7 +3969,9 @@ function renderChat(){
   for(let r=0;r<=thread.currentRound;r++){
     const round=thread.rounds[r];if(!round)continue;
     if(round.npcMsgs){round.npcMsgs.forEach(msg=>{
-      html+='<div class="chat-bub npc">'+msg+'</div>';
+      // Strip action tags from display
+      const cleanMsg=msg.replace(/\[GIVE:\d+\]/g,'').replace(/\[TREAT:\d+\]/g,'').replace(/\[ASK:\d+:.+?\]/g,'').trim();
+      html+='<div class="chat-bub npc">'+cleanMsg+'</div>';
     });}
     if(round._playerChoice!==undefined){
       html+='<div class="chat-bub player">'+round._playerChoice+'</div>';
@@ -4740,8 +4742,10 @@ async function _doSendMessage(msg,npcId){
   const reply=await generateNPCReply(npcId,aiMsg,history);
   // Remove typing indicator
   removeTypingIndicator();
-  // Add NPC bubble
-  addChatBubble('npc',reply);
+  // Process chat effects FIRST (strips [GIVE]/[ASK] tags from reply)
+  const cleanReply=processChatEffects(reply,npcId);
+  // Add NPC bubble with cleaned reply
+  addChatBubble('npc',cleanReply);
   // Save to history
   saveChatHistory(npcId,msg,reply);
   // 社交拓展：更新好友关系
@@ -4752,8 +4756,6 @@ async function _doSendMessage(msg,npcId){
   // Apply mood effect from reply sentiment
   const moodEffect=judgeNPCMood(reply);
   G.mood=clamp(G.mood+moodEffect,0,200);
-  // Process chat triggers for game effects
-  processChatEffects(reply,npcId);
   // Save game
   saveGame();
   // Re-enable send button
