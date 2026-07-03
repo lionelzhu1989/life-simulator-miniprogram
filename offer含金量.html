@@ -2686,7 +2686,7 @@ function openProactiveChat(npcId){
   const opts=document.getElementById('chatOpts');
   let optsHtml='';
   p.greetings.forEach((g,i)=>{
-    optsHtml+='<div class="chat-opt" onclick="startProactiveChatWith(\''+npcId+'\','+i+')">'+g.text+' <span style="font-size:11px;color:#aaa;">#'+g.tag+'</span></div>';
+    optsHtml+='<div class="chat-opt" onclick="startProactiveChatWith(\''+npcId+'\','+i+')">'+g.text+'</div>';
   });
   optsHtml+='<div class="chat-opt" onclick="closeChat()" style="color:#999;">👋 返回通讯录</div>';
   opts.innerHTML=optsHtml;
