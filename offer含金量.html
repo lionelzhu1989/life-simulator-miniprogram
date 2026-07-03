@@ -2092,7 +2092,7 @@ function advanceMonth(){
     if(G._recentEvents)G._recentEvents.push('🥚彩蛋：'+egg.text.replace(/[\u{1F300}-\u{1FFFF}]/gu,'').substring(0,20));
   }
   // Phone triggers
-  if(!G.gameOver){initPhoneState();triggerFollowUps();triggerPhoneMessages();processScheduledDates();if(Math.random()<0.50)triggerAIMoments().catch(()=>{});if(Math.random()<0.40)triggerMoments();generateNotifications();generateGossipEvent();triggerGathering();}
+  if(!G.gameOver){initPhoneState();triggerFollowUps();triggerPhoneMessages();processScheduledDates();triggerParentHelp();if(Math.random()<0.50)triggerAIMoments().catch(()=>{});if(Math.random()<0.40)triggerMoments();generateNotifications();generateGossipEvent();triggerGathering();}
   // 社交拓展：每月有概率触发偶遇场景
   if(!G.gameOver && !G._encounter && !G._pendingDecision){
     tryTriggerEncounter();
@@ -4536,8 +4536,19 @@ async function selectPhoneOption(optIdx){
       showTypingIndicator();
       const endMsg=await generateThreadAIReply(thread.npc,'对话结束',opt.text,thread);
       removeTypingIndicator();
-      if(endMsg){thread.rounds[thread.currentRound].npcMsgs=[endMsg];}
+      if(endMsg){thread.rounds[thread.currentRound].npcMsgs=[endMsg];
+        // v3.15.3: 模板线程也检测日程意图（玩家选择或AI回复）
+        const sInfo=detectScheduleIntent(endMsg)||detectScheduleIntent(opt.text);
+        const sNpc=thread.npc;
+        if(sInfo&&(sNpc.startsWith('contact_')||sNpc==='campusGirl')){
+          setTimeout(()=>{showScheduleConfirm(sNpc,sInfo);},800);
+        }
+      }
     }catch(e){removeTypingIndicator();}
+    // v3.15.3: 日程线程选择后显示场景结果
+    if(opt._scheduleResult){
+      setTimeout(()=>{showToast('✨ '+opt._scheduleResult);},600);
+    }
     saveGame();refreshAll();
     renderChat();
     return;
@@ -5438,9 +5449,10 @@ async function _doSendMessage(msg,npcId){
   // Apply mood effect from reply sentiment
   const moodEffect=judgeNPCMood(reply);
   G.mood=clamp(G.mood+moodEffect,0,200);
-  // Detect schedule intent from AI reply
-  const scheduleInfo=detectScheduleIntent(cleanReply);
-  if(scheduleInfo&&npcId&&npcId.startsWith('contact_')){
+  // Detect schedule intent from AI reply OR player message
+  const scheduleInfo=detectScheduleIntent(cleanReply)||detectScheduleIntent(msg);
+  const canSchedule=npcId&&(npcId.startsWith('contact_')||npcId==='campusGirl');
+  if(scheduleInfo&&canSchedule){
     // Show schedule confirmation in chat
     setTimeout(()=>{showScheduleConfirm(npcId,scheduleInfo);},500);
   }
@@ -6074,7 +6086,14 @@ function triggerScheduleEvent(event){
     }
   }
   // Update relationship
-  if(event.npcId&&event.npcId.startsWith('contact_')){
+  const isRomance=(event.npcId==='campusGirl');
+  if(event.npcId&&(event.npcId.startsWith('contact_')||isRomance)){
+    if(isRomance&&G.romance){
+      G.romance.affection=clamp(G.romance.affection+8,0,100);
+      G.romance.lastInteraction=G.totalMonths;
+      if(G.romance.affection>=60)G.romance.stage='dating';
+      else if(G.romance.affection>=30)G.romance.stage='crush';
+    }
     const contact=(G.socialContacts||[]).find(c=>c.id===event.npcId);
     if(contact){
       updateRelationship(event.npcId,{
@@ -6082,12 +6101,18 @@ function triggerScheduleEvent(event){
         lastActivity:G.totalMonths,
         lastActivityType:event.type
       });
-      // Check for relationship progression
       checkRelationshipProgression(event.npcId);
+    }else{
+      // For campusGirl etc without socialContacts entry, still update generic relationship
+      updateRelationship(event.npcId,{
+        intimacy:+15,trust:+5,
+        lastActivity:G.totalMonths,
+        lastActivityType:event.type
+      });
     }
   }
-  // Generate AI scenario for the event
-  generateEventScenario(event);
+  // v3.15.3: 创建互动对话线程，让玩家体验日程场景
+  createScheduleThread(event);
   // Mark as done
   event.status='done';
   event.triggeredMonth=G.totalMonths;
@@ -6096,31 +6121,163 @@ function triggerScheduleEvent(event){
   addNotification('system','✅ '+event.title+' 已完成');
 }
 
-function generateEventScenario(event){
-  // Build context for AI to generate a scenario
-  const costDesc=event.cost>0?'花了¥'+fmt(event.cost)+'，':'';
-  const leaveDesc=event.annualLeave>0?'请了'+event.annualLeave+'天年假，':'';
-  const scenarioMap={
-    dinner:'一起吃了顿饭，'+costDesc+'聊得很开心',
-    movie:'一起看了场电影，'+costDesc+'氛围不错',
-    date:'约会了，'+costDesc+'感情升温',
-    gathering:'朋友聚会，'+costDesc+'热闹非凡',
-    trip:'出去旅游了，'+leaveDesc+costDesc+'玩得很尽兴',
-    karaoke:'去唱了K，'+costDesc+'唱到嗨',
-    hotSpring:'泡了温泉，'+costDesc+'超级放松',
-    shopping:'逛街购物，'+costDesc+'买了不少东西',
-    sports:'一起运动了，'+leaveDesc+'出了一身汗'
+// v3.15.3: 日程触发 → 创建互动对话线程（让玩家体验场景，不只是扣钱）
+function createScheduleThread(event){
+  const p=NPC_PERSONALITIES[event.npcId]||{name:event.npcName||'朋友',avatar:event.npcAvatar||'👤'};
+  const name=p.name;const avatar=p.avatar;
+  const isRomance=(event.npcId==='campusGirl');
+  // 根据活动类型生成NPC开场白和玩家选项
+  const scenes={
+    dinner:{
+      npcLines:[
+        '到啦！我选了这家店，听说招牌菜特别好吃，你看看想吃什么？',
+        '终于等到今天了！饿死了，快点菜吧，今天我请客也行~',
+        '这家店环境不错吧？我提前订的位子，靠窗的哦'
+      ],
+      opts:[
+        {text:'🎉 今天我请客！随便点',fx:{cash:-200,mood:8},next:-1,effect:'豪爽请客，'+name+'很开心'},
+        {text:'📱 先拍个照发朋友圈',fx:{mood:5,EQ:2},next:-1,effect:'拍了合照，互动感满满'},
+        {text:'😊 和'+name+'聊了聊最近的生活',fx:{mood:10},next:-1,effect:'聊得很深入，关系更近了'},
+        {text:'😅 吃完发现忘带钱包了',fx:{mood:-3},next:-1,effect:'尴尬但'+name+'帮你付了'}
+      ]
+    },
+    movie:{
+      npcLines:[
+        '票买好了！座位在中间偏后，视野最好的位置~',
+        '这部电影我期待好久了！听说结局超反转，你别剧透我！',
+        '快快快，要开场了！爆米花要大份还是小份？'
+      ],
+      opts:[
+        {text:'🍿 买了超大桶爆米花和两杯饮料',fx:{cash:-80,mood:6},next:-1,effect:'仪式感拉满'},
+        {text:'😉 看电影时偷偷牵了'+name+'的手',fx:{mood:12,EQ:3},next:-1,effect:'心跳加速，气氛暧昧'},
+        {text:'💬 一起讨论剧情，聊得停不下来',fx:{mood:8},next:-1,effect:'看完电影又聊了很久'},
+        {text:'😴 看到一半睡着了...',fx:{mood:-5},next:-1,effect:name+'有点无语，但还是把外套给你盖上了'}
+      ]
+    },
+    date:{
+      npcLines:[
+        '今天约会你有什么安排呀？我都听你的~',
+        '嘿嘿，今天穿了你上次说好看的那件裙子！',
+        '我们去哪玩？我想去那个新开的咖啡馆坐坐'
+      ],
+      opts:[
+        {text:'🌹 送了一束花',fx:{cash:-100,mood:10},next:-1,effect:name+'收到花很开心'},
+        {text:'📸 一起拍了很多照片',fx:{mood:8,EQ:2},next:-1,effect:'留下了很多美好回忆'},
+        {text:'🚶 在公园散步聊天',fx:{mood:6},next:-1,effect:'安静又温馨的时光'},
+        {text:'🎯 一起玩了密室逃脱',fx:{cash:-150,mood:12},next:-1,effect:'配合默契，感情升温'}
+      ]
+    },
+    gathering:{
+      npcLines:[
+        '大家都到了！就等你了，快来！',
+        '今天人好多啊，好久没这么热闹了',
+        '来来来，先干一杯！'
+      ],
+      opts:[
+        {text:'🍻 和大家喝得很开心',fx:{mood:8,health:-3},next:-1,effect:'气氛热烈，喝多了'},
+        {text:'🎤 唱了首歌惊艳全场',fx:{mood:10,EQ:2},next:-1,effect:'大家都说你唱得好'},
+        {text:'💰 结账时AA制，大家分摊',fx:{cash:-100,mood:5},next:-1,effect:'公平合理，大家没负担'},
+        {text:'🤫 跟'+name+'聊了些心里话',fx:{mood:6},next:-1,effect:'聚会中难得的真诚时刻'}
+      ]
+    },
+    trip:{
+      npcLines:[
+        '到目的地了！空气好新鲜啊~快看那边的风景！',
+        '旅行开始！你负责攻略，我负责拍照怎么样？',
+        '终于出发了！我在车上激动得一晚上没睡好'
+      ],
+      opts:[
+        {text:'🏨 住了一家超棒的民宿',fx:{cash:-500,mood:12},next:-1,effect:'环境很好，拍了很多美照'},
+        {text:'🏔️ 一起爬山看日出',fx:{mood:15,health:-5},next:-1,effect:'累但值得，日出美哭了'},
+        {text:'🍜 尝遍了当地美食',fx:{cash:-200,mood:10},next:-1,effect:'吃货的天堂'},
+        {text:'📖 在海边安静地待了一下午',fx:{mood:8},next:-1,effect:'难得的放松时光'}
+      ]
+    },
+    karaoke:{
+      npcLines:[
+        '麦霸在此！今天我要唱到嗓子哑！',
+        '包厢订好了！快来看看歌单，你先点！',
+        '这首歌我会唱！我们一起唱！'
+      ],
+      opts:[
+        {text:'🎤 和'+name+'合唱了一首情歌',fx:{mood:12,EQ:3},next:-1,effect:'合唱超有默契'},
+        {text:'💃 跳了一段舞',fx:{mood:8},next:-1,effect:'气氛嗨到爆'},
+        {text:'🍹 点了些酒和小吃',fx:{cash:-150,mood:6},next:-1,effect:'边喝边唱，开心'},
+        {text:'📱 给'+name+'录了唱歌视频',fx:{mood:5},next:-1,effect:''+name+'唱得真好听'}
+      ]
+    },
+    hotSpring:{
+      npcLines:[
+        '泡温泉好舒服啊~感觉整个人都放松了',
+        '水温刚刚好！你快来，这边还有花瓣池！',
+        '哇，从这里能看到山景，太美了'
+      ],
+      opts:[
+        {text:'😌 泡着温泉聊着天，太惬意了',fx:{mood:12,health:5},next:-1,effect:'身心都得到了放松'},
+        {text:'🍷 边泡边喝了杯热茶',fx:{mood:8},next:-1,effect:'悠哉悠哉'},
+        {text:'📸 拍了温泉边的风景照',fx:{mood:5},next:-1,effect:'风景如画'},
+        {text:'💆 做了个SPA按摩',fx:{cash:-200,mood:10},next:-1,effect:'整个人都轻了'}
+      ]
+    },
+    shopping:{
+      npcLines:[
+        '这家店好好逛！你帮我看看这个好看吗？',
+        '今天目标是给你买件新衣服，走！',
+        '我看到好多想买的，你帮我参谋参谋~'
+      ],
+      opts:[
+        {text:'👗 给'+name+'买了一件衣服',fx:{cash:-300,mood:10},next:-1,effect:name+'很开心'},
+        {text:'🛍️ 一起逛了一下午',fx:{cash:-100,mood:8},next:-1,effect:'收获满满'},
+        {text:'☕ 逛累了喝杯奶茶',fx:{cash:-30,mood:5},next:-1,effect:'甜蜜的休息时光'},
+        {text:'💅 一起去做了美甲',fx:{cash:-150,mood:8},next:-1,effect:''+name+'超喜欢'}
+      ]
+    },
+    sports:{
+      npcLines:[
+        '来来来，今天比一场！谁输谁请客！',
+        '运动完的感觉真好！你平时都做什么运动？',
+        '热身好了吗？我们开始吧！'
+      ],
+      opts:[
+        {text:'💪 拼尽全力赢了比赛',fx:{mood:12,health:-3},next:-1,effect:'虽然累但超有成就感'},
+        {text:'🤝 打了个平手，惺惺相惜',fx:{mood:8},next:-1,effect:'实力相当，下次再战'},
+        {text:'💦 运动完一起去吃了补充能量',fx:{cash:-80,mood:6},next:-1,effect:'运动后的饭特别香'},
+        {text:'🧘 一起做了瑜伽拉伸',fx:{mood:6,health:3},next:-1,effect:'身心舒畅'}
+      ]
+    }
   };
-  const summary=scenarioMap[event.type]||event.title+'，'+costDesc+'度过了一段美好时光';
-  // Add to life events
+  const scene=scenes[event.type]||scenes.dinner;
+  const npcMsg=scene.npcLines[Math.floor(Math.random()*scene.npcLines.length)];
+  const opts=scene.opts.map(o=>({
+    text:o.text,fx:o.fx||{},next:-1,
+    _scheduleResult:o.effect
+  }));
+  // 创建聊天线程
+  const thread={
+    id:G.phone.nextId++,
+    npcId:event.npcId,
+    npcName:name,
+    npcAvatar:avatar,
+    tplId:'schedule_'+event.type+'_'+event.id,
+    type:'wechat',
+    rounds:[{npcMsgs:['📅 '+event.title+'\n\n'+npcMsg],opts:opts}],
+    currentRound:0,
+    status:'unread',
+    receivedMonth:G.totalMonths,
+    readMonth:null,
+    followUp:null,
+    flagClear:null
+  };
+  pushPhoneThread(thread);
+  // 记录到人生事件
   if(!G.lifeEvents)G.lifeEvents=[];
+  const summaryMap={dinner:'吃了顿饭',movie:'看了场电影',date:'约会',gathering:'聚会',trip:'旅游',karaoke:'唱K',hotSpring:'泡温泉',shopping:'逛街',sports:'运动'};
   G.lifeEvents.push({
-    text:event.npcAvatar+' '+event.title+' —— '+summary,
+    text:avatar+' '+event.title+' —— 和'+name+''+(summaryMap[event.type]||'活动'),
     month:G.totalMonths,type:'social'
   });
-  // Update mood
   G.mood=clamp(G.mood+10,0,200);
-  showToast('💕 '+event.title+'，心情+10');
+  addNotification('system','📱 '+name+'发来了消息：'+event.title);
 }
 
 // ========== 关系状态系统 ==========
@@ -7386,3 +7543,75 @@ function startPlayerDate(activityId){
   updateChatRelBar(npcId);
 }
 
+
+// v3.15.3: 缺钱时父母主动发消息借钱/给钱
+function triggerParentHelp(){
+  if(!G.phone||!G.phone.threads)return;
+  const cash=G.cash;
+  const age=getAge();
+  // 条件：现金不足500，且年龄<40（父母还在操心的年纪）
+  if(cash>500||age>40)return;
+  // 每6个月最多触发一次
+  const lastMom=G.phone.flags['_parent_help_mom']||0;
+  const lastDad=G.phone.flags['_parent_help_dad']||0;
+  const cooldown=6;
+  // 判断谁先发
+  const momRel=getRelationship('mom');
+  const dadRel=getRelationship('dad');
+  const canMom=(G.totalMonths-lastMom>=cooldown)&&momRel.intimacy>=20;
+  const canDad=(G.totalMonths-lastDad>=cooldown)&&dadRel.intimacy>=20;
+  if(!canMom&&!canDad)return;
+  // 30%概率触发（不是每月都发）
+  if(Math.random()>0.30)return;
+  // 已有未读消息时不发
+  if(G.phone.threads.some(t=>t.status!=='replied'))return;
+  const npcId=canMom?(canDad&&Math.random()>0.5?'dad':'mom'):(canDad?'dad':'mom');
+  const npc=NPCS[npcId];
+  const isMom=(npcId==='mom');
+  const rel=getRelationship(npcId);
+  // 根据亲密程度决定给多少
+  let giveAmount=0;
+  if(rel.intimacy>=80)giveAmount=3000;
+  else if(rel.intimacy>=60)giveAmount=2000;
+  else if(rel.intimacy>=40)giveAmount=1000;
+  else giveAmount=500;
+  // 爸妈说话风格不同
+  const momLines=[
+    '儿子啊，妈看你最近手头紧，给你转了'+fmt(giveAmount)+'块钱，别省着，该花就花。妈这儿有。',
+    '听你爸说你最近不太好？妈给你打了'+fmt(giveAmount)+'，别跟妈客气。养你这么大，妈就盼着你好。',
+    '天冷了多穿点。妈给你转了'+fmt(giveAmount)+'，买点好吃的，别老吃泡面。',
+    '你小时候妈就说过，再难妈都养得起你。转了'+fmt(giveAmount)+'过去，不够跟妈说。'
+  ];
+  const dadLines=[
+    '给你转了'+fmt(giveAmount)+'。不够再说。注意身体。',
+    '你妈让我给你打钱。'+fmt(giveAmount)+'，收到了说一声。少熬夜。',
+    '爸知道你不容易。这'+fmt(giveAmount)+'先拿着用，有困难别硬扛。',
+    '工作再忙也要吃饭。钱转过去了，照顾好自己。'
+  ];
+  const msg=isMom?momLines[Math.floor(Math.random()*momLines.length)]:dadLines[Math.floor(Math.random()*dadLines.length)];
+  const thread={
+    id:G.phone.nextId++,
+    npcId:npcId,
+    npcName:npc.name,
+    npcAvatar:npc.avatar,
+    tplId:'parent_help_'+npcId+'_'+G.totalMonths,
+    type:'wechat',
+    rounds:[{
+      npcMsgs:[msg],
+      opts:[
+        {text:'❤️ 谢谢'+(isMom?'妈':'爸')+'，我会好好用的',fx:{cash:giveAmount,mood:10},next:-1},
+        {text:'😔 不用了，我能撑住',fx:{mood:-3},next:-1},
+        {text:'😭 '+('感动得不行，'+(isMom?'妈':'爸')+'最好了'),fx:{cash:giveAmount,mood:15},next:-1}
+      ]
+    }],
+    currentRound:0,
+    status:'unread',
+    receivedMonth:G.totalMonths,
+    readMonth:null,
+    followUp:null,
+    flagClear:null
+  };
+  pushPhoneThread(thread);
+  G.phone.flags['_parent_help_'+npcId]=G.totalMonths;
+  saveGame();
+}
