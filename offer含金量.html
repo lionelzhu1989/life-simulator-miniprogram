@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>offer含金量 v3.12.3</title>
+<title>offer含金量 v3.12.7</title>
 <style>
 
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -56,11 +56,15 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 .list-info .name{font-size:14px;font-weight:500;}
 .list-info .desc{font-size:12px;color:var(--text-light);margin-top:2px;}
 .list-action{margin-left:10px;}
-.stock-price{font-size:20px;font-weight:700;}
+.stock-price{font-size:22px;font-weight:700;letter-spacing:-0.5px;}
 .stock-up{color:var(--danger);}
 .stock-down{color:var(--success);}
 .stock-flat{color:var(--text-light);}
-.stock-hold{font-size:12px;color:var(--text-light);margin-top:4px;}
+.stock-hold{font-size:12px;color:var(--text-light);margin-top:2px;}
+.stock-change{font-size:13px;font-weight:600;margin-left:8px;}
+.stock-row1{display:flex;align-items:baseline;gap:6px;margin-bottom:2px;}
+.stock-row2{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text-light);margin-bottom:8px;}
+.stock-row2 .tag{margin-left:auto;}
 .input-group{display:flex;align-items:center;gap:8px;margin-top:8px;}
 .input{flex:1;height:36px;border:1.5px solid #ddd;border-radius:8px;padding:0 12px;font-size:14px;outline:none;transition:border .2s;}
 .input:focus{border-color:var(--primary);}
@@ -2358,7 +2362,7 @@ function refreshStock(){
         newsTag=relatedNews.type==='good'?'<span class="tag tag-green" style="margin-left:6px;font-size:10px;">利好</span>':'<span class="tag tag-red" style="margin-left:6px;font-size:10px;">利空</span>';
       }
     }
-    html+='<div class="list-item" style="flex-wrap:wrap;"><div class="list-info" style="width:100%;"><div class="flex-between"><span class="name">'+s.name+newsTag+'</span><span class="stock-price '+cls+'">¥'+price.toFixed(2)+'</span></div><div class="flex-between mt-8"><span class="stock-hold">涨跌：<span class="'+cls+'">'+(change>0?'+':'')+change+'%</span></span><span class="stock-hold">持有：'+hold+'股</span></div></div><div class="list-action" style="width:100%;display:flex;gap:8px;margin-top:8px;"><button class="btn btn-danger btn-sm" style="flex:1;" onclick="stockSell(\''+s.code+'\')" '+(hold<=0?'disabled':'')+'>卖出</button><button class="btn btn-success btn-sm" style="flex:1;" onclick="stockBuy(\''+s.code+'\')" '+(maxBuy<=0?'disabled':'')+'>买入</button></div></div>';
+    html+='<div class="list-item" style="flex-wrap:wrap;"><div class="list-info" style="width:100%;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;"><span class="name" style="font-size:15px;font-weight:600;">'+s.name+'</span>'+newsTag+'</div><div style="display:flex;align-items:baseline;gap:8px;"><span class="stock-price '+cls+'">¥'+price.toFixed(2)+'</span><span class="stock-change '+cls+'" style="font-size:13px;font-weight:600;">'+(change>0?'+':'')+change+'%</span></div><div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-light);margin-top:4px;"><span>持有 '+hold+' 股</span>'+(hold>0?'<span>市值 ¥'+fmt(hold*price)+'</span>':'')+'</div></div><div class="list-action" style="width:100%;display:flex;gap:8px;margin-top:8px;"><button class="btn btn-danger btn-sm" style="flex:1;" onclick="stockSell(\''+s.code+'\')" '+(hold<=0?'disabled':'')+'>'+String.fromCharCode(21334)+String.fromCharCode(20986)+'</button><button class="btn btn-success btn-sm" style="flex:1;" onclick="stockBuy(\''+s.code+'\')" '+(maxBuy<=0?'disabled':'')+'>'+String.fromCharCode(20080)+String.fromCharCode(20837)+'</button></div></div>';
   });
   document.getElementById('stockList').innerHTML=html;
   let holdHtml='';let totalVal=0;
@@ -4648,6 +4652,8 @@ ${JSON.stringify(gameState, null, 2)}
   // Try API call
   if(AI_CHAT_CONFIG.enabled&&AI_CHAT_CONFIG._fallbackCount<AI_CHAT_CONFIG.maxFallback){
     try{
+      const controller=new AbortController();
+      const timeoutId=setTimeout(()=>controller.abort(),12000);
       const resp=await fetch(AI_CHAT_CONFIG.apiUrl,{
         method:'POST',
         headers:{
@@ -4662,8 +4668,10 @@ ${JSON.stringify(gameState, null, 2)}
           ],
           temperature:0.8,
           max_tokens:300
-        })
+        }),
+        signal:controller.signal
       });
+      clearTimeout(timeoutId);
       if(resp.ok){
         const data=await resp.json();
         if(data.choices&&data.choices[0]&&data.choices[0].message){
@@ -5095,12 +5103,24 @@ async function _doSendMessage(msg,npcId){
   if(giveIntent){
     aiMsg=msg+'\n（玩家刚刚给了你¥'+giveIntent.amount+'，请根据你的性格和关系决定如何回应）';
   }
-  // Generate AI reply
-  const reply=await generateNPCReply(npcId,aiMsg,history);
-  // Remove typing indicator
+  let reply;
+  try{
+    // Generate AI reply
+    reply=await generateNPCReply(npcId,aiMsg,history);
+  }catch(e){
+    console.error('generateNPCReply error:',e);
+    reply=getTemplateReply(npcId,msg);
+  }
+  // Remove typing indicator (ALWAYS, even on error)
   removeTypingIndicator();
   // Process chat effects FIRST (strips [GIVE]/[ASK] tags from reply)
-  const cleanReply=processChatEffects(reply,npcId);
+  let cleanReply;
+  try{
+    cleanReply=processChatEffects(reply,npcId);
+  }catch(e){
+    console.error('processChatEffects error:',e);
+    cleanReply=reply.replace(/\[\w+:.*?\]/g,'');
+  }
   // Add NPC bubble with cleaned reply
   addChatBubble('npc',cleanReply);
   // Save to history
@@ -5373,12 +5393,23 @@ function likeAIGMoment(id){
 function showMomentCommentInput(id){showMomentInput(id);}
 function showMomentInput(id){
   const wrap=document.getElementById('moment-input-'+id);
-  if(wrap){
-    wrap.style.display=wrap.style.display==='none'?'block':'none';
-    if(wrap.style.display==='block'){
-      const inp=document.getElementById('moment-tf-'+id);
-      if(inp)setTimeout(()=>inp.focus(),100);
-    }
+  if(!wrap)return;
+  // If already visible, just hide it
+  if(wrap.style.display==='block'){
+    wrap.style.display='none';
+    return;
+  }
+  // Hide ALL other open comment inputs first
+  document.querySelectorAll('[id^="moment-input-"]').forEach(el=>el.style.display='none');
+  // Show this one
+  wrap.style.display='block';
+  // Ensure input is empty and focus it
+  const inp=document.getElementById('moment-tf-'+id);
+  if(inp){
+    inp.value='';
+    inp.removeAttribute('readonly');
+    inp.removeAttribute('disabled');
+    setTimeout(()=>{inp.focus();inp.click();},150);
   }
 }
 
@@ -5395,16 +5426,21 @@ function submitMomentComment(id){
   if(!m.playerComments)m.playerComments=[];
   m.playerComments.push({npcId:'player',npcName:'我',npcAvatar:'🧑',text:text,month:G.totalMonths,byPlayer:true});
   G.EQ=clamp(G.EQ+20,0,200);
-  showToast('💬 评论成功！情商+20');
-  tf.value='';
-  // Hide input after submit
+  // Hide input immediately
   const wrap=document.getElementById('moment-input-'+id);
   if(wrap)wrap.style.display='none';
-  renderMoments();saveGame();refreshLife();
-  _triggerMomentNPCComments(id);
+  // Clear input
+  if(tf)tf.value='';
+  // Re-render first so player can see their comment
+  renderMoments();
+  saveGame();
+  refreshLife();
+  showToast('💬 评论成功！情商+20');
+  // Trigger NPC reply async (non-blocking, don't re-render on failure)
+  _triggerMomentNPCComments(id).catch(e=>console.log('NPC comment skipped:',e));
 }
 async function _triggerMomentNPCComments(momentId){
-  if(!AI_ENGINE.enabled||!G.phone)return;
+  if(!G.phone)return;
   // 先查AI朋友圈，再查模板朋友圈
   let m=G.phone.aiMoments?G.phone.aiMoments.find(x=>x.id===momentId):null;
   if(!m)m=(G.phone.moments||[]).find(x=>x.id===momentId);
@@ -5415,6 +5451,9 @@ async function _triggerMomentNPCComments(momentId){
   // 可参与评论的NPC（排除发帖者）
   const commenterPool=['mom','dad','bestie','colleague','boss','classmate','neighbor','exColleague','mentor','gymCoach','campusGirl'];
   const available=commenterPool.filter(id=>id!==m.npcId);
+  // Always generate fallback comments in case AI fails
+  const fallbackReplies=['哈哈不错','支持！','真好','加油💪','好棒👍','羡慕啊','太强了','不错哦','真优秀'];
+  const fallbackNpcs=available.sort(()=>Math.random()-0.5).slice(0,randInt(1,2));
   // 随机选1-2个NPC评论
   const shuffled=available.sort(()=>Math.random()-0.5);
   const chosen=shuffled.slice(0,randInt(1,2));
@@ -5453,7 +5492,16 @@ ${chosen.map(id=>{const p=NPC_PERSONALITIES[id];return p?`- ${id}(${p.name}): �
       });
       renderMoments();saveGame();
     }
-  }catch(e){}
+  }catch(e){
+    // Fallback: use template comments when AI fails
+    console.log('Moment NPC comment AI failed, using fallback');
+    if(!m.comments)m.comments=[];
+    fallbackNpcs.forEach(npcId=>{
+      const npc=NPCS[npcId]||NPC_PERSONALITIES[npcId]||{name:'朋友',avatar:'👤'};
+      m.comments.push({npcId:npcId,npcName:npc.name,npcAvatar:npc.avatar,text:fallbackReplies[randInt(0,fallbackReplies.length-1)],month:G.totalMonths,byPlayer:false});
+    });
+    renderMoments();saveGame();
+  }
 }
 
 function askAboutMoment(id){
