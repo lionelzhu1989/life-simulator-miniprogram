@@ -2679,19 +2679,18 @@ function openProactiveChat(npcId){
   if(!G.phone.activeChats)G.phone.activeChats=[];
   const p=NPC_PERSONALITIES[npcId];if(!p)return;
   G._openProactiveNpc=npcId;
-  let html='<div style="max-height:60vh;overflow-y:auto;">';
-  html+='<div style="text-align:center;margin-bottom:12px;"><span style="font-size:32px;">'+p.avatar+'</span><div style="font-weight:600;margin-top:4px;">'+p.name+'</div>';
-  html+='<div style="font-size:12px;color:#999;margin-top:2px;">'+p.traits.join(' / ')+'</div></div>';
-  html+='<div style="font-size:13px;color:#666;margin-bottom:8px;">你想说什么？</div>';
+  // Use full-screen chat overlay
+  document.getElementById('chatName').textContent=p.avatar+' '+p.name;
+  const body=document.getElementById('chatBody');
+  body.innerHTML='<div style="text-align:center;padding:20px 0;color:#999;font-size:13px;"><div style="font-size:28px;margin-bottom:8px;">'+p.avatar+'</div>'+p.name+' · '+p.traits.join('/')+'<br><br>选择一个话题开始聊天 ↓</div>';
+  const opts=document.getElementById('chatOpts');
+  let optsHtml='';
   p.greetings.forEach((g,i)=>{
-    html+='<div style="background:#f8f9fa;padding:12px;border-radius:10px;margin-bottom:8px;cursor:pointer;border:1px solid #e9ecef;" onclick="startProactiveChatWith(\''+npcId+'\','+i+')">';
-    html+='<div style="display:flex;justify-content:space-between;align-items:center;">';
-    html+='<span style="font-size:14px;">'+g.text+'</span>';
-    html+='<span style="font-size:11px;color:#aaa;background:#eee;padding:2px 8px;border-radius:10px;">'+g.tag+'</span>';
-    html+='</div></div>';
+    optsHtml+='<div class="chat-opt" onclick="startProactiveChatWith(\''+npcId+'\','+i+')">'+g.text+' <span style="font-size:11px;color:#aaa;">#'+g.tag+'</span></div>';
   });
-  html+='</div>';
-  showModal({title:'💬 与'+p.name+'聊天',content:html,confirmText:'返回',cancelText:'',success(){}});
+  optsHtml+='<div class="chat-opt" onclick="closeChat()" style="color:#999;">👋 返回通讯录</div>';
+  opts.innerHTML=optsHtml;
+  document.getElementById('chatOverlay').classList.add('show');
 }
 
 // ===== 开始对话（选择开场白后） =====
@@ -2710,20 +2709,22 @@ function startProactiveChatWith(npcId,greetingIdx){
     effect:{mood:mood}};
   G.phone.activeChats.unshift(chat);
   G._openProactiveChat=chat.id;
-  saveGame();refreshAll();
-  // Show chat directly
-  let chatHtml='<div style="max-height:60vh;overflow-y:auto;" id="proactiveChatBox">';
-  chatHtml+='<div class="chat-msg chat-player">'+greeting.text+'</div>';
-  const npcMsg=respArr[randInt(0,respArr.length-1)];
-  chatHtml+='<div class="chat-msg chat-npc"><span class="chat-avatar">'+p.avatar+'</span>'+npcMsg+'</div>';
-  const followups=p.followups.slice(0,3);
-  chatHtml+='<div style="margin-top:12px;">';
+  saveGame();updatePhoneBadge();
+  // Build chat in overlay
+  const body=document.getElementById('chatBody');
+  body.innerHTML='';
+  body.insertAdjacentHTML('beforeend','<div class="chat-bub player">'+greeting.text+'</div>');
+  body.insertAdjacentHTML('beforeend','<div class="chat-bub npc">'+respArr[randInt(0,respArr.length-1)]+'</div>');
+  body.scrollTop=body.scrollHeight;
+  // Show follow-ups
+  const opts=document.getElementById('chatOpts');
+  let optsHtml='';
+  const followups=chat.followups.slice(0,3);
   followups.forEach((f,i)=>{
-    chatHtml+='<div class="chat-opt" onclick="continueProactiveChat(\''+npcId+'\','+i+')">💬 '+f+'</div>';
+    optsHtml+='<div class="chat-opt" onclick="continueProactiveChat(\''+npcId+'\','+i+')">💬 '+f+'</div>';
   });
-  chatHtml+='<div class="chat-opt" onclick="endProactiveChat()" style="color:#999;">👋 结束对话</div>';
-  chatHtml+='</div></div>';
-  showModal({title:p.avatar+' '+p.name,content:chatHtml,confirmText:'',cancelText:'',success(){}});
+  optsHtml+='<div class="chat-opt" onclick="endProactiveChat()" style="color:#999;">👋 结束对话</div>';
+  opts.innerHTML=optsHtml;
 }
 
 // ===== 继续对话 =====
@@ -2783,23 +2784,23 @@ function continueProactiveChat(npcId,followupIdx){
   };
   const traitResponses=traitMap[trait]||['嗯嗯','是确实'];
   const npcReply=traitResponses[randInt(0,traitResponses.length-1)];
-  // Render updated chat
-  let chatHtml='<div style="max-height:60vh;overflow-y:auto;" id="proactiveChatBox">';
-  chatHtml+='<div class="chat-msg chat-player">'+followup+'</div>';
-  chatHtml+='<div class="chat-msg chat-npc"><span class="chat-avatar">'+p.avatar+'</span>'+npcReply+'</div>';
+  // Append to chat overlay
+  const body=document.getElementById('chatBody');
+  body.insertAdjacentHTML('beforeend','<div class="chat-bub player">'+followup+'</div>');
+  body.insertAdjacentHTML('beforeend','<div class="chat-bub npc">'+npcReply+'</div>');
+  body.scrollTop=body.scrollHeight;
+  // Update options
+  const opts=document.getElementById('chatOpts');
+  let optsHtml='';
   if(chat.followups.length>0){
-    chatHtml+='<div style="margin-top:12px;">';
     chat.followups.slice(0,3).forEach((f,i)=>{
-      chatHtml+='<div class="chat-opt" onclick="continueProactiveChat(\''+npcId+'\','+i+')">💬 '+f+'</div>';
+      optsHtml+='<div class="chat-opt" onclick="continueProactiveChat(\''+npcId+'\','+i+')">💬 '+f+'</div>';
     });
-    chatHtml+='<div class="chat-opt" onclick="endProactiveChat()" style="color:#999;">👋 结束对话</div>';
-    chatHtml+='</div>';
   }else{
-    chatHtml+='<div style="text-align:center;color:#999;font-size:12px;margin-top:12px;">'+p.name+'：没什么好聊的了</div>';
-    chatHtml+='<div class="chat-opt" onclick="endProactiveChat()" style="color:#999;">👋 结束对话</div>';
+    optsHtml+='<div style="text-align:center;color:#999;font-size:12px;padding:8px;">'+p.name+'：没什么好聊的了</div>';
   }
-  chatHtml+='</div>';
-  showModal({title:p.avatar+' '+p.name,content:chatHtml,confirmText:'',cancelText:'',success(){}});
+  optsHtml+='<div class="chat-opt" onclick="endProactiveChat()" style="color:#999;">👋 结束对话</div>';
+  opts.innerHTML=optsHtml;
 }
 
 // ===== 结束对话 =====
@@ -2807,7 +2808,7 @@ function endProactiveChat(){
   const chat=G.phone.activeChats.find(c=>c.npcId===G._openProactiveNpc&&c.status==='active');
   if(chat)chat.status='ended';
   G._openProactiveChat=null;G._openProactiveNpc=null;
-  saveGame();refreshAll();closeModal();
+  saveGame();updatePhoneBadge();closeChat();
 }
 
 // ===== 学习充电系统 =====
