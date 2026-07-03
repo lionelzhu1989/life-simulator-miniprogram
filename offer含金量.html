@@ -4278,7 +4278,7 @@ function renderPhoneList(){
       if(npcId==='gymCoach'&&G.totalMonths<6)return;
       // Check if there's an active chat with this NPC
       const hasActive=G.phone&&G.phone.activeChats&&G.phone.activeChats.some(ch=>ch.npcId===npcId&&ch.status==='active');
-      html+='<div class="msg-item" onclick="openProactiveChat(''+npcId+'')" style="cursor:pointer;">';
+      html+='\u003cdiv class="msg-item" onclick="openProactiveChat(\''+npcId+'\')" style="cursor:pointer;"\u003e';
       html+='<div class="msg-av">'+p.avatar+'</div>';
       html+='<div class="msg-bd"><div class="msg-nm">'+p.name+'</div>';
       html+='<div class="msg-pv">'+p.traits.slice(0,2).join('·')+'</div></div>';
@@ -5688,7 +5688,7 @@ effect可选字段：cash(金额), health(0-100), mood(0-100), IQ(0-100), EQ(0-1
 - 如果玩家有特定资产（股票/房产/公司），可以和该资产相关
 - 小雨只是众多NPC之一，不要每次都选她
 - 可以完全出乎意料：比如在办公室遇到明星、路上捡到奇怪的东西、突然收到多年不联系的人的消息
-${chainContext}
+${chainContext}`
   },{
     role:'user',
     content:`玩家：${ctx.age}岁，${ctx.jobLevel}，资产${ctx.totalAsset}，心情${ctx.mood}，健康${ctx.health}，已婚${ctx.married}，子女${ctx.children}，有股票${ctx.stocks.length>0?'有':'无'}
