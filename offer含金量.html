@@ -620,13 +620,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
   <div class="ai-float-close" onclick="event.stopPropagation();closeAIFloat()">×</div>
 </div>
 
-<div class="guide-overlay" id="guideOverlay" onclick="closeGuide()">
-  <div class="guide-box">
-    <div class="guide-icon" id="guideIcon">💡</div>
-    <div class="guide-text" id="guideText"></div>
-    <button class="btn btn-primary btn-sm" onclick="closeGuide()">知道了</button>
-  </div>
-</div>
+<!-- v3.12.1: Old simple guide removed, using new 4-page guide at bottom of file -->
 
 <div class="promo-overlay" id="promoOverlay">
   <div class="promo-label">P R O M O T I O N</div>
@@ -3033,22 +3027,40 @@ function generateSharePoster(){
   showToast('📱 海报已生成！');
 }
 
-// ========== 新手引导 ==========
-function showGuide(msg,icon){
-  document.getElementById('guideIcon').textContent=icon||'💡';
-  document.getElementById('guideText').textContent=msg;
+// ========== 玩法指南（v3.12.1 4页完整版） ==========
+let _guideCurrentPage=1;
+function openGuide(){
+  _guideCurrentPage=1;
+  _showGuidePage(1);
   document.getElementById('guideOverlay').classList.add('show');
 }
 function closeGuide(){document.getElementById('guideOverlay').classList.remove('show');}
+function _showGuidePage(n){
+  for(let i=1;i<=4;i++){
+    const p=document.getElementById('guidePage'+i);
+    if(p)p.classList.toggle('active',i===n);
+  }
+  document.querySelectorAll('.guide-dot').forEach((d,i)=>d.classList.toggle('active',i===n-1));
+  const prev=document.getElementById('guidePrev');
+  const next=document.getElementById('guideNext');
+  const close=document.getElementById('guideClose');
+  if(prev)prev.style.display=n===1?'none':'inline-block';
+  if(next)next.style.display=n===4?'none':'inline-block';
+  if(close)close.style.display=n===4?'inline-block':'none';
+}
+function nextGuidePage(){
+  if(_guideCurrentPage<4){_guideCurrentPage++;_showGuidePage(_guideCurrentPage);}
+}
+function prevGuidePage(){
+  if(_guideCurrentPage>1){_guideCurrentPage--;_showGuidePage(_guideCurrentPage);}
+}
+function goGuidePage(n){_guideCurrentPage=n;_showGuidePage(n);}
 function advanceGuide(){
-  if(G.guideStep>=3)return;
-  const msgs=[
-    ['💡','先去"工作"标签找份工作吧！点击晋升按钮试试'],
-    ['📈','攒点钱，去"投资"标签试试买一手股票！'],
-    ['🏠','多赚钱，去"投资→房产"买套小房子！']
-  ];
-  showGuide(msgs[G.guideStep][1],msgs[G.guideStep][0]);
-  G.guideStep++;
+  // Auto-show guide on first 3 months if not yet seen
+  if(G.guideStep===0){
+    G.guideStep=1;
+    openGuide();
+  }
 }
 
 // ========== AI浮窗 ==========
@@ -5240,6 +5252,8 @@ function _npcInteractWithRecentMoments(){
 }
 
 function renderMoments(){
+  // v3.12.1: Trigger NPC proactive interactions each time moments are viewed
+  if(G.phone&&G.phone.aiMoments&&G.phone.aiMoments.length>0)_npcInteractWithRecentMoments();
   const el=document.getElementById('phone-moments');if(!el)return;
   const aiM=G.phone&&G.phone.aiMoments?G.phone.aiMoments:[];
   const tplM=G.phone?G.phone.moments:[];
