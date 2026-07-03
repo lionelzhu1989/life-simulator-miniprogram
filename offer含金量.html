@@ -1323,7 +1323,7 @@ requires:{minAsset:10000000},rounds:[
 {npcMsgs:['好吧...','我跟老师说你出差了'],opts:[{text:'对不起宝贝',fx:{mood:-8},next:-1}]}]},
 
 {id:'spouse_romance',npc:'spouse',type:'wechat',ageMin:25,ageMax:60,chance:0.12,cooldown:6,requires:{married:true},rounds:[
-{npcMsgs:['亲爱的','今天是我们认识第'+(G.totalMonths||0)+'个月','你有什么想说的？'],opts:[
+{npcMsgs:['亲爱的','今天是我们认识第'+(typeof G!=='undefined'&&G?G.totalMonths:0)+'个月','你有什么想说的？'],opts:[
 {text:'爱你，宝贝',fx:{mood:10,EQ:5},next:1},
 {text:'哇，时间过得真快',fx:{mood:5},next:2}]},
 {npcMsgs:['我也爱你 ❤️','今晚我做饭吧','你早点回来'],opts:[{text:'好！',fx:{mood:8},next:-1}]},
