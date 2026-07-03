@@ -566,10 +566,12 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
       <div class="phone-tab active" onclick="switchPhoneTab('messages')">💬 消息</div>
       <div class="phone-tab" onclick="switchPhoneTab('contacts')">📇 通讯录</div>
       <div class="phone-tab" onclick="switchPhoneTab('moments')">📷 朋友圈</div>
+      <div class="phone-tab" onclick="switchPhoneTab('notifications')" style="position:relative;">🔔 通知<span class="notif-badge" id="notifBadge" style="display:none;">0</span></div>
     </div>
     <div id="phone-messages" class="phone-content active"></div>
     <div id="phone-contacts" class="phone-content"></div>
     <div id="phone-moments" class="phone-content"></div>
+    <div id="phone-notifications" class="phone-content"></div>
 
   </div>
 
@@ -4305,9 +4307,6 @@ function renderPhoneList(){
       html+='</div></div>';
     });
   }
-  // Append notifications at bottom of messages
-  const notifHtml=_getNotificationsHTML();
-  if(notifHtml)html+=notifHtml;
   if(!html||html===''){
     html='<div class="text-center text-sm text-muted" style="padding:40px 0;"><div style="font-size:48px;margin-bottom:12px;">📱</div>消息会在人生旅途中陆续到来<br>点击"度过一月"推进人生</div>';
   }
@@ -5567,7 +5566,7 @@ function commentMoment(id){
 function addNotification(type,text){
   if(!G.phone)return;
   const icons={achievement:'🏅',stock:'📈',system:'📱',event:'⚡',warning:'⚠️'};
-  G.phone.notifications.unshift({id:G.phone.nextId++,type:type,icon:icons[type]||'📱',text:text,month:G.totalMonths,read:true});
+  G.phone.notifications.unshift({id:G.phone.nextId++,type:type,icon:icons[type]||'📱',text:text,month:G.totalMonths,read:false});
 }
 function generateNotifications(){
   if(!G.phone)return;
@@ -5578,13 +5577,42 @@ function generateNotifications(){
   });
 }
 function renderNotifications(){
-  // v3.12.0: Notifications now render in messages list via _getNotificationsHTML
+  const el=document.getElementById('phone-notifications');if(!el)return;
+  if(!G.phone||!G.phone.notifications||G.phone.notifications.length===0){
+    el.innerHTML='<div class="notif-empty"><div style="font-size:48px;margin-bottom:12px;">🔔</div>暂无系统通知<br>成就、股票、事件通知会出现在这里</div>';return;
+  }
+  let html='';
+  G.phone.notifications.forEach(n=>{
+    const bgCls=n.type==='achievement'?'#fef9e7':n.type==='stock'?'#d5f5e3':n.type==='warning'?'#fadbd8':'#d6eaf8';
+    const cls=n.read?'notif-item read':'notif-item unread';
+    html+='<div class="'+cls+'" onclick="markNotifRead('+n.id+')">';
+    html+='<div class="notif-icon" style="background:'+bgCls+';">'+n.icon+'</div>';
+    html+='<div class="notif-body"><div class="notif-text">'+n.text+'</div>';
+    html+='<div class="notif-meta">'+getTimeStr(n.month)+'</div></div>';
+    if(!n.read)html+='<div class="notif-dot"></div>';
+    html+='</div>';
+  });
+  el.innerHTML=html;
+  updateNotifBadge();
+}
+function markNotifRead(id){
+  if(!G.phone||!G.phone.notifications)return;
+  const n=G.phone.notifications.find(x=>x.id===id);
+  if(n){n.read=true;saveGame();}
+  renderNotifications();
+  updatePhoneBadge();
+}
+function updateNotifBadge(){
+  const badge=document.getElementById('notifBadge');if(!badge)return;
+  const count=G.phone?G.phone.notifications.filter(n=>!n.read).length:0;
+  if(count>0){badge.textContent=count>99?'99+':count;badge.style.display='flex';}
+  else badge.style.display='none';
 }
 
 function switchPhoneTab(tab){
   document.querySelectorAll('.phone-tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.phone-content').forEach(c=>c.classList.remove('active'));
-  const tabNames=['messages','contacts','moments'];
+  const tabNames=['messages','contacts','moments','notifications'];
   const idx=tabNames.indexOf(tab);
   if(idx>=0){const allTabs=document.querySelectorAll('.phone-tab');if(allTabs[idx])allTabs[idx].classList.add('active');}
   const el=document.getElementById('phone-'+tab);
@@ -5592,11 +5620,14 @@ function switchPhoneTab(tab){
   if(tab==='messages')renderPhoneList();
   else if(tab==='contacts')renderContacts();
   else if(tab==='moments')renderMoments();
+  else if(tab==='notifications')renderNotifications();
 }
-function refreshPhone(){renderPhoneList();renderContacts();renderMoments();updatePhoneBadge();updatePhoneHint();}
+function refreshPhone(){renderPhoneList();renderContacts();renderMoments();renderNotifications();updatePhoneBadge();updateNotifBadge();updatePhoneHint();}
 function updatePhoneBadge(){
   const badge=document.getElementById('phoneBadge');if(!badge)return;
-  const count=G.phone?G.phone.threads.filter(t=>t.status!=='replied'&&t.rounds[t.currentRound]&&!t.rounds[t.currentRound]._playerChoice).length:0;
+  const msgCount=G.phone?G.phone.threads.filter(t=>t.status!=='replied'&&t.rounds[t.currentRound]&&!t.rounds[t.currentRound]._playerChoice).length:0;
+  const notifCount=G.phone&&G.phone.notifications?G.phone.notifications.filter(n=>!n.read).length:0;
+  const count=msgCount+notifCount;
   if(count>0){
     badge.textContent=count>99?'99+':count;
     badge.style.display='flex';
@@ -6554,3 +6585,14 @@ function _debugAddTestMoments(){
   alert('已添加3条测试朋友圈（含NPC评论+点赞），请切换到朋友圈查看');
 }
 console.log('[v3.12.3] 调试函数已加载：运行 _debugAddTestMoments() 可强制添加测试朋友圈');
+.notif-badge{position:absolute;top:2px;right:2px;min-width:16px;height:16px;line-height:16px;font-size:10px;font-weight:700;color:#fff;background:#e74c3c;border-radius:8px;text-align:center;padding:0 4px;pointer-events:none;}
+.notif-item{display:flex;align-items:flex-start;gap:10px;padding:12px 16px;background:#fff;border-bottom:1px solid #f5f5f5;cursor:pointer;transition:background .15s;}
+.notif-item:active{background:#f8f8f8;}
+.notif-item.unread{background:#fff5f5;border-left:3px solid #e74c3c;}
+.notif-item.read{opacity:.65;}
+.notif-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.notif-body{flex:1;min-width:0;}
+.notif-text{font-size:14px;color:#333;line-height:1.4;word-break:break-word;}
+.notif-meta{font-size:11px;color:#999;margin-top:4px;}
+.notif-dot{width:8px;height:8px;background:#e74c3c;border-radius:50%;flex-shrink:0;margin-top:6px;}
+.notif-empty{text-align:center;padding:60px 20px;color:#999;font-size:14px;}
