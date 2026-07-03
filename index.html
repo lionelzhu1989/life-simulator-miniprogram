@@ -1519,6 +1519,7 @@ function defaultState(){
     unlockedTiers:{},luxuryItems:[],
     forbesShown:false,shortPositions:{},phone:{threads:[],moments:[],aiMoments:[],notifications:[],flags:{},lastTriggerMonth:0,nextId:1,chatHistory:{}},
     lifeEvents:[],socialContacts:[],relationships:{},
+    savings:0,
     romance:{npcId:null,stage:'none',affection:0,metMonth:0,lastInteraction:0},
     scheduledDates:[]
   };
@@ -1593,6 +1594,7 @@ function migrateSave(){
   if(!G.socialContacts)G.socialContacts=[];
   if(!G.relationships)G.relationships={};
   if(!G.scheduledDates)G.scheduledDates=[];
+  if(!G.savings&&G.savings!==0)G.savings=0;
   if(!G.romance)G.romance={npcId:null,stage:'none',affection:0,metMonth:0,lastInteraction:0};
   if(!G.phone)G.phone={threads:[],moments:[],aiMoments:[],notifications:[],flags:{},lastTriggerMonth:0,nextId:1,chatHistory:{},activeChats:[]};
   if(!G.phone.aiMoments)G.phone.aiMoments=[];
@@ -3879,9 +3881,10 @@ function openProactiveChat(npcId){
   // Load chat history if exists
   const history=G.phone.chatHistory[npcId]||[];
   if(history.length>0){
-    // Show last 10 NPC messages only (player's own messages hidden for clean chat feel)
-    const recent=history.slice(-10);
+    // Show both player and NPC messages for full context
+    const recent=history.slice(-15);
     recent.forEach(h=>{
+      if(h.player)addChatBubble('player',h.player);
       if(h.npc)addChatBubble('npc',h.npc);
     });
   }else{
@@ -4540,7 +4543,7 @@ async function selectPhoneOption(optIdx){
         // v3.15.3: 模板线程也检测日程意图（玩家选择或AI回复）
         const sInfo=detectScheduleIntent(endMsg)||detectScheduleIntent(opt.text);
         const sNpc=thread.npc;
-        if(sInfo&&(sNpc.startsWith('contact_')||sNpc==='campusGirl')){
+        if(sInfo&&sNpc){
           setTimeout(()=>{showScheduleConfirm(sNpc,sInfo);},800);
         }
       }
@@ -5451,7 +5454,7 @@ async function _doSendMessage(msg,npcId){
   G.mood=clamp(G.mood+moodEffect,0,200);
   // Detect schedule intent from AI reply OR player message
   const scheduleInfo=detectScheduleIntent(cleanReply)||detectScheduleIntent(msg);
-  const canSchedule=npcId&&(npcId.startsWith('contact_')||npcId==='campusGirl');
+  const canSchedule=!!npcId;
   if(scheduleInfo&&canSchedule){
     // Show schedule confirmation in chat
     setTimeout(()=>{showScheduleConfirm(npcId,scheduleInfo);},500);
@@ -6036,6 +6039,11 @@ function renderSchedule(){
 
 function processScheduledDates(){
   if(!G.scheduledDates)return;
+  // 清理超过6个月的过期日程，避免数组无限增长
+  G.scheduledDates=G.scheduledDates.filter(e=>{
+    if(e.status==='expired'&&e.month<G.totalMonths-6)return false;
+    return true;
+  });
   G.scheduledDates.forEach(e=>{
     if(e.status!=='upcoming')return;
     if(e.month<G.totalMonths){
@@ -6051,25 +6059,7 @@ function processScheduledDates(){
 
 function triggerScheduleEvent(event){
   if(!event||event.status!=='upcoming')return;
-  // Deduct cost
-  if(event.cost>0){
-    if(G.cash>=event.cost){
-      G.cash-=event.cost;
-      showToast('💸 '+event.title+'花费 ¥'+fmt(event.cost));
-    }else{
-      // Not enough money - borrow from savings
-      const shortfall=event.cost-G.cash;
-      G.cash=0;
-      if(G.savings>=shortfall){
-        G.savings-=shortfall;
-        showToast('💸 '+event.title+'花费 ¥'+fmt(event.cost)+'（存款支付'+fmt(shortfall)+'）');
-      }else{
-        // Can't afford at all
-        G.savings=0;
-        showToast('💸 '+event.title+'花费 ¥'+fmt(event.cost)+'（存款不足，信用卡透支）');
-      }
-    }
-  }
+  // 费用由createScheduleThread的选项扣除，这里不再重复扣
   // Deduct annual leave
   if(event.annualLeave>0){
     if(!G.annualLeave)G.annualLeave=0;
@@ -6085,9 +6075,9 @@ function triggerScheduleEvent(event){
       G.cash-=dailySalary*needed;
     }
   }
-  // Update relationship
+  // Update relationship for any NPC
   const isRomance=(event.npcId==='campusGirl');
-  if(event.npcId&&(event.npcId.startsWith('contact_')||isRomance)){
+  if(event.npcId){
     if(isRomance&&G.romance){
       G.romance.affection=clamp(G.romance.affection+8,0,100);
       G.romance.lastInteraction=G.totalMonths;
@@ -6269,14 +6259,7 @@ function createScheduleThread(event){
     flagClear:null
   };
   pushPhoneThread(thread);
-  // 记录到人生事件
-  if(!G.lifeEvents)G.lifeEvents=[];
-  const summaryMap={dinner:'吃了顿饭',movie:'看了场电影',date:'约会',gathering:'聚会',trip:'旅游',karaoke:'唱K',hotSpring:'泡温泉',shopping:'逛街',sports:'运动'};
-  G.lifeEvents.push({
-    text:avatar+' '+event.title+' —— 和'+name+''+(summaryMap[event.type]||'活动'),
-    month:G.totalMonths,type:'social'
-  });
-  G.mood=clamp(G.mood+10,0,200);
+  // mood和结果由选项系统处理，这里不再重复加
   addNotification('system','📱 '+name+'发来了消息：'+event.title);
 }
 
