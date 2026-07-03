@@ -4930,9 +4930,53 @@ async function generateThreadAIReply(npcId,context,playerChoice,thread){
     }
   }
   
+  // v3.15.7: 关系深度决定对话尺度
+  let relHint='';
+  const isRomance=(npcId==='campusGirl'&&G.romance&&G.romance.npcId==='campusGirl');
+  if(isRomance){
+    const aff=G.romance.affection||0;
+    const stage=G.romance.stage||'none';
+    if(stage==='dating'){
+      relHint='\n## 🔥 恋人模式（最重要）\n'+
+        '你们已经在一起了！你们是热恋中的情侣。\n'+
+        '- 可以撒娇、调情、说甜腻的话、开黄色玩笑\n'+
+        '- 她会主动撒娇、索要抱抱、用"讨厌~""哼"等语气词\n'+
+        '- 可以聊亲密话题（身体接触、同居、未来规划）\n'+
+        '- 她的回应要暧昧、热情、有情趣\n'+
+        '- 适当用"嘿嘿""嘻嘻""人家"等撒娇用语\n';
+    }else if(stage==='close'||aff>=40){
+      relHint='\n## 💗 暧昧模式\n'+
+        '你们正在暧昧升温中，关系比朋友更亲密。\n'+
+        '- 可以适当调情、试探性地开暧昧玩笑\n'+
+        '- 她会害羞但不抗拒，偶尔主动撩你\n'+
+        '- 聊天可以涉及感情话题、约会细节\n'+
+        '- 用"嘿嘿""讨厌~"等暧昧语气词\n'+
+        '- 但不要太过火，保持暧昧的甜蜜感\n';
+    }else if(aff>=20){
+      relHint='\n## 💙 好感模式\n'+
+        '她对你有好感，可以适当表达关心。\n'+
+        '- 聊天自然亲切，偶尔带点暧昧暗示\n'+
+        '- 可以适当表达好感，但不要太过直白\n';
+    }
+  }else{
+    const npcRelType=_getRelationshipType(npcId);
+    if(npcRelType==='family'){
+      relHint='\n## 👨‍👩‍👧 家人关系\n'+
+        '你们是家人，关系温馨自然。\n'+
+        '- 可以聊家常、关心对方生活\n'+
+        '- 偶尔撒娇求帮忙、表达感谢\n'+
+        '- 不要有任何暧昧或调情内容\n';
+    }else if(npcRelType==='friend'){
+      relHint='\n## 🤝 朋友关系\n'+
+        '你们是好朋友，聊天轻松随意。\n'+
+        '- 可以吐槽、开玩笑、聊八卦\n'+
+        '- 保持朋友间的分寸感\n';
+    }
+  }
+  
   const systemPrompt=`# 你是${p.name}
 
-${style}
+${style}${relHint}
 
 ## 对话规则（最重要）
 1. **先接话，再展开**。玩家刚刚说了"${playerChoice}"，你必须先回应这句话，再自然地引出你想聊的。
@@ -6172,7 +6216,23 @@ const _SCENE_CASH={
   sports:[{cash:0},{cash:0},{cash:-80},{cash:0}]
 };
 async function generateScheduleSceneAI(event,npcId,npcName,npcTraits,relType,activityName){
-  const relLabels={romance:'恋人/暧昧对象',family:'家人',friend:'好友/同学',colleague:'同事/上司',acquaintance:'刚认识的朋友'};
+  let relLabels={romance:'恋人/暧昧对象',family:'家人',friend:'好友/同学',colleague:'同事/上司',acquaintance:'刚认识的朋友'};
+  // v3.15.7: 根据关系深度调整场景提示
+  let relNote='';
+  if(relType==='romance'&&G.romance){
+    const aff=G.romance.affection||0;
+    const stage=G.romance.stage||'none';
+    if(stage==='dating'){
+      relLabels.romance='❤️ 恋人（已在一起）';
+      relNote='\n⚠️ 你们已经是恋人！对话要甜蜜亲热，可以撒娇调情、说情话、开暧昧玩笑。选项要有亲密互动（牵手、拥抱、亲亲等）。';
+    }else if(stage==='close'||aff>=40){
+      relLabels.romance='💗 暧昧对象（升温中）';
+      relNote='\n⚠️ 你们正在暧昧！对话要暧昧甜蜜，有试探性调情。选项可以有牵手、靠近等暧昧互动。';
+    }else if(aff>=20){
+      relLabels.romance='💙 有好感的朋友';
+      relNote='\n她对你有好感，对话可以带点暧昧，但不要太直白。';
+    }
+  }
   const relReqs={
     romance:'- 对话要甜蜜暧昧，有撒娇或调情\n- 选项要有浪漫互动（牵手、拥抱、表白等）\n- 至少1个花钱选项（买礼物/请客）\n',
     family:'- 对话要温馨自然，有家人间的关心\n- 选项要有亲情互动（聊天、照顾、陪伴等）\n- 至少1个花钱选项（给爸妈买东西）\n',
@@ -6183,6 +6243,7 @@ async function generateScheduleSceneAI(event,npcId,npcName,npcTraits,relType,act
   const prompt='你是人生模拟游戏的场景生成器。请为约会场景生成NPC开场白和4个玩家选项。\n\n'+
     '## 角色\n- NPC：'+npcName+'（'+npcTraits+'）\n'+
     '- 关系：'+relLabels[relType]+'\n- 活动：'+activityName+'\n\n'+
+    (relNote?relNote+'\n\n':'')+
     '## 关系要求\n'+(relReqs[relType]||relReqs.acquaintance)+
     '- 第4个选项要搞笑、意外或略尴尬（制造笑点）\n\n'+
     '## 输出纯JSON（不要代码块）\n'+
