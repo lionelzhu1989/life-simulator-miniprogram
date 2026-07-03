@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>offer含金量 v3.9.1</title>
+<title>offer含金量 v3.9.3</title>
 <style>
 
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -1751,7 +1751,12 @@ function closeForbes(){
 // ========== 核心：度过一月 ==========
 function nextMonth(){
   if(G.gameOver)return;
-  if(hasUnread()){showToast('📱 请先处理所有未读消息！');switchTab('phone');return;}
+  if(hasUnread()){
+    const unreadCount=G.phone?G.phone.threads.filter(t=>t.status!=='replied'&&t.rounds[t.currentRound]&&!t.rounds[t.currentRound]._playerChoice).length:0;
+    showToast('📱 还有 '+unreadCount+' 条消息需要回复');
+    switchTab('phone');
+    return;
+  }
   if(G._pendingDecision){showToast('⚡ 请先完成当前事件！');return;}
   advanceMonth();
   saveGame();refreshAll();
@@ -4092,7 +4097,7 @@ function openThread(id){
   if(thread.status==='unread'){thread.status='reading';thread.readMonth=G.totalMonths;}
   G._openThreadId=id;
   renderChat();
-  // v3.9.2: 显示模板选项，隐藏AI输入框
+  // v3.9.3: 显示模板选项，隐藏AI输入框
   const opts=document.getElementById('chatOpts');
   const area=document.getElementById('chatInputArea');
   if(opts)opts.style.display='flex';
@@ -4186,9 +4191,11 @@ function selectPhoneOption(optIdx){
   // Check if next round exists
   if(opt.next<thread.rounds.length){
     thread.currentRound=opt.next;
+    showToast('💬 还有后续消息需要回复');
   }else{
     thread.status='replied';
     if(thread.flagClear){delete G.phone.flags[thread.flagClear];}
+    showToast('✅ 消息已处理');
   }
   saveGame();refreshAll();
   renderChat();
@@ -4198,6 +4205,11 @@ function closeChat(){
   document.getElementById('chatOverlay').classList.remove('show');
   G._openThreadId=null;G._openProactiveNpc=null;
   renderPhoneList();renderContacts();updatePhoneBadge();
+  // v3.9.3: If still unread, hint the player
+  if(hasUnread()){
+    const unreadCount=G.phone.threads.filter(t=>t.status!=='replied'&&t.rounds[t.currentRound]&&!t.rounds[t.currentRound]._playerChoice).length;
+    if(unreadCount>0)setTimeout(()=>showToast('📱 还有 '+unreadCount+' 条消息待处理'),600);
+  }
 }
 
 // ===== AI Chat System =====
@@ -4841,7 +4853,7 @@ async function sendPlayerMessage(){
   const input=document.getElementById('chatInputField');
   const sendBtn=document.getElementById('chatInputSend');
   const msg=input.value.trim();
-  if(!msg||!G._openProactiveNpc)return;
+  if(!msg)return;if(!G._openProactiveNpc){showToast('💬 请使用下方选项回复');return;}
   // Clear input
   input.value='';
   // Detect player money giving intent
@@ -5232,14 +5244,14 @@ function switchPhoneTab(tab){
 function refreshPhone(){injectDynamicContacts();renderPhoneList();renderContacts();renderMoments();renderNotifications();updatePhoneBadge();updatePhoneHint();}
 function updatePhoneBadge(){
   const badge=document.getElementById('phoneBadge');if(!badge)return;
-  const count=G.phone?G.phone.threads.filter(t=>t.status!=='replied').length:0;
+  const count=G.phone?G.phone.threads.filter(t=>t.status!=='replied'&&t.rounds[t.currentRound]&&!t.rounds[t.currentRound]._playerChoice).length:0;
   if(count>0){badge.textContent=count>99?'99+':count;badge.style.display='flex';}
   else{badge.style.display='none';}
 }
 function updatePhoneHint(){
   const hint=document.getElementById('phoneHint');const txt=document.getElementById('phoneHintText');
   if(!hint||!txt)return;
-  const count=G.phone?G.phone.threads.filter(t=>t.status!=='replied').length:0;
+  const count=G.phone?G.phone.threads.filter(t=>t.status!=='replied'&&t.rounds[t.currentRound]&&!t.rounds[t.currentRound]._playerChoice).length:0;
   if(count>0){hint.style.display='flex';txt.textContent='有 '+count+' 条未读消息需要处理才能继续';}
   else{hint.style.display='none';}
 }
