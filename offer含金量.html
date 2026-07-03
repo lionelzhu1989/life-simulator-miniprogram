@@ -557,10 +557,11 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
     <div class="phone-hint" id="phoneHint" style="display:none;">⚠️ <span id="phoneHintText">有未读消息需要处理</span></div>
     <div class="phone-tabs">
       <div class="phone-tab active" onclick="switchPhoneTab('messages')">💬 消息</div>
+      <div class="phone-tab" onclick="switchPhoneTab('contacts')">📇 通讯录</div>
       <div class="phone-tab" onclick="switchPhoneTab('moments')">📷 朋友圈</div>
     </div>
     <div id="phone-messages" class="phone-content active"></div>
-    <div id="phone-contacts" class="phone-content" style="display:none;"></div>
+    <div id="phone-contacts" class="phone-content"></div>
     <div id="phone-moments" class="phone-content"></div>
 
   </div>
@@ -5554,15 +5555,16 @@ function renderNotifications(){
 function switchPhoneTab(tab){
   document.querySelectorAll('.phone-tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.phone-content').forEach(c=>c.classList.remove('active'));
-  const tabNames=['messages','moments'];
+  const tabNames=['messages','contacts','moments'];
   const idx=tabNames.indexOf(tab);
   if(idx>=0){const allTabs=document.querySelectorAll('.phone-tab');if(allTabs[idx])allTabs[idx].classList.add('active');}
   const el=document.getElementById('phone-'+tab);
   if(el)el.classList.add('active');
   if(tab==='messages')renderPhoneList();
+  else if(tab==='contacts')renderContacts();
   else if(tab==='moments')renderMoments();
 }
-function refreshPhone(){renderPhoneList();renderMoments();updatePhoneBadge();updatePhoneHint();}
+function refreshPhone(){renderPhoneList();renderContacts();renderMoments();updatePhoneBadge();updatePhoneHint();}
 function updatePhoneBadge(){
   const badge=document.getElementById('phoneBadge');if(!badge)return;
   const count=G.phone?G.phone.threads.filter(t=>t.status!=='replied'&&t.rounds[t.currentRound]&&!t.rounds[t.currentRound]._playerChoice).length:0;
@@ -5706,6 +5708,22 @@ function buildMomentsPrompt(ctx){
   return [{
     role:'system',
     content:`你是"offer含金量"的朋友圈引擎。模拟NPC发微信朋友圈+其他NPC评论。风格要像真实朋友圈，不是游戏。
+
+【人物关系】所有人都是"玩家"的微信好友，彼此之间没有亲属关系：
+- 妈妈/爸爸：玩家的父母，退休在家，不认识玩家的同事和朋友
+- 老王：玩家的发小/铁哥们
+- 小李：玩家的同事
+- 张总：玩家的老板
+- 小张：玩家的大学同学
+- 刘经理：玩家的银行客户经理
+- 小陈：玩家的房产中介
+- 邻居老赵：玩家的邻居
+- 前同事小周：玩家的前同事
+- 李教授：玩家的导师
+- 健身教练：玩家的健身房教练
+- 小雨：玩家的女朋友/校园恋人
+⚠️ 爸爸评论小李的朋友圈时，要说"我家孩子也加班"而不是"你也要注意身体"——他不认识小李，只关心自己孩子。评论要符合你和发帖人的关系。
+
 可选NPC（随机选1个发朋友圈，2-3个评论）：
 ${chosen.map(n=>`·${n.id}(${n.name}): ${n.traits.join('、')}，常发${n.topics.join('、')}`).join('\n')}
 
