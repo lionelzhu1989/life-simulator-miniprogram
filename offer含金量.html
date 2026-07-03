@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>offer含金量 v3.8</title>
+<title>offer含金量 v3.9.1</title>
 <style>
 
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 :root{--primary:#3498db;--primary-dark:#2980b9;--header-bg:#2c3e50;--bg:#f0f2f5;--card-bg:#fff;--text:#333;--text-light:#888;--danger:#e74c3c;--success:#27ae60;--warning:#f39c12;--gold:#f1c40f;--radius:12px;--shadow:0 2px 12px rgba(0,0,0,0.08);}
 html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB',sans-serif;background:var(--bg);color:var(--text);overflow:hidden;}
-.app{height:100%;display:flex;flex-direction:column;max-width:480px;margin:0 auto;position:relative;background:var(--bg);}
-.page{flex:1;overflow-y:auto;padding:16px;padding-bottom:80px;-webkit-overflow-scrolling:touch;display:none;}
+.app{height:100%;display:flex;flex-direction:column;max-width:480px;width:100%;margin:0 auto;position:relative;background:var(--bg);}
+.page{flex:1;overflow-y:auto;padding:16px;padding-bottom:80px;-webkit-overflow-scrolling:touch;display:none;word-break:break-word;}
 .page.active{display:block;}
 .header{background:var(--header-bg);color:#fff;padding:16px 20px 14px;text-align:center;position:relative;flex-shrink:0;}
 .header h1{font-size:18px;font-weight:600;letter-spacing:1px;}
@@ -20,7 +20,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 .tab-item.active{color:var(--primary);}
 .tab-item .tab-icon{font-size:22px;margin-bottom:2px;}
 .tab-item:active{opacity:.7;}
-.card{background:var(--card-bg);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin-bottom:12px;}
+.card{background:var(--card-bg);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin-bottom:12px;overflow:hidden;}
 .card-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:6px;}
 .card-title .icon{font-size:18px;}
 .attr-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f5f5f5;}
@@ -33,7 +33,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 .bar-mood{background:linear-gradient(90deg,#e67e22,#f1c40f);}
 .bar-iq{background:linear-gradient(90deg,#9b59b6,#3498db);}
 .bar-eq{background:linear-gradient(90deg,#e91e63,#ff5722);}
-.money-big{font-size:28px;font-weight:700;color:var(--warning);text-align:center;padding:8px 0;}
+.money-big{font-size:28px;font-weight:700;color:var(--warning);text-align:center;padding:8px 0;word-break:break-word;}
 .money-label{font-size:12px;color:var(--text-light);text-align:center;margin-top:-4px;}
 .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;}
 .stat-item{text-align:center;padding:10px;background:#f8f9fa;border-radius:8px;}
@@ -68,13 +68,13 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 .modal-overlay.show{opacity:1;pointer-events:auto;}
 .modal-box{background:#fff;border-radius:16px;width:85%;max-width:360px;padding:24px 20px;text-align:center;transform:scale(0.85);transition:transform .25s;}
 .modal-overlay.show .modal-box{transform:scale(1);}
-.modal-title{font-size:17px;font-weight:600;margin-bottom:10px;}
-.modal-content{font-size:14px;color:#666;line-height:1.6;margin-bottom:20px;white-space:pre-line;text-align:left;}
+.modal-title{font-size:17px;font-weight:600;margin-bottom:10px;word-break:break-word;}
+.modal-content{font-size:14px;color:#666;line-height:1.6;margin-bottom:20px;white-space:pre-line;text-align:left;word-break:break-word;overflow-wrap:break-word;}
 .modal-btns{display:flex;gap:10px;justify-content:center;}
 .modal-btns .btn{flex:1;}
 .toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.8);background:rgba(0,0,0,.75);color:#fff;padding:14px 24px;border-radius:10px;font-size:14px;z-index:2000;opacity:0;pointer-events:none;transition:all .3s;text-align:center;max-width:260px;}
 .toast.show{opacity:1;transform:translate(-50%,-50%) scale(1);}
-.event-banner{padding:14px 16px;border-radius:10px;margin-bottom:12px;font-size:13px;line-height:1.6;animation:slideDown .3s ease;}
+.event-banner{padding:14px 16px;border-radius:10px;margin-bottom:12px;font-size:13px;line-height:1.6;animation:slideDown .3s ease;word-break:break-word;overflow-wrap:break-word;}
 .event-good{background:linear-gradient(135deg,#d4efdf,#a9dfbf);color:#1e8449;border:1px solid #a9dfbf;}
 .event-bad{background:linear-gradient(135deg,#fadbd8,#f1948a);color:#922b21;border:1px solid #f1948a;}
 .event-neutral{background:linear-gradient(135deg,#d6eaf8,#aed6f1);color:#1a5276;border:1px solid #aed6f1;}
@@ -197,8 +197,8 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 .choice-option.locked{opacity:.45;cursor:not-allowed;}
 .choice-option-icon{font-size:28px;flex-shrink:0;margin-top:2px;}
 .choice-option-body{flex:1;}
-.choice-option-title{font-size:14px;font-weight:600;color:var(--text);}
-.choice-option-desc{font-size:12px;color:var(--text-light);margin-top:3px;line-height:1.4;}
+.choice-option-title{font-size:14px;font-weight:600;color:var(--text);word-break:break-word;}
+.choice-option-desc{font-size:12px;color:var(--text-light);margin-top:3px;line-height:1.4;word-break:break-word;overflow-wrap:break-word;}
 .choice-option-tag{display:inline-block;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:600;margin-top:4px;}
 .tag-safe{background:#d5f5e3;color:#1e8449;}
 .tag-risk{background:#fadbd8;color:#922b21;}
@@ -206,7 +206,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 .choice-option-lock{font-size:11px;color:var(--danger);margin-top:4px;}
 
 /* ====== V2: News Banner ====== */
-.news-banner{padding:12px 14px;border-radius:10px;margin-bottom:12px;font-size:12px;line-height:1.5;position:relative;overflow:hidden;}
+.news-banner{padding:12px 14px;border-radius:10px;margin-bottom:12px;font-size:12px;line-height:1.5;position:relative;overflow:hidden;word-break:break-word;}
 .news-banner.news-good{background:linear-gradient(135deg,#d4efdf,#a9dfbf);color:#1e8449;border:1px solid #a9dfbf;}
 .news-banner.news-bad{background:linear-gradient(135deg,#fadbd8,#f1948a);color:#922b21;border:1px solid #f1948a;}
 .news-banner-title{font-weight:700;font-size:13px;margin-bottom:4px;}
@@ -269,14 +269,14 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 .chat-hd{background:var(--header-bg);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0;}
 .chat-back{font-size:24px;cursor:pointer;padding:4px;line-height:1;}
 .chat-nm{font-size:17px;font-weight:600;}
-.chat-body{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;-webkit-overflow-scrolling:touch;background:#ededed;}
+.chat-body{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;-webkit-overflow-scrolling:touch;background:#ededed;word-break:break-word;}
 .chat-bub{max-width:78%;padding:10px 14px;border-radius:14px;font-size:14px;line-height:1.55;word-break:break-word;animation:bubIn .25s ease;}
 .chat-bub.npc{background:#fff;align-self:flex-start;border-bottom-left-radius:4px;box-shadow:0 1px 2px rgba(0,0,0,.06);}
 .chat-bub.player{background:#95ec69;align-self:flex-end;border-bottom-right-radius:4px;}
 .chat-bub.sys{background:rgba(0,0,0,.05);align-self:center;font-size:12px;color:#999;padding:6px 14px;border-radius:8px;}
 .chat-time{text-align:center;font-size:11px;color:#bbb;padding:8px 0;}
 .chat-opts{padding:12px 16px;background:#f7f7f7;border-top:1px solid #e5e5e5;display:flex;flex-direction:column;gap:8px;flex-shrink:0;}
-.chat-opt{background:#fff;border:1.5px solid #e0e0e0;border-radius:10px;padding:12px 14px;font-size:13px;cursor:pointer;transition:all .15s;line-height:1.4;}
+.chat-opt{background:#fff;border:1.5px solid #e0e0e0;border-radius:10px;padding:12px 14px;font-size:13px;cursor:pointer;transition:all .15s;line-height:1.4;word-break:break-word;}
 .chat-opt:active{background:#eef6ff;border-color:var(--primary);transform:scale(0.98);}
 /* AI Chat Input Area */
 .chat-input-area{padding:10px 12px;background:#f7f7f7;border-top:1px solid #e5e5e5;display:flex;align-items:center;gap:8px;flex-shrink:0;}
@@ -350,7 +350,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 .money-decision-icon{font-size:40px;margin-bottom:8px;}
 .money-decision-title{font-size:17px;font-weight:600;color:var(--text);margin-bottom:8px;}
 .money-decision-amount{font-size:24px;font-weight:700;color:#e67e22;margin:12px 0;}
-.money-decision-reason{font-size:13px;color:#888;margin-bottom:16px;line-height:1.5;}
+.money-decision-reason{font-size:13px;color:#888;margin-bottom:16px;line-height:1.5;word-break:break-word;}
 .money-decision-btns{display:flex;gap:12px;}
 .money-decision-btns .btn{flex:1;}
 .money-give-confirm-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:2000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;}
@@ -1216,7 +1216,133 @@ requires:{minAsset:10000000},rounds:[
 {npcMsgs:['X先生/女士您好','我是XX财经的记者','想采访一下您的创业经历...'],opts:[
 {text:'好的，配合采访',fx:{mood:10,EQ:3},next:1},
 {text:'不好意思，不方便',fx:{},next:-1}]},
-{npcMsgs:['太好了！','文章发出来后反响很好','您现在算是名人了！'],opts:[{text:'谢谢',fx:{mood:5},next:-1}]}]}
+{npcMsgs:['太好了！','文章发出来后反响很好','您现在算是名人了！'],opts:[{text:'谢谢',fx:{mood:5},next:-1}]}]},
+
+// ====== v3.9.1: 中年生活模板(35-60岁) ======
+{id:'bestie_reconnect',npc:'bestie',type:'wechat',ageMin:30,ageMax:60,chance:0.12,cooldown:8,rounds:[
+{npcMsgs:['兄弟/姐妹！好久不见！','最近怎么样？','我换工作了，现在在一家创业公司做CTO'],opts:[
+{text:'厉害啊！啥时候聚聚',fx:{mood:8},next:1},
+{text:'创业公司风险大啊，小心点',fx:{EQ:3},next:2}]},
+{npcMsgs:['必须的！这周五晚上？','我请你吃火锅','顺便聊聊',],opts:[{text:'好！不见不散',fx:{mood:5,cash:-200},next:-1}]},
+{npcMsgs:['是啊，我也在想这个问题','但机会难得，想搏一搏'],opts:[{text:'支持你！',fx:{mood:3},next:-1}]}]},
+
+{id:'colleague_career_talk',npc:'colleague',type:'wechat',ageMin:30,ageMax:55,chance:0.1,cooldown:10,rounds:[
+{npcMsgs:['最近公司架构调整，你知道吗？','听说我们部门要合并到另一个组','形势不太妙啊'],opts:[
+{text:'我也听说了，走一步看一步吧',fx:{mood:-3},next:1},
+{text:'没事，能力强到哪都吃香',fx:{mood:5,IQ:2},next:2}]},
+{npcMsgs:['你说得对。不过我有个朋友在招人','要不要帮你问问？'],opts:[
+{text:'好啊，先了解了解',fx:{mood:5},next:-1,flag:{colleague_referral:true}},
+{text:'暂时不用，谢谢',fx:{},next:-1}]},
+{npcMsgs:['行，有需要随时说','咱们这关系，不用客气'],opts:[{text:'好的兄弟',fx:{mood:3},next:-1}]}]},
+
+{id:'neighbor_chat',npc:'neighbor',type:'wechat',ageMin:30,ageMax:70,chance:0.1,cooldown:8,rounds:[
+{npcMsgs:['小X啊，你家水管是不是漏水了？','楼下邻居说天花板在滴水','你赶紧看看'],opts:[
+{text:'啊？我马上检查',fx:{mood:-5},next:1},
+{text:'不会吧，我刚装修的',fx:{mood:-3},next:2}]},
+{npcMsgs:['检查了吗？','要是真漏了得赶紧修','楼下邻居都急了'],opts:[
+{text:'修好了，是接口松了',fx:{mood:3},next:-1},
+{text:'是物业的问题，让他们处理',fx:{mood:-2},next:-1}]}]},
+
+{id:'ex_colleague_offer',npc:'exColleague',type:'wechat',ageMin:28,ageMax:55,chance:0.08,cooldown:18,rounds:[
+{npcMsgs:['兄弟/姐妹！','我现在在一家新公司做总监','有个高级经理的坑位，想不想来？'],opts:[
+{text:'什么行业？薪资怎么样？',fx:{mood:5},next:1},
+{text:'谢谢想着我，但暂时不想动',fx:{},next:2}]},
+{npcMsgs:['AI+教育赛道，刚拿了B轮','薪资比你现在高30%','还有期权'],opts:[
+{text:'听起来不错，我考虑考虑',fx:{mood:8},next:-1,flag:{considering_job_change:true}},
+{text:'教育赛道风险太大了',fx:{EQ:2},next:-1}]},
+{npcMsgs:['行，不急，你慢慢想','机会给你留着'],opts:[{text:'好的，谢谢',fx:{mood:3},next:-1}]}]},
+
+{id:'gym_coach_push',npc:'gymCoach',type:'wechat',ageMin:25,ageMax:60,chance:0.1,cooldown:6,rounds:[
+{npcMsgs:['哥/姐！好久没来了啊','最近是不是太忙了？','身体是革命的本钱啊！'],opts:[
+{text:'最近确实忙，下周去',fx:{mood:3},next:1},
+{text:'办了卡又不去，浪费钱',fx:{mood:-2},next:2}]},
+{npcMsgs:['我给你留了个私教体验课','免费的！来感受一下','保证让你重新爱上运动'],opts:[
+{text:'行，这周六去',fx:{mood:5},next:-1},
+{text:'真没时间，别烦了',fx:{mood:-3},next:-1}]},
+{npcMsgs:['好的好的，那我等你消息','记得来啊！'],opts:[{text:'嗯嗯',fx:{},next:-1}]}]},
+
+{id:'banker_invest',npc:'banker',type:'wechat',ageMin:30,ageMax:65,chance:0.08,cooldown:12,requires:{minAsset:200000},rounds:[
+{npcMsgs:['X先生/女士您好','我是XX银行的理财经理小刘','最近我们有一款新的稳健型理财产品'],opts:[
+{text:'年化多少？风险怎么样？',fx:{IQ:2},next:1},
+{text:'暂时不需要，谢谢',fx:{},next:-1}]},
+{npcMsgs:['年化4.2%，R2低风险','期限6个月，随时可赎回','非常适合您这种高净值客户'],opts:[
+{text:'我考虑一下',fx:{mood:3},next:-1},
+{text:'投10万试试',fx:{cash:-100000,mood:5},next:-1,flag:{has_bank_product:true}}]},
+{npcMsgs:['好的，不着急','有需要随时联系我'],opts:[{text:'好的',fx:{},next:-1}]}]},
+
+{id:'delivery_package',npc:'delivery',type:'wechat',ageMin:18,ageMax:70,chance:0.15,cooldown:3,rounds:[
+{npcMsgs:['您好，有您的快递','放在小区门口驿站了','取件码是'+Math.floor(1000+Math.random()*9000)],opts:[
+{text:'好的谢谢',fx:{mood:3},next:-1}]},
+{npcMsgs:['您好，快递到了','是XX的东西','麻烦下来取一下'],opts:[
+{text:'马上来',fx:{mood:2},next:-1}]},
+{npcMsgs:['您的快递签收了','如有问题请联系我','祝您生活愉快'],opts:[{text:'收到',fx:{},next:-1}]}]},
+
+{id:'mom_retire',npc:'mom',type:'wechat',ageMin:40,ageMax:70,chance:0.1,cooldown:12,rounds:[
+{npcMsgs:['儿子/女儿啊','妈退休了','以后有大把时间了'],opts:[
+{text:'恭喜妈！终于可以享福了',fx:{mood:8},next:1},
+{text:'退休金够花吗？',fx:{EQ:3},next:2}]},
+{npcMsgs:['够花够花，你别操心','我跟你爸打算去旅游','先去北京看看天安门'],opts:[
+{text:'好啊！拍照片给我看',fx:{mood:5},next:-1}]},
+{npcMsgs:['我们有退休金，还有存款','你安心工作，别惦记我们'],opts:[{text:'好的妈，注意身体',fx:{mood:3,health:2},next:-1}]}]},
+
+{id:'dad_advice',npc:'dad',type:'wechat',ageMin:25,ageMax:65,chance:0.08,cooldown:18,rounds:[
+{npcMsgs:['儿子/女儿啊','爸跟你说个事','你张叔叔家的孩子，创业亏了50万'],opts:[
+{text:'怎么回事？',fx:{IQ:2},next:1},
+{text:'创业有风险啊',fx:{mood:-2},next:2}]},
+{npcMsgs:['就是太冲动了，没想清楚就干','你以后要是想创业','一定要想清楚再动手'],opts:[
+{text:'爸说得对，我记住了',fx:{EQ:3},next:-1}]},
+{npcMsgs:['行了，爸不多说了','你忙你的','注意身体'],opts:[{text:'好的爸',fx:{mood:3},next:-1}]}]},
+
+{id:'child_school',npc:'child',type:'wechat',ageMin:30,ageMax:50,chance:0.1,cooldown:8,requires:{children:1},rounds:[
+{npcMsgs:['爸爸/妈妈','学校要开家长会','你能不能来？'],opts:[
+{text:'好的，爸爸/妈妈一定去',fx:{mood:8},next:1},
+{text:'这周太忙了，下次吧',fx:{mood:-5},next:2}]},
+{npcMsgs:['太好了！','老师说我最近表现很好','还得了小红花呢！'],opts:[{text:'真棒！',fx:{mood:10},next:-1}]},
+{npcMsgs:['好吧...','我跟老师说你出差了'],opts:[{text:'对不起宝贝',fx:{mood:-8},next:-1}]}]},
+
+{id:'spouse_romance',npc:'spouse',type:'wechat',ageMin:25,ageMax:60,chance:0.12,cooldown:6,requires:{married:true},rounds:[
+{npcMsgs:['亲爱的','今天是我们认识第'+(G.totalMonths||0)+'个月','你有什么想说的？'],opts:[
+{text:'爱你，宝贝',fx:{mood:10,EQ:5},next:1},
+{text:'哇，时间过得真快',fx:{mood:5},next:2}]},
+{npcMsgs:['我也爱你 ❤️','今晚我做饭吧','你早点回来'],opts:[{text:'好！',fx:{mood:8},next:-1}]},
+{npcMsgs:['哼，就知道敷衍我'],opts:[{text:'没有啦，真的爱你',fx:{mood:3},next:-1}]}]},
+
+{id:'mysterious_call',npc:'mysterious',type:'call',ageMin:20,ageMax:60,chance:0.04,cooldown:36,rounds:[
+{npcMsgs:['你好','我这边是XX投资机构','注意到您在投资方面很有见解'],opts:[
+{text:'你谁啊？',fx:{},next:1},
+{text:'什么机构？',fx:{IQ:2},next:2}]},
+{npcMsgs:['我们有一个内部投资项目','年化收益15%-20%','只有受邀人士才能参与'],opts:[
+{text:'听起来像骗局',fx:{EQ:5},next:-1},
+{text:'具体说说？',fx:{mood:3},next:-1,flag:{scam_bait:true}}]},
+{npcMsgs:['绝对正规！','您可以先小金额试试','很多人已经赚到钱了'],opts:[
+{text:'不用了，谢谢',fx:{mood:2},next:-1},
+{text:'我考虑一下',fx:{},next:-1}]}]},
+
+{id:'boss_mentor',npc:'boss',type:'wechat',ageMin:35,ageMax:55,chance:0.08,cooldown:24,requires:{minJobLevel:3},rounds:[
+{npcMsgs:['小X，来我办公室一下','想跟你聊聊团队管理的事','你带团队多久了？'],opts:[
+{text:'快两年了',fx:{},next:1},
+{text:'有什么问题吗？',fx:{},next:2}]},
+{npcMsgs:['我觉得你有潜力','公司准备提拔一批中层','我想推荐你'],opts:[
+{text:'谢谢张总信任！',fx:{mood:10,EQ:5},next:-1}]},
+{npcMsgs:['但你需要提升一下汇报能力','下次高管会你来做个分享','主题就选你最擅长的'],opts:[
+{text:'好的，我准备一下',fx:{IQ:3,mood:5},next:-1}]}]},
+
+{id:'colleague_complaint',npc:'colleague',type:'wechat',ageMin:22,ageMax:50,chance:0.12,cooldown:6,rounds:[
+{npcMsgs:['你知道吗','小王被开了','说是泄露公司机密'],opts:[
+{text:'真的假的？他不是干得挺好的吗',fx:{mood:-3},next:1},
+{text:'跟我有什么关系',fx:{},next:-1}]},
+{npcMsgs:['谁知道呢','反正现在人心惶惶的','老板天天开会强调保密'],opts:[
+{text:'做好自己的事就行了',fx:{EQ:3},next:-1}]},
+{npcMsgs:['你说得对','不说了，干活去了'],opts:[{text:'嗯',fx:{},next:-1}]}]},
+
+{id:'realtor_call',npc:'realtor',type:'call',ageMin:25,ageMax:60,chance:0.08,cooldown:12,rounds:[
+{npcMsgs:['您好，我是XX房产的小陈','最近有个新盘特别适合您','位置好价格还实惠'],opts:[
+{text:'什么位置？多少钱？',fx:{},next:1},
+{text:'不需要，谢谢',fx:{},next:-1}]},
+{npcMsgs:['三环内，均价3万5','首付只要30万','周边有地铁有学校'],opts:[
+{text:'听起来不错，我考虑下',fx:{mood:3},next:-1},
+{text:'太贵了，买不起',fx:{mood:-2},next:-1}]},
+{npcMsgs:['好的，不着急','有需要随时联系我'],opts:[{text:'好的',fx:{},next:-1}]}]}
 ];
 
 
@@ -1671,7 +1797,7 @@ function advanceMonth(){
   let rentIncome=0;G.houses.forEach(h=>{const info=HOUSES.find(x=>x.id===h.id);rentIncome+=info?info.rent:0;});
   income+=rentIncome;
   let loanPay=0;
-  G.houses.forEach(h=>{if(h.loan&&h.loanBalance>0){const pay=Math.min(h.loanMonthly,h.loanBalance);h.loanBalance-=pay;h.loanMonthly=h.loanBalance>0?h.loanMonthly:0;loanPay+=pay;if(h.loanBalance<=0){h.loanBalance=0;h.loan=false;h.own=true;G.events.push({text:'🏦 恭喜！房贷已还清！',type:'good'});}}});
+  G.houses.forEach(h=>{if(h.loan&&h.loanBalance>0){const pay=Math.min(h.loanMonthly,h.loanBalance);h.loanBalance-=pay;h.loanMonthly=h.loanBalance>0?h.loanMonthly:0;loanPay+=pay;if(h.loanBalance<=0){h.loanBalance=0;h.loan=false;h.own=true;G.events.push({text:'🏦 恭喜！房贷已还清！',type:'good'});notifyAsMessage('system','🏦 恭喜！房贷已还清！');}}});
   expense+=loanPay;
   const childCost=G.children*20000/12;expense+=childCost;
   // Business income
@@ -1852,6 +1978,10 @@ function applySmallEvent(evt){
   if(eff.EQ)G.EQ=clamp(G.EQ+eff.EQ,0,200);
   if(eff.stockLoss){for(const code in G.stockHoldings){G.stockPrices[code]=Math.max(1,G.stockPrices[code]*(1-eff.stockLoss));}}
   G.events.push(e);
+  // v3.9: 小事件也发消息（系统通知）
+  if(evt.type==='bad'||(eff.money&&eff.money<0)){
+    notifyAsMessage('system',e.text);
+  }
   // 连锁反应记忆
   if(G._recentEvents){
     const clean=e.text.replace(/[\u{1F300}-\u{1FFFF}]/gu,'').trim().substring(0,25);
@@ -1959,6 +2089,8 @@ function selectDecisionOption(optIndex){
   closeDecisionEvent();
   showModal({title:evt.title,content:resultText,showCancel:false,confirmText:'继续'});
   G.events.push({text:evt.title+': '+opt.title,type:'neutral'});
+  // v3.9: 决策结果也发一条消息给玩家
+  notifyAsMessage('system','📋 '+evt.title+'：你选择了「'+opt.title+'」');
   // 恋爱事件更新恋爱状态
   if(evt.id&&evt.id.indexOf('campus_romance')>=0){
     if(!G.romance)G.romance={npcId:null,stage:'none',affection:0,metMonth:0,lastInteraction:0};
@@ -2004,6 +2136,8 @@ function triggerStockNews(){
       const impact=(Math.random()>0.3)?news.impact:news.impact*0.5;
       G.stockPrices[s.code]=Math.max(1,G.stockPrices[s.code]*(1+impact));
     });
+    // v3.9: 新闻也发消息
+    notifyAsMessage('system','📰 '+news.title+' — '+news.desc);
   });
 }
 
@@ -2805,7 +2939,7 @@ function confirmRestart(){
 
 // ===== Phone System Functions =====
 function initPhoneState(){
-  if(!G.phone)G.phone={threads:[],moments:[],notifications:[],flags:{},lastTriggerMonth:0,nextId:1,activeChats:[]};
+  if(!G.phone)G.phone={threads:[],moments:[],notifications:[],flags:{},lastTriggerMonth:0,nextId:1,activeChats:[],lastNpcMessageMonth:0};
 }
 
 // ===== 通讯录：主动聊天话题库 =====
@@ -3700,6 +3834,7 @@ function checkStudyProgress(){
     if(course.healthBonus)G.health=clamp(G.health+course.healthBonus,0,200);
     if(course.moodBonus)G.mood=clamp(G.mood+course.moodBonus,0,200);
     G.events.push({text:'🎓 完成学习：'+course.name+'！IQ+'+(course.iqBonus||0)+' EQ+'+(course.eqBonus||0),type:'good'});
+    notifyAsMessage('system','🎓 完成学习：'+course.name+'！IQ+'+(course.iqBonus||0)+' EQ+'+(course.eqBonus||0));
     if(!G.lifeEvents)G.lifeEvents=[];G.lifeEvents.push({month:G.totalMonths,icon:'🎓',title:'完成'+course.name,detail:'IQ+'+(course.iqBonus||0)+' EQ+'+(course.eqBonus||0),type:'learn'});
     showToast('🎉 恭喜完成 '+course.name+'！');
     addNotification('achievement','🎓 完成学习：'+course.name);
@@ -3913,6 +4048,7 @@ function addPhoneThread(tpl){
   };
   pushPhoneThread(thread);
   G.phone.flags['last_'+tpl.id]=G.totalMonths;
+  G.phone.lastNpcMessageMonth=G.totalMonths;
   updatePhoneBadge();
 }
 
@@ -3928,7 +4064,7 @@ function renderPhoneList(){
   G.phone.threads.forEach(t=>{
     const round=t.rounds[t.currentRound];
     let preview='[对话进行中]';
-    if(round&&round.npcMsgs&&round.npcMsgs.length>0)preview=round.npcMsgs[round.npcMsgs.length-1].substring(0,32);
+    if(round&&round.npcMsgs&&round.npcMsgs.length>0)preview=round.npcMsgs[round.npcMsgs.length-1].replace(/\[GIVE:\d+\]/g,'').replace(/\[TREAT:\d+\]/g,'').replace(/\[ASK:\d+:.+?\]/g,'').trim().substring(0,32);
     if(round&&round.npc&&round.npc.length>0)preview=round.npc[round.npc.length-1].substring(0,32);
     if(t.status==='replied')preview='[已回复]';
     // Count unread rounds
@@ -3956,6 +4092,11 @@ function openThread(id){
   if(thread.status==='unread'){thread.status='reading';thread.readMonth=G.totalMonths;}
   G._openThreadId=id;
   renderChat();
+  // v3.9.2: 显示模板选项，隐藏AI输入框
+  const opts=document.getElementById('chatOpts');
+  const area=document.getElementById('chatInputArea');
+  if(opts)opts.style.display='flex';
+  if(area)area.style.display='none';
   document.getElementById('chatOverlay').classList.add('show');
   updatePhoneBadge();
 }
@@ -3969,7 +4110,9 @@ function renderChat(){
   for(let r=0;r<=thread.currentRound;r++){
     const round=thread.rounds[r];if(!round)continue;
     if(round.npcMsgs){round.npcMsgs.forEach(msg=>{
-      html+='<div class="chat-bub npc">'+msg+'</div>';
+      // Strip action tags from display
+      const cleanMsg=msg.replace(/\[GIVE:\d+\]/g,'').replace(/\[TREAT:\d+\]/g,'').replace(/\[ASK:\d+:.+?\]/g,'').trim();
+      html+='<div class="chat-bub npc">'+cleanMsg+'</div>';
     });}
     if(round._playerChoice!==undefined){
       html+='<div class="chat-bub player">'+round._playerChoice+'</div>';
@@ -4014,7 +4157,7 @@ function selectPhoneOption(optIdx){
   // Handle special game integrations
   if(opt.fx&&opt.fx.jobIndex!==undefined){
     G.jobIndex=opt.fx.jobIndex;G.monthsAtJob=0;
-    if(opt.fx.jobFire){G.salaryBonus=0;G.events=G.events||[];G.events.push({text:'💼 你被公司辞退了...',type:'bad'});}
+    if(opt.fx.jobFire){G.salaryBonus=0;G.events=G.events||[];G.events.push({text:'💼 你被公司辞退了...',type:'bad'});notifyAsMessage('system','💼 你被公司辞退了...');}
   }
   if(opt.fx&&opt.fx.spouse){
     // Find a spouse if not already married
@@ -4740,8 +4883,10 @@ async function _doSendMessage(msg,npcId){
   const reply=await generateNPCReply(npcId,aiMsg,history);
   // Remove typing indicator
   removeTypingIndicator();
-  // Add NPC bubble
-  addChatBubble('npc',reply);
+  // Process chat effects FIRST (strips [GIVE]/[ASK] tags from reply)
+  const cleanReply=processChatEffects(reply,npcId);
+  // Add NPC bubble with cleaned reply
+  addChatBubble('npc',cleanReply);
   // Save to history
   saveChatHistory(npcId,msg,reply);
   // 社交拓展：更新好友关系
@@ -4752,8 +4897,6 @@ async function _doSendMessage(msg,npcId){
   // Apply mood effect from reply sentiment
   const moodEffect=judgeNPCMood(reply);
   G.mood=clamp(G.mood+moodEffect,0,200);
-  // Process chat triggers for game effects
-  processChatEffects(reply,npcId);
   // Save game
   saveGame();
   // Re-enable send button
@@ -4775,10 +4918,12 @@ function setupChatInputListener(){
   }
 }
 
-// Show chat input area
+// Show chat input area (for AI chat mode)
 function showChatInputArea(show){
   const area=document.getElementById('chatInputArea');
   const opts=document.getElementById('chatOpts');
+  // show=true: AI聊天模式，显示输入框隐藏选项
+  // show=false: 模板消息模式，显示选项隐藏输入框
   if(area)area.style.display=show?'flex':'none';
   if(opts)opts.style.display=show?'none':'flex';
 }
@@ -5650,8 +5795,10 @@ window.triggerPhoneMessages=function(){
   if(!G.phone)return;
   // 每6个月重置fallback计数，让AI有机会恢复
   if(G.totalMonths%6===0)AI_ENGINE._fallbackCount=0;
+  // v3.9.1: 初始化lastNpcMessageMonth（兼容旧存档）
+  if(G.phone.lastNpcMessageMonth===undefined)G.phone.lastNpcMessageMonth=0;
   
-  // Helper: 从模板中筛选可用消息
+  // Helper: 从模板中筛选可用消息（放宽冷却和概率）
   function pickTemplate(){
     const age=getAge();const total=calcTotalAsset();
     const eligible=PHONE_MESSAGES.filter(m=>{
@@ -5668,15 +5815,21 @@ window.triggerPhoneMessages=function(){
         if(m.requires.hasLoan){let has=false;G.houses.forEach(h=>{if(h.loan)has=true;});if(!has)return false;}
       }
       const last=G.phone.flags['last_'+m.id];
-      if(last&&G.totalMonths-last<(m.cooldown||12))return false;
-      // v3.8: 提高模板触发概率，从chance提升到 min(chance*3, 0.6)
-      const boostedChance=Math.min((m.chance||0.15)*3, 0.6);
+      // v3.9.1: 冷却期减半，让NPC更活跃
+      const cd=Math.max(Math.floor((m.cooldown||12)/2),2);
+      if(last&&G.totalMonths-last<cd)return false;
+      // v3.9.1: 提高模板触发概率，从chance*3提升到 min(chance*5, 0.8)
+      const boostedChance=Math.min((m.chance||0.15)*5, 0.8);
       if(Math.random()>boostedChance)return false;
       return true;
     });
     if(eligible.length>0){addPhoneThread(eligible[randInt(0,eligible.length-1)]);return true;}
     return false;
   }
+  
+  // v3.9.1: 干旱保底——超过3个月没收到任何NPC消息，强制触发一条
+  const drySpell=G.totalMonths-(G.phone.lastNpcMessageMonth||0);
+  const forceMessage=drySpell>=3;
   
   // 保底机制：前6个月如果没有收到任何消息，强制触发一条
   const isFirstMonths=G.totalMonths<=6;
@@ -5686,17 +5839,24 @@ window.triggerPhoneMessages=function(){
   if(AI_ENGINE.enabled&&Math.random()<0.8){
     triggerAIPhoneMessage().then(used=>{
       if(!used){
-        if(!pickTemplate()&&isFirstMonths&&hasNoThreads){
-          // 保底：强制发一条妈妈的消息
-          const momMsg=PHONE_MESSAGES.find(m=>m.id==='mom_nag');
-          if(momMsg)addPhoneThread(momMsg);
+        if(!pickTemplate()){
+          // v3.9.1: 干旱保底或首月保底——强制发一条
+          if(forceMessage||isFirstMonths&&hasNoThreads){
+            const fallbackPool=PHONE_MESSAGES.filter(m=>getAge()>=m.ageMin&&getAge()<=m.ageMax);
+            const fallbackMsg=fallbackPool.length>0?fallbackPool[randInt(0,fallbackPool.length-1)]:PHONE_MESSAGES.find(m=>m.id==='mom_nag');
+            if(fallbackMsg)addPhoneThread(fallbackMsg);
+          }
         }
       }
     });
   }else{
-    if(!pickTemplate()&&isFirstMonths&&hasNoThreads){
-      const momMsg=PHONE_MESSAGES.find(m=>m.id==='mom_nag');
-      if(momMsg)addPhoneThread(momMsg);
+    if(!pickTemplate()){
+      // v3.9.1: 干旱保底或首月保底——强制发一条
+      if(forceMessage||isFirstMonths&&hasNoThreads){
+        const fallbackPool=PHONE_MESSAGES.filter(m=>getAge()>=m.ageMin&&getAge()<=m.ageMax);
+        const fallbackMsg=fallbackPool.length>0?fallbackPool[randInt(0,fallbackPool.length-1)]:PHONE_MESSAGES.find(m=>m.id==='mom_nag');
+        if(fallbackMsg)addPhoneThread(fallbackMsg);
+      }
     }
   }
 };
@@ -5818,4 +5978,17 @@ async function generateEncounterAIResponse(sceneKey, npcName, choiceText, choice
   // 根据effect判断态度
   var goodEffect = choiceEffect && (choiceEffect.eq > 0 || choiceEffect.mood > 0 || choiceEffect.health > 0);
   return {text:fallbackText, wantFriend:goodEffect};
+}
+// ===== Helper: 将事件转为NPC消息（让玩家在消息栏看到） =====
+function notifyAsMessage(npcId,text){
+  if(!G.phone)return;
+  const npc=NPCS[npcId]||{name:'系统',avatar:'📱'};
+  const thread={
+    id:G.phone.nextId++,npcId:npcId,npcName:npc.name,npcAvatar:npc.avatar,
+    tplId:'event_'+G.totalMonths+'_'+npcId,type:'wechat',
+    rounds:[{npcMsgs:[text],opts:[{text:'知道了',fx:{},next:-1}]}],
+    currentRound:0,status:'unread',receivedMonth:G.totalMonths,readMonth:null,
+    followUp:null,flagClear:null
+  };
+  pushPhoneThread(thread);
 }
