@@ -1577,6 +1577,28 @@ function nextMonth(){
   checkAchievements();
   if(G.gameOver)setTimeout(()=>showGameOver(),500);
 }
+const TEMPLATE_SMALL_EVENTS=[
+  {text:'💰 朋友还钱，收到3000元',type:'good',effect:{money:3000}},
+  {text:'💪 坚持健身，健康+3',type:'good',effect:{health:3}},
+  {text:'📚 课余学习，智商+2',type:'neutral',effect:{IQ:2,mood:-2}},
+  {text:'🎭 参加社团活动，情商+2',type:'neutral',effect:{EQ:2}},
+  {text:'🍻 朋友聚会，心情+5',type:'neutral',effect:{mood:5,money:-300}},
+  {text:'📱 手机被偷',type:'bad',effect:{money:-3000,mood:-5}},
+  {text:'🏥 生病住院',type:'bad',effect:{money:-8000,health:-8}},
+  {text:'🎰 买彩票中了2000元',type:'good',effect:{money:2000}},
+  {text:'📉 股市震荡，持仓亏损10%',type:'bad',effect:{stockLoss:0.1}},
+  {text:'📜 考下专业证书，智商+3',type:'neutral',effect:{IQ:3}},
+  {text:'☕ 路上遇到老同学，聊了半小时',type:'good',effect:{EQ:2,mood:3}},
+  {text:'🛒 超市打折，囤了一堆日用品',type:'neutral',effect:{money:-500,mood:3}},
+  {text:'🎵 堵车时听到一首好歌，心情变好',type:'good',effect:{mood:5}},
+  {text:'🌧️ 忘带伞淋了雨',type:'bad',effect:{health:-2,mood:-3}},
+  {text:'🎉 收到意外奖金500元',type:'good',effect:{money:500}},
+  {text:'💤 昨晚失眠，今天状态差',type:'bad',effect:{health:-3,mood:-5}},
+  {text:'🏃 晨跑时捡到100元',type:'good',effect:{money:100,mood:3}},
+  {text:'🍜 吃了碗超好吃的面，心情+4',type:'good',effect:{mood:4,money:-30}},
+  {text:'📚 看了一本好书，智商+2情商+1',type:'good',effect:{IQ:2,EQ:1}},
+  {text:'😤 被领导无故批评，心情-8',type:'bad',effect:{mood:-8}}
+];
 function advanceMonth(){
   G.totalMonths++;G.monthsAtJob++;G.events=[];
   G._encounterActive=false; // 重置月度场景标记
@@ -1688,33 +1710,30 @@ function advanceMonth(){
     triggerStockNews();
   }
   G.houses.forEach(h=>{const info=HOUSES.find(x=>x.id===h.id);const change=(Math.random()-0.45)*0.05*h.marketValue/12;h.marketValue=Math.round(h.marketValue+change);if(info)h.marketValue=Math.max(info.price*0.3,h.marketValue);});
-  // V2: Decision events (20% chance per month, age-appropriate)
-  if(Math.random()<0.20){
+  // V2: Decision events (40% chance per month, age-appropriate)
+  if(Math.random()<0.40){
     triggerDecisionEvent();
   }
-  // V2: Small random events still happen (15%)
-  if(Math.random()<0.15){
-    const smallEvents=[
-      {text:'💰 朋友还钱，收到3000元',type:'good',effect:{money:3000}},
-      {text:'💪 坚持健身，健康+3',type:'good',effect:{health:3}},
-      {text:'📚 课余学习，智商+2',type:'neutral',effect:{IQ:2,mood:-2}},
-      {text:'🎭 参加社团活动，情商+2',type:'neutral',effect:{EQ:2}},
-      {text:'🍻 朋友聚会，心情+5',type:'neutral',effect:{mood:5,money:-300}},
-      {text:'📱 手机被偷',type:'bad',effect:{money:-3000,mood:-5}},
-      {text:'🏥 生病住院',type:'bad',effect:{money:-8000,health:-8}},
-      {text:'🎰 买彩票中了2000元',type:'good',effect:{money:2000}},
-      {text:'📉 股市震荡，持仓亏损10%',type:'bad',effect:{stockLoss:0.1}},
-      {text:'📜 考下专业证书，智商+3',type:'neutral',effect:{IQ:3}}
-    ];
-    const evt=smallEvents[randInt(0,smallEvents.length-1)];
-    applySmallEvent(evt);
+  // V2: Small random events (35% chance, AI优先模板降级)
+  if(Math.random()<0.35){
+    if(AI_ENGINE.enabled&&AI_ENGINE._fallbackCount<AI_ENGINE.maxFallback){
+      callAI(buildSmallEventPrompt,'small').then(result=>{
+        if(result&&result.text){
+          applySmallEvent({text:result.text,type:result.type||'neutral',effect:result.effect||{}});
+        }else{
+          applySmallEvent(TEMPLATE_SMALL_EVENTS[randInt(0,TEMPLATE_SMALL_EVENTS.length-1)]);
+        }
+      }).catch(()=>{applySmallEvent(TEMPLATE_SMALL_EVENTS[randInt(0,TEMPLATE_SMALL_EVENTS.length-1)]);});
+    }else{
+      applySmallEvent(TEMPLATE_SMALL_EVENTS[randInt(0,TEMPLATE_SMALL_EVENTS.length-1)]);
+    }
   }
   const nm=getMonth();G.events.unshift({text:'📅 '+getAge()+'年'+nm+'月 · 净收入：'+fmt(net),type:net>=0?'good':'bad'});
   // Monthly task auto-complete
   G.monthlyTasks['advance']=true;
   G.monthlyTasks['promote']=true;
   // Phone triggers
-  if(!G.gameOver){initPhoneState();triggerFollowUps();if(Math.random()<0.4)triggerPhoneMessages();if(Math.random()<0.35)triggerAIMoments().catch(()=>{if(Math.random()<0.12)triggerMoments();});generateNotifications();generateGossipEvent();triggerGathering();}
+  if(!G.gameOver){initPhoneState();triggerFollowUps();if(Math.random()<0.55)triggerPhoneMessages();if(Math.random()<0.50)triggerAIMoments().catch(()=>{if(Math.random()<0.15)triggerMoments();});generateNotifications();generateGossipEvent();triggerGathering();}
   // 社交拓展：每月有概率触发偶遇场景
   if(!G.gameOver && !G._encounter && !G._pendingDecision){
     tryTriggerEncounter();
