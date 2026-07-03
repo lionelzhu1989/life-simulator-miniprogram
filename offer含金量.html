@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>offer含金量 v3.7</title>
+<title>offer含金量 v3.8</title>
 <style>
 
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -956,6 +956,36 @@ requires:{minAsset:300000},rounds:[
 {npcMsgs:['行行，2万也够了','谢谢宝贝'],opts:[{text:'不客气',fx:{EQ:2},next:-1}]},
 {npcMsgs:['...行吧。','妈不麻烦你了。'],opts:[{text:'...',fx:{mood:-5},next:-1}]}]},
 
+// ====== CAMPUS / EARLY LIFE (18-22) ======
+{id:'mom_campus',npc:'mom',type:'wechat',ageMin:18,ageMax:22,chance:0.15,cooldown:6,rounds:[
+{npcMsgs:['儿子/女儿，生活费够不够？','妈给你转了2000块','别省着，该吃吃该喝喝'],opts:[
+{text:'谢谢妈！够用了',fx:{cash:2000,mood:8},next:1},
+{text:'妈你别老转钱，我自己能赚',fx:{mood:3,IQ:2},next:2}]},
+{npcMsgs:['赚钱是赚钱的事，身体重要','你爸让我问你，考试准备得怎么样了？'],opts:[
+{text:'挺好的，放心吧',fx:{mood:5},next:-1}]},
+{npcMsgs:['你这孩子，跟妈客气什么','你安心学习，钱的事别操心'],opts:[{text:'好的妈',fx:{mood:5},next:-1}]}]},
+{id:'bestie_campus',npc:'bestie',type:'wechat',ageMin:18,ageMax:22,chance:0.15,cooldown:4,rounds:[
+{npcMsgs:['兄弟/姐妹！','今晚食堂新出了个菜，巨好吃！','一起去尝尝？'],opts:[
+{text:'走走走！',fx:{mood:8,cash:-30},next:1},
+{text:'不了，我在赶作业',fx:{IQ:3},next:2}]},
+{npcMsgs:['冲冲冲！','我已经占好位了'],opts:[{text:'马上到！',fx:{mood:3},next:-1}]},
+{npcMsgs:['行吧...','那你忙完叫我'],opts:[{text:'好的',fx:{},next:-1}]}]},
+{id:'classmate_compare',npc:'classmate',type:'wechat',ageMin:18,ageMax:25,chance:0.12,cooldown:10,rounds:[
+{npcMsgs:['哎你实习工资多少啊？','我刚拿了xxx的offer','月薪8000！感觉还不错'],opts:[
+{text:'挺厉害的！恭喜',fx:{mood:-3},next:1},
+{text:'我还在找呢...',fx:{mood:-5},next:2},
+{text:'我这边也差不多',fx:{mood:2},next:3}]},
+{npcMsgs:['你也加油！','秋招快开始了，早点准备'],opts:[{text:'嗯嗯',fx:{mood:2},next:-1}]},
+{npcMsgs:['没事，慢慢来','反正我们还年轻'],opts:[{text:'对，不急',fx:{mood:3},next:-1}]},
+{npcMsgs:['哈哈我就是随便说说','你肯定能找到更好的'],opts:[{text:'借你吉言',fx:{mood:2},next:-1}]}]},
+{id:'mentor_guide',npc:'mentor',type:'wechat',ageMin:18,ageMax:25,chance:0.08,cooldown:24,rounds:[
+{npcMsgs:['最近学习/工作怎么样？','有没有什么困惑可以聊聊','年轻人要多思考方向'],opts:[
+{text:'老师，我有点迷茫',fx:{mood:3},next:1},
+{text:'挺好的，谢谢老师关心',fx:{mood:5},next:2}]},
+{npcMsgs:['迷茫是正常的','关键是要行动起来','多试错，找到自己真正想做的事'],opts:[
+{text:'受教了！',fx:{IQ:5,mood:5},next:-1}]},
+{npcMsgs:['那就好。记住，不要怕失败','年轻就是最大的资本'],opts:[{text:'好的老师！',fx:{mood:3},next:-1}]}]},
+
 // ====== WORK ======
 {id:'boss_overtime',npc:'boss',type:'call',ageMin:22,ageMax:45,chance:0.15,cooldown:4,rounds:[
 {npcMsgs:['小X啊，周六加个班。','有个紧急项目要赶，客户周一要看方案。','做好了年底给你评优。'],opts:[
@@ -1051,6 +1081,29 @@ flagClear:'bestie_lent'},
 {npcMsgs:['好的，转账完成后我们会核实','请尽快操作...'],opts:[{text:'...转了',fx:{},next:-1}]},
 {npcMsgs:['您做得对！','银行不会要求客户转账到其他账户','这是典型的电信诈骗'],opts:[{text:'差点上当了',fx:{mood:5},next:-1}]},
 {npcMsgs:['（对方挂断了电话）'],opts:[{text:'哼，骗子',fx:{mood:5},next:-1}]}]},
+
+// ====== MORE SOCIAL ======
+{id:'neighbor_chat',npc:'neighbor',type:'wechat',ageMin:22,ageMax:70,chance:0.1,cooldown:8,rounds:[
+{npcMsgs:['小X啊，你家WiFi密码多少？','我家网断了，想蹭一下','就用一会儿！'],opts:[
+{text:'密码是xxxxxx',fx:{mood:3},next:1},
+{text:'不太方便诶',fx:{},next:2}]},
+{npcMsgs:['谢谢啊！','对了，你听说了吗，楼下那家要搬走了','好像是嫌房租太贵'],opts:[{text:'是吗，现在生意不好做',fx:{mood:2},next:-1}]},
+{npcMsgs:['行吧...','那我自己想想办法'],opts:[{text:'抱歉啊',fx:{mood:-2},next:-1}]}]},
+{id:'ex_colleague_job',npc:'exColleague',type:'wechat',ageMin:23,ageMax:50,chance:0.08,cooldown:18,rounds:[
+{npcMsgs:['好久不见！','我跳槽到xxx了，待遇翻倍','你有没有想过换个环境？'],opts:[
+{text:'什么公司？说来听听',fx:{mood:5},next:1},
+{text:'我现在挺好的，不想动',fx:{mood:3},next:2},
+{text:'帮我内推一下？',fx:{EQ:3},next:3}]},
+{npcMsgs:['公司名字我私发你','你要是感兴趣我帮你推'],opts:[{text:'好的，谢谢！',fx:{mood:5},next:-1}]},
+{npcMsgs:['也是，稳定最重要'],opts:[{text:'嗯',fx:{},next:-1}]},
+{npcMsgs:['没问题！','我明天就跟HR说'],opts:[{text:'太够意思了',fx:{mood:8},next:-1}]}]},
+{id:'gym_push',npc:'gymCoach',type:'wechat',ageMin:22,ageMax:50,chance:0.08,cooldown:12,rounds:[
+{npcMsgs:['兄弟/姐妹！','好久没来健身房了啊','最近是不是偷懒了？'],opts:[
+{text:'最近太忙了...',fx:{mood:-3},next:1},
+{text:'明天就去！',fx:{mood:5},next:2}]},
+{npcMsgs:['忙不是借口！','身体是革命的本钱','我给你留了个私教体验课，免费的'],opts:[
+{text:'好，我去',fx:{health:5,mood:5},next:-1},
+{text:'再说吧...',fx:{},next:-1}]}]},
 
 // ====== SPOUSE ======
 {id:'spouse_fight',npc:'spouse',type:'call',ageMin:25,ageMax:60,chance:0.1,cooldown:12,
@@ -1760,7 +1813,7 @@ function advanceMonth(){
     if(G._recentEvents)G._recentEvents.push('🥚彩蛋：'+egg.text.replace(/[\u{1F300}-\u{1FFFF}]/gu,'').substring(0,20));
   }
   // Phone triggers
-  if(!G.gameOver){initPhoneState();triggerFollowUps();if(Math.random()<0.55)triggerPhoneMessages();if(Math.random()<0.50)triggerAIMoments().catch(()=>{if(Math.random()<0.15)triggerMoments();});generateNotifications();generateGossipEvent();triggerGathering();}
+  if(!G.gameOver){initPhoneState();triggerFollowUps();triggerPhoneMessages();if(Math.random()<0.50)triggerAIMoments().catch(()=>{if(Math.random()<0.15)triggerMoments();});generateNotifications();generateGossipEvent();triggerGathering();}
   // 社交拓展：每月有概率触发偶遇场景
   if(!G.gameOver && !G._encounter && !G._pendingDecision){
     tryTriggerEncounter();
@@ -4011,7 +4064,7 @@ const AI_CHAT_CONFIG={
   model:'GLM-4-Flash',
   enabled:true,
   _fallbackCount:0,
-  maxFallback:3
+  maxFallback:15
 };
 
 // Relationship mapping for NPC
@@ -5075,7 +5128,7 @@ const AI_ENGINE={
   lastCall:0,
   minInterval:2000,// 2s between calls
   _fallbackCount:0,
-  maxFallback:3,// after 3 consecutive fails, disable until restart
+  maxFallback:15,// increased: allow more retries before disabling AI
 };
 
 function getGameStateContext(){
@@ -5432,9 +5485,9 @@ function buildNewsPrompt(ctx){
 let _aiQueue=Promise.resolve();
 function callAI(promptBuilder,eventType){
   if(!AI_ENGINE.enabled||AI_ENGINE._fallbackCount>=AI_ENGINE.maxFallback)return Promise.resolve(null);
-  // 入队：等待前一个调用完成后，间隔1.5秒再执行
+  // 入队：等待前一个调用完成后，间隔1秒再执行
   const task=_aiQueue.then(async()=>{
-    await new Promise(r=>setTimeout(r,1500));
+    await new Promise(r=>setTimeout(r,1000));
     return _doCallAI(promptBuilder,eventType);
   });
   // 更新队列（不让失败阻塞后续）
@@ -5451,7 +5504,7 @@ async function _doCallAI(promptBuilder,eventType){
   if(!AI_ENGINE.useProxy)headers['Authorization']='Bearer '+AI_ENGINE.apiKey;
   try{
     const ctrl=new AbortController();
-    const tid=setTimeout(()=>ctrl.abort(),10000);
+    const tid=setTimeout(()=>ctrl.abort(),15000);
     const resp=await fetch(url,{
       method:'POST',headers,
       body:JSON.stringify({messages,model:AI_ENGINE.model,max_tokens:800,temperature:0.92}),
@@ -5595,36 +5648,11 @@ window.triggerDecisionEvent=function(){
 // Override triggerPhoneMessages to try AI first - 所有通讯录NPC都能主动找你
 window.triggerPhoneMessages=function(){
   if(!G.phone)return;
-  // 70%概率用AI生成NPC主动消息，让通讯录里的人都能找你
-  if(AI_ENGINE.enabled&&Math.random()<0.7){
-    triggerAIPhoneMessage().then(used=>{
-      if(!used){
-        // Fallback to template
-        const age=getAge();const total=calcTotalAsset();
-        const eligible=PHONE_MESSAGES.filter(m=>{
-          if(age<m.ageMin||age>m.ageMax)return false;
-          if(m.requires){
-            if(m.requires.married&&!G.spouse)return false;
-            if(m.requires.single&&G.spouse)return false;
-            if(m.requires.children&&G.children===0)return false;
-            if(m.requires.minAsset&&total<m.requires.minAsset)return false;
-            if(m.requires.minJobLevel&&G.jobIndex<m.requires.minJobLevel)return false;
-            if(m.requires.flag&&!G.phone.flags[m.requires.flag])return false;
-            if(m.requires.boss_angry&&!G.phone.flags.boss_angry)return false;
-            // 创业者不触发老板/同事相关事件
-            if(G.selfEmployed&&(m.npc==='boss'||m.npc==='hr'||m.npc==='colleague'))return false;
-            if(m.requires.hasLoan){let has=false;G.houses.forEach(h=>{if(h.loan)has=true;});if(!has)return false;}
-          }
-          const last=G.phone.flags['last_'+m.id];
-          if(last&&G.totalMonths-last<(m.cooldown||12))return false;
-          if(Math.random()>(m.chance||0.15))return false;
-          return true;
-        });
-        if(eligible.length>0){const msg=eligible[randInt(0,eligible.length-1)];addPhoneThread(msg);}
-      }
-    });
-  }else{
-    // Original template logic
+  // 每6个月重置fallback计数，让AI有机会恢复
+  if(G.totalMonths%6===0)AI_ENGINE._fallbackCount=0;
+  
+  // Helper: 从模板中筛选可用消息
+  function pickTemplate(){
     const age=getAge();const total=calcTotalAsset();
     const eligible=PHONE_MESSAGES.filter(m=>{
       if(age<m.ageMin||age>m.ageMax)return false;
@@ -5636,16 +5664,40 @@ window.triggerPhoneMessages=function(){
         if(m.requires.minJobLevel&&G.jobIndex<m.requires.minJobLevel)return false;
         if(m.requires.flag&&!G.phone.flags[m.requires.flag])return false;
         if(m.requires.boss_angry&&!G.phone.flags.boss_angry)return false;
-        // 创业者不触发老板/同事相关事件
         if(G.selfEmployed&&(m.npc==='boss'||m.npc==='hr'||m.npc==='colleague'))return false;
         if(m.requires.hasLoan){let has=false;G.houses.forEach(h=>{if(h.loan)has=true;});if(!has)return false;}
       }
       const last=G.phone.flags['last_'+m.id];
       if(last&&G.totalMonths-last<(m.cooldown||12))return false;
-      if(Math.random()>(m.chance||0.15))return false;
+      // v3.8: 提高模板触发概率，从chance提升到 min(chance*3, 0.6)
+      const boostedChance=Math.min((m.chance||0.15)*3, 0.6);
+      if(Math.random()>boostedChance)return false;
       return true;
     });
-    if(eligible.length>0){const msg=eligible[randInt(0,eligible.length-1)];addPhoneThread(msg);}
+    if(eligible.length>0){addPhoneThread(eligible[randInt(0,eligible.length-1)]);return true;}
+    return false;
+  }
+  
+  // 保底机制：前6个月如果没有收到任何消息，强制触发一条
+  const isFirstMonths=G.totalMonths<=6;
+  const hasNoThreads=G.phone.threads.length===0;
+  
+  // 80%概率用AI生成NPC主动消息
+  if(AI_ENGINE.enabled&&Math.random()<0.8){
+    triggerAIPhoneMessage().then(used=>{
+      if(!used){
+        if(!pickTemplate()&&isFirstMonths&&hasNoThreads){
+          // 保底：强制发一条妈妈的消息
+          const momMsg=PHONE_MESSAGES.find(m=>m.id==='mom_nag');
+          if(momMsg)addPhoneThread(momMsg);
+        }
+      }
+    });
+  }else{
+    if(!pickTemplate()&&isFirstMonths&&hasNoThreads){
+      const momMsg=PHONE_MESSAGES.find(m=>m.id==='mom_nag');
+      if(momMsg)addPhoneThread(momMsg);
+    }
   }
 };
 
