@@ -3235,10 +3235,9 @@ function openProactiveChat(npcId){
   // Load chat history if exists
   const history=G.phone.chatHistory[npcId]||[];
   if(history.length>0){
-    // Show last 10 messages
+    // Show last 10 NPC messages only (player's own messages hidden for clean chat feel)
     const recent=history.slice(-10);
     recent.forEach(h=>{
-      if(h.player)addChatBubble('player',h.player);
       if(h.npc)addChatBubble('npc',h.npc);
     });
   }else{
@@ -4200,9 +4199,9 @@ function processChatEffects(reply,npcId){
     const amount=parseInt(giveMatch[1]);
     G.cash=clamp(G.cash+amount,-999999,999999999);
     const npcName=(NPC_PERSONALITIES[npcId]||{}).name||'NPC';
-    triggered.push('💰 '+npcName+'给了你¥'+fmt(amount));
+    triggered.push('💰 '+npcName+'给了你'+fmt(amount));
     // Show money transfer notice in chat
-    addChatBubble('money-transfer','💰 收到转账 ¥'+fmt(amount));
+    addChatBubble('money-transfer','💰 收到转账 '+fmt(amount));
     // Record in history
     recordMoneyHistory(npcId,'',npcName+'给了你¥'+amount,amount,'npc_gave');
     refreshLife();
@@ -4307,7 +4306,7 @@ function showGiveConfirm(npcId,amount,msg,callback){
     document.body.appendChild(overlay);
   }
   document.getElementById('giveConfirmNpc').textContent='给 '+npcName+' 转账';
-  document.getElementById('giveConfirmAmount').textContent='¥'+fmt(amount);
+  document.getElementById('giveConfirmAmount').textContent=fmt(amount);
   overlay.classList.add('show');
   // Store pending give data
   window._pendingGive={npcId:npcId,amount:amount,msg:msg,callback:callback};
@@ -4321,7 +4320,7 @@ function closeGiveConfirm(confirmed){
   if(confirmed){
     // Check if player has enough cash
     if(G.cash<pg.amount){
-      showToast('现金不足！当前余额¥'+fmt(G.cash));
+      showToast('现金不足！当前余额'+fmt(G.cash));
       window._pendingGive=null;
       return;
     }
@@ -4329,7 +4328,7 @@ function closeGiveConfirm(confirmed){
     G.cash=clamp(G.cash-pg.amount,-999999,999999999);
     const npcName=(NPC_PERSONALITIES[pg.npcId]||{}).name||'NPC';
     // Show system notice in chat
-    addChatBubble('money-notice','💰 你给了'+npcName+' ¥'+fmt(pg.amount));
+    addChatBubble('money-notice','💰 你给了'+npcName+' '+fmt(pg.amount));
     // Record in history
     recordMoneyHistory(pg.npcId,'给'+npcName+'¥'+pg.amount,'',pg.amount,'give_to_npc');
     // Refresh UI
@@ -4362,7 +4361,7 @@ function showMoneyDecision(npcId,amount,reason){
     document.body.appendChild(overlay);
   }
   document.getElementById('mdTitle').textContent=npcName+'向你借钱';
-  document.getElementById('mdAmount').textContent='¥'+fmt(amount);
+  document.getElementById('mdAmount').textContent=fmt(amount);
   document.getElementById('mdReason').textContent='原因：'+reason;
   overlay.classList.add('show');
   window._pendingAsk={npcId:npcId,amount:amount,reason:reason};
@@ -4376,14 +4375,14 @@ function resolveMoneyDecision(accepted){
   const npcName=(NPC_PERSONALITIES[pa.npcId]||{}).name||'NPC';
   if(accepted){
     if(G.cash<pa.amount){
-      showToast('现金不足！当前余额¥'+fmt(G.cash));
+      showToast('现金不足！当前余额'+fmt(G.cash));
       window._pendingAsk=null;
       return;
     }
     G.cash=clamp(G.cash-pa.amount,-999999,999999999);
-    addChatBubble('money-notice','💰 你借给了'+npcName+' ¥'+fmt(pa.amount));
+    addChatBubble('money-notice','💰 你借给了'+npcName+' '+fmt(pa.amount));
     recordMoneyHistory(pa.npcId,'借给'+npcName+'¥'+pa.amount,'你借给了'+npcName+'¥'+pa.amount,pa.amount,'lend_to_npc');
-    showToast('已借出 ¥'+fmt(pa.amount));
+    showToast('已借出 '+fmt(pa.amount));
   }else{
     addChatBubble('sys','你拒绝了'+npcName+'的借钱请求');
     recordMoneyHistory(pa.npcId,'拒绝了'+npcName+'借钱¥'+pa.amount,'你拒绝了'+npcName+'的借钱请求',0,'refused_ask');
@@ -4978,4 +4977,3 @@ function pushPhoneThread(thread){
   }
   G.phone.threads.unshift(thread);
 }
-<!-- 1783074382 -->
