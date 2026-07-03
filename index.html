@@ -2276,7 +2276,7 @@ function addPhoneThread(tpl){
   updatePhoneBadge();
 }
 
-function hasUnread(){return G.phone&&G.phone.threads.some(t=>t.status==='unread');}
+function hasUnread(){return G.phone&&G.phone.threads.some(t=>t.status!=='replied');}
 
 function renderPhoneList(){
   const el=document.getElementById('phone-messages');if(!el)return;
@@ -2529,14 +2529,14 @@ function switchPhoneTab(tab){
 function refreshPhone(){renderPhoneList();renderMoments();renderNotifications();updatePhoneBadge();updatePhoneHint();}
 function updatePhoneBadge(){
   const badge=document.getElementById('phoneBadge');if(!badge)return;
-  const count=G.phone?G.phone.threads.filter(t=>t.status==='unread').length:0;
+  const count=G.phone?G.phone.threads.filter(t=>t.status!=='replied').length:0;
   if(count>0){badge.textContent=count>99?'99+':count;badge.style.display='flex';}
   else{badge.style.display='none';}
 }
 function updatePhoneHint(){
   const hint=document.getElementById('phoneHint');const txt=document.getElementById('phoneHintText');
   if(!hint||!txt)return;
-  const count=G.phone?G.phone.threads.filter(t=>t.status==='unread').length:0;
+  const count=G.phone?G.phone.threads.filter(t=>t.status!=='replied').length:0;
   if(count>0){hint.style.display='flex';txt.textContent='有 '+count+' 条未读消息需要处理才能继续';}
   else{hint.style.display='none';}
 }
@@ -2564,7 +2564,7 @@ const AI_ENGINE={
   directUrl:'https://api.deepseek.com/v1/chat/completions',
   apiKey:'sk-80feb150523e432bba305509fdaa1409',
   model:'deepseek-chat',
-  useProxy:true,
+  useProxy:false,
   cache:{},// prompt hash → response
   pending:null,// current fetch promise
   lastCall:0,
