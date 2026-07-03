@@ -1714,8 +1714,8 @@ function advanceMonth(){
   if(Math.random()<0.40){
     triggerDecisionEvent();
   }
-  // V2: Small random events (35% chance, AI优先模板降级)
-  if(Math.random()<0.35){
+  // V2: Small random events (AI生成，模板仅API失败兜底)
+  if(Math.random()<0.50){
     if(AI_ENGINE.enabled&&AI_ENGINE._fallbackCount<AI_ENGINE.maxFallback){
       callAI(buildSmallEventPrompt,'small').then(result=>{
         if(result&&result.text){
@@ -5115,27 +5115,32 @@ next:-1表示对话结束，next:1表示下一轮。
 function buildSmallEventPrompt(ctx){
   return[{
     role:'system',
-    content:`你是人生模拟游戏的小事件引擎。生成一个小随机事件。
+    content:`你是人生模拟游戏的小事件引擎。生成一个随机小事件——可以是任何事情，越丰富越好。
 必须返回严格JSON格式（不要markdown代码块），结构如下：
 {
-  "text":"事件描述（含emoji，15-25字）",
+  "text":"事件描述（含emoji，15-30字）",
   "type":"good或bad或neutral",
   "effect":{效果}
 }
 effect可选：{money:金额, health:数字, mood:数字, IQ:数字, EQ:数字, stockLoss:小数(如0.1)}
-事件要简短有趣，贴近生活。
 
-【联动规则】（重要！）
-事件应与玩家当前年龄/状态最相关的领域联动：
-- 18-22岁：学业、社团、实习、校园恋爱（小雨）随机选
-- 23-30岁：工作、同事、跳槽、社交相关
-- 31-40岁：家庭、子女、健康、理财相关
-- 40岁+：投资、健康、子女教育、事业相关
-- 可以涉及小雨，但不是必须，随机选择最合适的领域。`
+【创意要求】（重要！）
+事件类型越丰富越好，随机选择，不要重复：
+- 生活琐事：丢东西、捡到钱、吃到好吃的、天气、堵车、快递到了
+- 社交互动：朋友借钱、老同学联系、被点赞、被拉黑、聚会、表白
+- 职场相关：被表扬、被批评、加班、出差、同事八卦、跳槽机会
+- 健康相关：感冒、失眠、健身有效、体检异常、过敏
+- 情感相关：被表白、吵架、和好、暧昧、吃醋、分手
+- 财务相关：彩票、红包、被骗、还钱、投资小赚
+- 学习成长：考了证书、看了一本书、学了新技能、灵感爆发
+- 荒诞搞笑：踩狗屎、中了小奖、被鸟拉头上、手机摔了屏幕没碎
+- 随机NPC互动：任何NPC都可能出现
+每次随机选一个方向，不要总是同一个类型。`
+
   },{
     role:'user',
     content:`玩家：${ctx.age}岁，${ctx.jobLevel}，资产${ctx.totalAsset}，健康${ctx.health}，心情${ctx.mood}
-${'请根据玩家年龄和状态选择最相关的小事件。'}`
+请随机生成一个小事件，越丰富越好。`
   }];
 }
 
