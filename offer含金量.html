@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>offer含金量 v3.12.0</title>
+<title>offer含金量 v3.12.3</title>
 <style>
 
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -5179,6 +5179,32 @@ function triggerFollowUps(){
   }
 }
 
+
+// v3.12.3: Cold-start - ensure player always has something to see in moments
+function _coldStartMoments(){
+  if(!G.phone)return;
+  const aiCount=(G.phone.aiMoments||[]).length;
+  const tplCount=(G.phone.moments||[]).length;
+  if(aiCount+tplCount>0)return; // Already has content
+  // Auto-inject 3 starter moments with NPC comments + likes
+  const starters=[
+    {npcId:'classmate',text:'终于在杭州买房了！首付80万，虽然要还30年房贷，但总算有了自己的窝 🏠'},
+    {npcId:'colleague',text:'又是加班到深夜的一天 😴 但看到成果还是有成就感的'},
+    {npcId:'bestie',text:'周末去了趟三亚，海真蓝！人生苦短，及时行乐 🏖️'}
+  ];
+  const commentPool=['mom','dad','bestie','colleague','classmate','neighbor','boss','mentor'];
+  starters.forEach(s=>{
+    const npc=NPCS[s.npcId]||{name:'朋友',avatar:'👤'};
+    const comments=[];
+    const shuffled=commentPool.filter(id=>id!==s.npcId).sort(()=>Math.random()-0.5);
+    for(let i=0;i<3;i++){
+      const cn=NPCS[shuffled[i]]||{name:'朋友',avatar:'👤'};
+      comments.push({npcId:shuffled[i],npcName:cn.name,npcAvatar:cn.avatar,text:['恭喜恭喜！🎉','厉害了👍','加油💪'][i]});
+    }
+    const likedNpcs=shuffled.slice(0,5);
+    G.phone.moments.push({id:G.phone.nextId++,npcId:s.npcId,npcName:npc.name,npcAvatar:npc.avatar,text:s.text,month:G.totalMonths,liked:false,comments:comments,playerComments:[],likedNpcs:likedNpcs});
+  });
+}
 function triggerMoments(){
   if(!G.phone)return;
   const age=getAge();const total=calcTotalAsset();
@@ -5255,6 +5281,8 @@ function renderMoments(){
   // v3.12.1: Trigger NPC proactive interactions each time moments are viewed
   if(G.phone&&G.phone.aiMoments&&G.phone.aiMoments.length>0)_npcInteractWithRecentMoments();
   const el=document.getElementById('phone-moments');if(!el)return;
+  // v3.12.3: Cold-start - auto-inject moments if player has none
+  _coldStartMoments();
   const aiM=G.phone&&G.phone.aiMoments?G.phone.aiMoments:[];
   const tplM=G.phone?G.phone.moments:[];
   const all=[...aiM.map(m=>({...m,_isAI:true})),...tplM.map(m=>({...m,_isAI:false}))];
@@ -6430,4 +6458,4 @@ function _debugAddTestMoments(){
   saveGame();
   alert('已添加3条测试朋友圈（含NPC评论+点赞），请切换到朋友圈查看');
 }
-console.log('[DEBUG] 调试函数已加载：运行 _debugAddTestMoments() 可强制添加测试朋友圈');
+console.log('[v3.12.3] 调试函数已加载：运行 _debugAddTestMoments() 可强制添加测试朋友圈');
