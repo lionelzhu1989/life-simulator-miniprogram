@@ -1365,16 +1365,16 @@ requires:{minAsset:10000000},rounds:[
 
 
 const PHONE_MOMENTS=[
-{npc:'mom',text:'今天天气真好，出去散步了 ☀️ 退休生活就是悠闲~',ageMin:22,ageMax:80,chance:0.08},
-{npc:'classmate',text:'终于在杭州买房了！首付80万，虽然要还30年房贷，但总算有了自己的窝 🏠',ageMin:25,ageMax:55,chance:0.06},
-{npc:'bestie',text:'升职了！从今天开始是部门经理了 💼 感谢所有支持我的人！',ageMin:25,ageMax:50,chance:0.06},
-{npc:'colleague',text:'又是加班到深夜的一天 😴 但看到成果还是有成就感的',ageMin:22,ageMax:50,chance:0.08},
-{npc:'bestie',text:'周末去了趟三亚，海真蓝！人生苦短，及时行乐 🏖️',ageMin:25,ageMax:60,chance:0.07},
-{npc:'classmate',text:'孩子出生了！7斤6两，母子平安 👶 感恩！',ageMin:28,ageMax:45,chance:0.05},
-{npc:'mysterious',text:'最近AI赛道很火，新能源也是风口，懂的都懂 📈',ageMin:25,ageMax:55,chance:0.05},
-{npc:'realtor',text:'笋盘推荐！市中心精装三房，低于市场价20%！手慢无！',ageMin:25,ageMax:55,chance:0.04,requires:{minAsset:2000000}},
-{npc:'banker',text:'市场波动期，正是定投好时机！稳健理财，跑赢通胀 💰',ageMin:25,ageMax:65,chance:0.05,requires:{minAsset:300000}},
-{npc:'classmate',text:'今天跑了人生第一个马拉松！42公里！🏅 挑战自我，永不止步！',ageMin:25,ageMax:60,chance:0.04}
+{npc:'mom',text:'今天天气真好，出去散步了 ☀️ 退休生活就是悠闲~',ageMin:22,ageMax:80,chance:0.20},
+{npc:'classmate',text:'终于在杭州买房了！首付80万，虽然要还30年房贷，但总算有了自己的窝 🏠',ageMin:25,ageMax:55,chance:0.15},
+{npc:'bestie',text:'升职了！从今天开始是部门经理了 💼 感谢所有支持我的人！',ageMin:25,ageMax:50,chance:0.15},
+{npc:'colleague',text:'又是加班到深夜的一天 😴 但看到成果还是有成就感的',ageMin:22,ageMax:50,chance:0.20},
+{npc:'bestie',text:'周末去了趟三亚，海真蓝！人生苦短，及时行乐 🏖️',ageMin:25,ageMax:60,chance:0.18},
+{npc:'classmate',text:'孩子出生了！7斤6两，母子平安 👶 感恩！',ageMin:28,ageMax:45,chance:0.12},
+{npc:'mysterious',text:'最近AI赛道很火，新能源也是风口，懂的都懂 📈',ageMin:25,ageMax:55,chance:0.12},
+{npc:'realtor',text:'笋盘推荐！市中心精装三房，低于市场价20%！手慢无！',ageMin:25,ageMax:55,chance:0.10,requires:{minAsset:2000000}},
+{npc:'banker',text:'市场波动期，正是定投好时机！稳健理财，跑赢通胀 💰',ageMin:25,ageMax:65,chance:0.12,requires:{minAsset:300000}},
+{npc:'classmate',text:'今天跑了人生第一个马拉松！42公里！🏅 挑战自我，永不止步！',ageMin:25,ageMax:60,chance:0.10}
 ];
 
 
@@ -1968,7 +1968,7 @@ function advanceMonth(){
     if(G._recentEvents)G._recentEvents.push('🥚彩蛋：'+egg.text.replace(/[\u{1F300}-\u{1FFFF}]/gu,'').substring(0,20));
   }
   // Phone triggers
-  if(!G.gameOver){initPhoneState();triggerFollowUps();triggerPhoneMessages();if(Math.random()<0.50)triggerAIMoments().catch(()=>{if(Math.random()<0.15)triggerMoments();});generateNotifications();generateGossipEvent();triggerGathering();}
+  if(!G.gameOver){initPhoneState();triggerFollowUps();triggerPhoneMessages();if(Math.random()<0.50)triggerAIMoments().catch(()=>{});if(Math.random()<0.40)triggerMoments();generateNotifications();generateGossipEvent();triggerGathering();}
   // 社交拓展：每月有概率触发偶遇场景
   if(!G.gameOver && !G._encounter && !G._pendingDecision){
     tryTriggerEncounter();
@@ -5186,7 +5186,7 @@ function triggerMoments(){
     if(age<m.ageMin||age>m.ageMax)return;
     if(m.requires&&m.requires.minAsset&&total<m.requires.minAsset)return;
     if(Math.random()>(m.chance||0.05))return;
-    if(G.phone.moments.find(mt=>mt.text===m.text&&G.totalMonths-mt.month<24))return;
+    if(G.phone.moments.find(mt=>mt.text===m.text&&G.totalMonths-mt.month<12))return;
     const npc=NPCS[m.npc]||{name:'未知',avatar:'👤'};
     const newMoment={id:G.phone.nextId++,npcId:m.npc,npcName:npc.name,npcAvatar:npc.avatar,text:m.text,month:G.totalMonths,liked:false,comments:[],playerComments:[],likedNpcs:[]};
     // Generate 1-3 random NPC comments
