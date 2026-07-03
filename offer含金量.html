@@ -5162,24 +5162,33 @@ function buildNewsPrompt(ctx){
   }];
 }
 
-async function callAI(promptBuilder,eventType){
+// AI调用队列：保证串行执行，每次间隔1.5秒
+let _aiQueue=Promise.resolve();
+function callAI(promptBuilder,eventType){
+  if(!AI_ENGINE.enabled||AI_ENGINE._fallbackCount>=AI_ENGINE.maxFallback)return Promise.resolve(null);
+  // 入队：等待前一个调用完成后，间隔1.5秒再执行
+  const task=_aiQueue.then(async()=>{
+    await new Promise(r=>setTimeout(r,1500));
+    return _doCallAI(promptBuilder,eventType);
+  });
+  // 更新队列（不让失败阻塞后续）
+  _aiQueue=task.catch(()=>{});
+  return task;
+}
+async function _doCallAI(promptBuilder,eventType){
   if(!AI_ENGINE.enabled||AI_ENGINE._fallbackCount>=AI_ENGINE.maxFallback)return null;
-  const now=Date.now();
-  if(now-AI_ENGINE.lastCall<AI_ENGINE.minInterval)return null;
   const ctx=getGameStateContext();
   const messages=promptBuilder(ctx);
-  const cacheKey=JSON.stringify(messages);
-  if(AI_ENGINE.cache[cacheKey])return AI_ENGINE.cache[cacheKey];
-  AI_ENGINE.lastCall=now;
+  const cacheKey=eventType+':'+ctx.totalMonths+':'+Math.random().toString(36).substr(2,4);
   const url=AI_ENGINE.useProxy?AI_ENGINE.proxyUrl:AI_ENGINE.directUrl;
   const headers={'Content-Type':'application/json'};
   if(!AI_ENGINE.useProxy)headers['Authorization']='Bearer '+AI_ENGINE.apiKey;
   try{
     const ctrl=new AbortController();
-    const tid=setTimeout(()=>ctrl.abort(),8000);
+    const tid=setTimeout(()=>ctrl.abort(),10000);
     const resp=await fetch(url,{
       method:'POST',headers,
-      body:JSON.stringify({messages,max_tokens:600,temperature:0.85}),
+      body:JSON.stringify({messages,model:AI_ENGINE.model,max_tokens:600,temperature:0.85}),
       signal:ctrl.signal
     });
     clearTimeout(tid);
@@ -5187,12 +5196,10 @@ async function callAI(promptBuilder,eventType){
     const data=await resp.json();
     const text=data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content;
     if(!text){AI_ENGINE._fallbackCount++;return null;}
-    // Parse JSON from response (handle possible markdown code blocks)
     let parsed;
     const jsonMatch=text.match(/\{[\s\S]*\}/);
     if(jsonMatch)parsed=JSON.parse(jsonMatch[0]);
     else{AI_ENGINE._fallbackCount++;return null;}
-    AI_ENGINE.cache[cacheKey]=parsed;
     AI_ENGINE._fallbackCount=0;
     return parsed;
   }catch(e){
