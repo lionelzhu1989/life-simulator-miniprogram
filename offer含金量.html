@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>offer含金量 v3.10.0</title>
+<title>offer含金量 v3.11.0</title>
 <style>
 
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -4201,7 +4201,7 @@ function hasUnread(){return G.phone&&G.phone.threads.some(t=>{if(t.status==='rep
 function renderPhoneList(){
   const el=document.getElementById('phone-messages');if(!el)return;
   let html='';
-  // v3.10.0: Show message threads
+  // v3.11.0: Show message threads
   if(G.phone&&G.phone.threads.length>0){
     G.phone.threads.forEach(t=>{
       const round=t.rounds[t.currentRound];
@@ -4224,7 +4224,7 @@ function renderPhoneList(){
       html+='</div></div>';
     });
   }
-  // v3.10.0: Show contacts at bottom (clickable, open AI chat)
+  // v3.11.0: Show contacts at bottom (clickable, open AI chat)
   injectDynamicContacts();
   const contacts=Object.keys(NPC_PERSONALITIES);
   if(contacts.length>0){
@@ -4260,7 +4260,7 @@ function openThread(id){
   if(thread.status==='unread'){thread.status='reading';thread.readMonth=G.totalMonths;}
   G._openThreadId=id;
   renderChat();
-  // v3.10.0: 显示模板选项，隐藏AI输入框
+  // v3.11.0: 显示模板选项，隐藏AI输入框
   const opts=document.getElementById('chatOpts');
   const area=document.getElementById('chatInputArea');
   if(opts)opts.style.display='flex';
@@ -4368,7 +4368,7 @@ function closeChat(){
   document.getElementById('chatOverlay').classList.remove('show');
   G._openThreadId=null;G._openProactiveNpc=null;
   renderPhoneList();renderContacts();updatePhoneBadge();
-  // v3.10.0: If still unread, hint the player
+  // v3.11.0: If still unread, hint the player
   if(hasUnread()){
     const unreadCount=G.phone.threads.filter(t=>t.status!=='replied'&&t.rounds[t.currentRound]&&!t.rounds[t.currentRound]._playerChoice).length;
     if(unreadCount>0)setTimeout(()=>showToast('📱 还有 '+unreadCount+' 条消息待处理'),600);
@@ -5147,8 +5147,67 @@ function triggerMoments(){
     if(Math.random()>(m.chance||0.05))return;
     if(G.phone.moments.find(mt=>mt.text===m.text&&G.totalMonths-mt.month<24))return;
     const npc=NPCS[m.npc]||{name:'未知',avatar:'👤'};
-    G.phone.moments.unshift({id:G.phone.nextId++,npcId:m.npc,npcName:npc.name,npcAvatar:npc.avatar,text:m.text,month:G.totalMonths,liked:false,likeCount:randInt(3,25)});
+    const newMoment={id:G.phone.nextId++,npcId:m.npc,npcName:npc.name,npcAvatar:npc.avatar,text:m.text,month:G.totalMonths,liked:false,comments:[],playerComments:[],likedNpcs:[]};
+    // Generate 1-3 random NPC comments
+    const commentPool=['mom','dad','bestie','colleague','classmate','neighbor','boss','mentor','gymCoach','campusGirl','realtor','banker','exColleague'].filter(id=>id!==m.npc);
+    const shuffled=commentPool.sort(()=>Math.random()-0.5);
+    const numComments=randInt(1,3);
+    const defaultComments=[
+      '恭喜恭喜！🎉','厉害了👍','加油💪','不错不错','真好啊~','羡慕！','太强了吧',
+      '一起加油','生活愉快😊','支持！','不错哦','好棒！','哈哈😂','加油加油',
+      '什么时候也带带我','真优秀','向你学习','幸福满满','真不错','赞👍',
+      '好厉害！','羡慕死了','太棒了','冲冲冲','一起努力','这波可以','绝了',
+      '我要哭了😭','好幸福啊','太赞了吧','真的牛','向大佬看齐','冲啊！'
+    ];
+    for(let i=0;i<numComments&&i<shuffled.length;i++){
+      const cid=shuffled[i];
+      const cn=NPCS[cid]||{name:'朋友',avatar:'👤'};
+      newMoment.comments.push({npcId:cid,npcName:cn.name,npcAvatar:cn.avatar,text:defaultComments[randInt(0,defaultComments.length-1)]});
+    }
+    // Generate random NPC likes (3-8 NPCs)
+    const likePool=commentPool.sort(()=>Math.random()-0.5);
+    const numLikes=randInt(3,Math.min(8,likePool.length));
+    newMoment.likedNpcs=likePool.slice(0,numLikes);
+    G.phone.moments.unshift(newMoment);
   });
+}
+
+// NPCs proactively interact with recent moments
+function _npcInteractWithRecentMoments(){
+  if(!G.phone||!G.phone.aiMoments)return;
+  // Only interact with moments from last 6 months
+  const recent=G.phone.aiMoments.filter(m=>G.totalMonths-m.month<=6);
+  if(recent.length===0)return;
+  const m=recent[randInt(0,recent.length-1)];
+  if(!m)return;
+  // Random chance to like or comment
+  const action=Math.random();
+  if(action<0.4){
+    // Like
+    if(!m.likedNpcs)m.likedNpcs=[];
+    const npcPool=['mom','dad','bestie','colleague','classmate','neighbor','boss','mentor','gymCoach'].filter(id=>id!==m.npcId&&!m.likedNpcs.includes(id));
+    if(npcPool.length>0){
+      const npcId=npcPool[randInt(0,npcPool.length-1)];
+      const npc=NPCS[npcId];
+      if(npc){
+        m.likedNpcs.push(npcId);
+        showToast('❤️ '+npc.name+'赞了你的一条朋友圈');
+      }
+    }
+  }else if(action<0.7){
+    // Comment
+    if(!m.comments)m.comments=[];
+    const npcPool=['mom','dad','bestie','colleague','classmate','neighbor','boss'].filter(id=>id!==m.npcId&&!m.comments.find(c=>c.npcId===id));
+    if(npcPool.length>0){
+      const npcId=npcPool[randInt(0,npcPool.length-1)];
+      const npc=NPCS[npcId];
+      if(npc){
+        const replies=['哈哈不错','支持！','真好','加油💪','好棒👍','羡慕啊','太强了'];
+        m.comments.push({npcId:npcId,npcName:npc.name,npcAvatar:npc.avatar,text:replies[randInt(0,replies.length-1)]});
+        showToast('💬 '+npc.name+'评论了你的一条朋友圈');
+      }
+    }
+  }
 }
 
 function renderMoments(){
@@ -5197,7 +5256,7 @@ function renderMoments(){
       // "Ask NPC about this" button
       html+='<div class="moment-ask" onclick="askAboutMoment('+m.id+')">💬 问问TA这件事</div>';
     }else{
-      // Template moments: show comments + input like AI moments
+      // Template moments: NPC comments + likes + comment input
       const comments=m.comments||[];
       const pComments=m.playerComments||[];
       const allComments=[...comments,...pComments];
@@ -5208,11 +5267,21 @@ function renderMoments(){
         });
         html+='</div>';
       }
+      // NPC likes
+      const likedNpcs=(m.likedNpcs||[]).map(id=>{const n=NPCS[id];return n?n.name:null;}).filter(Boolean);
+      if(likedNpcs.length>0||m.liked){
+        html+='<div class="moment-likes">❤️ '+(m.liked?'你, ':'')+likedNpcs.join('、')+' 觉得很赞</div>';
+      }
       html+='<div class="moment-acts">';
-      html+='<div class="moment-act '+(m.liked?'liked':'')+'" onclick="likeMoment('+m.id+')">'+(m.liked?'❤️':'🤍')+' '+(m.likeCount+(m.liked?1:0))+'</div>';
-      html+='<div class="moment-act" onclick="commentMoment('+m.id+')">💬 评论</div>';
+      html+='<div class="moment-act '+(m.liked?'liked':'')+'" onclick="likeMoment('+m.id+')">'+(m.liked?'❤️':'🤍')+' '+(likedNpcs.length+(m.liked?1:0))+'</div>';
+      html+='<div class="moment-act" onclick="showMomentInput('+m.id+')">💬 评论</div>';
       html+='</div>';
-      // Comment input area (hidden by default, dynamically created by commentMoment)
+      // Pre-rendered comment input area (hidden by default)
+      html+='<div id="moment-input-'+m.id+'" style="display:none;margin-top:8px;">';
+      html+='<div class="moment-input-wrap">';
+      html+='<input class="moment-input" id="moment-tf-'+m.id+'" placeholder="写评论...">';
+      html+='<button class="moment-send" onclick="submitMomentComment('+m.id+')">发送</button>';
+      html+='</div></div>';
     }
     html+='</div>';
   });
@@ -5230,14 +5299,21 @@ function likeAIGMoment(id){
   renderMoments();saveGame();refreshLife();
 }
 
-function showMomentCommentInput(id){
+function showMomentCommentInput(id){showMomentInput(id);}
+function showMomentInput(id){
   const wrap=document.getElementById('moment-input-'+id);
-  if(wrap)wrap.style.display=wrap.style.display==='none'?'block':'none';
+  if(wrap){
+    wrap.style.display=wrap.style.display==='none'?'block':'none';
+    if(wrap.style.display==='block'){
+      const inp=document.getElementById('moment-tf-'+id);
+      if(inp)setTimeout(()=>inp.focus(),100);
+    }
+  }
 }
 
 function submitMomentComment(id){
   if(!G.phone)return;
-  // 先查AI朋友圈，再查模板朋友圈
+  // Search all moment sources by id
   let m=G.phone.aiMoments?G.phone.aiMoments.find(x=>x.id===id):null;
   let isTemplate=false;
   if(!m){m=(G.phone.moments||[]).find(x=>x.id===id);isTemplate=true;}
@@ -5245,28 +5321,15 @@ function submitMomentComment(id){
   const tf=document.getElementById('moment-tf-'+id);
   const text=tf?tf.value.trim():'';
   if(!text){showToast('请输入评论内容');return;}
-  // 统一用playerComments存储
   if(!m.playerComments)m.playerComments=[];
   m.playerComments.push({npcId:'player',npcName:'我',npcAvatar:'🧑',text:text,month:G.totalMonths,byPlayer:true});
   G.EQ=clamp(G.EQ+20,0,200);
   showToast('💬 评论成功！情商+20');
   tf.value='';
-  // 如果是模板朋友圈，添加默认评论让画面不空
-  if(isTemplate&&!m.comments){
-    const randomComments=[
-      {npc:'mom',npcName:'妈妈',npcAvatar:'👩',text:'👍'},
-      {npc:'bestie',npcName:'老王',npcAvatar:'🍻',text:'可以啊'},
-      {npc:'neighbor',npcName:'邻居老赵',npcAvatar:'🏘️',text:'不错不错'},
-      {npc:'classmate',npcName:'小张',npcAvatar:'🎓',text:'还行吧'},
-    ];
-    m.comments=[];
-    for(let i=0;i<randInt(1,2);i++){
-      const rc=randomComments[randInt(0,randomComments.length-1)];
-      m.comments.push({npc:rc.npc,npcName:rc.npcName,npcAvatar:rc.npcAvatar,text:rc.text});
-    }
-  }
+  // Hide input after submit
+  const wrap=document.getElementById('moment-input-'+id);
+  if(wrap)wrap.style.display='none';
   renderMoments();saveGame();refreshLife();
-  // 触发AI NPC跟评（模板和AI朋友圈都触发）
   _triggerMomentNPCComments(id);
 }
 async function _triggerMomentNPCComments(momentId){
