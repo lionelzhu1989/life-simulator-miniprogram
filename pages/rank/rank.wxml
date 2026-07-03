@@ -1,0 +1,19 @@
+<view class="container">
+  <view class="card my-rank">
+    <view class="my-title">我的财富</view>
+    <view class="my-asset">¥{{myAsset}}</view>
+    <view class="my-rank-num">本校排名：第 {{myRank}} 名</view>
+  </view>
+
+  <view class="section-title">校园财富榜</view>
+  <view class="card">
+    <view class="rank-item" wx:for="{{rankList}}" wx:key="index">
+      <text class="rank-num {{index < 3 ? 'top' : ''}}">{{index+1}}</text>
+      <text class="rank-name">{{item.name}}</text>
+      <text class="rank-asset">¥{{item.asset}}</text>
+    </view>
+  </view>
+
+  <text class="tip">邀请好友一起玩，冲击本校榜首！</text>
+  <button class="share-btn" open-type="share">邀请好友PK</button>
+</view>

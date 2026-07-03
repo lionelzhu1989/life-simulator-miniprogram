@@ -1,0 +1,4 @@
+{
+  "desc": "微信小程序 sitemap 配置",
+  "rules": [{ "action": "allow", "page": "*" }]
+}

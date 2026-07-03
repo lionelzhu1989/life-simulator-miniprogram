@@ -1,0 +1,15 @@
+<view class="container">
+  <view class="cash-bar">可用资金：¥{{player.money}}</view>
+  <view class="section-title">股票行情</view>
+  <view class="card stock-card" wx:for="{{stocks}}" wx:key="code">
+    <view class="stock-header">
+      <text class="stock-name">{{item.name}}</text>
+      <text class="stock-price">¥{{item.currentPrice}}</text>
+    </view>
+    <view class="stock-hold">持仓：{{getHoldAmount(item.code)}} 股</view>
+    <view class="btn-group">
+      <button size="mini" bindtap="buyStock" data-stock="{{item}}">买入</button>
+      <button size="mini" bindtap="sellStock" data-stock="{{item}}">卖出</button>
+    </view>
+  </view>
+</view>

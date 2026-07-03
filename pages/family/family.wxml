@@ -1,0 +1,36 @@
+<view class="container">
+  <view class="section-title">婚姻状况</view>
+  <block wx:if="{{player.spouse}}">
+    <view class="card spouse-card">
+      <view class="spouse-name">配偶：{{player.spouse.name}}</view>
+      <view class="spouse-info">年薪：¥{{player.spouse.salary}} / 年</view>
+      <view class="spouse-buff">家庭加成：每年提升健康与心情</view>
+    </view>
+  </block>
+  <view class="empty" wx:else>当前单身</view>
+
+  <view class="section-title">可交往对象</view>
+  <view class="card spouse-card" wx:for="{{spouses}}" wx:key="id">
+    <view class="spouse-name">{{item.name}}</view>
+    <view class="spouse-info">年薪：¥{{item.salary}}</view>
+    <button size="mini" bindtap="marry" data-spouse="{{item}}" disabled="{{player.spouse && player.spouse.id === item.id}}">
+      {{player.spouse && player.spouse.id === item.id ? '已结婚' : '结婚'}}
+    </button>
+  </view>
+
+  <view class="section-title">子女</view>
+  <block wx:if="{{player.children.length > 0}}">
+    <view class="card child-card" wx:for="{{player.children}}" wx:key="index">
+      <text>孩子{{index+1}}：{{item.age}}岁</text>
+      <text class="cost">年抚养费：¥20000</text>
+    </view>
+  </block>
+  <view class="empty" wx:else>暂无子女</view>
+
+  <button class="born-btn"
+    bindtap="haveChild"
+    disabled="{{!player.spouse || player.children.length >= 3}}"
+  >
+    {{player.spouse ? (player.children.length >= 3 ? '子女数量已达上限' : '生育子女') : '先结婚才能生子'}}
+  </button>
+</view>

@@ -1,0 +1,43 @@
+<view class="container">
+  <view class="cash-bar">可用资金：¥{{player.money}}</view>
+
+  <!-- 我的房产 -->
+  <view class="section-title">我的房产</view>
+  <block wx:if="{{player.houses.length > 0}}">
+    <view class="card house-card" wx:for="{{player.houses}}" wx:key="index">
+      <view class="house-name">{{item.name}} ({{item.area}}㎡)</view>
+      <view class="house-info">估值：¥{{item.buyPrice}} | 月租金：¥{{item.rent}}</view>
+      <view class="loan-info" wx:if="{{item.loan && item.loan.remainingTerm > 0}}">
+        房贷：月供¥{{item.loan.monthlyPayment}}，剩余{{item.loan.remainingTerm}}年
+      </view>
+      <view class="btn-group">
+        <button size="mini" bindtap="prepayLoan" data-index="{{index}}" wx:if="{{item.loan && item.loan.remainingTerm > 0}}">提前还款</button>
+        <button size="mini" bindtap="sellHouse" data-index="{{index}}">出售</button>
+      </view>
+    </view>
+  </block>
+  <view class="empty" wx:else>暂无房产</view>
+
+  <!-- 可购房源 -->
+  <view class="section-title">可购房源</view>
+  <view class="card house-card" wx:for="{{houses}}" wx:key="id">
+    <view class="house-name">{{item.name}} ({{item.area}}㎡)</view>
+    <view class="house-info">总价：¥{{item.price}} | 月租金：¥{{item.rent}}</view>
+    <view class="btn-group">
+      <button size="mini" bindtap="buyFull" data-house="{{item}}">全款</button>
+      <button size="mini" bindtap="showLoanModal" data-house="{{item}}">贷款买</button>
+    </view>
+  </view>
+
+  <!-- 贷款弹窗 -->
+  <view class="modal" wx:if="{{showLoanModal}}" bindtap="closeLoanModal">
+    <view class="modal-content" catchtap="">
+      <view class="modal-title">选择首付比例</view>
+      <view class="loan-option" wx:for="{{downPayments}}" wx:key="ratio" bindtap="confirmLoan" data-ratio="{{item.ratio}}">
+        <view class="loan-main">首付{{item.ratio*100}}%</view>
+        <view class="loan-sub">首付¥{{item.downAmount}} | 月供¥{{item.monthlyPayment}}</view>
+      </view>
+      <button bindtap="closeLoanModal">取消</button>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,30 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/work/work",
+    "pages/stock/stock",
+    "pages/house/house",
+    "pages/family/family",
+    "pages/rank/rank"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#2c3e50",
+    "navigationBarTitleText": "人生首富模拟器",
+    "navigationBarTextStyle": "white"
+  },
+  "tabBar": {
+    "color": "#7f8c8d",
+    "selectedColor": "#3498db",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      { "pagePath": "pages/index/index", "text": "人生" },
+      { "pagePath": "pages/work/work", "text": "工作" },
+      { "pagePath": "pages/stock/stock", "text": "股市" },
+      { "pagePath": "pages/house/house", "text": "房产" }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

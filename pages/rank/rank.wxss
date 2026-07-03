@@ -1,0 +1,54 @@
+.my-rank {
+  text-align: center;
+  margin-bottom: 30rpx;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff;
+}
+.my-title {
+  font-size: 26rpx;
+  opacity: 0.9;
+  margin-bottom: 10rpx;
+}
+.my-asset {
+  font-size: 48rpx;
+  font-weight: bold;
+  margin-bottom: 10rpx;
+}
+.my-rank-num {
+  font-size: 26rpx;
+  opacity: 0.9;
+}
+.rank-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+.rank-num {
+  width: 60rpx;
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #999;
+}
+.rank-num.top {
+  color: #e67e22;
+  font-size: 32rpx;
+}
+.rank-name {
+  flex: 1;
+  font-size: 28rpx;
+}
+.rank-asset {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #e74c3c;
+}
+.tip {
+  text-align: center;
+  color: #666;
+  font-size: 24rpx;
+  margin: 30rpx 0 20rpx;
+}
+.share-btn {
+  background: #3498db;
+  color: #fff;
+}

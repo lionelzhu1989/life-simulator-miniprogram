@@ -1,0 +1,16 @@
+<view class="container">
+  <text class="tip">选择职业入职，属性达标即可应聘成功</text>
+  <view class="card job-card {{currentJobId === item.id ? 'onjob' : ''}}" wx:for="{{jobs}}" wx:key="id">
+    <view class="job-name">{{item.name}}</view>
+    <view class="job-info">年薪：¥{{item.salary}} / 年</view>
+    <view class="job-req">要求：智商≥{{item.requireIQ}} 情商≥{{item.requireEQ}}</view>
+    <button
+      size="mini"
+      bindtap="applyJob"
+      data-job="{{item}}"
+      disabled="{{currentJobId === item.id}}"
+    >
+      {{currentJobId === item.id ? '当前在职' : '入职'}}
+    </button>
+  </view>
+</view>

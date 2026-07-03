@@ -1,0 +1,67 @@
+<view class="container">
+  <!-- 头部状态栏 -->
+  <view class="card header-card">
+    <view class="header-top">
+      <text>{{player.age}} 岁</text>
+      <text>总资产：¥{{totalAsset}}</text>
+    </view>
+    <view class="cash-row">
+      <text>现金：¥{{player.money}}</text>
+      <text wx:if="{{player.job}}">职业：{{player.job.name}}</text>
+      <text wx:else>职业：待业</text>
+    </view>
+  </view>
+
+  <!-- 属性面板 -->
+  <view class="stats-grid">
+    <view class="stat-item">
+      <text class="label">健康</text>
+      <text class="value">{{player.health}}</text>
+    </view>
+    <view class="stat-item">
+      <text class="label">心情</text>
+      <text class="value">{{player.mood}}</text>
+    </view>
+    <view class="stat-item">
+      <text class="label">智商</text>
+      <text class="value">{{player.IQ}}</text>
+    </view>
+    <view class="stat-item">
+      <text class="label">情商</text>
+      <text class="value">{{player.EQ}}</text>
+    </view>
+  </view>
+
+  <!-- 快捷入口 -->
+  <view class="entry-group">
+    <view class="entry-card" bindtap="goFamily">
+      <text>👨‍👩‍👧 家庭生活</text>
+      <text class="arrow">›</text>
+    </view>
+    <view class="entry-card" bindtap="goRank">
+      <text>🏆 财富排行榜</text>
+      <text class="arrow">›</text>
+    </view>
+  </view>
+
+  <!-- AI校招入口 -->
+  <view class="card ai-entry" bindtap="goAI">
+    🎯 AI帮你匹配真实校招岗位
+  </view>
+
+  <!-- 操作按钮 -->
+  <button class="next-btn" bindtap="handleNextYear">度过一年</button>
+  <view class="btn-row">
+    <button class="half-btn" bindtap="onShareAppMessage" open-type="share">分享人生</button>
+    <button class="half-btn reset" bindtap="handleReset">重开人生</button>
+  </view>
+
+  <!-- 事件弹窗 -->
+  <view class="modal" wx:if="{{showEvent}}" bindtap="closeEvent">
+    <view class="modal-content" catchtap="">
+      <view class="modal-title">{{eventTitle}}</view>
+      <text class="modal-text">{{currentEvent.text}}</text>
+      <button bindtap="closeEvent">知道了</button>
+    </view>
+  </view>
+</view>

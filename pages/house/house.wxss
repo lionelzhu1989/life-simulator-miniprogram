@@ -1,0 +1,43 @@
+.cash-bar {
+  text-align: center;
+  font-size: 28rpx;
+  font-weight: bold;
+  margin-bottom: 20rpx;
+}
+.house-card {
+  margin-bottom: 20rpx;
+}
+.house-name {
+  font-size: 30rpx;
+  font-weight: bold;
+  margin-bottom: 10rpx;
+}
+.house-info {
+  color: #666;
+  font-size: 26rpx;
+  margin-bottom: 8rpx;
+}
+.loan-info {
+  color: #e67e22;
+  font-size: 24rpx;
+  margin-bottom: 12rpx;
+}
+.empty {
+  text-align: center;
+  color: #999;
+  padding: 40rpx;
+}
+.loan-option {
+  padding: 20rpx;
+  border-bottom: 1rpx solid #eee;
+  text-align: center;
+}
+.loan-main {
+  font-size: 28rpx;
+  font-weight: bold;
+  margin-bottom: 6rpx;
+}
+.loan-sub {
+  font-size: 24rpx;
+  color: #666;
+}

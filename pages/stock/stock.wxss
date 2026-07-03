@@ -1,0 +1,28 @@
+.cash-bar {
+  text-align: center;
+  font-size: 28rpx;
+  font-weight: bold;
+  margin-bottom: 20rpx;
+}
+.stock-card {
+  margin-bottom: 20rpx;
+}
+.stock-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10rpx;
+}
+.stock-name {
+  font-size: 30rpx;
+  font-weight: bold;
+}
+.stock-price {
+  color: #e74c3c;
+  font-size: 30rpx;
+  font-weight: bold;
+}
+.stock-hold {
+  color: #666;
+  font-size: 24rpx;
+  margin-bottom: 16rpx;
+}
