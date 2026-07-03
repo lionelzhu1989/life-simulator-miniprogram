@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>offer含金量 v3.11.0</title>
+<title>offer含金量 v3.12.0</title>
 <style>
 
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -260,7 +260,8 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 .msg-mt{text-align:right;flex-shrink:0;margin-left:8px;}
 .msg-tm{font-size:11px;color:var(--text-light);}
 .msg-bg{background:#e74c3c;color:#fff;font-size:10px;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-top:6px;margin-left:auto;padding:0 5px;}
-.phone-badge{position:absolute;top:0;right:4px;background:#e74c3c;color:#fff;font-size:9px;min-width:15px;height:15px;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 3px;z-index:10;}
+.phone-badge{position:absolute;top:-4px;right:-6px;background:#e74c3c;color:#fff;font-size:10px;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 4px;z-index:10;font-weight:700;box-shadow:0 2px 6px rgba(231,76,60,0.5);animation:badgePulse 2s infinite;}
+@keyframes badgePulse{0%,100%{transform:scale(1);}50%{transform:scale(1.1);}}
 /* Trade input number spinner hide */
 #tradeInput::-webkit-inner-spin-button,#tradeInput::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
 #tradeInput[type=number]{-moz-appearance:textfield;}
@@ -557,7 +558,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
     <div id="phone-messages" class="phone-content active"></div>
     <div id="phone-contacts" class="phone-content" style="display:none;"></div>
     <div id="phone-moments" class="phone-content"></div>
-    <div id="phone-notifications" class="phone-content" style="display:none" style="display:none;"></div>
+
   </div>
 
   <div class="tab-bar">
@@ -3715,6 +3716,8 @@ function renderContacts(){
   });
   // 动态联系人
   injectDynamicContacts();
+  // v3.12.0: Show system notifications at bottom of messages list (read-only)
+  _renderNotificationsInMessages(html);
   (G.socialContacts||[]).forEach(function(c){
     var p=NPC_PERSONALITIES[c.id];
     if(!p) return;
@@ -3734,6 +3737,8 @@ function renderContacts(){
 function openProactiveChat(npcId){
   initChatHistory();
   injectDynamicContacts();
+  // v3.12.0: Show system notifications at bottom of messages list (read-only)
+  _renderNotificationsInMessages(html);
   const p=NPC_PERSONALITIES[npcId];if(!p)return;
   G._openProactiveNpc=npcId;
   // Set header
@@ -4198,10 +4203,27 @@ function addPhoneThread(tpl){
 
 function hasUnread(){return G.phone&&G.phone.threads.some(t=>{if(t.status==='replied')return false;const r=t.rounds[t.currentRound];return r&&!r._playerChoice;});}
 
+
+function _getNotificationsHTML(){
+  if(!G.phone||!G.phone.notifications||G.phone.notifications.length===0)return'';
+  let h='<div style="padding:8px 16px;font-size:11px;color:#999;border-top:1px solid #f0f0f0;margin-top:8px;">🔔 系统通知</div>';
+  // Only show last 5 notifications
+  const recent=G.phone.notifications.slice(0,5);
+  recent.forEach(n=>{
+    const bgCls=n.type==='achievement'?'#fef9e7':n.type==='stock'?'#d5f5e3':n.type==='warning'?'#fadbd8':'#d6eaf8';
+    h+='<div class="msg-item" style="cursor:default;opacity:0.7;">';
+    h+='<div class="msg-av" style="background:'+bgCls+';">'+n.icon+'</div>';
+    h+='<div class="msg-bd"><div class="msg-nm" style="color:#666;">'+n.text+'</div>';
+    h+='<div class="msg-pv" style="color:#999;">系统通知</div></div>';
+    h+='<div class="msg-mt"><div class="msg-tm">'+getTimeStr(n.month)+'</div></div></div>';
+  });
+  return h;
+}
+
 function renderPhoneList(){
   const el=document.getElementById('phone-messages');if(!el)return;
   let html='';
-  // v3.11.0: Show message threads
+  // v3.12.0: Show message threads
   if(G.phone&&G.phone.threads.length>0){
     G.phone.threads.forEach(t=>{
       const round=t.rounds[t.currentRound];
@@ -4224,8 +4246,10 @@ function renderPhoneList(){
       html+='</div></div>';
     });
   }
-  // v3.11.0: Show contacts at bottom (clickable, open AI chat)
+  // v3.12.0: Show contacts at bottom (clickable, open AI chat)
   injectDynamicContacts();
+  // v3.12.0: Show system notifications at bottom of messages list (read-only)
+  _renderNotificationsInMessages(html);
   const contacts=Object.keys(NPC_PERSONALITIES);
   if(contacts.length>0){
     html+='<div style="padding:8px 16px;font-size:11px;color:#999;border-top:1px solid #f0f0f0;margin-top:8px;">💬 联系人（点击开始聊天）</div>';
@@ -4247,7 +4271,10 @@ function renderPhoneList(){
       html+='</div></div>';
     });
   }
-  if(!html){
+  // Append notifications at bottom of messages
+  const notifHtml=_getNotificationsHTML();
+  if(notifHtml)html+=notifHtml;
+  if(!html||html===''){
     html='<div class="text-center text-sm text-muted" style="padding:40px 0;"><div style="font-size:48px;margin-bottom:12px;">📱</div>消息会在人生旅途中陆续到来<br>点击"度过一月"推进人生</div>';
   }
   el.innerHTML=html;
@@ -4260,7 +4287,7 @@ function openThread(id){
   if(thread.status==='unread'){thread.status='reading';thread.readMonth=G.totalMonths;}
   G._openThreadId=id;
   renderChat();
-  // v3.11.0: 显示模板选项，隐藏AI输入框
+  // v3.12.0: 显示模板选项，隐藏AI输入框
   const opts=document.getElementById('chatOpts');
   const area=document.getElementById('chatInputArea');
   if(opts)opts.style.display='flex';
@@ -4368,7 +4395,7 @@ function closeChat(){
   document.getElementById('chatOverlay').classList.remove('show');
   G._openThreadId=null;G._openProactiveNpc=null;
   renderPhoneList();renderContacts();updatePhoneBadge();
-  // v3.11.0: If still unread, hint the player
+  // v3.12.0: If still unread, hint the player
   if(hasUnread()){
     const unreadCount=G.phone.threads.filter(t=>t.status!=='replied'&&t.rounds[t.currentRound]&&!t.rounds[t.currentRound]._playerChoice).length;
     if(unreadCount>0)setTimeout(()=>showToast('📱 还有 '+unreadCount+' 条消息待处理'),600);
@@ -5013,6 +5040,8 @@ function recordMoneyHistory(npcId,playerMsg,npcMsg,amount,moneyType){
 // Send player message
 async function sendPlayerMessage(){
   injectDynamicContacts();
+  // v3.12.0: Show system notifications at bottom of messages list (read-only)
+  _renderNotificationsInMessages(html);
   const input=document.getElementById('chatInputField');
   const sendBtn=document.getElementById('chatInputSend');
   const msg=input.value.trim();
@@ -5443,16 +5472,7 @@ function generateNotifications(){
   });
 }
 function renderNotifications(){
-  const el=document.getElementById('phone-notifications');if(!el)return;
-  if(!G.phone||G.phone.notifications.length===0){
-    el.innerHTML='<div class="text-center text-sm text-muted" style="padding:40px 0;"><div style="font-size:48px;margin-bottom:12px;">🔔</div>暂无通知</div>';return;
-  }
-  let html='';
-  G.phone.notifications.forEach(n=>{
-    const bgCls=n.type==='achievement'?'#fef9e7':n.type==='stock'?'#d5f5e3':n.type==='warning'?'#fadbd8':'#d6eaf8';
-    html+='<div class="notif-item"><div class="notif-ic" style="background:'+bgCls+';">'+n.icon+'</div><div class="notif-body"><div class="notif-title">'+n.text+'</div><div class="notif-tm">'+getTimeStr(n.month)+'</div></div></div>';
-  });
-  el.innerHTML=html;
+  // v3.12.0: Notifications now render in messages list via _getNotificationsHTML
 }
 
 function switchPhoneTab(tab){
@@ -5470,8 +5490,16 @@ function refreshPhone(){renderPhoneList();renderMoments();updatePhoneBadge();upd
 function updatePhoneBadge(){
   const badge=document.getElementById('phoneBadge');if(!badge)return;
   const count=G.phone?G.phone.threads.filter(t=>t.status!=='replied'&&t.rounds[t.currentRound]&&!t.rounds[t.currentRound]._playerChoice).length:0;
-  if(count>0){badge.textContent=count>99?'99+':count;badge.style.display='flex';}
-  else{badge.style.display='none';}
+  if(count>0){
+    badge.textContent=count>99?'99+':count;
+    badge.style.display='flex';
+    // Add subtle animation on update
+    badge.style.animation='none';
+    badge.offsetHeight; // trigger reflow
+    badge.style.animation='badgePulse 2s infinite';
+  }else{
+    badge.style.display='none';
+  }
 }
 function updatePhoneHint(){
   const hint=document.getElementById('phoneHint');const txt=document.getElementById('phoneHintText');
@@ -6362,3 +6390,6 @@ function notifyAsMessage(npcId,text){
   };
   pushPhoneThread(thread);
 }
+
+// v3.12.0: Stub for compatibility - notifications are rendered via _getNotificationsHTML in renderPhoneList
+function _renderNotificationsInMessages(html){}
