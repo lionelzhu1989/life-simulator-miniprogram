@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>offer含金量 v3.0</title>
+<title>offer含金量 v3.3</title>
 <style>
 
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -4232,8 +4232,7 @@ function processChatEffects(reply,npcId){
     G.cash=clamp(G.cash+amount,-999999,999999999);
     const npcName=(NPC_PERSONALITIES[npcId]||{}).name||'NPC';
     triggered.push('💰 '+npcName+'给了你'+fmt(amount));
-    // Show money transfer notice in chat
-    addChatBubble('money-transfer','💰 收到转账 '+fmt(amount));
+    // 不再显示显式的转账标志，让NPC在对话中自然说出
     // Record in history
     recordMoneyHistory(npcId,'',npcName+'给了你¥'+amount,amount,'npc_gave');
     refreshLife();
@@ -4739,25 +4738,79 @@ tagCls只能是 tag-safe/tag-risk/tag-golden 之一。
 }
 
 function buildPhonePrompt(ctx){
-  const npcList=Object.keys(NPCS).map(k=>NPCS[k].name+'('+k+')');
-  return[{
+  // 构建所有可聊天NPC的详细人设信息
+  const npcPersonalities = {
+    mom: {name:'妈妈',traits:['唠叨','关心','爱攀比','节俭','护犊子'],topics:['催婚','身体健康','工作累不累','花钱大手大脚','别人家孩子']},
+    dad: {name:'爸爸',traits:['沉默','严厉','偶尔温情','报喜不报忧'],topics:['工作顺不顺','身体怎么样','钱够不够花','少熬夜']},
+    bestie: {name:'老王',traits:['八卦','直爽','爱喝酒','损友','讲义气'],topics:['八卦','喝酒','吐槽','赚钱路子','一起玩']},
+    colleague: {name:'小李',traits:['谨慎','消息灵通','爱吐槽','职场生存'],topics:['公司八卦','老板动向','裁员','跳槽','年终奖']},
+    boss: {name:'张总',traits:['圆滑','惜字如金','画饼','施压','偶尔真诚'],topics:['加班','项目进度','晋升','画饼','表扬']},
+    classmate: {name:'小张',traits:['攀比','怀旧','消息灵通','爱炫耀'],topics:['聚会','谁混得好','谁离婚了','比较收入']},
+    banker: {name:'刘经理',traits:['专业','殷勤','推销','信息差'],topics:['理财产品','存款利率','基金','贷款']},
+    realtor: {name:'小陈',traits:['热情','夸大','逼单','信息量大'],topics:['房价','好房源','投资','学区房']},
+    neighbor: {name:'邻居老赵',traits:['热心','八卦','操心','小区万事通'],topics:['小区新闻','物业','邻里八卦']},
+    exColleague: {name:'前同事小周',traits:['怀旧','感慨','信息量大','爱比较'],topics:['以前公司','跳槽','近况','行业变化']},
+    mentor: {name:'李教授',traits:['睿智','温和','惜字如金','有深度'],topics:['人生建议','职业规划','深度思考']},
+    gymCoach: {name:'健身教练',traits:['热情','直率','爱劝人健身','八卦体质'],topics:['训练计划','健身房八卦','减脂增肌']},
+    spouse: {name:'配偶',traits:['亲密','唠叨','需要陪伴','偶尔吵架'],topics:['日常','陪伴','生活琐事','情感']},
+    child: {name:'孩子',traits:['天真','依赖','成长','叛逆'],topics:['学校','成绩','要钱','叛逆']},
+    mysterious: {name:'神秘人',traits:['神秘','信息量大','偶尔有用'],topics:['行业内幕','赚钱机会','警告']}
+  };
+  
+  // 根据玩家年龄和状态筛选合适的NPC
+  let availableNpcs = ['mom','dad','bestie','colleague','boss','classmate','neighbor','exColleague','mentor','gymCoach'];
+  if(ctx.age >= 25) availableNpcs.push('banker','realtor');
+  if(ctx.married) availableNpcs.push('spouse');
+  if(ctx.children > 0) availableNpcs.push('child');
+  if(Math.random() < 0.1) availableNpcs.push('mysterious');
+  
+  return [{
     role:'system',
-    content:`你是人生模拟游戏的手机消息NPC。根据玩家状态，生成一条手机消息（微信聊天）。
+    content:`你是人生模拟游戏的AI对话引擎。你需要模拟不同性格的NPC主动给玩家发微信消息。
+
+【重要】你必须选择一个NPC来发起对话，不要让玩家选择NPC。
+
+可选NPC及其性格特点：
+${availableNpcs.map(id => {
+  const p = npcPersonalities[id];
+  return `- ${id}(${p.name}): 性格${p.traits.join('、')}，常聊${p.topics.join('、')}`;
+}).join('\n')}
+
+【对话规则】
+1. 根据NPC性格生成对话内容，要符合人设
+2. NPC说话要自然，像真人微信聊天
+3. 对话2-4轮，每轮NPC发1-2条消息
+4. 每轮给玩家1-3个回复选项
+5. 对话要和玩家当前状态相关（年龄、职业、资产等）
+6. 可以有emoji但不要太多
+
+【金额标签规则】（重要！）
+- 如果NPC要给玩家钱，在NPC的对话文本中自然地说出来（如"转你500块"、"给你发个红包"）
+- 然后在回复选项中用[GIVE:金额]标签触发转账
+- 如果NPC要向玩家借钱，在NPC的对话文本中自然地说出来（如"能借我2万周转吗"）
+- 然后在回复选项中用[ASK:金额:原因]标签触发决策
+- 【严禁方向搞反！NPC给玩家=用GIVE，NPC向玩家借钱=用ASK】
+
 必须返回严格JSON格式（不要markdown代码块），结构如下：
 {
-  "npc":"npcId（从以下选：mom/dad/spouse/bestie/classmate/colleague/boss/landlord/realtor/banker/mysterious）",
-  "type":"wechat或call或sms",
+  "npc":"npcId",
+  "type":"wechat",
   "rounds":[
     {"npcMsgs":["NPC说的话1","NPC说的话2"],"opts":[{"text":"玩家回复","fx":{},"next":-1}]}
   ]
 }
-fx可选：{mood:数字, health:数字, IQ:数字, EQ:数字, money:数字}
+fx可选：{mood:数字, health:数字, IQ:数字, EQ:数字, cash:数字, salaryBonus:小数}
 next:-1表示对话结束，next:1表示下一轮。
-对话2-4轮，自然真实，像真人在聊天。可以有emoji但不要太多。`
+
+【示例】妈妈发来消息：
+{"npc":"mom","type":"wechat","rounds":[
+  {"npcMsgs":["儿子，最近忙不忙？","妈看你朋友圈老是加班，要注意身体啊"],opts:[{"text":"妈，我挺好的，就是最近项目忙","fx":{},"next":1}]},
+  {"npcMsgs":["别太累了，钱是赚不完的","对了，你二姨家小明都结婚了...你什么时候带个对象回来？"],opts:[{"text":"妈，我有在看了，别催了","fx":{},"next":-1},{"text":"妈，其实我有对象了","fx":{},"next":-1}]}
+]}`
   },{
     role:'user',
-    content:`玩家状态：${JSON.stringify(ctx)}
-请生成一条${ctx.age}岁的人会收到的手机消息。可能是家人问候、同事吐槽、朋友分享、老板安排任务等。要有生活气息。`
+    content:`玩家状态：年龄${ctx.age}岁，${ctx.jobLevel||'待业'}，资产${ctx.totalAsset}元，已婚：${ctx.married?'是':'否'}，子女：${ctx.children}人，心情${ctx.mood}，健康${ctx.health}
+请生成一条NPC主动发来的微信消息。选择最合适的NPC，对话要自然、有生活气息。`
   }];
 }
 
@@ -4920,10 +4973,11 @@ window.triggerDecisionEvent=function(){
   }
 };
 
-// Override triggerPhoneMessages to try AI first
+// Override triggerPhoneMessages to try AI first - 所有通讯录NPC都能主动找你
 window.triggerPhoneMessages=function(){
   if(!G.phone)return;
-  if(AI_ENGINE.enabled&&Math.random()<0.5){
+  // 70%概率用AI生成NPC主动消息，让通讯录里的人都能找你
+  if(AI_ENGINE.enabled&&Math.random()<0.7){
     triggerAIPhoneMessage().then(used=>{
       if(!used){
         // Fallback to template
@@ -5090,4 +5144,3 @@ async function generateEncounterAIResponse(sceneKey, npcName, choiceText, choice
   var goodEffect = choiceEffect && (choiceEffect.eq > 0 || choiceEffect.mood > 0 || choiceEffect.health > 0);
   return {text:fallbackText, wantFriend:goodEffect};
 }
-// v3.2 1783075640
