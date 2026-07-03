@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>人生首富模拟器</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+:root {
+  --primary: #3498db;
+  --primary-dark: #2980b9;
+  --header-bg: #2c3e50;
+  --bg: #f0f2f5;
+  --card-bg: #ffffff;
+  --text: #333333;
+  --text-light: #888888;
+  --danger: #e74c3c;
+  --success: #27ae60;
+  --warning: #f39c12;
+  --gold: #f1c40f;
+  --radius: 12px;
+  --shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
+
+/* ===== 页面容器 ===== */
+.app { height: 100%; display: flex; flex-direction: column; max-width: 480px; margin: 0 auto; position: relative; background: var(--bg); }
+.page { flex: 1; overflow-y: auto; padding: 16px; padding-bottom: 80px; -webkit-overflow-scrolling: touch; display: none; }
+.page.active { display: block; }
+
+/* ===== 顶部栏 ===== */
+.header { background: var(--header-bg); color: #fff; padding: 16px 20px 14px; text-align: center; position: relative; flex-shrink: 0; }
+.header h1 { font-size: 18px; font-weight: 600; letter-spacing: 1px; }
+.header-sub { font-size: 12px; color: rgba(255,255,255,0.6); margin-top: 4px; }
+
+/* ===== 底部Tab栏 ===== */
+.tab-bar { display: flex; background: #fff; border-top: 1px solid #e8e8e8; flex-shrink: 0; padding-bottom: env(safe-area-inset-bottom, 0); position: relative; z-index: 100; }
+.tab-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px 0 6px; font-size: 10px; color: var(--text-light); cursor: pointer; transition: color 0.2s; user-select: none; -webkit-user-select: none; }
+.tab-item.active { color: var(--primary); }
+.tab-item .tab-icon { font-size: 22px; margin-bottom: 2px; }
+.tab-item:active { opacity: 0.7; }
+
+/* ===== 卡片 ===== */
+.card { background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; margin-bottom: 12px; }
+.card-title { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+.card-title .icon { font-size: 18px; }
+
+/* ===== 属性条 ===== */
+.attr-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f5f5f5; }
+.attr-row:last-child { border-bottom: none; }
+.attr-label { font-size: 13px; color: #666; display: flex; align-items: center; gap: 4px; }
+.attr-value { font-size: 14px; font-weight: 600; color: var(--text); }
+.attr-bar { flex: 1; height: 6px; background: #eee; border-radius: 3px; margin: 0 12px; overflow: hidden; }
+.attr-bar-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+.bar-health { background: linear-gradient(90deg, #e74c3c, #27ae60); }
+.bar-mood { background: linear-gradient(90deg, #e67e22, #f1c40f); }
+.bar-iq { background: linear-gradient(90deg, #9b59b6, #3498db); }
+.bar-eq { background: linear-gradient(90deg, #e91e63, #ff5722); }
+
+/* ===== 金额显示 ===== */
+.money-big { font-size: 28px; font-weight: 700; color: var(--warning); text-align: center; padding: 8px 0; }
+.money-label { font-size: 12px; color: var(--text-light); text-align: center; margin-top: -4px; }
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+.stat-item { text-align: center; padding: 10px; background: #f8f9fa; border-radius: 8px; }
+.stat-item .num { font-size: 18px; font-weight: 700; color: var(--primary); }
+.stat-item .label { font-size: 11px; color: var(--text-light); margin-top: 2px; }
+
+/* ===== 按钮 ===== */
+.btn { display: inline-flex; align-items: center; justify-content: center; padding: 10px 24px; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.15s; user-select: none; -webkit-user-select: none; }
+.btn:active { transform: scale(0.96); opacity: 0.85; }
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-success { background: var(--success); color: #fff; }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-warning { background: var(--warning); color: #fff; }
+.btn-outline { background: transparent; border: 1.5px solid var(--primary); color: var(--primary); }
+.btn-block { display: flex; width: 100%; }
+.btn-sm { padding: 6px 14px; font-size: 12px; }
+.btn-lg { padding: 14px 32px; font-size: 16px; }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+/* ===== 列表项 ===== */
+.list-item { display: flex; align-items: center; padding: 14px 0; border-bottom: 1px solid #f0f0f0; }
+.list-item:last-child { border-bottom: none; }
+.list-info { flex: 1; }
+.list-info .name { font-size: 14px; font-weight: 500; }
+.list-info .desc { font-size: 12px; color: var(--text-light); margin-top: 2px; }
+.list-action { margin-left: 10px; }
+
+/* ===== 股票 ===== */
+.stock-price { font-size: 20px; font-weight: 700; }
+.stock-up { color: var(--danger); }
+.stock-down { color: var(--success); }
+.stock-flat { color: var(--text-light); }
+.stock-hold { font-size: 12px; color: var(--text-light); margin-top: 4px; }
+
+/* ===== 输入 ===== */
+.input-group { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.input { flex: 1; height: 36px; border: 1.5px solid #ddd; border-radius: 8px; padding: 0 12px; font-size: 14px; outline: none; transition: border 0.2s; }
+.input:focus { border-color: var(--primary); }
+select.input { appearance: none; -webkit-appearance: none; background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23999' fill='none' stroke-width='1.5'/%3E%3C/svg%3E") right 10px center no-repeat; padding-right: 28px; }
+
+/* ===== 模态框 ===== */
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
+.modal-overlay.show { opacity: 1; pointer-events: auto; }
+.modal-box { background: #fff; border-radius: 16px; width: 85%; max-width: 360px; padding: 24px 20px; text-align: center; transform: scale(0.85); transition: transform 0.25s; }
+.modal-overlay.show .modal-box { transform: scale(1); }
+.modal-title { font-size: 17px; font-weight: 600; margin-bottom: 10px; }
+.modal-content { font-size: 14px; color: #666; line-height: 1.6; margin-bottom: 20px; }
+.modal-btns { display: flex; gap: 10px; justify-content: center; }
+.modal-btns .btn { flex: 1; }
+
+/* ===== Toast ===== */
+.toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8); background: rgba(0,0,0,0.75); color: #fff; padding: 14px 24px; border-radius: 10px; font-size: 14px; z-index: 2000; opacity: 0; pointer-events: none; transition: all 0.3s; text-align: center; max-width: 260px; }
+.toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+
+/* ===== 事件提示 ===== */
+.event-banner { padding: 14px 16px; border-radius: 10px; margin-bottom: 12px; font-size: 13px; line-height: 1.6; animation: slideDown 0.3s ease; }
+.event-good { background: linear-gradient(135deg, #d4efdf, #a9dfbf); color: #1e8449; border: 1px solid #a9dfbf; }
+.event-bad { background: linear-gradient(135deg, #fadbd8, #f1948a); color: #922b21; border: 1px solid #f1948a; }
+.event-neutral { background: linear-gradient(135deg, #d6eaf8, #aed6f1); color: #1a5276; border: 1px solid #aed6f1; }
+@keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+/* ===== 排行榜 ===== */
+.rank-item { display: flex; align-items: center; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
+.rank-num { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; margin-right: 12px; flex-shrink: 0; }
+.rank-1 { background: linear-gradient(135deg, #f39c12, #e67e22); color: #fff; }
+.rank-2 { background: linear-gradient(135deg, #bdc3c7, #95a5a6); color: #fff; }
+.rank-3 { background: linear-gradient(135deg, #e67e22, #d35400); color: #fff; }
+.rank-other { background: #f0f0f0; color: #999; }
+.rank-info { flex: 1; }
+.rank-name { font-size: 14px; font-weight: 500; }
+.rank-detail { font-size: 11px; color: var(--text-light); margin-top: 2px; }
+.rank-money { font-size: 15px; font-weight: 700; color: var(--warning); }
+
+/* ===== 其他 ===== */
+.section-title { font-size: 13px; color: var(--text-light); margin: 16px 0 8px; font-weight: 500; }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; }
+.tag-green { background: #d5f5e3; color: #1e8449; }
+.tag-red { background: #fadbd8; color: #922b21; }
+.tag-blue { background: #d6eaf8; color: #1a5276; }
+.tag-orange { background: #fdebd0; color: #935116; }
+.divider { height: 1px; background: #f0f0f0; margin: 12px 0; }
+.text-center { text-align: center; }
+.text-sm { font-size: 12px; }
+.text-muted { color: var(--text-light); }
+.mt-8 { margin-top: 8px; }
+.mt-12 { margin-top: 12px; }
+.mt-16 { margin-top: 16px; }
+.mb-8 { margin-bottom: 8px; }
+.mb-12 { margin-bottom: 12px; }
+.flex-between { display: flex; justify-content: space-between; align-items: center; }
+.flex-center { display: flex; align-items: center; justify-content: center; }
+.gap-8 { gap: 8px; }
+.gap-12 { gap: 12px; }
+
+/* ===== 欢迎页 ===== */
+.welcome-page { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; padding: 40px 24px; text-align: center; background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%); color: #fff; }
+.welcome-page h1 { font-size: 32px; margin-bottom: 8px; }
+.welcome-page .subtitle { font-size: 14px; opacity: 0.8; margin-bottom: 32px; }
+.welcome-page .start-btn { background: var(--gold); color: #333; padding: 14px 48px; border-radius: 30px; font-size: 18px; font-weight: 700; border: none; cursor: pointer; box-shadow: 0 4px 16px rgba(241,196,15,0.4); }
+.welcome-page .start-btn:active { transform: scale(0.95); }
+.welcome-page .features { margin-top: 40px; display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+.welcome-page .feat { background: rgba(255,255,255,0.15); border-radius: 10px; padding: 10px 16px; font-size: 12px; }
+
+/* ===== 游戏结束 ===== */
+.game-over { text-align: center; padding: 40px 20px; }
+.game-over .emoji { font-size: 64px; margin-bottom: 16px; }
+.game-over h2 { font-size: 22px; margin-bottom: 8px; }
+.game-over .summary { font-size: 14px; color: #666; line-height: 1.8; margin: 20px 0; }
+.game-over .final-money { font-size: 36px; font-weight: 700; color: var(--warning); margin: 16px 0; }
+
+/* 滚动条美化 */
+.page::-webkit-scrollbar { width: 0; }
+</style>
+</head>
+<body>
+
+<!-- 欢迎页 -->
+<div id="welcomePage" class="welcome-page">
+  <div style="font-size:64px;margin-bottom:16px;">💰</div>
+  <h1>人生首富模拟器</h1>
+  <p class="subtitle">体验从零开始的财富人生</p>
+  <button class="start-btn" onclick="startGame()">开始人生</button>
+  <div class="features">
+    <div class="feat">💼 职业发展</div>
+    <div class="feat">📈 模拟股市</div>
+    <div class="feat">🏠 房产投资</div>
+    <div class="feat">👨‍👩‍👧 家庭生活</div>
+    <div class="feat">🎲 随机事件</div>
+    <div class="feat">🏆 财富排行</div>
+  </div>
+</div>
+
+<!-- 游戏主界面 -->
+<div id="gameApp" class="app" style="display:none;">
+  <!-- 顶部 -->
+  <div class="header">
+    <h1 id="headerTitle">人生首富模拟器</h1>
+    <div class="header-sub" id="headerSub"></div>
+  </div>
+
+  <!-- 页面：人生 -->
+  <div id="page-life" class="page active">
+    <div id="eventArea"></div>
+    <!-- 资产概览 -->
+    <div class="card">
+      <div class="card-title"><span class="icon">💰</span>资产概览</div>
+      <div class="money-big" id="totalAsset">¥0</div>
+      <div class="money-label">总资产</div>
+      <div class="stat-grid">
+        <div class="stat-item"><div class="num" id="cashDisplay">¥0</div><div class="label">现金</div></div>
+        <div class="stat-item"><div class="num" id="stockValueDisplay">¥0</div><div class="label">股票市值</div></div>
+        <div class="stat-item"><div class="num" id="houseValueDisplay">¥0</div><div class="label">房产估值</div></div>
+        <div class="stat-item"><div class="num" id="loanDisplay">¥0</div><div class="label">贷款余额</div></div>
+      </div>
+    </div>
+    <!-- 四维属性 -->
+    <div class="card">
+      <div class="card-title"><span class="icon">📊</span>个人属性</div>
+      <div class="attr-row">
+        <span class="attr-label">❤️ 健康</span>
+        <div class="attr-bar"><div class="attr-bar-fill bar-health" id="barHealth" style="width:100%"></div></div>
+        <span class="attr-value" id="valHealth">100</span>
+      </div>
+      <div class="attr-row">
+        <span class="attr-label">😊 心情</span>
+        <div class="attr-bar"><div class="attr-bar-fill bar-mood" id="barMood" style="width:100%"></div></div>
+        <span class="attr-value" id="valMood">100</span>
+      </div>
+      <div class="attr-row">
+        <span class="attr-label">🧠 智商</span>
+        <div class="attr-bar"><div class="attr-bar-fill bar-iq" id="barIQ" style="width:100%"></div></div>
+        <span class="attr-value" id="valIQ">100</span>
+      </div>
+      <div class="attr-row">
+        <span class="attr-label">💬 情商</span>
+        <div class="attr-bar"><div class="attr-bar-fill bar-eq" id="barEQ" style="width:100%"></div></div>
+        <span class="attr-value" id="valEQ">100</span>
+      </div>
+    </div>
+    <!-- 年度操作 -->
+    <div class="card text-center">
+      <button class="btn btn-primary btn-lg btn-block" onclick="nextYear()" id="nextYearBtn">🚀 度过一年</button>
+      <div class="text-sm text-muted mt-8" id="yearHint">点击按钮推进人生</div>
+    </div>
+  </div>
+
+  <!-- 页面：工作 -->
+  <div id="page-work" class="page">
+    <div class="card">
+      <div class="card-title"><span class="icon">💼</span>当前职业</div>
+      <div id="currentJob"></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="icon">📋</span>可选职业</div>
+      <div id="jobList"></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="icon">👨‍👩‍👧</span>家庭</div>
+      <div id="familyInfo"></div>
+    </div>
+  </div>
+
+  <!-- 页面：股市 -->
+  <div id="page-stock" class="page">
+    <div class="card">
+      <div class="card-title"><span class="icon">📈</span>模拟股市</div>
+      <div id="stockList"></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="icon">💼</span>我的持仓</div>
+      <div id="myStocks"></div>
+    </div>
+  </div>
+
+  <!-- 页面：房产 -->
+  <div id="page-house" class="page">
+    <div class="card">
+      <div class="card-title"><span class="icon">🏠</span>房产市场</div>
+      <div id="houseList"></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="icon">🏘️</span>我的房产</div>
+      <div id="myHouses"></div>
+    </div>
+  </div>
+
+  <!-- 页面：排行/更多 -->
+  <div id="page-more" class="page">
+    <div class="card">
+      <div class="card-title"><span class="icon">🏆</span>财富排行榜</div>
+      <div id="rankList"></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="icon">🤖</span>校招AI入口</div>
+      <p class="text-sm text-muted mb-8">AI智能校招助手，为你推荐最适合的职业发展路径</p>
+      <button class="btn btn-outline btn-block" onclick="showToast('🚧 功能开发中，敬请期待！')">进入校招AI</button>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="icon">📤</span>分享</div>
+      <button class="btn btn-success btn-block" onclick="shareGame()">📱 分享给好友</button>
+    </div>
+    <div class="card text-center">
+      <button class="btn btn-danger btn-block" onclick="confirmRestart()">🔄 重开人生</button>
+    </div>
+  </div>
+
+  <!-- 底部Tab -->
+  <div class="tab-bar">
+    <div class="tab-item active" onclick="switchTab('life')"><span class="tab-icon">🏠</span><span>人生</span></div>
+    <div class="tab-item" onclick="switchTab('work')"><span class="tab-icon">💼</span><span>工作</span></div>
+    <div class="tab-item" onclick="switchTab('stock')"><span class="tab-icon">📈</span><span>股市</span></div>
+    <div class="tab-item" onclick="switchTab('house')"><span class="tab-icon">🏘️</span><span>房产</span></div>
+    <div class="tab-item" onclick="switchTab('more')"><span class="tab-icon">⭐</span><span>更多</span></div>
+  </div>
+</div>
+
+<!-- 自定义模态框 -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalBg(event)">
+  <div class="modal-box">
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="modal-content" id="modalContent"></div>
+    <div class="modal-btns" id="modalBtns"></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toastEl"></div>
+
+<script>
+// ========== 游戏数据定义 ==========
+const JOBS = [
+  { id: 'intern', name: '实习生', salary: 36000, requireIQ: 0, requireEQ: 0 },
+  { id: 'programmer', name: '初级程序员', salary: 120000, requireIQ: 110, requireEQ: 70 },
+  { id: 'market', name: '市场专员', salary: 80000, requireIQ: 90, requireEQ: 100 },
+  { id: 'finance', name: '金融分析师', salary: 150000, requireIQ: 120, requireEQ: 90 },
+  { id: 'manager', name: '部门经理', salary: 250000, requireIQ: 115, requireEQ: 110 }
+];
+
+const STOCKS = [
+  { code: 'TECH001', name: '互联网科技', basePrice: 100, volatility: 0.3 },
+  { code: 'HOUSE001', name: '地产龙头', basePrice: 50, volatility: 0.2 },
+  { code: 'BANK001', name: '国有银行', basePrice: 30, volatility: 0.08 },
+  { code: 'MED001', name: '医药生物', basePrice: 80, volatility: 0.25 }
+];
+
+const HOUSES = [
+  { id: 'old', name: '老破小', price: 500000, rent: 1500, area: 50 },
+  { id: 'normal', name: '刚需住宅', price: 1500000, rent: 3500, area: 90 },
+  { id: 'school', name: '学区房', price: 3000000, rent: 5000, area: 80 },
+  { id: 'villa', name: '别墅', price: 8000000, rent: 12000, area: 200 }
+];
+
+const LOAN_CONFIG = { annualRate: 0.045, maxTerm: 30, downPaymentOptions: [0.3, 0.5, 0.7] };
+
+const SPOUSES = [
+  { id: 'teacher', name: '教师', salary: 80000, moodBonus: 5 },
+  { id: 'doctor', name: '医生', salary: 180000, healthBonus: 3 },
+  { id: 'designer', name: '设计师', salary: 120000, moodBonus: 8 },
+  { id: 'civil', name: '公务员', salary: 100000, stability: true }
+];
+
+const EVENTS = [
+  { id: 1, text: '🎉 公司发年终奖，多拿了2个月工资', effect: { money: 2, type: 'salary' }, type: 'good' },
+  { id: 2, text: '🏥 生病住院，花费10000元医疗费', effect: { money: -10000, health: -10 }, type: 'bad' },
+  { id: 3, text: '🎰 买彩票中了5000元小奖', effect: { money: 5000 }, type: 'good' },
+  { id: 4, text: '📚 利用业余时间充电学习，智商+5', effect: { IQ: 5, mood: -5 }, type: 'neutral' },
+  { id: 5, text: '📉 股市震荡，持仓整体亏损20%', effect: { stockLoss: 0.2 }, type: 'bad' },
+  { id: 6, text: '📈 楼市利好，所有房产增值10%', effect: { houseGain: 0.1 }, type: 'good' },
+  { id: 7, text: '🍻 朋友聚会放松，心情+10', effect: { mood: 10, money: -500 }, type: 'neutral' },
+  { id: 8, text: '💪 坚持健身锻炼，健康+8', effect: { health: 8 }, type: 'neutral' }
+];
+
+// ========== 模拟NPC排行榜 ==========
+const NPC_NAMES = ['王思聪','马云','马化腾','刘强东','雷军','李彦宏','张一鸣','黄峥','丁磊','钟睒睒','王健林','许家印'];
+
+// ========== 游戏状态 ==========
+let G = null;
+
+function defaultState() {
+  return {
+    age: 22,
+    year: 0,
+    cash: 10000,
+    health: 100,
+    mood: 100,
+    IQ: 100,
+    EQ: 100,
+    jobIndex: 0, // 当前职业在JOBS中的索引
+    stockHoldings: {}, // { code: shares }
+    stockPrices: {},   // 当前价格
+    houses: [],        // [{ id, own, loan, loanBalance, loanTerm, loanMonthly, marketValue }]
+    spouse: null,      // 配偶id或null
+    children: 0,
+    childAges: [],     // 每个孩子的年龄
+    events: [],        // 本年事件列表
+    gameOver: false,
+    gameOverReason: '',
+    rank: 0
+  };
+}
+
+// ========== 存储 ==========
+function saveGame() { localStorage.setItem('richsim_save', JSON.stringify(G)); }
+function loadGame() {
+  try {
+    const s = localStorage.getItem('richsim_save');
+    if (s) { G = JSON.parse(s); return true; }
+  } catch(e) {}
+  return false;
+}
+function clearGame() { localStorage.removeItem('richsim_save'); }
+
+// ========== 工具函数 ==========
+function fmt(n) {
+  if (Math.abs(n) >= 100000000) return '¥' + (n/100000000).toFixed(2) + '亿';
+  if (Math.abs(n) >= 10000) return '¥' + (n/10000).toFixed(1) + '万';
+  return '¥' + n.toLocaleString('zh-CN');
+}
+function fmtShort(n) {
+  if (Math.abs(n) >= 100000000) return (n/100000000).toFixed(2) + '亿';
+  if (Math.abs(n) >= 10000) return (n/10000).toFixed(1) + '万';
+  return n.toLocaleString('zh-CN');
+}
+function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+function randInt(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
+function randFloat(a, b) { return Math.random() * (b - a) + a; }
+
+// ========== 自定义模态框 (替代 wx.showModal) ==========
+function showModal({ title, content, showCancel, confirmText, cancelText, success }) {
+  document.getElementById('modalTitle').textContent = title || '';
+  document.getElementById('modalContent').textContent = content || '';
+  const btns = document.getElementById('modalBtns');
+  btns.innerHTML = '';
+  if (showCancel !== false) {
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'btn btn-outline';
+    cancelBtn.textContent = cancelText || '取消';
+    cancelBtn.onclick = () => { hideModal(); success && success({ confirm: false, cancel: true }); };
+    btns.appendChild(cancelBtn);
+  }
+  const confirmBtn = document.createElement('button');
+  confirmBtn.className = 'btn btn-primary';
+  confirmBtn.textContent = confirmText || '确定';
+  confirmBtn.onclick = () => { hideModal(); success && success({ confirm: true, cancel: false }); };
+  btns.appendChild(confirmBtn);
+  document.getElementById('modalOverlay').classList.add('show');
+}
+function hideModal() { document.getElementById('modalOverlay').classList.remove('show'); }
+function closeModalBg(e) { if (e.target === document.getElementById('modalOverlay')) hideModal(); }
+
+// ========== 自定义Toast (替代 wx.showToast) ==========
+let toastTimer = null;
+function showToast(msg, duration) {
+  const el = document.getElementById('toastEl');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), duration || 1800);
+}
+
+// ========== Tab切换 (替代 wx.navigateTo) ==========
+function switchTab(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelectorAll('.tab-item').forEach((t, i) => {
+    const tabs = ['life','work','stock','house','more'];
+    t.classList.toggle('active', tabs[i] === name);
+  });
+  refreshPage(name);
+}
+
+// ========== 初始化/开始游戏 ==========
+function startGame() {
+  if (loadGame() && !G.gameOver) {
+    document.getElementById('welcomePage').style.display = 'none';
+    document.getElementById('gameApp').style.display = 'flex';
+    initStockPrices();
+    refreshAll();
+    return;
+  }
+  G = defaultState();
+  initStockPrices();
+  saveGame();
+  document.getElementById('welcomePage').style.display = 'none';
+  document.getElementById('gameApp').style.display = 'flex';
+  refreshAll();
+}
+
+function initStockPrices() {
+  STOCKS.forEach(s => {
+    if (!G.stockPrices[s.code]) G.stockPrices[s.code] = s.basePrice;
+  });
+}
+
+// ========== 刷新UI ==========
+function refreshAll() {
+  refreshLife();
+  refreshHeader();
+}
+function refreshHeader() {
+  const job = JOBS[G.jobIndex];
+  document.getElementById('headerSub').textContent = `年龄 ${G.age}岁 · ${job.name} · 第${G.year}年`;
+}
+function refreshLife() {
+  // 总资产
+  const total = calcTotalAsset();
+  document.getElementById('totalAsset').textContent = fmt(total);
+  document.getElementById('cashDisplay').textContent = fmt(G.cash);
+  // 股票市值
+  let stockVal = 0;
+  for (const code in G.stockHoldings) {
+    stockVal += G.stockHoldings[code] * (G.stockPrices[code] || 0);
+  }
+  document.getElementById('stockValueDisplay').textContent = fmt(stockVal);
+  // 房产估值
+  let houseVal = 0;
+  G.houses.forEach(h => houseVal += h.marketValue);
+  document.getElementById('houseValueDisplay').textContent = fmt(houseVal);
+  // 贷款
+  let loanBal = 0;
+  G.houses.forEach(h => loanBal += (h.loanBalance || 0));
+  document.getElementById('loanDisplay').textContent = fmt(loanBal);
+  // 属性
+  setAttrBar('Health', G.health);
+  setAttrBar('Mood', G.mood);
+  setAttrBar('IQ', G.IQ);
+  setAttrBar('EQ', G.EQ);
+  // 事件
+  renderEvents();
+  // 按钮状态
+  document.getElementById('nextYearBtn').disabled = G.gameOver;
+}
+function setAttrBar(name, val) {
+  val = clamp(Math.round(val), 0, 200);
+  document.getElementById('bar' + name).style.width = Math.min(val, 100) + '%';
+  document.getElementById('val' + name).textContent = val;
+}
+
+function refreshPage(name) {
+  if (name === 'work') refreshWork();
+  else if (name === 'stock') refreshStock();
+  else if (name === 'house') refreshHouse();
+  else if (name === 'more') refreshMore();
+}
+
+// ========== 资产计算 ==========
+function calcTotalAsset() {
+  let total = G.cash;
+  for (const code in G.stockHoldings) {
+    total += G.stockHoldings[code] * (G.stockPrices[code] || 0);
+  }
+  G.houses.forEach(h => total += h.marketValue);
+  G.houses.forEach(h => total -= (h.loanBalance || 0));
+  return total;
+}
+
+// ========== 事件渲染 ==========
+function renderEvents() {
+  const area = document.getElementById('eventArea');
+  if (!G.events || G.events.length === 0) { area.innerHTML = ''; return; }
+  area.innerHTML = G.events.map(e => `<div class="event-banner event-${e.type}">${e.text}</div>`).join('');
+}
+
+// ========== 工作页面 ==========
+function refreshWork() {
+  const job = JOBS[G.jobIndex];
+  // 当前职业
+  let html = `<div class="list-item">
+    <div class="list-info">
+      <div class="name">${job.name}</div>
+      <div class="desc">年薪：${fmt(job.salary)}</div>
+    </div>
+    <span class="tag tag-green">当前</span>
+  </div>`;
+  document.getElementById('currentJob').innerHTML = html;
+  // 可选职业
+  let jobHtml = '';
+  JOBS.forEach((j, i) => {
+    const canUpgrade = i > G.jobIndex && G.IQ >= j.requireIQ && G.EQ >= j.requireEQ;
+    const canDowngrade = i < G.jobIndex;
+    const locked = i > G.jobIndex && !canUpgrade;
+    const isCurrent = i === G.jobIndex;
+    let action = '';
+    if (!isCurrent && canUpgrade) {
+      action = `<button class="btn btn-primary btn-sm" onclick="changeJob(${i})">升职</button>`;
+    } else if (!isCurrent && canDowngrade) {
+      action = `<button class="btn btn-outline btn-sm" onclick="changeJob(${i})">降级</button>`;
+    } else if (locked) {
+      action = `<span class="text-sm text-muted">IQ≥${j.requireIQ} EQ≥${j.requireEQ}</span>`;
+    } else if (isCurrent) {
+      action = `<span class="tag tag-blue">在职</span>`;
+    }
+    jobHtml += `<div class="list-item">
+      <div class="list-info">
+        <div class="name">${j.name} <span class="text-sm text-muted">年薪${fmtShort(j.salary)}</span></div>
+        <div class="desc">要求：智商${j.requireIQ} / 情商${j.requireEQ}</div>
+      </div>
+      <div class="list-action">${action}</div>
+    </div>`;
+  });
+  document.getElementById('jobList').innerHTML = jobHtml;
+  // 家庭
+  refreshFamily();
+}
+function changeJob(idx) {
+  G.jobIndex = idx;
+  saveGame();
+  refreshWork();
+  refreshHeader();
+  showToast('✅ 职业变更成功！');
+}
+function refreshFamily() {
+  let html = '';
+  if (G.spouse) {
+    const sp = SPOUSES.find(s => s.id === G.spouse);
+    html += `<div class="list-item"><div class="list-info"><div class="name">💑 配偶：${sp.name}</div><div class="desc">年薪：${fmt(sp.salary)}</div></div></div>`;
+    html += `<div class="list-item"><div class="list-info"><div class="name">👶 子女：${G.children}人</div><div class="desc">${G.children > 0 ? '每年抚养费约' + fmt(G.children * 20000) : '尚未生育'}</div></div>`;
+    if (G.children < 3) {
+      html += `<div class="list-action"><button class="btn btn-primary btn-sm" onclick="haveChild()">生娃</button></div>`;
+    }
+    html += `</div>`;
+  } else {
+    html = `<div class="text-center text-sm text-muted" style="padding:16px 0;">
+      <div>💒 尚未结婚</div>
+      <button class="btn btn-primary btn-sm mt-8" onclick="marry()">相亲结婚 (彩礼¥10万)</button>
+    </div>`;
+  }
+  document.getElementById('familyInfo').innerHTML = html;
+}
+function marry() {
+  if (G.cash < 100000) {
+    showModal({ title: '余额不足', content: '结婚需要10万彩礼，当前现金不足！', showCancel: false, confirmText: '知道了' });
+    return;
+  }
+  showModal({
+    title: '选择配偶',
+    content: SPOUSES.map((s, i) => `${i+1}. ${s.name}（年薪${fmtShort(s.salary)}）`).join('\n'),
+    confirmText: '随机匹配',
+    success(res) {
+      if (res.confirm) {
+        const idx = randInt(0, SPOUSES.length - 1);
+        const sp = SPOUSES[idx];
+        G.cash -= 100000;
+        G.spouse = sp.id;
+        G.mood = clamp(G.mood + 15, 0, 200);
+        saveGame();
+        refreshLife();
+        refreshWork();
+        showToast(`🎊 恭喜！你和${sp.name}结婚了！`);
+      }
+    }
+  });
+}
+function haveChild() {
+  if (G.children >= 3) { showToast('最多只能生3个孩子'); return; }
+  if (G.cash < 50000) {
+    showModal({ title: '余额不足', content: '生子需要5万费用，当前现金不足！', showCancel: false });
+    return;
+  }
+  G.cash -= 50000;
+  G.children++;
+  G.childAges.push(0);
+  G.mood = clamp(G.mood + 20, 0, 200);
+  saveGame();
+  refreshLife();
+  refreshWork();
+  showToast('👶 恭喜！家里添了一个宝宝！');
+}
+
+// ========== 股市页面 ==========
+function refreshStock() {
+  let html = '';
+  STOCKS.forEach(s => {
+    const price = G.stockPrices[s.code] || s.basePrice;
+    const change = ((price - s.basePrice) / s.basePrice * 100).toFixed(2);
+    const cls = change > 0 ? 'stock-up' : change < 0 ? 'stock-down' : 'stock-flat';
+    const hold = G.stockHoldings[s.code] || 0;
+    const maxBuy = Math.floor(G.cash / price);
+    html += `<div class="list-item" style="flex-wrap:wrap;">
+      <div class="list-info" style="width:100%;">
+        <div class="flex-between">
+          <span class="name">${s.name}</span>
+          <span class="stock-price ${cls}">¥${price.toFixed(2)}</span>
+        </div>
+        <div class="flex-between mt-8">
+          <span class="stock-hold">涨跌：<span class="${cls}">${change > 0 ? '+' : ''}${change}%</span></span>
+          <span class="stock-hold">持有：${hold}股</span>
+        </div>
+      </div>
+      <div class="list-action" style="width:100%;display:flex;gap:8px;margin-top:8px;">
+        <button class="btn btn-danger btn-sm" style="flex:1;" onclick="stockSell('${s.code}')" ${hold <= 0 ? 'disabled' : ''}>卖出</button>
+        <button class="btn btn-success btn-sm" style="flex:1;" onclick="stockBuy('${s.code}')" ${maxBuy <= 0 ? 'disabled' : ''}>买入</button>
+      </div>
+    </div>`;
+  });
+  document.getElementById('stockList').innerHTML = html;
+  // 持仓汇总
+  let holdHtml = '';
+  let totalVal = 0;
+  for (const code in G.stockHoldings) {
+    const shares = G.stockHoldings[code];
+    if (shares <= 0) continue;
+    const s = STOCKS.find(x => x.code === code);
+    const val = shares * G.stockPrices[code];
+    totalVal += val;
+    holdHtml += `<div class="list-item">
+      <div class="list-info"><div class="name">${s.name}</div><div class="desc">${shares}股 × ¥${G.stockPrices[code].toFixed(2)}</div></div>
+      <span style="font-weight:600;color:var(--warning);">${fmt(val)}</span>
+    </div>`;
+  }
+  if (!holdHtml) holdHtml = '<div class="text-center text-sm text-muted" style="padding:16px 0;">暂无持仓</div>';
+  else holdHtml += `<div class="divider"></div><div class="flex-between"><span class="text-sm">持仓总市值</span><span style="font-weight:700;color:var(--warning);">${fmt(totalVal)}</span></div>`;
+  document.getElementById('myStocks').innerHTML = holdHtml;
+}
+function stockBuy(code) {
+  const s = STOCKS.find(x => x.code === code);
+  const price = G.stockPrices[code];
+  const maxShares = Math.floor(G.cash / price);
+  if (maxShares <= 0) { showToast('现金不足！'); return; }
+  showModal({
+    title: `买入 ${s.name}`,
+    content: `当前价格：¥${price.toFixed(2)}\n可买最多：${maxShares}股\n当前现金：${fmt(G.cash)}`,
+    success(res) {
+      if (res.confirm) {
+        const shares = Math.min(maxShares, Math.max(1, Math.floor(G.cash * 0.3 / price)));
+        const cost = shares * price;
+        G.cash -= cost;
+        G.stockHoldings[code] = (G.stockHoldings[code] || 0) + shares;
+        saveGame();
+        refreshStock();
+        refreshLife();
+        showToast(`✅ 买入${shares}股${s.name}`);
+      }
+    }
+  });
+}
+function stockSell(code) {
+  const s = STOCKS.find(x => x.code === code);
+  const shares = G.stockHoldings[code] || 0;
+  const price = G.stockPrices[code];
+  showModal({
+    title: `卖出 ${s.name}`,
+    content: `当前持有：${shares}股\n当前价格：¥${price.toFixed(2)}\n可获金额：${fmt(shares * price)}`,
+    success(res) {
+      if (res.confirm) {
+        const revenue = shares * price;
+        G.cash += revenue;
+        delete G.stockHoldings[code];
+        saveGame();
+        refreshStock();
+        refreshLife();
+        showToast(`✅ 卖出${shares}股${s.name}，入账${fmt(revenue)}`);
+      }
+    }
+  });
+}
+
+// ========== 房产页面 ==========
+function refreshHouse() {
+  let html = '';
+  HOUSES.forEach(h => {
+    const owned = G.houses.find(x => x.id === h.id);
+    let action = '';
+    if (owned) {
+      const tagCls = owned.loan ? 'tag-orange' : 'tag-green';
+      action = `<span class="tag ${tagCls}">${owned.loan ? '按揭中' : '已拥有'}</span>`;
+    } else {
+      action = `<button class="btn btn-primary btn-sm" onclick="buyHouse('${h.id}')">购买</button>`;
+    }
+    html += `<div class="list-item">
+      <div class="list-info">
+        <div class="name">${h.name} <span class="text-sm text-muted">${h.area}㎡</span></div>
+        <div class="desc">价格：${fmt(h.price)} | 月租：${fmt(h.rent)}/月</div>
+      </div>
+      <div class="list-action">${action}</div>
+    </div>`;
+  });
+  document.getElementById('houseList').innerHTML = html;
+  // 我的房产
+  let myHtml = '';
+  let totalRent = 0;
+  G.houses.forEach(h => {
+    const info = HOUSES.find(x => x.id === h.id);
+    totalRent += info.rent;
+    let detail = `估值：${fmt(h.marketValue)}`;
+    if (h.loan) detail += ` | 月供：${fmt(h.loanMonthly)}`;
+    let actions = `<button class="btn btn-danger btn-sm" onclick="sellHouse('${h.id}')">出售</button>`;
+    myHtml += `<div class="list-item">
+      <div class="list-info"><div class="name">${info.name}</div><div class="desc">${detail}</div></div>
+      <div class="list-action">${actions}</div>
+    </div>`;
+  });
+  if (!myHtml) myHtml = '<div class="text-center text-sm text-muted" style="padding:16px 0;">暂无房产</div>';
+  else myHtml += `<div class="divider"></div><div class="flex-between"><span class="text-sm">每月租金收入</span><span style="font-weight:600;color:var(--success);">+${fmt(totalRent)}/月</span></div>`;
+  document.getElementById('myHouses').innerHTML = myHtml;
+}
+function buyHouse(houseId) {
+  const h = HOUSES.find(x => x.id === houseId);
+  const owned = G.houses.find(x => x.id === houseId);
+  if (owned) { showToast('已拥有该房产'); return; }
+  showModal({
+    title: `购买 ${h.name}`,
+    content: `价格：${fmt(h.price)}\n选择付款方式：`,
+    confirmText: '全款购买',
+    success(res) {
+      if (res.confirm) {
+        if (G.cash < h.price) { showModal({ title: '余额不足', content: '现金不足以全款购买！', showCancel: false }); return; }
+        G.cash -= h.price;
+        G.houses.push({ id: h.id, own: true, loan: false, loanBalance: 0, loanTerm: 0, loanMonthly: 0, marketValue: h.price });
+        saveGame();
+        refreshHouse();
+        refreshLife();
+        showToast(`🏠 恭喜全款购入${h.name}！`);
+      } else {
+        // 按揭
+        showLoanModal(h);
+      }
+    }
+  });
+}
+function showLoanModal(h) {
+  const options = LOAN_CONFIG.downPaymentOptions.map((dp, i) => {
+    const downPay = h.price * dp;
+    const loan = h.price - downPay;
+    const monthlyRate = LOAN_CONFIG.annualRate / 12;
+    const monthly = loan * monthlyRate * Math.pow(1 + monthlyRate, LOAN_CONFIG.maxTerm * 12) / (Math.pow(1 + monthlyRate, LOAN_CONFIG.maxTerm * 12) - 1);
+    return { dp, downPay: Math.round(downPay), loan: Math.round(loan), monthly: Math.round(monthly), term: LOAN_CONFIG.maxTerm };
+  });
+  const text = options.map((o, i) => `${i+1}. 首付${(o.dp*100)}%（${fmt(o.downPay)}），贷${fmt(o.loan)}，月供${fmt(o.monthly)}，${o.term}年`).join('\n');
+  showModal({
+    title: `${h.name} - 按揭贷款`,
+    content: `房屋总价：${fmt(h.price)}\n\n${text}`,
+    confirmText: '首付30%',
+    success(res) {
+      if (res.confirm) {
+        const o = options[0];
+        if (G.cash < o.downPay) { showModal({ title: '余额不足', content: `首付需要${fmt(o.downPay)}，现金不足！`, showCancel: false }); return; }
+        G.cash -= o.downPay;
+        G.houses.push({ id: h.id, own: false, loan: true, loanBalance: o.loan, loanTerm: o.term * 12, loanMonthly: o.monthly, marketValue: h.price });
+        saveGame();
+        refreshHouse();
+        refreshLife();
+        showToast(`🏠 购入${h.name}（按揭${(o.dp*100)}%首付）`);
+      }
+    }
+  });
+}
+function sellHouse(houseId) {
+  const idx = G.houses.findIndex(x => x.id === houseId);
+  if (idx === -1) return;
+  const h = G.houses[idx];
+  const info = HOUSES.find(x => x.id === houseId);
+  const revenue = h.marketValue - (h.loanBalance || 0);
+  showModal({
+    title: `出售 ${info.name}`,
+    content: `市场估值：${fmt(h.marketValue)}\n贷款余额：${fmt(h.loanBalance || 0)}\n净收入：${fmt(revenue)}`,
+    success(res) {
+      if (res.confirm) {
+        G.cash += revenue;
+        G.houses.splice(idx, 1);
+        saveGame();
+        refreshHouse();
+        refreshLife();
+        showToast(`✅ 出售成功，入账${fmt(revenue)}`);
+      }
+    }
+  });
+}
+
+// ========== 排行榜 ==========
+function refreshMore() {
+  renderRanking();
+}
+function renderRanking() {
+  const playerAsset = calcTotalAsset();
+  // 生成NPC
+  const npcs = NPC_NAMES.map((name, i) => ({
+    name,
+    asset: Math.round(randFloat(50000, 50000000) * Math.pow(0.85, i)),
+    isPlayer: false
+  }));
+  npcs.push({ name: '🧑 我', asset: playerAsset, isPlayer: true });
+  npcs.sort((a, b) => b.asset - a.asset);
+  let html = '';
+  npcs.forEach((n, i) => {
+    const rankCls = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : 'rank-other';
+    const highlight = n.isPlayer ? 'style="background:#eaf6ff;border-radius:8px;padding:4px 8px;margin:-4px -8px;"' : '';
+    html += `<div class="rank-item" ${highlight}>
+      <div class="rank-num ${rankCls}">${i + 1}</div>
+      <div class="rank-info"><div class="rank-name">${n.name}</div><div class="rank-detail">总资产</div></div>
+      <div class="rank-money">${fmt(n.asset)}</div>
+    </div>`;
+  });
+  document.getElementById('rankList').innerHTML = html;
+}
+
+// ========== 分享 ==========
+function shareGame() {
+  const total = calcTotalAsset();
+  const job = JOBS[G.jobIndex];
+  const text = `我在《人生首富模拟器》活到了${G.age}岁，当上了${job.name}，总资产${fmt(total)}！快来挑战你能赚多少💰`;
+  if (navigator.share) {
+    navigator.share({ title: '人生首富模拟器', text }).catch(() => {});
+  } else {
+    // 复制到剪贴板
+    navigator.clipboard.writeText(text).then(() => {
+      showToast('✅ 分享文案已复制到剪贴板！');
+    }).catch(() => {
+      showModal({ title: '分享', content: text, showCancel: false, confirmText: '关闭' });
+    });
+  }
+}
+
+// ========== 重开人生 ==========
+function confirmRestart() {
+  showModal({
+    title: '确定重开？',
+    content: '当前游戏进度将被清除，确定要重新开始吗？',
+    success(res) {
+      if (res.confirm) {
+        clearGame();
+        G = defaultState();
+        initStockPrices();
+        saveGame();
+        refreshAll();
+        switchTab('life');
+        showToast('🔄 人生已重置！');
+      }
+    }
+  });
+}
+
+// ========== 核心：度过一年 ==========
+function nextYear() {
+  if (G.gameOver) return;
+  G.year++;
+  G.age++;
+  G.events = [];
+
+  const job = JOBS[G.jobIndex];
+  let income = job.salary;
+  let expense = 0;
+
+  // 配偶薪资
+  if (G.spouse) {
+    const sp = SPOUSES.find(s => s.id === G.spouse);
+    income += sp.salary;
+  }
+
+  // 租金收入
+  let rentIncome = 0;
+  G.houses.forEach(h => {
+    const info = HOUSES.find(x => x.id === h.id);
+    rentIncome += info.rent * 12;
+  });
+  income += rentIncome;
+
+  // 房贷月供
+  let loanPay = 0;
+  G.houses.forEach(h => {
+    if (h.loan && h.loanBalance > 0) {
+      const pay = Math.min(h.loanMonthly * 12, h.loanBalance);
+      h.loanBalance -= pay;
+      h.loanMonthly = h.loanBalance > 0 ? h.loanMonthly : 0;
+      loanPay += pay;
+      if (h.loanBalance <= 0) { h.loanBalance = 0; h.loan = false; h.own = true; G.events.push({ text: '🏦 恭喜！房贷已还清！', type: 'good' }); }
+    }
+  });
+  expense += loanPay;
+
+  // 子女抚养费
+  const childCost = G.children * 20000;
+  expense += childCost;
+
+  // 结算
+  const net = income - expense;
+  G.cash += net;
+
+  // 属性自然衰减
+  G.health = clamp(G.health - 2, 0, 200);
+  G.mood = clamp(G.mood - 3, 0, 200);
+
+  // 配偶加成
+  if (G.spouse) {
+    const sp = SPOUSES.find(s => s.id === G.spouse);
+    if (sp.moodBonus) G.mood = clamp(G.mood + sp.moodBonus, 0, 200);
+    if (sp.healthBonus) G.health = clamp(G.health + sp.healthBonus, 0, 200);
+  }
+
+  // 孩子年龄增长
+  G.childAges = G.childAges.map(a => a + 1);
+
+  // 股票行情波动
+  STOCKS.forEach(s => {
+    const price = G.stockPrices[s.code];
+    const change = (Math.random() - 0.48) * s.volatility * price; // 略偏正
+    G.stockPrices[s.code] = Math.max(1, Math.round((price + change) * 100) / 100);
+  });
+
+  // 房产市场波动
+  G.houses.forEach(h => {
+    const info = HOUSES.find(x => x.id === h.id);
+    const change = (Math.random() - 0.45) * 0.05 * h.marketValue;
+    h.marketValue = Math.round(h.marketValue + change);
+    h.marketValue = Math.max(info.price * 0.3, h.marketValue);
+  });
+
+  // 随机事件 (30%概率)
+  if (Math.random() < 0.3) {
+    const evt = EVENTS[randInt(0, EVENTS.length - 1)];
+    applyEvent(evt);
+  }
+
+  // 年度总结提示
+  const summaryParts = [];
+  summaryParts.push(`年薪入账：${fmt(job.salary)}`);
+  if (rentIncome > 0) summaryParts.push(`租金收入：${fmt(rentIncome)}`);
+  if (loanPay > 0) summaryParts.push(`房贷支出：${fmt(loanPay)}`);
+  if (childCost > 0) summaryParts.push(`抚养费用：${fmt(childCost)}`);
+  G.events.unshift({ text: `📅 第${G.year}年总结\n净收入：${fmt(net)}`, type: net >= 0 ? 'good' : 'bad' });
+
+  // 检查游戏结束
+  if (G.health <= 0) {
+    G.gameOver = true;
+    G.gameOverReason = '健康归零，人生结束';
+    setTimeout(() => showGameOver(), 500);
+  } else if (G.age >= 80 && Math.random() < 0.3) {
+    G.gameOver = true;
+    G.gameOverReason = '安享晚年，人生圆满结束';
+    setTimeout(() => showGameOver(), 500);
+  }
+
+  saveGame();
+  refreshAll();
+}
+
+function applyEvent(evt) {
+  const e = { text: evt.text, type: evt.type };
+  const eff = evt.effect;
+  if (eff.money) {
+    if (eff.type === 'salary') {
+      const bonus = JOBS[G.jobIndex].salary * eff.money;
+      G.cash += bonus;
+      e.text += `（+${fmt(bonus)}）`;
+    } else {
+      G.cash += eff.money;
+      if (eff.money > 0) e.text += `（+${fmt(eff.money)}）`;
+      else e.text += `（${fmt(eff.money)}）`;
+    }
+  }
+  if (eff.health) G.health = clamp(G.health + eff.health, 0, 200);
+  if (eff.mood) G.mood = clamp(G.mood + eff.mood, 0, 200);
+  if (eff.IQ) G.IQ = clamp(G.IQ + eff.IQ, 0, 200);
+  if (eff.EQ) G.EQ = clamp(G.EQ + eff.EQ, 0, 200);
+  if (eff.stockLoss) {
+    for (const code in G.stockHoldings) {
+      G.stockPrices[code] = Math.max(1, G.stockPrices[code] * (1 - eff.stockLoss));
+    }
+  }
+  if (eff.houseGain) {
+    G.houses.forEach(h => { h.marketValue = Math.round(h.marketValue * (1 + eff.houseGain)); });
+  }
+  G.events.push(e);
+}
+
+// ========== 游戏结束 ==========
+function showGameOver() {
+  const total = calcTotalAsset();
+  const job = JOBS[G.jobIndex];
+  let emoji = '💀';
+  if (total > 10000000) emoji = '🏆';
+  else if (total > 1000000) emoji = '🎉';
+  else if (total > 100000) emoji = '😊';
+  else if (G.gameOverReason.includes('圆满')) emoji = '🌅';
+
+  showModal({
+    title: '🎊 人生结束',
+    content: `${emoji}\n${G.gameOverReason}\n\n活到 ${G.age} 岁\n最终职业：${job.name}\n最终总资产：${fmt(total)}\n\n${total > 10000000 ? '你是真正的首富！' : total > 1000000 ? '小有成就！' : '继续努力吧！'}`,
+    showCancel: false,
+    confirmText: '重新开始',
+    success() {
+      confirmRestart();
+    }
+  });
+}
+
+// ========== 页面加载初始化 ==========
+window.addEventListener('load', () => {
+  if (loadGame() && !G.gameOver) {
+    // 有存档，直接进入游戏
+    document.getElementById('welcomePage').style.display = 'none';
+    document.getElementById('gameApp').style.display = 'flex';
+    initStockPrices();
+    refreshAll();
+  }
+});
+</script>
+</body>
+</html>
