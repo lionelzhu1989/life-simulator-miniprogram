@@ -938,6 +938,9 @@ const LUXURY_ITEMS=[
 // ===== V2: Forbes List =====
 const FORBES_NAMES=['马化腾','马云','钟睒睒','张一鸣','黄峥','李嘉诚','刘强东','雷军','王健林','李彦宏'];
 
+// ========== 游戏状态 ==========
+let G=null;
+
 // ===== NPC System =====
 const NPCS={mom:{name:'妈妈',avatar:'👩'},dad:{name:'爸爸',avatar:'👨'},boss:{name:'张总',avatar:'👨‍💼'},colleague:{name:'小李',avatar:'👩‍💻'},hr:{name:'HR王姐',avatar:'👩‍💼'},bestie:{name:'老王',avatar:'🍻'},classmate:{name:'小张',avatar:'🎓'},mysterious:{name:'神秘人',avatar:'🎭'},banker:{name:'刘经理',avatar:'🏦'},realtor:{name:'小陈',avatar:'🏠'},spouse:{name:'配偶',avatar:'💑'},child:{name:'孩子',avatar:'👦'},delivery:{name:'快递',avatar:'📦'},system:{name:'系统',avatar:'📱'},wife:{name:'老婆',avatar:'👩'},husband:{name:'老公',avatar:'👨'},gymCoach:{name:'健身教练',avatar:'🏋️'},neighbor:{name:'邻居老赵',avatar:'🧑‍🦳'},exColleague:{name:'前同事小周',avatar:'👨‍🔬'},mentor:{name:'导师李教授',avatar:'🧑‍🏫'},scammer:{name:'神秘号码',avatar:'📱'},campusGirl:{name:'小雨',avatar:'👧'}};
 const PHONE_MESSAGES=[
@@ -1421,9 +1424,6 @@ const LEGACY_UPGRADES=[
   {id:'mood',name:'😊 初始心情+10',cost:10,effect:{mood:10}}
 ];
 const NPC_NAMES=['王思聪','马云','马化腾','刘强东','雷军','李彦宏','张一鸣','黄峥','丁磊','钟睒睒','王健林'];
-
-// ========== 游戏状态 ==========
-let G=null;
 
 function defaultState(){
   const legacy=loadLegacy();
