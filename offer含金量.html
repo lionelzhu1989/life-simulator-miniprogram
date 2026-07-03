@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>offer含金量 v3.5</title>
+<title>offer含金量 v3.6</title>
 <style>
 
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -1602,6 +1602,7 @@ const TEMPLATE_SMALL_EVENTS=[
 function advanceMonth(){
   G.totalMonths++;G.monthsAtJob++;G.events=[];
   G._encounterActive=false; // 重置月度场景标记
+  if(!G._recentEvents)G._recentEvents=[]; // 连锁反应记忆（最近事件记录）
   const job=JOBS[G.jobIndex];
   let income=job.salary/12;
   // V2: Early income slightly lower (first 24 months penalty)
@@ -1732,6 +1733,29 @@ function advanceMonth(){
   // Monthly task auto-complete
   G.monthlyTasks['advance']=true;
   G.monthlyTasks['promote']=true;
+  // 🥚 彩蛋事件（5%概率，极其稀有）
+  if(Math.random()<0.05&&!G.gameOver){
+    const easterEggs=[
+      {text:'🥚 你中了一个小众平台的NFT，虽然不值钱但很有意思',type:'good',effect:{mood:8,EQ:1}},
+      {text:'🥚 你随手买的刮刮乐中了200块！',type:'good',effect:{money:200,mood:10}},
+      {text:'🥚 你在二手平台卖掉了三年前的旧手机，赚了80块',type:'good',effect:{money:80,mood:5}},
+      {text:'🥚 你被隔壁桌的人认出来"你是不是xxx"（认错人了）',type:'neutral',effect:{mood:3}},
+      {text:'🥚 你今天出门发现鞋带系了一个完美的蝴蝶结，心情莫名好',type:'good',effect:{mood:5}},
+      {text:'🥚 你在地铁上看到一个人在看你，你们对视了3秒后同时笑了',type:'good',effect:{mood:6,EQ:2}},
+      {text:'🥚 你发现自己三年前写的评论被100人点赞了',type:'good',effect:{mood:8}},
+      {text:'🥚 你收到一封来自陌生人的感谢邮件——你忘了帮过他什么忙',type:'good',effect:{mood:10,EQ:2}},
+      {text:'🥚 你在超市抓娃娃机一次就抓到了一个丑萌玩偶',type:'good',effect:{mood:12,money:-15}},
+      {text:'🥚 你的外卖里多送了一份小食，心情大好',type:'good',effect:{mood:8,money:-25}},
+      {text:'🥚 你随手转发的抽奖居然中了一箱零食',type:'good',effect:{mood:15,money:50}},
+      {text:'🥚 你翻出了一张5年前的照片，回忆杀',type:'neutral',effect:{mood:6}},
+      {text:'🥚 你今天随机被一个小孩叫了声"哥哥/姐姐"，虽然你已经不小了',type:'good',effect:{mood:8}},
+      {text:'🥚 你在网上发的帖子突然有了回复，有人认真跟你讨论',type:'good',effect:{mood:5,IQ:1}},
+      {text:'🥚 你今天发现自己的公交卡里还有200块余额',type:'good',effect:{money:200,mood:10}},
+    ];
+    const egg=easterEggs[randInt(0,easterEggs.length-1)];
+    applySmallEvent(egg);
+    if(G._recentEvents)G._recentEvents.push('🥚彩蛋：'+egg.text.replace(/[\u{1F300}-\u{1FFFF}]/gu,'').substring(0,20));
+  }
   // Phone triggers
   if(!G.gameOver){initPhoneState();triggerFollowUps();if(Math.random()<0.55)triggerPhoneMessages();if(Math.random()<0.50)triggerAIMoments().catch(()=>{if(Math.random()<0.15)triggerMoments();});generateNotifications();generateGossipEvent();triggerGathering();}
   // 社交拓展：每月有概率触发偶遇场景
@@ -1772,6 +1796,12 @@ function applySmallEvent(evt){
   if(eff.EQ)G.EQ=clamp(G.EQ+eff.EQ,0,200);
   if(eff.stockLoss){for(const code in G.stockHoldings){G.stockPrices[code]=Math.max(1,G.stockPrices[code]*(1-eff.stockLoss));}}
   G.events.push(e);
+  // 连锁反应记忆
+  if(G._recentEvents){
+    const clean=e.text.replace(/[\u{1F300}-\u{1FFFF}]/gu,'').trim().substring(0,25);
+    G._recentEvents.push(clean);
+    if(G._recentEvents.length>5)G._recentEvents.shift();
+  }
 }
 
 // ========== V2: Decision Event System ==========
@@ -1793,6 +1823,12 @@ function triggerDecisionEvent(){
 function showDecisionEvent(evt){
   G.decisionCount=(G.decisionCount||0)+1;
   G._pendingDecision=true;
+  // 连锁反应记忆
+  if(G._recentEvents){
+    const clean=(evt.title||'决策事件').replace(/[\u{1F300}-\u{1FFFF}]/gu,'').trim().substring(0,25);
+    G._recentEvents.push(clean);
+    if(G._recentEvents.length>5)G._recentEvents.shift();
+  }
   let optionsHtml='';
   evt.options.forEach((opt,i)=>{
     const locked=(opt.reqIQ&&G.IQ<opt.reqIQ)||(opt.reqEQ&&G.EQ<opt.reqEQ);
@@ -4974,232 +5010,313 @@ function getGameStateContext(){
 }
 
 function buildDecisionPrompt(ctx){
+  // 构建连锁反应上下文
+  let chainContext='';
+  if(G._recentEvents&&G._recentEvents.length>0){
+    const recent=G._recentEvents.slice(-3);
+    chainContext='\n【近期发生过的事】'+recent.map(e=>'·'+e).join('；')+'\n可以围绕这些事产生后续发展（但不要每次都关联）。';
+  }
   return[{
     role:'system',
-    content:`你是人生模拟游戏"offer含金量"的AI剧情引擎。根据玩家当前状态，生成一个随机的人生决策事件。
-必须返回严格JSON格式（不要markdown代码块），结构如下：
+    content:`你是"offer含金量"的人生剧情引擎，风格参考：奇葩说+吐槽大会+真实人生。你的目标是让玩家"卧槽"。
+生成一个随机人生决策事件，必须返回严格JSON（不要markdown代码块）：
 {
-  "title":"事件标题（含emoji）",
-  "scene":"场景描述（50-80字，有画面感，口语化）",
+  "title":"事件标题（含emoji，要有冲击力）",
+  "scene":"场景描述（60-100字，有画面感，口语化，像朋友在跟你讲八卦）",
   "options":[
-    {"icon":"emoji","title":"选项标题","desc":"一句话描述","tag":"标签","tagCls":"tag-safe或tag-risk或tag-golden","effect":{效果JSON},"result":"选择后的结果描述（30-50字）"}
+    {"icon":"emoji","title":"选项标题（4-8字，有态度）","desc":"一句话描述（口语化，有画面感）","tag":"标签","tagCls":"tag-safe或tag-risk或tag-golden","effect":{效果},"result":"选择后的结果描述（40-80字，要有戏剧性）"}
   ]
 }
-effect可选字段：cash(金额), health(0-100), mood(0-100), IQ(0-100), EQ(0-100), salaryBonus(小数)
-选项2-3个，至少一个稳健(tag-safe)一个激进(tag-risk)。
-tagCls只能是 tag-safe/tag-risk/tag-golden 之一。
-事件要符合玩家年龄和资产水平，有趣、有反转、贴近真实生活。
+effect可选字段：cash(金额), health(0-100), mood(0-100), IQ(0-100), EQ(0-100), salaryBonus(小数), stockLoss(小数如0.1=跌10%)
 
-【联动规则】（重要！）
-事件应该与玩家当前状态最相关的领域/人物联动，不要硬套。按以下优先级：
-- 18-22岁（校园期）：优先与学业、社团、实习、校园恋爱（小雨）相关，随机选择
-- 23-30岁（职场期）：优先与工作、跳槽、同事、薪资相关
-- 31-40岁（家庭期）：优先与家庭、子女、房贷、婚姻相关
-- 40岁+（成熟期）：优先与投资、健康、事业转型、子女教育相关
-- 如果玩家有房产/股票/创业等特定资产，事件也可以和该资产相关
-- 恋爱（小雨）只是选项之一，不要每次都选小雨
+【灵魂要求】（最重要！）
+- 选项要大胆：一个"作死"选项、一个"稳妥"选项、一个"骚操作"选项（如果有3个选项的话）
+- 结果要有反转：选了"好选项"可能翻车，选了"坏选项"可能因祸得福
+- 场景要像真实生活：不要"系统提示"，要"你正在xxx，突然xxx"
+- 允许离谱但要合理：可以荒诞，但要在游戏世界观内说得通
+- 涉及金钱时数字要合理（不要出现百万级除非玩家很有钱）
+- 可以出现黑色幽默、反转、意外，但不要负面三观
+
+【联动规则】（按玩家当前状态选择最相关的领域）
+- 18-22岁：学业/社团/实习/恋爱/兼职/考证/室友矛盾（随机）
+- 23-30岁：跳槽/加薪/创业/恋爱/租房/职场政治/副业
+- 31-40岁：房贷/子女/婚姻/中年危机/事业瓶颈/父母养老
+- 40岁+：投资/健康/退休规划/子女教育/创业转型/养生
+- 如果玩家有特定资产（股票/房产/公司），可以和该资产相关
+- 小雨只是众多NPC之一，不要每次都选她
+- 可以完全出乎意料：比如在办公室遇到明星、路上捡到奇怪的东西、突然收到多年不联系的人的消息
+${chainContext}
   },{
     role:'user',
-    content:`玩家状态：${JSON.stringify(ctx)}
-${'请根据玩家当前年龄（'+ctx.age+'岁）和状态，选择最相关的领域生成一个人生决策事件。'}
-事件要和之前的不同，有新鲜感。`
+    content:`玩家：${ctx.age}岁，${ctx.jobLevel}，资产${ctx.totalAsset}，心情${ctx.mood}，健康${ctx.health}，已婚${ctx.married}，子女${ctx.children}，有股票${ctx.stocks.length>0?'有':'无'}
+请生成一个让玩家"卧槽"的人生决策事件。要有戏剧性、有反转、贴近真实但不无聊。`
   }];
 }
 
 function buildMomentsPrompt(ctx){
   const npcPool=[
-    {id:'mom',name:'妈妈',avatar:'👩',traits:['唠叨','关心','节俭'],topics:['退休生活','做饭','广场舞','天气']},
-    {id:'dad',name:'爸爸',avatar:'👨',traits:['沉默','报喜不报忧'],topics:['钓鱼','下棋','养花','老战友']},
-    {id:'bestie',name:'老王',avatar:'🍻',traits:['八卦','直爽','爱喝酒'],topics:['喝酒','聚会','吐槽','赚钱']},
-    {id:'colleague',name:'小李',avatar:'💼',traits:['谨慎','消息灵通'],topics:['加班','公司八卦','行业动态']},
-    {id:'boss',name:'张总',avatar:'👔',traits:['圆滑','画饼'],topics:['管理','行业趋势','投资']},
-    {id:'classmate',name:'小张',avatar:'🎓',traits:['攀比','怀旧'],topics:['聚会','谁混得好','比较']},
-    {id:'banker',name:'刘经理',avatar:'🏦',traits:['专业','推销'],topics:['理财','基金','市场']},
-    {id:'realtor',name:'小陈',avatar:'🏠',traits:['热情','信息量大'],topics:['房价','投资','城市']},
-    {id:'neighbor',name:'邻居老赵',avatar:'🏘️',traits:['热心','八卦'],topics:['小区','菜价','天气']},
-    {id:'exColleague',name:'前同事小周',avatar:'🔄',traits:['怀旧','感慨'],topics:['前公司','跳槽','行业']},
-    {id:'mentor',name:'李教授',avatar:'📖',traits:['睿智','有深度'],topics:['读书','思考','人生']},
-    {id:'gymCoach',name:'健身教练',avatar:'💪',traits:['热情','直率'],topics:['健身','健康','饮食']},
-    {id:'campusGirl',name:'小雨',avatar:'👧',traits:['活泼','可爱','会撒娇'],topics:['日常','学习','约会','校园生活']}
+    {id:'mom',name:'妈妈',avatar:'👩',traits:['唠叨','关心','节俭','爱转发养生文章'],topics:['退休生活','做饭','广场舞','养生','别人家孩子']},
+    {id:'dad',name:'爸爸',avatar:'👨',traits:['沉默','报喜不报忧','偶尔温情'],topics:['钓鱼','下棋','养花','老战友','国际大事']},
+    {id:'bestie',name:'老王',avatar:'🍻',traits:['八卦','直爽','爱喝酒','损友','社会'],topics:['喝酒','聚会','吐槽','赚钱','豪车']},
+    {id:'colleague',name:'小李',avatar:'💼',traits:['谨慎','消息灵通','爱吐槽','职场生存'],topics:['加班','公司八卦','行业动态','摸鱼','离职']},
+    {id:'boss',name:'张总',avatar:'👔',traits:['圆滑','画饼','偶尔真诚','中年危机'],topics:['管理','行业趋势','投资','应酬','跑步']},
+    {id:'classmate',name:'小张',avatar:'🎓',traits:['攀比','怀旧','爱炫耀','消息灵通'],topics:['聚会','谁混得好','比较收入','谁结婚了','投资']},
+    {id:'banker',name:'刘经理',avatar:'🏦',traits:['专业','殷勤','推销','信息差'],topics:['理财','基金','市场','存款利率']},
+    {id:'realtor',name:'小陈',avatar:'🏠',traits:['热情','夸大','逼单','信息量大'],topics:['房价','好房源','投资','学区房']},
+    {id:'neighbor',name:'邻居老赵',avatar:'🏘️',traits:['热心','八卦','操心','小区万事通'],topics:['小区新闻','物业','菜价','天气','相亲']},
+    {id:'exColleague',name:'前同事小周',avatar:'🔄',traits:['怀旧','感慨','爱比较'],topics:['前公司','跳槽','近况','行业变化']},
+    {id:'mentor',name:'李教授',avatar:'📖',traits:['睿智','温和','有深度'],topics:['读书','思考','人生','哲学']},
+    {id:'gymCoach',name:'健身教练',avatar:'💪',traits:['热情','直率','爱劝人健身'],topics:['健身','健康','饮食','减肥']},
+    {id:'campusGirl',name:'小雨',avatar:'👧',traits:['活泼','可爱','会撒娇','有小脾气'],topics:['日常','学习','约会','校园生活','情感','八卦']}
   ];
   let available=npcPool.map(n=>n.id);
-  if(!ctx.married) available=available.filter(id=>id!=='spouse');
-  if(ctx.children<=0) available=available.filter(id=>id!=='child');
   // 18-22岁：小雨高概率出现在朋友圈NPC池
   if(ctx.age>=18&&ctx.age<=22&&Math.random()<0.4){available=['campusGirl'];}
+  const chosen=npcPool.filter(n=>available.includes(n.id));
   return [{
     role:'system',
-    content:`你是人生模拟游戏的AI朋友圈引擎。你需要模拟一个NPC在微信朋友圈发了一条动态，以及2-3个其他NPC的评论。
+    content:`你是"offer含金量"的朋友圈引擎。模拟NPC发微信朋友圈+其他NPC评论。风格要像真实朋友圈，不是游戏。
+可选NPC（随机选1个发朋友圈，2-3个评论）：
+${chosen.map(n=>`·${n.id}(${n.name}): ${n.traits.join('、')}，常发${n.topics.join('、')}`).join('\n')}
 
-可选NPC及其性格特点：
-${npcPool.filter(n=>available.includes(n.id)).map(n=>`- ${n.id}(${n.name}): 性格${n.traits.join('、')}，常发${n.topics.join('、')}`).join('\n')}
+【朋友圈类型】（随机选择，每次不同！）
+- 📸 生活日常：美食/旅行/健身/遛娃/聚会
+- 🤔 深夜感悟：人生思考/emo/回忆杀
+- 📢 炫耀/凡尔赛：低调炫耀/假装抱怨实则秀
+- 😤 吐槽/抱怨：工作/天气/生活/社会现象
+- 📰 转发+点评：新闻/文章/视频+个人看法
+- 😂 搞笑/段子：自嘲/谐音梗/反差萌
+- 🎉 喜讯/官宣：升职/结婚/买房/孩子
+- 📱 卖惨/求助：丢东西/生病/被骗/倒霉
+- 🔥 吃瓜/八卦：分享别人的八卦/热点
+- 💭 深夜食堂：深夜放毒/晒美食
+- 🤷 随机日常：什么都可以，越真实越好
 
-【朋友圈规则】
-1. 选择最合适的NPC发一条朋友圈，内容要符合其性格和玩家当前状态
-2. 朋友圈要自然、真实，像真人发的：有emoji、有生活气息
-3. 给这条朋友圈安排2-3个其他NPC的评论，每个评论者的语气要完全不同：
-   - 妈妈：唠叨关心型"注意身体啊"
-   - 老王：直爽调侃型"又装逼"
-   - 老板：圆滑画饼型"年轻人有前途"
-   - 小张：攀比型"我比你更好"
-   - 小雨：可爱撒娇型"哼哼"
-   - 邻居：八卦型"听说了吗"
-   - 李教授：深度型"这让我想到"
-4. 评论要短（10-25字），口语化，像真实朋友圈评论区
-5. 玩家点赞+10，评论+20 EQ
+【评论风格指南】（每个NPC评论风格要完全不同！）
+- 妈妈："注意身体啊""多穿点""别老熬夜""妈给你寄了点东西"
+- 老王："又装逼""可以啊兄弟""改天约""你行啊"
+- 老板："有想法""年轻人不错""格局要打开""这个值得学习"
+- 小张："我上次xxx""这有什么""我比你xxx""你这个一般般"
+- 小雨："哈哈哈""哼哼""不理你了""你好无聊""可爱可爱"
+- 邻居："哎呀""我家xxx""物业怎么说""这事儿我知道"
+- 李教授："这让我想到""有道理但不完全对""你再想想"
+- 健身教练："该来训练了""别光吃不动""蛋白质补了吗"
+- 刘经理："这个理财产品了解一下""现在市场xxx"
+- 小陈："这个地段不错""学区房考虑一下""最近房价xxx"
 
-必须返回严格JSON格式（不要markdown代码块），结构如下：
+【强制要求】
+- 朋友圈正文50-120字，有emoji，像真人发的
+- 评论10-30字，口语化，带emoji
+- 3个评论必须是3个不同NPC
+- 评论之间可以互相回复（比如有人回复"哈哈哈"，另一个跟"真的"）
+- 玩家点赞+10心情，评论+20情商
+
+严格JSON（不要markdown）：
 {
-  "npc":"npcId",
-  "text":"朋友圈正文内容（50-100字，有emoji，像真人发的朋友圈）",
+  "npc":"发朋友圈的npcId",
+  "text":"朋友圈正文",
   "comments":[
-    {"npc":"评论者npcId","text":"评论内容（10-25字，口语化）"},
-    {"npc":"评论者npcId","text":"评论内容"},
-    {"npc":"评论者npcId","text":"评论内容"}
+    {"npc":"评论者1","text":"评论1"},
+    {"npc":"评论者2","text":"评论2"},
+    {"npc":"评论者3","text":"评论3"}
   ]
-}
-
-【示例1】妈妈发的朋友圈：
-{"npc":"mom","text":"今天天气好，和老姐妹们去公园走了两圈，拍了好多花 🌸 晚上做了红烧排骨，手艺越来越好了！退休生活就是这么朴实无华 😄","comments":[{"npc":"neighbor","text":"张姐这排骨看着就香！"},{"npc":"bestie","text":"阿姨好会享受生活啊"},{"npc":"classmate","text":"我妈天天催我学做饭"}]}
-
-【示例2】老王发的朋友圈：
-{"npc":"bestie","text":"周五下班，和兄弟们搞一顿！人生苦短，先干为敬 🍺🍺🍺","comments":[{"npc":"colleague","text":"羡慕了，我们还在加班"},{"npc":"classmate","text":"老王你这酒量越来越好了"},{"npc":"boss","text":"年轻人有活力是好事"}]}
-
-【示例3】小雨发的朋友圈：
-{"npc":"campusGirl","text":"图书馆占座成功！今天的自习室风景真好 ☀️ 学习使我快乐（并不）"},{"npc":"classmate","text":"你旁边那个位置是给谁留的？😏"},{"npc":"bestie","text":"这图拍得也太好看了吧"},{"npc":"mom","text":"好好学习别老玩手机"}]`
+}`
   },{
     role:'user',
-    content:`玩家状态：年龄${ctx.age}岁，${ctx.jobLevel||'待业'}，资产${ctx.totalAsset}元，已婚：${ctx.married?'是':'否'}，子女：${ctx.children}人，心情${ctx.mood}，健康${ctx.health}，情商${ctx.EQ}
-请生成一条朋友圈动态及评论。选择最合适的NPC，内容要和玩家当前生活状态有关联。`
+    content:`玩家：${ctx.age}岁，${ctx.jobLevel||'待业'}，资产${ctx.totalAsset}，心情${ctx.mood}，已婚${ctx.married}，子女${ctx.children}人
+随机选一个NPC发朋友圈，内容要真实、有趣、有生活气息。像刷朋友圈时看到的那种。`
   }];
 }
 
 function buildPhonePrompt(ctx){
-  // 构建所有可聊天NPC的详细人设信息
+  // 构建连锁反应上下文
+  let chainContext='';
+  if(G._recentEvents&&G._recentEvents.length>0){
+    const recent=G._recentEvents.slice(-2);
+    chainContext='\n【最近发生过】'+recent.join('；')+'。如果合适，可以让NPC提及这些事。';
+  }
   const npcPersonalities = {
-    mom: {name:'妈妈',traits:['唠叨','关心','爱攀比','节俭','护犊子'],topics:['催婚','身体健康','工作累不累','花钱大手大脚','别人家孩子']},
+    mom: {name:'妈妈',traits:['唠叨','关心','爱攀比','节俭','护犊子','催婚狂魔'],topics:['催婚','身体健康','工作累不累','花钱大手大脚','别人家孩子','相亲对象']},
     dad: {name:'爸爸',traits:['沉默','严厉','偶尔温情','报喜不报忧'],topics:['工作顺不顺','身体怎么样','钱够不够花','少熬夜']},
-    bestie: {name:'老王',traits:['八卦','直爽','爱喝酒','损友','讲义气'],topics:['八卦','喝酒','吐槽','赚钱路子','一起玩']},
-    colleague: {name:'小李',traits:['谨慎','消息灵通','爱吐槽','职场生存'],topics:['公司八卦','老板动向','裁员','跳槽','年终奖']},
-    boss: {name:'张总',traits:['圆滑','惜字如金','画饼','施压','偶尔真诚'],topics:['加班','项目进度','晋升','画饼','表扬']},
-    classmate: {name:'小张',traits:['攀比','怀旧','消息灵通','爱炫耀'],topics:['聚会','谁混得好','谁离婚了','比较收入']},
+    bestie: {name:'老王',traits:['八卦','直爽','爱喝酒','损友','讲义气','社会'],topics:['八卦','喝酒','吐槽','赚钱路子','一起玩','借钱']},
+    colleague: {name:'小李',traits:['谨慎','消息灵通','爱吐槽','职场生存'],topics:['公司八卦','老板动向','裁员','跳槽','年终奖','摸鱼']},
+    boss: {name:'张总',traits:['圆滑','惜字如金','画饼','施压','偶尔真诚'],topics:['加班','项目进度','晋升','画饼','表扬','敲打']},
+    classmate: {name:'小张',traits:['攀比','怀旧','消息灵通','爱炫耀'],topics:['聚会','谁混得好','谁离婚了','比较收入','投资']},
     banker: {name:'刘经理',traits:['专业','殷勤','推销','信息差'],topics:['理财产品','存款利率','基金','贷款']},
     realtor: {name:'小陈',traits:['热情','夸大','逼单','信息量大'],topics:['房价','好房源','投资','学区房']},
-    neighbor: {name:'邻居老赵',traits:['热心','八卦','操心','小区万事通'],topics:['小区新闻','物业','邻里八卦']},
+    neighbor: {name:'邻居老赵',traits:['热心','八卦','操心','小区万事通'],topics:['小区新闻','物业','邻里八卦','相亲']},
     exColleague: {name:'前同事小周',traits:['怀旧','感慨','信息量大','爱比较'],topics:['以前公司','跳槽','近况','行业变化']},
     mentor: {name:'李教授',traits:['睿智','温和','惜字如金','有深度'],topics:['人生建议','职业规划','深度思考']},
     gymCoach: {name:'健身教练',traits:['热情','直率','爱劝人健身','八卦体质'],topics:['训练计划','健身房八卦','减脂增肌']},
     spouse: {name:'配偶',traits:['亲密','唠叨','需要陪伴','偶尔吵架'],topics:['日常','陪伴','生活琐事','情感']},
     child: {name:'孩子',traits:['天真','依赖','成长','叛逆'],topics:['学校','成绩','要钱','叛逆']},
     mysterious: {name:'神秘人',traits:['神秘','信息量大','偶尔有用'],topics:['行业内幕','赚钱机会','警告']},
-    campusGirl: {name:'小雨',traits:['活泼','可爱','有点小脾气','会撒娇','直率'],topics:['日常','学习','约会','校园生活','情感','八卦']}
+    campusGirl: {name:'小雨',traits:['活泼','可爱','有点小脾气','会撒娇','直率'],topics:['日常','学习','约会','校园生活','情感','八卦','生气']}
   };
   
-  // 根据玩家年龄和状态筛选合适的NPC
   let availableNpcs = ['mom','dad','bestie','colleague','boss','classmate','neighbor','exColleague','mentor','gymCoach'];
   if(ctx.age >= 25) availableNpcs.push('banker','realtor');
   if(ctx.married) availableNpcs.push('spouse');
   if(ctx.children > 0) availableNpcs.push('child');
-  if(Math.random() < 0.1) availableNpcs.push('mysterious');
-  // 校园恋爱：18-22岁期间，小雨高概率主动找玩家聊天
+  if(Math.random() < 0.12) availableNpcs.push('mysterious');
   if(ctx.age >= 18 && ctx.age <= 22 && Math.random() < 0.45){
     availableNpcs = ['campusGirl','campusGirl','campusGirl','mom','bestie','classmate'];
   }
   
   return [{
     role:'system',
-    content:`你是人生模拟游戏的AI对话引擎。你需要模拟不同性格的NPC主动给玩家发微信消息。
+    content:`你是"offer含金量"的微信聊天引擎。模拟NPC主动给玩家发微信消息。要像真实微信聊天，不是游戏对话。
 
-【重要】你必须选择一个NPC来发起对话，不要让玩家选择NPC。
-
-可选NPC及其性格特点：
+可选NPC：
 ${availableNpcs.map(id => {
   const p = npcPersonalities[id];
-  return `- ${id}(${p.name}): 性格${p.traits.join('、')}，常聊${p.topics.join('、')}`;
+  return `·${id}(${p.name}): ${p.traits.join('、')}，常聊${p.topics.join('、')}`;
 }).join('\n')}
 
-【对话规则】
-1. 根据NPC性格生成对话内容，要符合人设
-2. NPC说话要自然，像真人微信聊天
-3. 对话2-4轮，每轮NPC发1-2条消息
-4. 每轮给玩家1-3个回复选项
-5. 对话要和玩家当前状态相关（年龄、职业、资产等）
-6. 可以有emoji但不要太多
+【对话风格要求】
+- 每个NPC说话要有强烈个人风格，读完第一句话就能猜出是谁
+- NPC可以发语音条（用"[语音条 3'']"表示）、表情包（用"[表情包]"表示）、转账红包
+- 对话可以出乎意料：老板突然真诚了、妈妈居然不催婚了、老王突然认真了
+- 对话要有冲突和转折，不要平铺直叙
+- 可以涉及金钱：NPC给玩家钱用[GIVE:金额]，NPC向玩家借钱用[ASK:金额:原因]
 
-【校园恋爱特别规则】（当选择campusGirl时）
-- 小雨是玩家的大学同学/校园暧昧对象，性格活泼可爱，会撒娇
-- 她主动找玩家聊天时，话题围绕：约吃饭、问在干嘛、分享日常、吐槽、撒娇、吃醋
-- 她说话要像真实的女大学生：会用"哈哈哈""emmm""你猜""哼"等语气词
-- 对话要自然推进关系：从日常闲聊→约出去玩→表白→在一起
-- 每次对话后如果有好感度变化，在fx中体现{mood:正数}表示好感提升
+【NPC说话风格深度指南】
+- 妈妈：前3句关心你，第4句突然催婚/催生/拿你和别人比。会突然发语音。"儿子！！！"开头。
+- 老爸：惜字如金，一条消息不超过10个字。但关键时刻一句话戳心。"嗯""好""少喝酒""钱够不够"。
+- 老王：上来就"兄弟！"或"卧槽！"。话题跳跃极快，从八卦到借钱到约酒。社会气十足。
+- 小李：消息很长，分很多条发。内容都是公司八卦，信息量巨大。"你知道吗""听说""据说"。
+- 老板：先夸再压。"最近表现不错"后面跟"但有个事"。偶尔深夜发消息。画饼大师。
+- 小张：永远在比较。"我xxx了""你呢？"。看似关心实则炫耀。发很多照片。
+- 刘经理：永远在推销。每条消息都像广告。但偶尔透露有用信息。
+- 小陈：热情到让你不好意思拒绝。消息轰炸。"这个真的很好""你考虑一下"。
+- 邻居老赵：消息永远很长，像在讲故事。家长里短，什么都知道。
+- 小周：怀旧杀。"还记得xxx吗""那时候"。突然感慨人生。
+- 李教授：消息少但精。每句话都像格言。"年轻人，xxx"。
+- 健身教练：每条消息都在劝你健身。看到什么都能扯到训练。"该练了！"
+- 配偶：情绪变化大。从"老公/老婆"到"你自己看着办"只需要一条消息。可以吵架。
+- 孩子：要钱/告状/分享/叛逆，四选一。消息带表情包。"爸/妈""我要""同学xxx"。
+- 神秘人：发消息像特工。"xxx有风险""建议你xxx""别问我是谁"。
+- 小雨：语气词多。"哈哈哈""emmm""你猜""哼""不理你了""你好无聊"。会突然生气又突然好。
 
-【金额标签规则】（重要！）
-- 如果NPC要给玩家钱，在NPC的对话文本中自然地说出来（如"转你500块"、"给你发个红包"）
-- 然后在回复选项中用[GIVE:金额]标签触发转账
-- 如果NPC要向玩家借钱，在NPC的对话文本中自然地说出来（如"能借我2万周转吗"）
-- 然后在回复选项中用[ASK:金额:原因]标签触发决策
-- 【严禁方向搞反！NPC给玩家=用GIVE，NPC向玩家借钱=用ASK】
+【对话结构】
+- 2-4轮对话
+- 每轮NPC发1-3条消息，然后给玩家1-3个选项
+- 对话要有起承转合：开场→展开→高潮/反转→结局
+- 最后一轮可以有意外转折（NPC突然说了一件大事）
 
-必须返回严格JSON格式（不要markdown代码块），结构如下：
+严格JSON（不要markdown）：
 {
   "npc":"npcId",
   "type":"wechat",
   "rounds":[
-    {"npcMsgs":["NPC说的话1","NPC说的话2"],"opts":[{"text":"玩家回复","fx":{},"next":-1}]}
+    {"npcMsgs":["NPC说的话"],"opts":[{"text":"玩家回复","fx":{},"next":-1}]}
   ]
 }
-fx可选：{mood:数字, health:数字, IQ:数字, EQ:数字, cash:数字, salaryBonus:小数}
-next:-1表示对话结束，next:1表示下一轮。
-
-【示例】妈妈发来消息：
-{"npc":"mom","type":"wechat","rounds":[
-  {"npcMsgs":["儿子，最近忙不忙？","妈看你朋友圈老是加班，要注意身体啊"],opts:[{"text":"妈，我挺好的，就是最近项目忙","fx":{},"next":1}]},
-  {"npcMsgs":["别太累了，钱是赚不完的","对了，你二姨家小明都结婚了...你什么时候带个对象回来？"],opts:[{"text":"妈，我有在看了，别催了","fx":{},"next":-1},{"text":"妈，其实我有对象了","fx":{},"next":-1}]}
-]}`
+fx可选：{mood:数字, health:数字, IQ:数字, EQ:数字, cash:数字, salaryBonus:小数}`
   },{
     role:'user',
     content:(function(){
-      let base=`玩家状态：年龄${ctx.age}岁，${ctx.jobLevel||'待业'}，资产${ctx.totalAsset}元，已婚：${ctx.married?'是':'否'}，子女：${ctx.children}人，心情${ctx.mood}，健康${ctx.health}`;
-      // If player clicked "ask about moment", include the moment context
+      let base=`玩家：${ctx.age}岁，${ctx.jobLevel||'待业'}，资产${ctx.totalAsset}，心情${ctx.mood}，健康${ctx.health}，已婚${ctx.married}，子女${ctx.children}人`;
       if(G._askMomentContext){
         const mc=G._askMomentContext;
-        base+=`\n\n【重要】玩家刚看了${mc.npcId}发的一条朋友圈，内容是："${mc.text}"。玩家想和TA聊这件事。请让该NPC主动发消息，话题围绕这条朋友圈展开（可以是解释、补充、或者聊相关的事）。强制选择npcId=${mc.npcId}。`;
+        base+=`\n\n【重要】玩家刚看了${mc.npcId}的朋友圈："${mc.text}"。让该NPC发消息聊这件事。强制npcId=${mc.npcId}。`;
         delete G._askMomentContext;
       }
-      return base+`\n请生成一条NPC主动发来的微信消息。选择最合适的NPC，对话要自然、有生活气息。`;
+      return base+`\n随机选一个NPC，生成一段让人意想不到的微信对话。要戏剧性，要有趣！${chainContext}`;
     })()
   }];
 }
 
 function buildSmallEventPrompt(ctx){
+  // 构建连锁反应上下文
+  let chainContext='';
+  if(G._recentEvents&&G._recentEvents.length>0){
+    const recent=G._recentEvents.slice(-2);
+    chainContext='\n【最近发生过】'+recent.join('；')+'。可以有后续反应。';
+  }
   return[{
     role:'system',
-    content:`你是人生模拟游戏的小事件引擎。生成一个随机小事件——可以是任何事情，越丰富越好。
-必须返回严格JSON格式（不要markdown代码块），结构如下：
+    content:`你是"offer含金量"的小事件引擎。生成一个随机小事件——任何事情都可能发生，越丰富越好。
+严格JSON（不要markdown）：
 {
-  "text":"事件描述（含emoji，15-30字）",
+  "text":"事件描述（含emoji，20-40字，要口语化有画面感）",
   "type":"good或bad或neutral",
   "effect":{效果}
 }
-effect可选：{money:金额, health:数字, mood:数字, IQ:数字, EQ:数字, stockLoss:小数(如0.1)}
+effect：{money:金额, health:数字, mood:数字, IQ:数字, EQ:数字, stockLoss:小数如0.1}
 
-【创意要求】（重要！）
-事件类型越丰富越好，随机选择，不要重复：
-- 生活琐事：丢东西、捡到钱、吃到好吃的、天气、堵车、快递到了
-- 社交互动：朋友借钱、老同学联系、被点赞、被拉黑、聚会、表白
-- 职场相关：被表扬、被批评、加班、出差、同事八卦、跳槽机会
-- 健康相关：感冒、失眠、健身有效、体检异常、过敏
-- 情感相关：被表白、吵架、和好、暧昧、吃醋、分手
-- 财务相关：彩票、红包、被骗、还钱、投资小赚
-- 学习成长：考了证书、看了一本书、学了新技能、灵感爆发
-- 荒诞搞笑：踩狗屎、中了小奖、被鸟拉头上、手机摔了屏幕没碎
-- 随机NPC互动：任何NPC都可能出现
-每次随机选一个方向，不要总是同一个类型。`
+【事件类型池】（每次随机选一个，不要重复）
+🎭 生活反转类：
+- 手机摔了但没碎/摔碎了屏幕
+- 出门前晴天下雨了/带伞了没下雨
+- 快递到了但不是自己的/自己的快递丢了
+- 路上捡到钱/钱包里少了钱
+- 吃到超好吃的/吃到苍蝇了
+- 堵车但旁边车里的人在跳舞/唱歌
 
+💬 社交魔幻类：
+- 发现自己被拉黑了/发消息对方没回
+- 前任突然加你微信/被前任的朋友圈晒到了
+- 有人在背后说你坏话被你听到了
+- 被陌生人夸好看/被搭讪了
+- 朋友突然找你借钱/还你钱
+- 老同学聚会邀请但不想去
+
+💼 职场魔幻类：
+- 被老板点名表扬/批评了
+- 发现同事在摸鱼被抓/自己摸鱼被看到
+- 收到猎头私信/被同事看到在投简历
+- 加班到深夜但第二天放假/加班但没加班费
+- 开会时打瞌睡被叫起来/电脑死机PPT没了
+
+🏃 健康随机类：
+- 跑步时膝盖响了一声/健身后浑身酸痛
+- 体检报告异常但复查没事/复查有问题需要进一步检查
+- 突然失眠/突然睡了12小时
+- 打了个喷嚏/过敏了/感冒了
+
+💕 情感地震类：
+- 发现男/女朋友手机有暧昧消息
+- 被表白但对方发错人了
+- 朋友聚会上被问"你怎么还单身"
+- 帮朋友带孩子被感动/崩溃
+- 和陌生人聊了一晚上超开心
+
+💰 财务惊喜/惊吓类：
+- 发现银行卡多了一笔钱/少了一笔钱
+- 报销下来了/发票丢了
+- 停车费罚款200/路上被贴条
+- 被推销办卡/健身房跑路了
+- 摸彩票中了10块钱/刮刮乐亏了50
+
+🧠 学习成长类：
+- 看到一句话突然顿悟了
+- 学了个新技能超有用/学了但没用
+- 别人请教你问题你答不上来
+- 灵感爆发但没记下来/记下来了写了好东西
+
+🐶 荒诞搞笑类：
+- 被鸟拉了头上
+- 走路踩到口香糖
+- 在电梯里放屁被发现了
+- 打喷嚏把假牙喷出去了
+- 被外卖小哥加了微信说你家地址好找
+
+🎲 随机NPC类：
+- 任何NPC都可能出现在任何场景
+- 陌生人的一个举动改变了你的一天
+- 刷到一个视频让你想了很久
+
+【创意要求】
+- 效果要有冲击力：好的要特别爽，坏的要特别倒霉，neutral的要有意思
+- 描述要有画面感：让玩家能想象出那个场景
+- 可以和玩家当前状态有关联，但也可以完全随机
+- 效果数值合理：不要一下影响太大
+- 事件描述要像朋友在跟你讲"我今天xxx"的语气${chainContext}`
   },{
     role:'user',
-    content:`玩家：${ctx.age}岁，${ctx.jobLevel}，资产${ctx.totalAsset}，健康${ctx.health}，心情${ctx.mood}
-请随机生成一个小事件，越丰富越好。`
+    content:`玩家：${ctx.age}岁，${ctx.jobLevel}，资产${ctx.totalAsset}，心情${ctx.mood}，健康${ctx.health}
+随机生成一个小事件，要有趣、要意外、要让人想截图分享！`
   }];
 }
 
@@ -5247,7 +5364,7 @@ async function _doCallAI(promptBuilder,eventType){
     const tid=setTimeout(()=>ctrl.abort(),10000);
     const resp=await fetch(url,{
       method:'POST',headers,
-      body:JSON.stringify({messages,model:AI_ENGINE.model,max_tokens:600,temperature:0.85}),
+      body:JSON.stringify({messages,model:AI_ENGINE.model,max_tokens:800,temperature:0.92}),
       signal:ctrl.signal
     });
     clearTimeout(tid);
