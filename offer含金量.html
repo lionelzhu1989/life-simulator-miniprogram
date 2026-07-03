@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>offer含金量 v3.6</title>
+<title>offer含金量 v3.7</title>
 <style>
 
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -785,7 +785,7 @@ const DECISION_EVENTS=[
   {id:'work_05',ageMin:30,ageMax:40,title:'🚀 创业邀请',scene:'你的前同事找到了一个好项目，邀请你合伙创业。技术团队已经搭好了，就差一个"懂业务的人"。如果成了，未来不可限量；如果败了，可能影响家庭。',
     options:[
       {icon:'🚀',title:'辞职创业',desc:'人生能有几回搏',tag:'高风险',tagCls:'tag-golden',
-        reqIQ:115,effect:{cash:-100000},resultChance:0.35,resultGood:{cash:800000,mood:30,IQ:10},resultBad:{cash:-80000,mood:-20,health:-10},
+        reqIQ:115,effect:{cash:-100000,career:'selfEmployed'},resultChance:0.35,resultGood:{cash:800000,mood:30,IQ:10},resultBad:{cash:-80000,mood:-20,health:-10},
         resultFail:'创业失败，投入的资金大部分亏了，家庭压力很大。但这段经历让你成长了很多。',resultWin:'公司拿到了A轮融资！你的身家一下翻了好几倍，朋友圈都在刷你的新闻。'},
       {icon:'💰',title:'小额投资参与',desc:'参与但不All in，保留退路',tag:'稳健',tagCls:'tag-safe',
         effect:{cash:-50000},resultChance:0.35,resultGood:{cash:200000,mood:10},resultBad:{cash:-30000,mood:-5},
@@ -812,7 +812,7 @@ const DECISION_EVENTS=[
       {icon:'🧘',title:'调整心态',desc:'接受自己的平凡，享受当下',tag:'智慧',tagCls:'tag-safe',effect:{mood:20,health:5},result:'你开始学着接受不完美的自己。跑步、冥想、读书，生活渐渐有了新的节奏。'},
       {icon:'💡',title:'寻找新激情',desc:'人生下半场要有新的追求',tag:'积极',tagCls:'tag-safe',reqEQ:110,effect:{mood:15,EQ:5},result:'你找到了新的兴趣——写作。开始在公众号上分享职场经验，意外收获了一批粉丝。'},
       {icon:'🏃',title:'彻底改变',desc:'辞职去旅行/读书/做志愿者',tag:'勇敢',tagCls:'tag-golden',
-        effect:{cash:-100000,mood:25,health:10},result:'你辞职去环游世界了。虽然没有了收入，但你找回了对生活的热情。回来后创业反而更成功了。'}
+        effect:{cash:-100000,mood:25,health:10,career:'selfEmployed'},result:'你辞职去环游世界了。虽然没有了收入，但你找回了对生活的热情。回来后创业反而更成功了。'}
     ]},
 
   // === Wealth era 45+ ===
@@ -1200,7 +1200,8 @@ const ACHIEVEMENTS_DEF=[
   {id:'forbes',name:'福布斯上榜',desc:'登上福布斯富豪榜',icon:'🌟'},
   {id:'philanthropist',name:'慈善家',desc:'建立慈善基金会',icon:'💝'},
   {id:'realty_king',name:'地产大亨',desc:'拥有3套以上房产',icon:'🏘️'},
-  {id:'decision_maker',name:'人生导演',desc:'做出20次人生抉择',icon:'🎬'}
+  {id:'decision_maker',name:'人生导演',desc:'做出20次人生抉择',icon:'🎬'},
+  {id:'entrepreneur',name:'创业先锋',desc:'辞职创业',icon:'🚀'}
 ];
 
 const MONTHLY_TASKS=[
@@ -1237,7 +1238,7 @@ function defaultState(){
   });
   return{
     totalMonths:0,cash,health:hp,mood,IQ:iq,EQ:eq,
-    jobIndex:0,monthsAtJob:0,
+    jobIndex:0,monthsAtJob:0,selfEmployed:false,
     stockHoldings:{},stockPrices:{},
     houses:[],businesses:[],techInvestments:[],
     spouse:null,children:0,childAges:[],
@@ -1379,7 +1380,8 @@ function refreshLearning(){
 }
 function refreshHeader(){
   const job=JOBS[G.jobIndex];
-  document.getElementById('headerSub').textContent='年龄 '+getAge()+'岁 · '+job.name+' · '+getMonth()+'月';
+  const careerLabel=G.selfEmployed?'🚀 创业者':job.name;
+  document.getElementById('headerSub').textContent='年龄 '+getAge()+'岁 · '+careerLabel+' · '+getMonth()+'月';
   document.getElementById('lpDisplay').textContent=G.legacyPoints||0;
 }
 function refreshLife(){
@@ -1604,12 +1606,13 @@ function advanceMonth(){
   G._encounterActive=false; // 重置月度场景标记
   if(!G._recentEvents)G._recentEvents=[]; // 连锁反应记忆（最近事件记录）
   const job=JOBS[G.jobIndex];
-  let income=job.salary/12;
+  // 创业者没有工资收入，只有副业/房租/配偶收入
+  let income=G.selfEmployed?0:job.salary/12;
   // V2: Early income slightly lower (first 24 months penalty)
-  if(G.totalMonths<=24)income*=0.85;
+  if(!G.selfEmployed&&G.totalMonths<=24)income*=0.85;
   // V2: Mid-late income boost (after 120 months)
-  if(G.totalMonths>120)income*=1.15;
-  if(G.salaryBonus>0)income*=(1+G.salaryBonus);
+  if(!G.selfEmployed&&G.totalMonths>120)income*=1.15;
+  if(!G.selfEmployed&&G.salaryBonus>0)income*=(1+G.salaryBonus);
   let expense=0;
   if(G.spouse){const sp=SPOUSES.find(s=>s.id===G.spouse);income+=sp.salary/12;}
   let rentIncome=0;G.houses.forEach(h=>{const info=HOUSES.find(x=>x.id===h.id);rentIncome+=info?info.rent:0;});
@@ -1871,6 +1874,16 @@ function selectDecisionOption(optIndex){
   if(eff.EQ)G.EQ=clamp(G.EQ+eff.EQ,0,200);
   if(eff.salaryBonus)G.salaryBonus+=eff.salaryBonus;
   if(eff.money)G.cash+=eff.money;
+  // 创业/离职状态处理
+  if(eff.career==='selfEmployed'){
+    G.selfEmployed=true;
+    if(!G.achievements.includes('entrepreneur'))G.achievements.push('entrepreneur');
+    G.events.push({text:'🚀 你辞职了，正式成为一名创业者！',type:'neutral'});
+  }
+  if(eff.career==='reEmploy'){
+    G.selfEmployed=false;
+    G.events.push({text:'💼 你重新找到了工作！',type:'good'});
+  }
   // Check for chance-based outcomes
   let resultText=opt.result;
   if(opt.resultChance!==undefined){
@@ -2027,27 +2040,32 @@ function socialGathering(){
 // ========== 工作页面 ==========
 function refreshWork(){
   const job=JOBS[G.jobIndex];
-  let html='<div class="list-item"><div class="list-info"><div class="name">'+job.name+'</div><div class="desc">月薪：'+fmt(job.salary/12)+' | 在岗：'+G.monthsAtJob+'个月</div></div><span class="tag tag-green">当前</span></div>';
-  document.getElementById('currentJob').innerHTML=html;
-  let jobHtml='';
-  JOBS.forEach((j,i)=>{
-    const isCurrent=i===G.jobIndex;
-    const isNext=i===G.jobIndex+1;
-    const canPromote=isNext&&G.IQ>=j.requireIQ&&G.EQ>=j.requireEQ&&G.monthsAtJob>=j.requireMonths;
-    const locked=isNext&&!canPromote;
-    let action='';
-    if(isCurrent)action='<span class="tag tag-blue">在职</span>';
-    else if(canPromote)action='<button class="btn btn-primary btn-sm" onclick="tryPromote('+i+')">晋升</button>';
-    else if(i<G.jobIndex)action='<span class="text-sm text-muted">已过</span>';
-    else if(locked){
-      const reasons=[];
-      if(G.IQ<j.requireIQ)reasons.push('IQ≥'+j.requireIQ);
-      if(G.EQ<j.requireEQ)reasons.push('EQ≥'+j.requireEQ);
-      if(G.monthsAtJob<j.requireMonths)reasons.push('经验'+Math.ceil(j.requireMonths/12)+'年');
-      action='<span class="text-sm text-muted">'+reasons.join(' ')+'</span>';
-    }
-    jobHtml+='<div class="list-item"><div class="list-info"><div class="name">'+(isCurrent?'▶ ':'')+j.name+' <span class="text-sm text-muted">月薪'+fmtShort(j.salary/12)+'</span></div><div class="desc">要求：IQ≥'+j.requireIQ+' EQ≥'+j.requireEQ+(j.requireMonths?' 经验'+Math.ceil(j.requireMonths/12)+'年':'')+'</div></div><div class="list-action">'+action+'</div></div>';
-  });
+  let html,jobHtml='';
+  if(G.selfEmployed){
+    // 创业者状态：不显示职场晋升路径
+    html='<div class="list-item"><div class="list-info"><div class="name">🚀 创业者</div><div class="desc">已辞职创业 | 收入来源：副业/房租/投资</div></div><span class="tag tag-golden">创业中</span></div>';
+    jobHtml='<div class="list-item" style="text-align:center;color:#888;"><div class="list-info"><div class="desc">你已经离开了职场，正在创业路上拼搏。<br>收入取决于你的生意和投资，而不是工资。</div></div></div>';
+  }else{
+    html='<div class="list-item"><div class="list-info"><div class="name">'+job.name+'</div><div class="desc">月薪：'+fmt(job.salary/12)+' | 在岗：'+G.monthsAtJob+'个月</div></div><span class="tag tag-green">当前</span></div>';
+    JOBS.forEach((j,i)=>{
+      const isCurrent=i===G.jobIndex;
+      const isNext=i===G.jobIndex+1;
+      const canPromote=isNext&&G.IQ>=j.requireIQ&&G.EQ>=j.requireEQ&&G.monthsAtJob>=j.requireMonths;
+      const locked=isNext&&!canPromote;
+      let action='';
+      if(isCurrent)action='<span class="tag tag-blue">在职</span>';
+      else if(canPromote)action='<button class="btn btn-primary btn-sm" onclick="tryPromote('+i+')">晋升</button>';
+      else if(i<G.jobIndex)action='<span class="text-sm text-muted">已过</span>';
+      else if(locked){
+        const reasons=[];
+        if(G.IQ<j.requireIQ)reasons.push('IQ≥'+j.requireIQ);
+        if(G.EQ<j.requireEQ)reasons.push('EQ≥'+j.requireEQ);
+        if(G.monthsAtJob<j.requireMonths)reasons.push('经验'+Math.ceil(j.requireMonths/12)+'年');
+        action='<span class="text-sm text-muted">'+reasons.join(' ')+'</span>';
+      }
+      jobHtml+='<div class="list-item"><div class="list-info"><div class="name">'+(isCurrent?'▶ ':'')+j.name+' <span class="text-sm text-muted">月薪'+fmtShort(j.salary/12)+'</span></div><div class="desc">要求：IQ≥'+j.requireIQ+' EQ≥'+j.requireEQ+(j.requireMonths?' 经验'+Math.ceil(j.requireMonths/12)+'年':'')+'</div></div><div class="list-action">'+action+'</div></div>';
+    });
+  }
   document.getElementById('jobList').innerHTML=jobHtml;
   refreshFamily();
 }
@@ -2532,8 +2550,14 @@ function refreshFiveDim(){
   let relScore=0;if(G.spouse)relScore+=40;relScore+=Math.min(60,G.children*20);
   // V2: Charity boost for relationship
   if(G.luxuryItems&&G.luxuryItems.includes('charity_fund'))relScore=Math.min(100,relScore+30);
-  const careerScore=Math.round((G.jobIndex/(JOBS.length-1))*100);
-  const passive=calcPassiveIncome();const active=JOBS[G.jobIndex].salary/12;
+  let careerScore;
+  if(G.selfEmployed){
+    // 创业者：事业分=生意数量*20+资产对数分，上限100
+    careerScore=Math.min(100,G.businesses.length*20+Math.min(40,Math.round(Math.log10(Math.max(1,totalAsset))*5)));
+  }else{
+    careerScore=Math.round((G.jobIndex/(JOBS.length-1))*100);
+  }
+  const passive=calcPassiveIncome();const active=G.selfEmployed?passive*0.5:JOBS[G.jobIndex].salary/12;
   const freedomScore=Math.min(100,Math.round((passive/Math.max(1,active+passive))*100));
   const total=Math.round((healthScore+wealthScore+relScore+careerScore+freedomScore)/5);
   const dims=[
@@ -2613,7 +2637,8 @@ function doRebirth(){
   showModal({title:'确定重生？',content:'当前人生将结束，已购买的升级将在下一轮生效。\n\n当前LP：'+(G.legacyPoints||0),success(res){
     if(res.confirm){
       const total=calcTotalAsset();
-      const earnedLP=Math.floor(total/100000)+G.achievements.length*5+JOBS[G.jobIndex].level*10;
+      const careerLP=G.selfEmployed?G.businesses.length*15:JOBS[G.jobIndex].level*10;
+      const earnedLP=Math.floor(total/100000)+G.achievements.length*5+careerLP;
       G.legacyPoints=(G.legacyPoints||0)+earnedLP;
       saveLegacy();
       if(!G.lifeEvents)G.lifeEvents=[];G.lifeEvents.push({month:G.totalMonths,icon:'♻️',title:'人生重生',detail:'结束当前人生，获得'+earnedLP+'轮回点',type:'career'});
@@ -2644,14 +2669,20 @@ function generateSharePoster(){
   ctx.strokeStyle='rgba(241,196,15,0.5)';ctx.lineWidth=2;
   ctx.beginPath();ctx.moveTo(100,280);ctx.lineTo(650,280);ctx.stroke();
   const age=getAge();const job=JOBS[G.jobIndex];const total=calcTotalAsset();
+  const careerLabel=G.selfEmployed?'🚀 创业者':job.name;
   ctx.fillStyle='#fff';ctx.font='32px sans-serif';
-  const stats=['🎂 年龄：'+age+'岁','💼 职业：'+job.name,'📅 时长：'+(age-22)+'年'+getMonth()+'个月','💰 总资产：'+fmt(total),'📈 股票市值：'+fmt(calcStockValue()),'🏠 房产数量：'+G.houses.length+'套','📖 人生抉择：'+(G.decisionCount||0)+'次'];
+  const stats=['🎂 年龄：'+age+'岁','💼 职业：'+careerLabel,'📅 时长：'+(age-22)+'年'+getMonth()+'个月','💰 总资产：'+fmt(total),'📈 股票市值：'+fmt(calcStockValue()),'🏠 房产数量：'+G.houses.length+'套','📖 人生抉择：'+(G.decisionCount||0)+'次'];
   stats.forEach((t,i)=>{ctx.fillText(t,375,340+i*50);});
   const healthScore=Math.round((G.health+G.mood)/2);
   const wealthScore=Math.min(100,Math.round(Math.log10(Math.max(1,total))*10));
   let relScore=0;if(G.spouse)relScore+=40;relScore+=Math.min(60,G.children*20);
   if(G.luxuryItems&&G.luxuryItems.includes('charity_fund'))relScore=Math.min(100,relScore+30);
-  const careerScore=Math.round((G.jobIndex/(JOBS.length-1))*100);
+  let careerScore;
+  if(G.selfEmployed){
+    careerScore=Math.min(100,G.businesses.length*20+Math.min(40,Math.round(Math.log10(Math.max(1,total))*5)));
+  }else{
+    careerScore=Math.round((G.jobIndex/(JOBS.length-1))*100);
+  }
   const totalScore=Math.round((healthScore+wealthScore+relScore+careerScore)/4);
   ctx.fillStyle='#f1c40f';ctx.font='bold 36px sans-serif';
   ctx.fillText('综合评分：'+totalScore+'分',375,700);
@@ -2695,13 +2726,16 @@ function closeAIFloat(){document.getElementById('aiFloatBtn').style.display='non
 // ========== 游戏结束 ==========
 function showGameOver(){
   const total=calcTotalAsset();const job=JOBS[G.jobIndex];
+  const careerLabel=G.selfEmployed?'🚀 创业者':job.name;
   let emoji='💀';
   if(total>10000000)emoji='🏆';else if(total>1000000)emoji='🎉';else if(total>100000)emoji='😊';else if(G.gameOverReason.includes('圆满'))emoji='🌅';
-  const earnedLP=Math.floor(total/100000)+G.achievements.length*5+JOBS[G.jobIndex].level*10;
-  const content=emoji+'\n'+G.gameOverReason+'\n\n活到 '+getAge()+' 岁\n最终职业：'+job.name+'\n最终总资产：'+fmt(total)+'\n人生抉择：'+(G.decisionCount||0)+'次\n成就：'+G.achievements.length+'个\n\n获得轮回点：+'+earnedLP+' LP\n\n想找到最适合你的工作？让AI帮你匹配 👉\nhttps://your-recruitment-ai.com';
+  const careerLP=G.selfEmployed?G.businesses.length*15:JOBS[G.jobIndex].level*10;
+  const earnedLP=Math.floor(total/100000)+G.achievements.length*5+careerLP;
+  const content=emoji+'\n'+G.gameOverReason+'\n\n活到 '+getAge()+' 岁\n最终职业：'+careerLabel+'\n最终总资产：'+fmt(total)+'\n人生抉择：'+(G.decisionCount||0)+'次\n成就：'+G.achievements.length+'个\n\n获得轮回点：+'+earnedLP+' LP\n\n想找到最适合你的工作？让AI帮你匹配 👉\nhttps://your-recruitment-ai.com';
   showModal({title:'🎊 人生结束',content,showCancel:false,confirmText:'重新开始/重生',success(){
     const total2=calcTotalAsset();
-    const lp=Math.floor(total2/100000)+G.achievements.length*5+JOBS[G.jobIndex].level*10;
+    const careerLP2=G.selfEmployed?G.businesses.length*15:JOBS[G.jobIndex].level*10;
+    const lp=Math.floor(total2/100000)+G.achievements.length*5+careerLP2;
     G.legacyPoints=(G.legacyPoints||0)+lp;
     saveLegacy();
     showModal({title:'♻️ 选择',content:'获得 '+lp+' LP\n当前总LP：'+G.legacyPoints+'\n\n是直接重生（保留加成），还是重开人生？',confirmText:'♻️ 重生',cancelText:'🔄 重开',success(res){
@@ -3653,7 +3687,7 @@ function triggerGathering(){
   if(Math.random()>0.25)return;// 25%概率触发
   const eligible=GATHERINGS.filter(g=>{
     if(g.npc==='spouse'&&!G.spouse)return false;
-    if(g.npc==='boss'&&G.jobIndex<3)return false;
+    if(g.npc==='boss'&&(G.jobIndex<3||G.selfEmployed))return false;
     return true;
   });
   if(eligible.length===0)return;
@@ -3789,6 +3823,8 @@ function triggerPhoneMessages(){
       if(m.requires.minJobLevel&&G.jobIndex<m.requires.minJobLevel)return false;
       if(m.requires.flag&&!G.phone.flags[m.requires.flag])return false;
       if(m.requires.boss_angry&&!G.phone.flags.boss_angry)return false;
+      // 创业者不触发老板/同事相关事件
+      if(G.selfEmployed&&(m.npc==='boss'||m.npc==='hr'||m.npc==='colleague'))return false;
       if(m.requires.hasLoan){let has=false;G.houses.forEach(h=>{if(h.loan)has=true;});if(!has)return false;}
       if(m.requires.married&&!G.spouse)return false;
     }
@@ -4087,8 +4123,8 @@ function buildFullGameState(){
   }
   return{
     name:'朱成龙',
-    job:job?job.name:'未知',
-    salary:job?fmt(job.salary)+'/年':'未知',
+    job:G.selfEmployed?'🚀 创业者（已辞职创业）':(job?job.name:'未知'),
+    salary:G.selfEmployed?'无固定工资，收入来自生意和投资':(job?fmt(job.salary)+'/年':'未知'),
     monthsAtJob:G.monthsAtJob||0,
     cash:fmt(G.cash),
     totalAssets:fmt(totalAssets),
@@ -5050,12 +5086,16 @@ function getGameStateContext(){
   for(const code in G.stockHoldings){const s=STOCKS.find(x=>x.code===code);if(s)portfolio.push(s.name+' '+G.stockHoldings[code].shares+'股(现价'+fmt(G.stockPrices[code])+')');}
   const houseList=G.houses.map(h=>{const info=HOUSES.find(x=>x.id===h.id);return info?info.name:'房产';});
   return{
-    age,jobLevel:job?job.title:'未知',jobSalary:job?fmt(job.salary)+'/年':'未知',
+    age,
+    jobLevel:G.selfEmployed?'创业者':(job?job.title:'未知'),
+    jobSalary:G.selfEmployed?'无固定工资':(job?fmt(job.salary)+'/年':'未知'),
     totalAsset:fmt(total),cash:fmt(G.cash),
     health:Math.round(G.health),mood:Math.round(G.mood),IQ:Math.round(G.IQ),EQ:Math.round(G.EQ),
     spouse:G.spouse?true:false,children:G.children,
     stocks:portfolio.slice(0,3),houses:houseList,
-    month:G.totalMonths,jobTitle:job?job.title:'未知'
+    month:G.totalMonths,
+    jobTitle:G.selfEmployed?'创业者':(job?job.title:'未知'),
+    selfEmployed:G.selfEmployed?true:false
   };
 }
 
@@ -5571,6 +5611,8 @@ window.triggerPhoneMessages=function(){
             if(m.requires.minJobLevel&&G.jobIndex<m.requires.minJobLevel)return false;
             if(m.requires.flag&&!G.phone.flags[m.requires.flag])return false;
             if(m.requires.boss_angry&&!G.phone.flags.boss_angry)return false;
+            // 创业者不触发老板/同事相关事件
+            if(G.selfEmployed&&(m.npc==='boss'||m.npc==='hr'||m.npc==='colleague'))return false;
             if(m.requires.hasLoan){let has=false;G.houses.forEach(h=>{if(h.loan)has=true;});if(!has)return false;}
           }
           const last=G.phone.flags['last_'+m.id];
@@ -5594,6 +5636,8 @@ window.triggerPhoneMessages=function(){
         if(m.requires.minJobLevel&&G.jobIndex<m.requires.minJobLevel)return false;
         if(m.requires.flag&&!G.phone.flags[m.requires.flag])return false;
         if(m.requires.boss_angry&&!G.phone.flags.boss_angry)return false;
+        // 创业者不触发老板/同事相关事件
+        if(G.selfEmployed&&(m.npc==='boss'||m.npc==='hr'||m.npc==='colleague'))return false;
         if(m.requires.hasLoan){let has=false;G.houses.forEach(h=>{if(h.loan)has=true;});if(!has)return false;}
       }
       const last=G.phone.flags['last_'+m.id];
