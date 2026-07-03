@@ -5848,15 +5848,13 @@ function switchPhoneTab(tab){
 function refreshPhone(){renderPhoneList();renderContacts();renderSchedule();renderMoments();renderNotifications();updatePhoneBadge();updateNotifBadge();updatePhoneHint();}
 function updatePhoneBadge(){
   const badge=document.getElementById('phoneBadge');if(!badge)return;
+  // 只计算模板消息线程（NPC发来的消息），不包括通知/朋友圈
   const msgCount=G.phone?G.phone.threads.filter(t=>t.status!=='replied'&&t.rounds[t.currentRound]&&!t.rounds[t.currentRound]._playerChoice).length:0;
-  const notifCount=G.phone&&G.phone.notifications?G.phone.notifications.filter(n=>!n.read).length:0;
-  const count=msgCount+notifCount;
-  if(count>0){
-    badge.textContent=count>99?'99+':count;
+  if(msgCount>0){
+    badge.textContent=msgCount>99?'99+':msgCount;
     badge.style.display='flex';
-    // Add subtle animation on update
     badge.style.animation='none';
-    badge.offsetHeight; // trigger reflow
+    badge.offsetHeight;
     badge.style.animation='badgePulse 2s infinite';
   }else{
     badge.style.display='none';
