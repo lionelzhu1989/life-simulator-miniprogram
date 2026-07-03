@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>offer含金量 v3.6</title>
+<title>offer含金量 v3.8</title>
 <style>
 
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -785,7 +785,7 @@ const DECISION_EVENTS=[
   {id:'work_05',ageMin:30,ageMax:40,title:'🚀 创业邀请',scene:'你的前同事找到了一个好项目，邀请你合伙创业。技术团队已经搭好了，就差一个"懂业务的人"。如果成了，未来不可限量；如果败了，可能影响家庭。',
     options:[
       {icon:'🚀',title:'辞职创业',desc:'人生能有几回搏',tag:'高风险',tagCls:'tag-golden',
-        reqIQ:115,effect:{cash:-100000},resultChance:0.35,resultGood:{cash:800000,mood:30,IQ:10},resultBad:{cash:-80000,mood:-20,health:-10},
+        reqIQ:115,effect:{cash:-100000,career:'selfEmployed'},resultChance:0.35,resultGood:{cash:800000,mood:30,IQ:10},resultBad:{cash:-80000,mood:-20,health:-10},
         resultFail:'创业失败，投入的资金大部分亏了，家庭压力很大。但这段经历让你成长了很多。',resultWin:'公司拿到了A轮融资！你的身家一下翻了好几倍，朋友圈都在刷你的新闻。'},
       {icon:'💰',title:'小额投资参与',desc:'参与但不All in，保留退路',tag:'稳健',tagCls:'tag-safe',
         effect:{cash:-50000},resultChance:0.35,resultGood:{cash:200000,mood:10},resultBad:{cash:-30000,mood:-5},
@@ -812,7 +812,7 @@ const DECISION_EVENTS=[
       {icon:'🧘',title:'调整心态',desc:'接受自己的平凡，享受当下',tag:'智慧',tagCls:'tag-safe',effect:{mood:20,health:5},result:'你开始学着接受不完美的自己。跑步、冥想、读书，生活渐渐有了新的节奏。'},
       {icon:'💡',title:'寻找新激情',desc:'人生下半场要有新的追求',tag:'积极',tagCls:'tag-safe',reqEQ:110,effect:{mood:15,EQ:5},result:'你找到了新的兴趣——写作。开始在公众号上分享职场经验，意外收获了一批粉丝。'},
       {icon:'🏃',title:'彻底改变',desc:'辞职去旅行/读书/做志愿者',tag:'勇敢',tagCls:'tag-golden',
-        effect:{cash:-100000,mood:25,health:10},result:'你辞职去环游世界了。虽然没有了收入，但你找回了对生活的热情。回来后创业反而更成功了。'}
+        effect:{cash:-100000,mood:25,health:10,career:'selfEmployed'},result:'你辞职去环游世界了。虽然没有了收入，但你找回了对生活的热情。回来后创业反而更成功了。'}
     ]},
 
   // === Wealth era 45+ ===
@@ -956,6 +956,36 @@ requires:{minAsset:300000},rounds:[
 {npcMsgs:['行行，2万也够了','谢谢宝贝'],opts:[{text:'不客气',fx:{EQ:2},next:-1}]},
 {npcMsgs:['...行吧。','妈不麻烦你了。'],opts:[{text:'...',fx:{mood:-5},next:-1}]}]},
 
+// ====== CAMPUS / EARLY LIFE (18-22) ======
+{id:'mom_campus',npc:'mom',type:'wechat',ageMin:18,ageMax:22,chance:0.15,cooldown:6,rounds:[
+{npcMsgs:['儿子/女儿，生活费够不够？','妈给你转了2000块','别省着，该吃吃该喝喝'],opts:[
+{text:'谢谢妈！够用了',fx:{cash:2000,mood:8},next:1},
+{text:'妈你别老转钱，我自己能赚',fx:{mood:3,IQ:2},next:2}]},
+{npcMsgs:['赚钱是赚钱的事，身体重要','你爸让我问你，考试准备得怎么样了？'],opts:[
+{text:'挺好的，放心吧',fx:{mood:5},next:-1}]},
+{npcMsgs:['你这孩子，跟妈客气什么','你安心学习，钱的事别操心'],opts:[{text:'好的妈',fx:{mood:5},next:-1}]}]},
+{id:'bestie_campus',npc:'bestie',type:'wechat',ageMin:18,ageMax:22,chance:0.15,cooldown:4,rounds:[
+{npcMsgs:['兄弟/姐妹！','今晚食堂新出了个菜，巨好吃！','一起去尝尝？'],opts:[
+{text:'走走走！',fx:{mood:8,cash:-30},next:1},
+{text:'不了，我在赶作业',fx:{IQ:3},next:2}]},
+{npcMsgs:['冲冲冲！','我已经占好位了'],opts:[{text:'马上到！',fx:{mood:3},next:-1}]},
+{npcMsgs:['行吧...','那你忙完叫我'],opts:[{text:'好的',fx:{},next:-1}]}]},
+{id:'classmate_compare',npc:'classmate',type:'wechat',ageMin:18,ageMax:25,chance:0.12,cooldown:10,rounds:[
+{npcMsgs:['哎你实习工资多少啊？','我刚拿了xxx的offer','月薪8000！感觉还不错'],opts:[
+{text:'挺厉害的！恭喜',fx:{mood:-3},next:1},
+{text:'我还在找呢...',fx:{mood:-5},next:2},
+{text:'我这边也差不多',fx:{mood:2},next:3}]},
+{npcMsgs:['你也加油！','秋招快开始了，早点准备'],opts:[{text:'嗯嗯',fx:{mood:2},next:-1}]},
+{npcMsgs:['没事，慢慢来','反正我们还年轻'],opts:[{text:'对，不急',fx:{mood:3},next:-1}]},
+{npcMsgs:['哈哈我就是随便说说','你肯定能找到更好的'],opts:[{text:'借你吉言',fx:{mood:2},next:-1}]}]},
+{id:'mentor_guide',npc:'mentor',type:'wechat',ageMin:18,ageMax:25,chance:0.08,cooldown:24,rounds:[
+{npcMsgs:['最近学习/工作怎么样？','有没有什么困惑可以聊聊','年轻人要多思考方向'],opts:[
+{text:'老师，我有点迷茫',fx:{mood:3},next:1},
+{text:'挺好的，谢谢老师关心',fx:{mood:5},next:2}]},
+{npcMsgs:['迷茫是正常的','关键是要行动起来','多试错，找到自己真正想做的事'],opts:[
+{text:'受教了！',fx:{IQ:5,mood:5},next:-1}]},
+{npcMsgs:['那就好。记住，不要怕失败','年轻就是最大的资本'],opts:[{text:'好的老师！',fx:{mood:3},next:-1}]}]},
+
 // ====== WORK ======
 {id:'boss_overtime',npc:'boss',type:'call',ageMin:22,ageMax:45,chance:0.15,cooldown:4,rounds:[
 {npcMsgs:['小X啊，周六加个班。','有个紧急项目要赶，客户周一要看方案。','做好了年底给你评优。'],opts:[
@@ -1051,6 +1081,29 @@ flagClear:'bestie_lent'},
 {npcMsgs:['好的，转账完成后我们会核实','请尽快操作...'],opts:[{text:'...转了',fx:{},next:-1}]},
 {npcMsgs:['您做得对！','银行不会要求客户转账到其他账户','这是典型的电信诈骗'],opts:[{text:'差点上当了',fx:{mood:5},next:-1}]},
 {npcMsgs:['（对方挂断了电话）'],opts:[{text:'哼，骗子',fx:{mood:5},next:-1}]}]},
+
+// ====== MORE SOCIAL ======
+{id:'neighbor_chat',npc:'neighbor',type:'wechat',ageMin:22,ageMax:70,chance:0.1,cooldown:8,rounds:[
+{npcMsgs:['小X啊，你家WiFi密码多少？','我家网断了，想蹭一下','就用一会儿！'],opts:[
+{text:'密码是xxxxxx',fx:{mood:3},next:1},
+{text:'不太方便诶',fx:{},next:2}]},
+{npcMsgs:['谢谢啊！','对了，你听说了吗，楼下那家要搬走了','好像是嫌房租太贵'],opts:[{text:'是吗，现在生意不好做',fx:{mood:2},next:-1}]},
+{npcMsgs:['行吧...','那我自己想想办法'],opts:[{text:'抱歉啊',fx:{mood:-2},next:-1}]}]},
+{id:'ex_colleague_job',npc:'exColleague',type:'wechat',ageMin:23,ageMax:50,chance:0.08,cooldown:18,rounds:[
+{npcMsgs:['好久不见！','我跳槽到xxx了，待遇翻倍','你有没有想过换个环境？'],opts:[
+{text:'什么公司？说来听听',fx:{mood:5},next:1},
+{text:'我现在挺好的，不想动',fx:{mood:3},next:2},
+{text:'帮我内推一下？',fx:{EQ:3},next:3}]},
+{npcMsgs:['公司名字我私发你','你要是感兴趣我帮你推'],opts:[{text:'好的，谢谢！',fx:{mood:5},next:-1}]},
+{npcMsgs:['也是，稳定最重要'],opts:[{text:'嗯',fx:{},next:-1}]},
+{npcMsgs:['没问题！','我明天就跟HR说'],opts:[{text:'太够意思了',fx:{mood:8},next:-1}]}]},
+{id:'gym_push',npc:'gymCoach',type:'wechat',ageMin:22,ageMax:50,chance:0.08,cooldown:12,rounds:[
+{npcMsgs:['兄弟/姐妹！','好久没来健身房了啊','最近是不是偷懒了？'],opts:[
+{text:'最近太忙了...',fx:{mood:-3},next:1},
+{text:'明天就去！',fx:{mood:5},next:2}]},
+{npcMsgs:['忙不是借口！','身体是革命的本钱','我给你留了个私教体验课，免费的'],opts:[
+{text:'好，我去',fx:{health:5,mood:5},next:-1},
+{text:'再说吧...',fx:{},next:-1}]}]},
 
 // ====== SPOUSE ======
 {id:'spouse_fight',npc:'spouse',type:'call',ageMin:25,ageMax:60,chance:0.1,cooldown:12,
@@ -1200,7 +1253,8 @@ const ACHIEVEMENTS_DEF=[
   {id:'forbes',name:'福布斯上榜',desc:'登上福布斯富豪榜',icon:'🌟'},
   {id:'philanthropist',name:'慈善家',desc:'建立慈善基金会',icon:'💝'},
   {id:'realty_king',name:'地产大亨',desc:'拥有3套以上房产',icon:'🏘️'},
-  {id:'decision_maker',name:'人生导演',desc:'做出20次人生抉择',icon:'🎬'}
+  {id:'decision_maker',name:'人生导演',desc:'做出20次人生抉择',icon:'🎬'},
+  {id:'entrepreneur',name:'创业先锋',desc:'辞职创业',icon:'🚀'}
 ];
 
 const MONTHLY_TASKS=[
@@ -1237,7 +1291,7 @@ function defaultState(){
   });
   return{
     totalMonths:0,cash,health:hp,mood,IQ:iq,EQ:eq,
-    jobIndex:0,monthsAtJob:0,
+    jobIndex:0,monthsAtJob:0,selfEmployed:false,
     stockHoldings:{},stockPrices:{},
     houses:[],businesses:[],techInvestments:[],
     spouse:null,children:0,childAges:[],
@@ -1379,7 +1433,8 @@ function refreshLearning(){
 }
 function refreshHeader(){
   const job=JOBS[G.jobIndex];
-  document.getElementById('headerSub').textContent='年龄 '+getAge()+'岁 · '+job.name+' · '+getMonth()+'月';
+  const careerLabel=G.selfEmployed?'🚀 创业者':job.name;
+  document.getElementById('headerSub').textContent='年龄 '+getAge()+'岁 · '+careerLabel+' · '+getMonth()+'月';
   document.getElementById('lpDisplay').textContent=G.legacyPoints||0;
 }
 function refreshLife(){
@@ -1604,12 +1659,13 @@ function advanceMonth(){
   G._encounterActive=false; // 重置月度场景标记
   if(!G._recentEvents)G._recentEvents=[]; // 连锁反应记忆（最近事件记录）
   const job=JOBS[G.jobIndex];
-  let income=job.salary/12;
+  // 创业者没有工资收入，只有副业/房租/配偶收入
+  let income=G.selfEmployed?0:job.salary/12;
   // V2: Early income slightly lower (first 24 months penalty)
-  if(G.totalMonths<=24)income*=0.85;
+  if(!G.selfEmployed&&G.totalMonths<=24)income*=0.85;
   // V2: Mid-late income boost (after 120 months)
-  if(G.totalMonths>120)income*=1.15;
-  if(G.salaryBonus>0)income*=(1+G.salaryBonus);
+  if(!G.selfEmployed&&G.totalMonths>120)income*=1.15;
+  if(!G.selfEmployed&&G.salaryBonus>0)income*=(1+G.salaryBonus);
   let expense=0;
   if(G.spouse){const sp=SPOUSES.find(s=>s.id===G.spouse);income+=sp.salary/12;}
   let rentIncome=0;G.houses.forEach(h=>{const info=HOUSES.find(x=>x.id===h.id);rentIncome+=info?info.rent:0;});
@@ -1757,7 +1813,7 @@ function advanceMonth(){
     if(G._recentEvents)G._recentEvents.push('🥚彩蛋：'+egg.text.replace(/[\u{1F300}-\u{1FFFF}]/gu,'').substring(0,20));
   }
   // Phone triggers
-  if(!G.gameOver){initPhoneState();triggerFollowUps();if(Math.random()<0.55)triggerPhoneMessages();if(Math.random()<0.50)triggerAIMoments().catch(()=>{if(Math.random()<0.15)triggerMoments();});generateNotifications();generateGossipEvent();triggerGathering();}
+  if(!G.gameOver){initPhoneState();triggerFollowUps();triggerPhoneMessages();if(Math.random()<0.50)triggerAIMoments().catch(()=>{if(Math.random()<0.15)triggerMoments();});generateNotifications();generateGossipEvent();triggerGathering();}
   // 社交拓展：每月有概率触发偶遇场景
   if(!G.gameOver && !G._encounter && !G._pendingDecision){
     tryTriggerEncounter();
@@ -1871,6 +1927,16 @@ function selectDecisionOption(optIndex){
   if(eff.EQ)G.EQ=clamp(G.EQ+eff.EQ,0,200);
   if(eff.salaryBonus)G.salaryBonus+=eff.salaryBonus;
   if(eff.money)G.cash+=eff.money;
+  // 创业/离职状态处理
+  if(eff.career==='selfEmployed'){
+    G.selfEmployed=true;
+    if(!G.achievements.includes('entrepreneur'))G.achievements.push('entrepreneur');
+    G.events.push({text:'🚀 你辞职了，正式成为一名创业者！',type:'neutral'});
+  }
+  if(eff.career==='reEmploy'){
+    G.selfEmployed=false;
+    G.events.push({text:'💼 你重新找到了工作！',type:'good'});
+  }
   // Check for chance-based outcomes
   let resultText=opt.result;
   if(opt.resultChance!==undefined){
@@ -2027,27 +2093,32 @@ function socialGathering(){
 // ========== 工作页面 ==========
 function refreshWork(){
   const job=JOBS[G.jobIndex];
-  let html='<div class="list-item"><div class="list-info"><div class="name">'+job.name+'</div><div class="desc">月薪：'+fmt(job.salary/12)+' | 在岗：'+G.monthsAtJob+'个月</div></div><span class="tag tag-green">当前</span></div>';
-  document.getElementById('currentJob').innerHTML=html;
-  let jobHtml='';
-  JOBS.forEach((j,i)=>{
-    const isCurrent=i===G.jobIndex;
-    const isNext=i===G.jobIndex+1;
-    const canPromote=isNext&&G.IQ>=j.requireIQ&&G.EQ>=j.requireEQ&&G.monthsAtJob>=j.requireMonths;
-    const locked=isNext&&!canPromote;
-    let action='';
-    if(isCurrent)action='<span class="tag tag-blue">在职</span>';
-    else if(canPromote)action='<button class="btn btn-primary btn-sm" onclick="tryPromote('+i+')">晋升</button>';
-    else if(i<G.jobIndex)action='<span class="text-sm text-muted">已过</span>';
-    else if(locked){
-      const reasons=[];
-      if(G.IQ<j.requireIQ)reasons.push('IQ≥'+j.requireIQ);
-      if(G.EQ<j.requireEQ)reasons.push('EQ≥'+j.requireEQ);
-      if(G.monthsAtJob<j.requireMonths)reasons.push('经验'+Math.ceil(j.requireMonths/12)+'年');
-      action='<span class="text-sm text-muted">'+reasons.join(' ')+'</span>';
-    }
-    jobHtml+='<div class="list-item"><div class="list-info"><div class="name">'+(isCurrent?'▶ ':'')+j.name+' <span class="text-sm text-muted">月薪'+fmtShort(j.salary/12)+'</span></div><div class="desc">要求：IQ≥'+j.requireIQ+' EQ≥'+j.requireEQ+(j.requireMonths?' 经验'+Math.ceil(j.requireMonths/12)+'年':'')+'</div></div><div class="list-action">'+action+'</div></div>';
-  });
+  let html,jobHtml='';
+  if(G.selfEmployed){
+    // 创业者状态：不显示职场晋升路径
+    html='<div class="list-item"><div class="list-info"><div class="name">🚀 创业者</div><div class="desc">已辞职创业 | 收入来源：副业/房租/投资</div></div><span class="tag tag-golden">创业中</span></div>';
+    jobHtml='<div class="list-item" style="text-align:center;color:#888;"><div class="list-info"><div class="desc">你已经离开了职场，正在创业路上拼搏。<br>收入取决于你的生意和投资，而不是工资。</div></div></div>';
+  }else{
+    html='<div class="list-item"><div class="list-info"><div class="name">'+job.name+'</div><div class="desc">月薪：'+fmt(job.salary/12)+' | 在岗：'+G.monthsAtJob+'个月</div></div><span class="tag tag-green">当前</span></div>';
+    JOBS.forEach((j,i)=>{
+      const isCurrent=i===G.jobIndex;
+      const isNext=i===G.jobIndex+1;
+      const canPromote=isNext&&G.IQ>=j.requireIQ&&G.EQ>=j.requireEQ&&G.monthsAtJob>=j.requireMonths;
+      const locked=isNext&&!canPromote;
+      let action='';
+      if(isCurrent)action='<span class="tag tag-blue">在职</span>';
+      else if(canPromote)action='<button class="btn btn-primary btn-sm" onclick="tryPromote('+i+')">晋升</button>';
+      else if(i<G.jobIndex)action='<span class="text-sm text-muted">已过</span>';
+      else if(locked){
+        const reasons=[];
+        if(G.IQ<j.requireIQ)reasons.push('IQ≥'+j.requireIQ);
+        if(G.EQ<j.requireEQ)reasons.push('EQ≥'+j.requireEQ);
+        if(G.monthsAtJob<j.requireMonths)reasons.push('经验'+Math.ceil(j.requireMonths/12)+'年');
+        action='<span class="text-sm text-muted">'+reasons.join(' ')+'</span>';
+      }
+      jobHtml+='<div class="list-item"><div class="list-info"><div class="name">'+(isCurrent?'▶ ':'')+j.name+' <span class="text-sm text-muted">月薪'+fmtShort(j.salary/12)+'</span></div><div class="desc">要求：IQ≥'+j.requireIQ+' EQ≥'+j.requireEQ+(j.requireMonths?' 经验'+Math.ceil(j.requireMonths/12)+'年':'')+'</div></div><div class="list-action">'+action+'</div></div>';
+    });
+  }
   document.getElementById('jobList').innerHTML=jobHtml;
   refreshFamily();
 }
@@ -2532,8 +2603,14 @@ function refreshFiveDim(){
   let relScore=0;if(G.spouse)relScore+=40;relScore+=Math.min(60,G.children*20);
   // V2: Charity boost for relationship
   if(G.luxuryItems&&G.luxuryItems.includes('charity_fund'))relScore=Math.min(100,relScore+30);
-  const careerScore=Math.round((G.jobIndex/(JOBS.length-1))*100);
-  const passive=calcPassiveIncome();const active=JOBS[G.jobIndex].salary/12;
+  let careerScore;
+  if(G.selfEmployed){
+    // 创业者：事业分=生意数量*20+资产对数分，上限100
+    careerScore=Math.min(100,G.businesses.length*20+Math.min(40,Math.round(Math.log10(Math.max(1,totalAsset))*5)));
+  }else{
+    careerScore=Math.round((G.jobIndex/(JOBS.length-1))*100);
+  }
+  const passive=calcPassiveIncome();const active=G.selfEmployed?passive*0.5:JOBS[G.jobIndex].salary/12;
   const freedomScore=Math.min(100,Math.round((passive/Math.max(1,active+passive))*100));
   const total=Math.round((healthScore+wealthScore+relScore+careerScore+freedomScore)/5);
   const dims=[
@@ -2613,7 +2690,8 @@ function doRebirth(){
   showModal({title:'确定重生？',content:'当前人生将结束，已购买的升级将在下一轮生效。\n\n当前LP：'+(G.legacyPoints||0),success(res){
     if(res.confirm){
       const total=calcTotalAsset();
-      const earnedLP=Math.floor(total/100000)+G.achievements.length*5+JOBS[G.jobIndex].level*10;
+      const careerLP=G.selfEmployed?G.businesses.length*15:JOBS[G.jobIndex].level*10;
+      const earnedLP=Math.floor(total/100000)+G.achievements.length*5+careerLP;
       G.legacyPoints=(G.legacyPoints||0)+earnedLP;
       saveLegacy();
       if(!G.lifeEvents)G.lifeEvents=[];G.lifeEvents.push({month:G.totalMonths,icon:'♻️',title:'人生重生',detail:'结束当前人生，获得'+earnedLP+'轮回点',type:'career'});
@@ -2644,14 +2722,20 @@ function generateSharePoster(){
   ctx.strokeStyle='rgba(241,196,15,0.5)';ctx.lineWidth=2;
   ctx.beginPath();ctx.moveTo(100,280);ctx.lineTo(650,280);ctx.stroke();
   const age=getAge();const job=JOBS[G.jobIndex];const total=calcTotalAsset();
+  const careerLabel=G.selfEmployed?'🚀 创业者':job.name;
   ctx.fillStyle='#fff';ctx.font='32px sans-serif';
-  const stats=['🎂 年龄：'+age+'岁','💼 职业：'+job.name,'📅 时长：'+(age-22)+'年'+getMonth()+'个月','💰 总资产：'+fmt(total),'📈 股票市值：'+fmt(calcStockValue()),'🏠 房产数量：'+G.houses.length+'套','📖 人生抉择：'+(G.decisionCount||0)+'次'];
+  const stats=['🎂 年龄：'+age+'岁','💼 职业：'+careerLabel,'📅 时长：'+(age-22)+'年'+getMonth()+'个月','💰 总资产：'+fmt(total),'📈 股票市值：'+fmt(calcStockValue()),'🏠 房产数量：'+G.houses.length+'套','📖 人生抉择：'+(G.decisionCount||0)+'次'];
   stats.forEach((t,i)=>{ctx.fillText(t,375,340+i*50);});
   const healthScore=Math.round((G.health+G.mood)/2);
   const wealthScore=Math.min(100,Math.round(Math.log10(Math.max(1,total))*10));
   let relScore=0;if(G.spouse)relScore+=40;relScore+=Math.min(60,G.children*20);
   if(G.luxuryItems&&G.luxuryItems.includes('charity_fund'))relScore=Math.min(100,relScore+30);
-  const careerScore=Math.round((G.jobIndex/(JOBS.length-1))*100);
+  let careerScore;
+  if(G.selfEmployed){
+    careerScore=Math.min(100,G.businesses.length*20+Math.min(40,Math.round(Math.log10(Math.max(1,total))*5)));
+  }else{
+    careerScore=Math.round((G.jobIndex/(JOBS.length-1))*100);
+  }
   const totalScore=Math.round((healthScore+wealthScore+relScore+careerScore)/4);
   ctx.fillStyle='#f1c40f';ctx.font='bold 36px sans-serif';
   ctx.fillText('综合评分：'+totalScore+'分',375,700);
@@ -2695,13 +2779,16 @@ function closeAIFloat(){document.getElementById('aiFloatBtn').style.display='non
 // ========== 游戏结束 ==========
 function showGameOver(){
   const total=calcTotalAsset();const job=JOBS[G.jobIndex];
+  const careerLabel=G.selfEmployed?'🚀 创业者':job.name;
   let emoji='💀';
   if(total>10000000)emoji='🏆';else if(total>1000000)emoji='🎉';else if(total>100000)emoji='😊';else if(G.gameOverReason.includes('圆满'))emoji='🌅';
-  const earnedLP=Math.floor(total/100000)+G.achievements.length*5+JOBS[G.jobIndex].level*10;
-  const content=emoji+'\n'+G.gameOverReason+'\n\n活到 '+getAge()+' 岁\n最终职业：'+job.name+'\n最终总资产：'+fmt(total)+'\n人生抉择：'+(G.decisionCount||0)+'次\n成就：'+G.achievements.length+'个\n\n获得轮回点：+'+earnedLP+' LP\n\n想找到最适合你的工作？让AI帮你匹配 👉\nhttps://your-recruitment-ai.com';
+  const careerLP=G.selfEmployed?G.businesses.length*15:JOBS[G.jobIndex].level*10;
+  const earnedLP=Math.floor(total/100000)+G.achievements.length*5+careerLP;
+  const content=emoji+'\n'+G.gameOverReason+'\n\n活到 '+getAge()+' 岁\n最终职业：'+careerLabel+'\n最终总资产：'+fmt(total)+'\n人生抉择：'+(G.decisionCount||0)+'次\n成就：'+G.achievements.length+'个\n\n获得轮回点：+'+earnedLP+' LP\n\n想找到最适合你的工作？让AI帮你匹配 👉\nhttps://your-recruitment-ai.com';
   showModal({title:'🎊 人生结束',content,showCancel:false,confirmText:'重新开始/重生',success(){
     const total2=calcTotalAsset();
-    const lp=Math.floor(total2/100000)+G.achievements.length*5+JOBS[G.jobIndex].level*10;
+    const careerLP2=G.selfEmployed?G.businesses.length*15:JOBS[G.jobIndex].level*10;
+    const lp=Math.floor(total2/100000)+G.achievements.length*5+careerLP2;
     G.legacyPoints=(G.legacyPoints||0)+lp;
     saveLegacy();
     showModal({title:'♻️ 选择',content:'获得 '+lp+' LP\n当前总LP：'+G.legacyPoints+'\n\n是直接重生（保留加成），还是重开人生？',confirmText:'♻️ 重生',cancelText:'🔄 重开',success(res){
@@ -3653,7 +3740,7 @@ function triggerGathering(){
   if(Math.random()>0.25)return;// 25%概率触发
   const eligible=GATHERINGS.filter(g=>{
     if(g.npc==='spouse'&&!G.spouse)return false;
-    if(g.npc==='boss'&&G.jobIndex<3)return false;
+    if(g.npc==='boss'&&(G.jobIndex<3||G.selfEmployed))return false;
     return true;
   });
   if(eligible.length===0)return;
@@ -3789,6 +3876,8 @@ function triggerPhoneMessages(){
       if(m.requires.minJobLevel&&G.jobIndex<m.requires.minJobLevel)return false;
       if(m.requires.flag&&!G.phone.flags[m.requires.flag])return false;
       if(m.requires.boss_angry&&!G.phone.flags.boss_angry)return false;
+      // 创业者不触发老板/同事相关事件
+      if(G.selfEmployed&&(m.npc==='boss'||m.npc==='hr'||m.npc==='colleague'))return false;
       if(m.requires.hasLoan){let has=false;G.houses.forEach(h=>{if(h.loan)has=true;});if(!has)return false;}
       if(m.requires.married&&!G.spouse)return false;
     }
@@ -3975,7 +4064,7 @@ const AI_CHAT_CONFIG={
   model:'GLM-4-Flash',
   enabled:true,
   _fallbackCount:0,
-  maxFallback:3
+  maxFallback:15
 };
 
 // Relationship mapping for NPC
@@ -4087,8 +4176,8 @@ function buildFullGameState(){
   }
   return{
     name:'朱成龙',
-    job:job?job.name:'未知',
-    salary:job?fmt(job.salary)+'/年':'未知',
+    job:G.selfEmployed?'🚀 创业者（已辞职创业）':(job?job.name:'未知'),
+    salary:G.selfEmployed?'无固定工资，收入来自生意和投资':(job?fmt(job.salary)+'/年':'未知'),
     monthsAtJob:G.monthsAtJob||0,
     cash:fmt(G.cash),
     totalAssets:fmt(totalAssets),
@@ -5039,7 +5128,7 @@ const AI_ENGINE={
   lastCall:0,
   minInterval:2000,// 2s between calls
   _fallbackCount:0,
-  maxFallback:3,// after 3 consecutive fails, disable until restart
+  maxFallback:15,// increased: allow more retries before disabling AI
 };
 
 function getGameStateContext(){
@@ -5050,12 +5139,16 @@ function getGameStateContext(){
   for(const code in G.stockHoldings){const s=STOCKS.find(x=>x.code===code);if(s)portfolio.push(s.name+' '+G.stockHoldings[code].shares+'股(现价'+fmt(G.stockPrices[code])+')');}
   const houseList=G.houses.map(h=>{const info=HOUSES.find(x=>x.id===h.id);return info?info.name:'房产';});
   return{
-    age,jobLevel:job?job.title:'未知',jobSalary:job?fmt(job.salary)+'/年':'未知',
+    age,
+    jobLevel:G.selfEmployed?'创业者':(job?job.title:'未知'),
+    jobSalary:G.selfEmployed?'无固定工资':(job?fmt(job.salary)+'/年':'未知'),
     totalAsset:fmt(total),cash:fmt(G.cash),
     health:Math.round(G.health),mood:Math.round(G.mood),IQ:Math.round(G.IQ),EQ:Math.round(G.EQ),
     spouse:G.spouse?true:false,children:G.children,
     stocks:portfolio.slice(0,3),houses:houseList,
-    month:G.totalMonths,jobTitle:job?job.title:'未知'
+    month:G.totalMonths,
+    jobTitle:G.selfEmployed?'创业者':(job?job.title:'未知'),
+    selfEmployed:G.selfEmployed?true:false
   };
 }
 
@@ -5392,9 +5485,9 @@ function buildNewsPrompt(ctx){
 let _aiQueue=Promise.resolve();
 function callAI(promptBuilder,eventType){
   if(!AI_ENGINE.enabled||AI_ENGINE._fallbackCount>=AI_ENGINE.maxFallback)return Promise.resolve(null);
-  // 入队：等待前一个调用完成后，间隔1.5秒再执行
+  // 入队：等待前一个调用完成后，间隔1秒再执行
   const task=_aiQueue.then(async()=>{
-    await new Promise(r=>setTimeout(r,1500));
+    await new Promise(r=>setTimeout(r,1000));
     return _doCallAI(promptBuilder,eventType);
   });
   // 更新队列（不让失败阻塞后续）
@@ -5411,7 +5504,7 @@ async function _doCallAI(promptBuilder,eventType){
   if(!AI_ENGINE.useProxy)headers['Authorization']='Bearer '+AI_ENGINE.apiKey;
   try{
     const ctrl=new AbortController();
-    const tid=setTimeout(()=>ctrl.abort(),10000);
+    const tid=setTimeout(()=>ctrl.abort(),15000);
     const resp=await fetch(url,{
       method:'POST',headers,
       body:JSON.stringify({messages,model:AI_ENGINE.model,max_tokens:800,temperature:0.92}),
@@ -5555,34 +5648,11 @@ window.triggerDecisionEvent=function(){
 // Override triggerPhoneMessages to try AI first - 所有通讯录NPC都能主动找你
 window.triggerPhoneMessages=function(){
   if(!G.phone)return;
-  // 70%概率用AI生成NPC主动消息，让通讯录里的人都能找你
-  if(AI_ENGINE.enabled&&Math.random()<0.7){
-    triggerAIPhoneMessage().then(used=>{
-      if(!used){
-        // Fallback to template
-        const age=getAge();const total=calcTotalAsset();
-        const eligible=PHONE_MESSAGES.filter(m=>{
-          if(age<m.ageMin||age>m.ageMax)return false;
-          if(m.requires){
-            if(m.requires.married&&!G.spouse)return false;
-            if(m.requires.single&&G.spouse)return false;
-            if(m.requires.children&&G.children===0)return false;
-            if(m.requires.minAsset&&total<m.requires.minAsset)return false;
-            if(m.requires.minJobLevel&&G.jobIndex<m.requires.minJobLevel)return false;
-            if(m.requires.flag&&!G.phone.flags[m.requires.flag])return false;
-            if(m.requires.boss_angry&&!G.phone.flags.boss_angry)return false;
-            if(m.requires.hasLoan){let has=false;G.houses.forEach(h=>{if(h.loan)has=true;});if(!has)return false;}
-          }
-          const last=G.phone.flags['last_'+m.id];
-          if(last&&G.totalMonths-last<(m.cooldown||12))return false;
-          if(Math.random()>(m.chance||0.15))return false;
-          return true;
-        });
-        if(eligible.length>0){const msg=eligible[randInt(0,eligible.length-1)];addPhoneThread(msg);}
-      }
-    });
-  }else{
-    // Original template logic
+  // 每6个月重置fallback计数，让AI有机会恢复
+  if(G.totalMonths%6===0)AI_ENGINE._fallbackCount=0;
+  
+  // Helper: 从模板中筛选可用消息
+  function pickTemplate(){
     const age=getAge();const total=calcTotalAsset();
     const eligible=PHONE_MESSAGES.filter(m=>{
       if(age<m.ageMin||age>m.ageMax)return false;
@@ -5594,14 +5664,40 @@ window.triggerPhoneMessages=function(){
         if(m.requires.minJobLevel&&G.jobIndex<m.requires.minJobLevel)return false;
         if(m.requires.flag&&!G.phone.flags[m.requires.flag])return false;
         if(m.requires.boss_angry&&!G.phone.flags.boss_angry)return false;
+        if(G.selfEmployed&&(m.npc==='boss'||m.npc==='hr'||m.npc==='colleague'))return false;
         if(m.requires.hasLoan){let has=false;G.houses.forEach(h=>{if(h.loan)has=true;});if(!has)return false;}
       }
       const last=G.phone.flags['last_'+m.id];
       if(last&&G.totalMonths-last<(m.cooldown||12))return false;
-      if(Math.random()>(m.chance||0.15))return false;
+      // v3.8: 提高模板触发概率，从chance提升到 min(chance*3, 0.6)
+      const boostedChance=Math.min((m.chance||0.15)*3, 0.6);
+      if(Math.random()>boostedChance)return false;
       return true;
     });
-    if(eligible.length>0){const msg=eligible[randInt(0,eligible.length-1)];addPhoneThread(msg);}
+    if(eligible.length>0){addPhoneThread(eligible[randInt(0,eligible.length-1)]);return true;}
+    return false;
+  }
+  
+  // 保底机制：前6个月如果没有收到任何消息，强制触发一条
+  const isFirstMonths=G.totalMonths<=6;
+  const hasNoThreads=G.phone.threads.length===0;
+  
+  // 80%概率用AI生成NPC主动消息
+  if(AI_ENGINE.enabled&&Math.random()<0.8){
+    triggerAIPhoneMessage().then(used=>{
+      if(!used){
+        if(!pickTemplate()&&isFirstMonths&&hasNoThreads){
+          // 保底：强制发一条妈妈的消息
+          const momMsg=PHONE_MESSAGES.find(m=>m.id==='mom_nag');
+          if(momMsg)addPhoneThread(momMsg);
+        }
+      }
+    });
+  }else{
+    if(!pickTemplate()&&isFirstMonths&&hasNoThreads){
+      const momMsg=PHONE_MESSAGES.find(m=>m.id==='mom_nag');
+      if(momMsg)addPhoneThread(momMsg);
+    }
   }
 };
 
