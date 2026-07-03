@@ -133,7 +133,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 .ai-float-text{font-size:12px;font-weight:600;}
 .ai-float-close{position:absolute;top:-6px;right:-6px;width:18px;height:18px;background:#999;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;line-height:1;}
 @keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.05);}}
-.guide-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:4000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s;}
+.guide-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:4000;display:none;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s;}
 .guide-overlay.show{opacity:1;pointer-events:auto;}
 .guide-box{background:#fff;border-radius:16px;padding:28px 24px;text-align:center;max-width:300px;transform:scale(0.8);transition:transform .3s;}
 .guide-overlay.show .guide-box{transform:scale(1);}
@@ -3036,9 +3036,9 @@ let _guideCurrentPage=1;
 function openGuide(){
   _guideCurrentPage=1;
   _showGuidePage(1);
-  document.getElementById('guideOverlay').classList.add('show');
+  var g=document.getElementById('guideOverlay');g.style.display='flex';g.classList.add('show');
 }
-function closeGuide(){document.getElementById('guideOverlay').classList.remove('show');}
+function closeGuide(){var g=document.getElementById('guideOverlay');g.classList.remove('show');g.style.display='none';}
 function _showGuidePage(n){
   for(let i=1;i<=4;i++){
     const p=document.getElementById('guidePage'+i);
