@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>offer含金量 v3.12.12</title>
+<title>offer含金量 v3.13.0</title>
 <style>
 
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -14,7 +14,9 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 .page.active{display:block;}
 .header{background:var(--header-bg);color:#fff;padding:16px 20px 14px;text-align:center;position:relative;flex-shrink:0;}
 .header h1{font-size:18px;font-weight:600;letter-spacing:1px;}
-.header-sub{font-size:12px;color:rgba(255,255,255,0.6);margin-top:4px;}
+.header-sub{font-size:12px;color:rgba(255,255,255,0.6);margin-top:4px;transition:opacity .15s;}
+.header-sub.month-flash{animation:monthFlash .4s ease;}
+@keyframes monthFlash{0%{opacity:1;}40%{opacity:0.3;}100%{opacity:1;}}
 .tab-bar{display:flex;background:#fff;border-top:1px solid #e8e8e8;flex-shrink:0;padding-bottom:env(safe-area-inset-bottom,0);position:relative;z-index:100;}
 .tab-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 0 6px;font-size:10px;color:var(--text-light);cursor:pointer;transition:color .2s;user-select:none;-webkit-user-select:none;}
 .tab-item.active{color:var(--primary);}
@@ -255,15 +257,22 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 .contact-name{font-size:15px;font-weight:500;color:#333;}
 .contact-status{font-size:12px;color:#999;margin-top:2px;}
 .contact-arrow{color:#ccc;font-size:14px;}
-.msg-item{display:flex;align-items:center;padding:13px 0;border-bottom:1px solid #f0f0f0;cursor:pointer;transition:background .15s;}
-.msg-item:active{background:#f8f8f8;}
-.msg-av{width:46px;height:46px;border-radius:23px;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;margin-right:12px;}
+.msg-item{display:flex;align-items:center;padding:13px 12px;border-bottom:1px solid #f0f0f0;cursor:pointer;transition:all .15s;border-radius:8px;margin:0 4px 2px;}
+.msg-item:active{background:#f0f0f0;}
+.msg-item.msg-unread{background:linear-gradient(135deg,#fff5f5,#fff0f0);border-left:3px solid #e74c3c;}
+.msg-item.msg-unread .msg-nm{color:#e74c3c;font-weight:700;}
+.msg-item.msg-unread .msg-av{box-shadow:0 0 0 2px #e74c3c;}
+.msg-item.msg-read{opacity:.7;}
+.msg-item.msg-read .msg-nm{color:#999;}
+.msg-av{width:46px;height:46px;border-radius:23px;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;margin-right:12px;position:relative;}
+.msg-av .unread-dot{position:absolute;top:0;right:0;width:12px;height:12px;background:#e74c3c;border-radius:50%;border:2px solid #fff;}
 .msg-bd{flex:1;min-width:0;}
 .msg-nm{font-size:15px;font-weight:500;}
 .msg-pv{font-size:12px;color:var(--text-light);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.msg-pv.msg-pv-unread{color:#333;font-weight:500;}
 .msg-mt{text-align:right;flex-shrink:0;margin-left:8px;}
 .msg-tm{font-size:11px;color:var(--text-light);}
-.msg-bg{background:#e74c3c;color:#fff;font-size:10px;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-top:6px;margin-left:auto;padding:0 5px;}
+.msg-bg{background:#e74c3c;color:#fff;font-size:10px;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-top:6px;margin-left:auto;padding:0 5px;animation:badgePulse 2s infinite;}
 .phone-badge{position:absolute;top:-4px;right:-6px;background:#e74c3c;color:#fff;font-size:10px;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 4px;z-index:10;font-weight:700;box-shadow:0 2px 6px rgba(231,76,60,0.5);animation:badgePulse 2s infinite;}
 @keyframes badgePulse{0%,100%{transform:scale(1);}50%{transform:scale(1.1);}}
 /* Trade input number spinner hide */
@@ -454,12 +463,10 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
     </div>
     <div class="card text-center">
       <button class="btn btn-primary btn-lg btn-block" onclick="nextMonth()" id="nextMonthBtn">🚀 度过一月</button>
-      <div style="display:flex;gap:8px;margin-top:10px;justify-content:center;">
+      <div style="display:flex;gap:6px;margin-top:10px;justify-content:center;flex-wrap:wrap;">
+        <button class="btn btn-outline btn-sm" onclick="socialGathering()" style="font-size:11px;">🤝 社交聚会 ¥3000</button>
         <button class="btn btn-outline btn-sm" onclick="fastForward(5)">⏩ 快进5年</button>
         <button class="btn btn-outline btn-sm" onclick="fastForward(10)">⏩ 快进10年</button>
-      </div>
-      <div style="display:flex;gap:8px;margin-top:8px;justify-content:center;">
-        <button class="btn btn-outline btn-sm" style="font-size:11px;" onclick="socialGathering()">🤝 社交聚会 ¥3000</button>
       </div>
       <div class="text-sm text-muted mt-8" id="yearHint">点击按钮推进人生</div>
     </div>
@@ -1615,7 +1622,14 @@ function refreshLearning(){
 function refreshHeader(){
   const job=JOBS[G.jobIndex];
   const careerLabel=G.selfEmployed?'🚀 创业者':job.name;
-  document.getElementById('headerSub').textContent='年龄 '+getAge()+'岁 · '+careerLabel+' · '+getMonth()+'月';
+  const yr=Math.floor(G.totalMonths/12);
+  const mo=(G.totalMonths%12)+1;
+  const el=document.getElementById('headerSub');
+  el.textContent='第'+yr+'年 '+mo+'月 · '+getAge()+'岁 · '+careerLabel;
+  // 月份变化时闪一下
+  el.classList.remove('month-flash');
+  void el.offsetWidth;
+  el.classList.add('month-flash');
   document.getElementById('lpDisplay').textContent=G.legacyPoints||0;
 }
 function refreshLife(){
@@ -1813,10 +1827,21 @@ function nextMonth(){
     return;
   }
   if(G._pendingDecision){showToast('⚡ 请先完成当前事件！');return;}
-  advanceMonth();
-  saveGame();refreshAll();
-  checkAchievements();
-  if(G.gameOver)setTimeout(()=>showGameOver(),500);
+  // 即时更新月份显示，消除卡顿感
+  const btn=document.getElementById('nextMonthBtn');
+  btn.disabled=true;btn.textContent='⏳ 进行中...';
+  requestAnimationFrame(()=>{
+    advanceMonth();
+    refreshHeader(); // 先刷头部让月份立即可见
+    const total=calcTotalAsset();
+    document.getElementById('totalAsset').textContent=fmt(total);
+    document.getElementById('cashDisplay').textContent=fmt(G.cash);
+    setTimeout(()=>{
+      saveGame();refreshAll();checkAchievements();
+      btn.disabled=false;btn.textContent='🚀 度过一月';
+      if(G.gameOver)setTimeout(()=>showGameOver(),500);
+    },30);
+  });
 }
 const TEMPLATE_SMALL_EVENTS=[
   {text:'💰 朋友还钱，收到3000元',type:'good',effect:{money:3000}},
@@ -4244,10 +4269,14 @@ function renderPhoneList(){
       }
       const timeStr=getTimeStr(t.receivedMonth);
       const unread=t.status==='unread'||(t.status==='reading'&&unreadCount>0);
-      html+='<div class="msg-item" onclick="openThread('+t.id+')" style="'+(unread?'font-weight:600;':'')+'">';
-      html+='<div class="msg-av">'+t.npcAvatar+'</div>';
+      const cls=unread?'msg-item msg-unread':'msg-item msg-read';
+      const pvCls=unread?'msg-pv msg-pv-unread':'msg-pv';
+      html+='<div class="'+cls+'" onclick="openThread('+t.id+')">';
+      html+='<div class="msg-av">'+t.npcAvatar;
+      if(unread)html+='<div class="unread-dot"></div>';
+      html+='</div>';
       html+='<div class="msg-bd"><div class="msg-nm">'+t.npcName+(t.type==='call'?' 📞':t.type==='sms'?' 💬':t.type==='gathering'?' 🎉':'')+'</div>';
-      html+='<div class="msg-pv">'+preview+'</div></div>';
+      html+='<div class="'+pvCls+'">'+preview+'</div></div>';
       html+='<div class="msg-mt"><div class="msg-tm">'+timeStr+'</div>';
       if(unread)html+='<div class="msg-bg">'+(unreadCount>1?unreadCount+'条':'新')+'</div>';
       html+='</div></div>';
@@ -5709,20 +5738,25 @@ function buildMomentsPrompt(ctx){
     role:'system',
     content:`你是"offer含金量"的朋友圈引擎。模拟NPC发微信朋友圈+其他NPC评论。风格要像真实朋友圈，不是游戏。
 
-【人物关系】所有人都是"玩家"的微信好友，彼此之间没有亲属关系：
-- 妈妈/爸爸：玩家的父母，退休在家，不认识玩家的同事和朋友
-- 老王：玩家的发小/铁哥们
-- 小李：玩家的同事
-- 张总：玩家的老板
-- 小张：玩家的大学同学
-- 刘经理：玩家的银行客户经理
-- 小陈：玩家的房产中介
-- 邻居老赵：玩家的邻居
-- 前同事小周：玩家的前同事
-- 李教授：玩家的导师
-- 健身教练：玩家的健身房教练
-- 小雨：玩家的女朋友/校园恋人
-⚠️ 爸爸评论小李的朋友圈时，要说"我家孩子也加班"而不是"你也要注意身体"——他不认识小李，只关心自己孩子。评论要符合你和发帖人的关系。
+【人物关系】所有人都是"玩家"的微信好友。家人之间互相认识，但不认识玩家的同事和朋友：
+- 妈妈和爸爸：夫妻，退休在家，互相认识，但不认识玩家的同事和朋友
+- 老王：玩家的发小/铁哥们，只认识玩家
+- 小李：玩家的同事，只认识玩家
+- 张总：玩家的老板，只认识玩家
+- 小张：玩家的大学同学，只认识玩家
+- 刘经理：玩家的银行客户经理，只认识玩家
+- 小陈：玩家的房产中介，只认识玩家
+- 邻居老赵：玩家的邻居，只认识玩家
+- 前同事小周：玩家的前同事，只认识玩家
+- 李教授：玩家的导师，只认识玩家
+- 健身教练：玩家的健身房教练，只认识玩家
+- 小雨：玩家的女朋友/校园恋人，只认识玩家
+⚠️ 评论规则：
+- 妈妈可以在爸爸的朋友圈下评论（他们是夫妻），可以以家人身份关心
+- 爸爸可以在妈妈的朋友圈下评论（他们是夫妻）
+- 但爸爸不应该在小李的朋友圈下以父亲口吻说话（他不认识小李）
+- 每个NPC只认识玩家，不认识其他玩家的社交圈
+- 评论要符合你和发帖人的关系
 
 可选NPC（随机选1个发朋友圈，2-3个评论）：
 ${chosen.map(n=>`·${n.id}(${n.name}): ${n.traits.join('、')}，常发${n.topics.join('、')}`).join('\n')}
