@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>offer含金量</title>
+<title>offer含金量 v2.1</title>
 <style>
 
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -2653,6 +2653,8 @@ const NPC_PERSONALITIES={
 // ===== 渲染通讯录（人设驱动） =====
 function renderContacts(){
   const el=document.getElementById('phone-contacts');if(!el)return;
+  if(!G.phone)G.phone={threads:[],moments:[],notifications:[],flags:{},lastTriggerMonth:0,nextId:1,activeChats:[]};
+  if(!G.phone.activeChats)G.phone.activeChats=[];
   let html='<div style="padding:12px 16px 8px;font-size:12px;color:#999;">点击头像开始对话</div>';
   Object.keys(NPC_PERSONALITIES).forEach(npcId=>{
     const p=NPC_PERSONALITIES[npcId];
@@ -3339,7 +3341,9 @@ function renderNotifications(){
 function switchPhoneTab(tab){
   document.querySelectorAll('.phone-tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.phone-content').forEach(c=>c.classList.remove('active'));
-  event.currentTarget.classList.add('active');
+  const tabNames=['messages','contacts','moments','notifications'];
+  const idx=tabNames.indexOf(tab);
+  if(idx>=0){const allTabs=document.querySelectorAll('.phone-tab');if(allTabs[idx])allTabs[idx].classList.add('active');}
   document.getElementById('phone-'+tab).classList.add('active');
   if(tab==='messages')renderPhoneList();
   else if(tab==='contacts')renderContacts();
@@ -3375,7 +3379,7 @@ window.addEventListener('load',()=>{
   if(loadGame()&&!G.gameOver){
     document.getElementById('welcomePage').style.display='none';
     document.getElementById('gameApp').style.display='flex';
-    initStockPrices();refreshAll();
+    initStockPrices();initPhoneState();refreshAll();
   }
 });
 const AI_ENGINE={
