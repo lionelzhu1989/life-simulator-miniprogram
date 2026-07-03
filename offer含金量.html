@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>offer含金量 v3.12.7</title>
+<title>offer含金量 v3.12.8</title>
 <style>
 
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -2362,14 +2362,14 @@ function refreshStock(){
         newsTag=relatedNews.type==='good'?'<span class="tag tag-green" style="margin-left:6px;font-size:10px;">利好</span>':'<span class="tag tag-red" style="margin-left:6px;font-size:10px;">利空</span>';
       }
     }
-    html+='<div class="list-item" style="flex-wrap:wrap;"><div class="list-info" style="width:100%;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;"><span class="name" style="font-size:15px;font-weight:600;">'+s.name+'</span>'+newsTag+'</div><div style="display:flex;align-items:baseline;gap:8px;"><span class="stock-price '+cls+'">¥'+price.toFixed(2)+'</span><span class="stock-change '+cls+'" style="font-size:13px;font-weight:600;">'+(change>0?'+':'')+change+'%</span></div><div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-light);margin-top:4px;"><span>持有 '+hold+' 股</span>'+(hold>0?'<span>市值 ¥'+fmt(hold*price)+'</span>':'')+'</div></div><div class="list-action" style="width:100%;display:flex;gap:8px;margin-top:8px;"><button class="btn btn-danger btn-sm" style="flex:1;" onclick="stockSell(\''+s.code+'\')" '+(hold<=0?'disabled':'')+'>'+String.fromCharCode(21334)+String.fromCharCode(20986)+'</button><button class="btn btn-success btn-sm" style="flex:1;" onclick="stockBuy(\''+s.code+'\')" '+(maxBuy<=0?'disabled':'')+'>'+String.fromCharCode(20080)+String.fromCharCode(20837)+'</button></div></div>';
+    html+='<div class="list-item" style="flex-wrap:wrap;"><div class="list-info" style="width:100%;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;"><span class="name" style="font-size:15px;font-weight:600;">'+s.name+'</span>'+newsTag+'</div><div style="display:flex;align-items:baseline;gap:8px;"><span class="stock-price '+cls+'">¥'+price.toFixed(2)+'</span><span class="stock-change '+cls+'" style="font-size:13px;font-weight:600;">'+(change>0?'+':'')+change+'%</span></div><div style="font-size:12px;color:var(--text-light);margin-top:4px;">持有 '+hold+' 股</div></div><div class="list-action" style="width:100%;display:flex;gap:8px;margin-top:8px;"><button class="btn btn-danger btn-sm" style="flex:1;" onclick="stockSell(\''+s.code+'\')" '+(hold<=0?'disabled':'')+'>'+String.fromCharCode(21334)+String.fromCharCode(20986)+'</button><button class="btn btn-success btn-sm" style="flex:1;" onclick="stockBuy(\''+s.code+'\')" '+(maxBuy<=0?'disabled':'')+'>'+String.fromCharCode(20080)+String.fromCharCode(20837)+'</button></div></div>';
   });
   document.getElementById('stockList').innerHTML=html;
   let holdHtml='';let totalVal=0;
   for(const code in G.stockHoldings){
     const shares=G.stockHoldings[code];if(shares<=0)continue;
     const s=STOCKS.find(x=>x.code===code);const val=shares*G.stockPrices[code];totalVal+=val;
-    holdHtml+='<div class="list-item"><div class="list-info"><div class="name">'+s.name+'</div><div class="desc">'+shares+'股 × ¥'+G.stockPrices[code].toFixed(2)+'</div></div><span style="font-weight:600;color:var(--warning);">'+fmt(val)+'</span></div>';
+    holdHtml+='<div class="list-item"><div class="list-info"><div class="name">'+s.name+'</div><div class="desc">'+'持有 '+shares+' 股'+'</div></div><span style="font-weight:600;color:var(--warning);">'+fmt(val)+'</span></div>';
   }
   if(!holdHtml)holdHtml='<div class="text-center text-sm text-muted" style="padding:16px 0;">暂无持仓</div>';
   else holdHtml+='<div class="divider"></div><div class="flex-between"><span class="text-sm">持仓总市值</span><span style="font-weight:700;color:var(--warning);">'+fmt(totalVal)+'</span></div>';
