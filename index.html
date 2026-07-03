@@ -1512,11 +1512,42 @@ function switchInvestTab(name){
 }
 
 // ========== 初始化 ==========
+function migrateSave(){
+  if(!G.houses)G.houses=[];
+  if(!G.businesses)G.businesses=[];
+  if(!G.techInvestments)G.techInvestments=[];
+  if(!G.achievements)G.achievements=[];
+  if(!G.activeNews)G.activeNews=[];
+  if(!G.unlockedTiers)G.unlockedTiers={};
+  if(!G.luxuryItems)G.luxuryItems=[];
+  if(!G.shortPositions)G.shortPositions={};
+  if(!G.lifeEvents)G.lifeEvents=[];
+  if(!G.socialContacts)G.socialContacts=[];
+  if(!G.romance)G.romance={npcId:null,stage:'none',affection:0,metMonth:0,lastInteraction:0};
+  if(!G.phone)G.phone={threads:[],moments:[],aiMoments:[],notifications:[],flags:{},lastTriggerMonth:0,nextId:1,chatHistory:{},activeChats:[]};
+  if(!G.phone.aiMoments)G.phone.aiMoments=[];
+  if(!G.phone.notifications)G.phone.notifications=[];
+  if(!G.phone.flags)G.phone.flags={};
+  if(!G.phone.threads)G.phone.threads=[];
+  if(!G.phone.moments)G.phone.moments=[];
+  if(!G.phone.chatHistory)G.phone.chatHistory={};
+  if(!G.phone.activeChats)G.phone.activeChats=[];
+  if(!G.stockHoldings)G.stockHoldings={};
+  if(!G.stockPrices)G.stockPrices={};
+  if(!G.monthlyTasks)G.monthlyTasks={};
+  if(!G.childAges)G.childAges=[];
+  if(G.gameOver===undefined)G.gameOver=false;
+  if(G.forbesShown===undefined)G.forbesShown=false;
+  if(G.selfEmployed===undefined)G.selfEmployed=false;
+  if(G.decisionCount===undefined)G.decisionCount=0;
+  if(G.guideStep===undefined)G.guideStep=0;
+  if(G.salaryBonus===undefined)G.salaryBonus=0;
+  if(G.children===undefined)G.children=0;
+  if(G.spouse===undefined)G.spouse=null;
+}
 function startGame(){
   if(loadGame()&&!G.gameOver){
-    // Migration: ensure romance state exists for old saves
-    if(!G.romance)G.romance={npcId:null,stage:'none',affection:0,metMonth:0,lastInteraction:0};
-    if(!G.phone.aiMoments)G.phone.aiMoments=[];
+    migrateSave();
     document.getElementById('welcomePage').style.display='none';
     document.getElementById('gameApp').style.display='flex';
     initStockPrices();initPhoneState();refreshAll();return;
@@ -5603,6 +5634,7 @@ function getTimeStr(month){
 // ========== 页面加载 ==========
 window.addEventListener('load',()=>{
   if(loadGame()&&!G.gameOver){
+    migrateSave();
     document.getElementById('welcomePage').style.display='none';
     document.getElementById('gameApp').style.display='flex';
     initStockPrices();initPhoneState();refreshAll();
