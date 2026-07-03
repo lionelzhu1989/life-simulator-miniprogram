@@ -6407,3 +6407,27 @@ function notifyAsMessage(npcId,text){
 
 // v3.12.0: Stub for compatibility - notifications are rendered via _getNotificationsHTML in renderPhoneList
 function _renderNotificationsInMessages(html){}
+// v3.12.2: Debug helper - force-add test moments
+function _debugAddTestMoments(){
+  if(!G||!G.phone){alert('G.phone不存在');return;}
+  const testNpcs=[
+    {npcId:'mom',npcName:'妈妈',npcAvatar:'👩',text:'今天天气真好，出去散步了 ☀️ 退休生活就是悠闲~'},
+    {npcId:'bestie',npcName:'老王',npcAvatar:'🍻',text:'升职了！从今天开始是部门经理了 💼 感谢所有支持我的人！'},
+    {npcId:'colleague',npcName:'小李',npcAvatar:'💼',text:'又是加班到深夜的一天 😴 但看到成果还是有成就感的'}
+  ];
+  const commentPool=['mom','dad','bestie','colleague','classmate','neighbor','boss'];
+  testNpcs.forEach(t=>{
+    const comments=[];
+    const shuffled=commentPool.filter(id=>id!==t.npcId).sort(()=>Math.random()-0.5);
+    for(let i=0;i<3;i++){
+      const cn=NPCS[shuffled[i]]||{name:'朋友',avatar:'👤'};
+      comments.push({npcId:shuffled[i],npcName:cn.name,npcAvatar:cn.avatar,text:['恭喜恭喜！🎉','厉害了👍','加油💪'][i]});
+    }
+    const likedNpcs=shuffled.slice(0,5);
+    G.phone.moments.unshift({id:G.phone.nextId++,npcId:t.npcId,npcName:t.npcName,npcAvatar:t.npcAvatar,text:t.text,month:G.totalMonths,liked:false,comments:comments,playerComments:[],likedNpcs:likedNpcs});
+  });
+  renderMoments();
+  saveGame();
+  alert('已添加3条测试朋友圈（含NPC评论+点赞），请切换到朋友圈查看');
+}
+console.log('[DEBUG] 调试函数已加载：运行 _debugAddTestMoments() 可强制添加测试朋友圈');
