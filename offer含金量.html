@@ -2133,7 +2133,7 @@ function triggerProjectEvents(){
       currentRound:0,status:'unread',receivedMonth:G.totalMonths,readMonth:0,
       flagClear:null,followUp:null,projectId:t.id,projectEventIdx:t.events.length-1
     };
-    G.phone.threads.unshift(thread);
+    pushPhoneThread(thread);
   });
   updatePhoneBadge();updatePhoneHint();
 }
@@ -2945,7 +2945,7 @@ function triggerGathering(){
     }],
     currentRound:0,status:'unread',receivedMonth:G.totalMonths,readMonth:0,flagClear:null,followUp:null
   };
-  G.phone.threads.unshift(thread);
+  pushPhoneThread(thread);
   saveGame();updatePhoneBadge();updatePhoneHint();
 }
 
@@ -3086,7 +3086,7 @@ function addPhoneThread(tpl){
     followUp:tpl.followUp?JSON.parse(JSON.stringify(tpl.followUp)):null,
     flagClear:tpl.flagClear||null
   };
-  G.phone.threads.unshift(thread);
+  pushPhoneThread(thread);
   G.phone.flags['last_'+tpl.id]=G.totalMonths;
   updatePhoneBadge();
 }
@@ -3694,3 +3694,17 @@ if(_origTriggerStockNews){
 </script>
 </body>
 </html>
+
+// ===== 归档：按NPC合并消息线程 =====
+function pushPhoneThread(thread){
+  // If same NPC has unread/reading thread, merge rounds into it
+  const existing=G.phone.threads.find(t=>t.npcId===thread.npcId&&t.status!=='replied');
+  if(existing){
+    existing.rounds.push(...thread.rounds);
+    // Keep the latest metadata
+    if(thread.projectId)existing.projectId=thread.projectId;
+    if(thread.projectEventIdx!==undefined)existing.projectEventIdx=thread.projectEventIdx;
+    updatePhoneBadge();updatePhoneHint();return;
+  }
+  G.phone.threads.unshift(thread);
+}
