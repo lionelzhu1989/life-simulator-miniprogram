@@ -1244,7 +1244,7 @@ function getGameYear(){return Math.floor(G.totalMonths/12)+1;}
 function showModal({title,content,showCancel,confirmText,cancelText,success}){
   document.getElementById('modalTitle').textContent=title||'';
   document.getElementById('modalContent').innerHTML=(content||'').replace(/\n/g,'<br>');
-  const btns=document.getElementById('modalBtns');btns.innerHTML='';
+  const btns=document.getElementById('modalBtns');btns.innerHTML='';btns.style.display='';
   if(showCancel!==false){const cb=document.createElement('button');cb.className='btn btn-outline';cb.textContent=cancelText||'取消';cb.onclick=()=>{hideModal();success&&success({confirm:false,cancel:true});};btns.appendChild(cb);}
   const cf=document.createElement('button');cf.className='btn btn-primary';cf.textContent=confirmText||'确定';cf.onclick=()=>{hideModal();success&&success({confirm:true,cancel:false});};btns.appendChild(cf);
   document.getElementById('modalOverlay').classList.add('show');
@@ -2989,8 +2989,8 @@ function startEncounterScene(sceneKey){
   setTimeout(function(){var b=document.getElementById('modalBtns');if(b)b.style.display='none';},10);
 }
 
-// ===== 处理玩家选择 =====
-function handleEncounterChoice(choiceIndex){
+// ===== 处理玩家选择（AI驱动） =====
+async function handleEncounterChoice(choiceIndex){
   if(!G._encounter) return;
   var sceneKey = G._encounter.key;
   var scene = ENCOUNTER_SCENES[sceneKey];
@@ -3001,22 +3001,18 @@ function handleEncounterChoice(choiceIndex){
   if(eff.health) G.health = clamp(G.health + eff.health, 0, 200);
   if(eff.iq) G.IQ = clamp(G.IQ + eff.iq, 0, 200);
   if(eff.eq) G.eq = clamp(G.eq + eff.eq, 0, 200);
-  // 累计通过数
-  if(choice.goodResponse) G._encounter.passCount++;
   // 禁用所有选项按钮
   var btns = document.querySelectorAll('#encounterChoices button');
   btns.forEach(function(b,i){
     b.disabled = true;
-    b.style.opacity = '0.5';
+    b.style.opacity = i===choiceIndex ? '1' : '0.5';
     b.style.cursor = 'default';
   });
-  // 高亮选中的按钮
   if(btns[choiceIndex]){
-    btns[choiceIndex].style.opacity = '1';
     btns[choiceIndex].style.background = '#e8f4fd';
     btns[choiceIndex].style.borderColor = '#3498db';
   }
-  // 显示NPC回应
+  // 显示加载中
   var avatar = (MEETABLE_NPCS[sceneKey]||{}).avatar || '👤';
   var npcName = G._encounter.npcName;
   var resultDiv = document.getElementById('encounterResult');
@@ -3025,28 +3021,42 @@ function handleEncounterChoice(choiceIndex){
     resultDiv.innerHTML = '<div style="display:flex;gap:8px;align-items:flex-start;margin-top:12px;">'+
       '<div style="font-size:28px;">'+avatar+'</div>'+
       '<div style="background:#f0f7ff;border-radius:12px;padding:10px 14px;">'+
-      '<div style="font-size:13px;color:#555;">'+choice.response+'</div>'+
+      '<div style="font-size:13px;color:#999;">思考中...</div>'+
+      '</div></div>';
+  }
+  // 调用AI生成回应
+  var playerState = {age:G.age, cash:G.cash, mood:G.mood, iq:G.IQ, eq:G.eq, health:G.health};
+  var aiResult = await generateEncounterAIResponse(sceneKey, npcName, choice.text, eff, playerState);
+  // 存储AI判断的加微信意愿
+  G._encounter.wantFriend = aiResult.wantFriend;
+  // 累计通过数（AI觉得好的回应也算）
+  if(aiResult.wantFriend) G._encounter.passCount++;
+  // 显示AI回应
+  if(resultDiv){
+    resultDiv.innerHTML = '<div style="display:flex;gap:8px;align-items:flex-start;margin-top:12px;">'+
+      '<div style="font-size:28px;">'+avatar+'</div>'+
+      '<div style="background:#f0f7ff;border-radius:12px;padding:10px 14px;">'+
+      '<div style="font-size:13px;color:#555;">'+aiResult.text+'</div>'+
       '</div></div>'+
       '<div onclick="endEncounterScene()" style="text-align:center;margin-top:16px;padding:12px;background:var(--primary);color:white;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;">继续 →</div>';
   }
 }
 
-// ===== 场景结束 =====
+// ===== 场景结束（AI判断是否加微信） =====
 function endEncounterScene(){
   if(!G._encounter) return;
   var sceneKey = G._encounter.key;
   var npcName = G._encounter.npcName;
-  var passCount = G._encounter.passCount;
-  var scene = ENCOUNTER_SCENES[sceneKey];
-  var passed = passCount >= (scene.passThreshold || 1);
+  // AI已判断NPC是否愿意加微信
+  var wantFriend = G._encounter.wantFriend;
   // 关闭弹窗
   hideModal();
   G._encounter = null;
-  if(passed){
-    // 通过 → 弹出"加微信"选项
+  if(wantFriend){
+    // NPC愿意 → 弹出"加微信"选项
     showModal({
       title:'交换联系方式',
-      content:'要加'+npcName+'的微信吗？',
+      content:npcName+'看起来对你印象不错，主动说"加个微信吧，以后多联系"。',
       confirmText:'加微信 💬',
       cancelText:'算了',
       success:function(res){
@@ -3062,10 +3072,16 @@ function endEncounterScene(){
       }
     });
   } else {
-    // 未通过
+    // NPC不太愿意
+    var byeLines = [
+      npcName+'礼貌地说了声"再见"就走了。',
+      npcName+'笑了笑说"下次再聊吧"，看起来不太想加微信。',
+      npcName+'接了个电话匆匆离开了。',
+      npcName+'说"我微信满了"然后笑着走了。'
+    ];
     showModal({
       title:'场景结束',
-      content:npcName+'礼貌地告别了，看起来不太想加你微信。',
+      content:byeLines[Math.floor(Math.random()*byeLines.length)],
       confirmText:'好吧',
       cancelText:'',
       success:function(){ G._encounterActive = false; }
@@ -3235,10 +3251,9 @@ function openProactiveChat(npcId){
   // Load chat history if exists
   const history=G.phone.chatHistory[npcId]||[];
   if(history.length>0){
-    // Show last 10 messages
+    // Show last 10 NPC messages only (player's own messages hidden for clean chat feel)
     const recent=history.slice(-10);
     recent.forEach(h=>{
-      if(h.player)addChatBubble('player',h.player);
       if(h.npc)addChatBubble('npc',h.npc);
     });
   }else{
@@ -4019,14 +4034,21 @@ ${JSON.stringify(gameState, null, 2)}
 
 ## 资金互动规则（必须严格执行）
 当对话涉及金钱时，你必须在回复末尾添加对应的标签（每个标签独占一行）：
-- 如果你要给玩家钱（比如给零花钱、还钱、投资支持），在回复最后加：[GIVE:金额数字]
-- 如果你要请玩家吃饭/消费，加：[TREAT:金额数字]
-- 如果你要向玩家借钱/要钱，加：[ASK:金额数字:简短原因]
+- 如果**你要给玩家钱**（比如给零花钱、还钱、投资支持、发红包），在回复最后加：[GIVE:金额数字]
+- 如果**你要请玩家吃饭/消费**，加：[TREAT:金额数字]
+- 如果**你要向玩家借钱/要钱**（玩家给你钱你才加这个），加：[ASK:金额数字:简短原因]
+
+⚠️ 关键区分：
+- 你主动给玩家钱 → [GIVE]，绝对不是[ASK]
+- 玩家说"借我点钱" → 你同意的话用[GIVE]，你不想给就说不加标签
+- 你缺钱想向玩家借 → 才用[ASK]
+- 方向搞反是严重错误！钱从你口袋到玩家 = GIVE，钱从玩家口袋到你 = ASK
 
 例如：
 用户说"给点零花钱"，你回复"行，拿去花吧"然后换行写"[GIVE:2000]"
-用户说"借我点钱交房租"，你回复"这么多？我也没多少啊"然后换行写"[ASK:1000:交房租]"
+用户说"借我点钱交房租"，你回复"这么多？行吧拿去"然后换行写"[GIVE:1000]"
 你请客吃饭，你回复"走，今天我请客"然后换行写"[TREAT:500]"
+你缺钱要借，你回复"最近手头紧，能借我点吗"然后换行写"[ASK:500:最近手头紧]"
 
 ## 重要规则
 1. 回复必须像真人聊天，口语化，自然随意
@@ -4194,15 +4216,24 @@ function processChatEffects(reply,npcId){
       triggered.push(trigger.msg);
     }
   });
+  // 安全纠错：如果文字内容是NPC给钱，但标签方向搞反了（用了ASK），自动纠正为GIVE
+  var hasGiveText=/(给你|转你|塞给你|发红包|给你钱|给你转|孝敬你)/.test(reply);
+  var hasAskTag=/\[ASK:\d+/.test(reply);
+  var hasGiveTag=/\[GIVE:\d+/.test(reply);
+  if(hasGiveText && hasAskTag && !hasGiveTag){
+    // 把 [ASK:金额:原因] 纠正为 [GIVE:金额]
+    reply=reply.replace(/\[ASK:(\d+):[^\]]*\]/g, function(m,p1){ return '[GIVE:'+p1+']'; });
+    triggered.push('🔄 系统纠正了资金方向');
+  }
   // Parse GIVE tag from AI reply - NPC gives money to player
   const giveMatch=reply.match(/\[GIVE:(\d+)\]/);
   if(giveMatch){
     const amount=parseInt(giveMatch[1]);
     G.cash=clamp(G.cash+amount,-999999,999999999);
     const npcName=(NPC_PERSONALITIES[npcId]||{}).name||'NPC';
-    triggered.push('💰 '+npcName+'给了你¥'+fmt(amount));
+    triggered.push('💰 '+npcName+'给了你'+fmt(amount));
     // Show money transfer notice in chat
-    addChatBubble('money-transfer','💰 收到转账 ¥'+fmt(amount));
+    addChatBubble('money-transfer','💰 收到转账 '+fmt(amount));
     // Record in history
     recordMoneyHistory(npcId,'',npcName+'给了你¥'+amount,amount,'npc_gave');
     refreshLife();
@@ -4307,7 +4338,7 @@ function showGiveConfirm(npcId,amount,msg,callback){
     document.body.appendChild(overlay);
   }
   document.getElementById('giveConfirmNpc').textContent='给 '+npcName+' 转账';
-  document.getElementById('giveConfirmAmount').textContent='¥'+fmt(amount);
+  document.getElementById('giveConfirmAmount').textContent=fmt(amount);
   overlay.classList.add('show');
   // Store pending give data
   window._pendingGive={npcId:npcId,amount:amount,msg:msg,callback:callback};
@@ -4321,7 +4352,7 @@ function closeGiveConfirm(confirmed){
   if(confirmed){
     // Check if player has enough cash
     if(G.cash<pg.amount){
-      showToast('现金不足！当前余额¥'+fmt(G.cash));
+      showToast('现金不足！当前余额'+fmt(G.cash));
       window._pendingGive=null;
       return;
     }
@@ -4329,7 +4360,7 @@ function closeGiveConfirm(confirmed){
     G.cash=clamp(G.cash-pg.amount,-999999,999999999);
     const npcName=(NPC_PERSONALITIES[pg.npcId]||{}).name||'NPC';
     // Show system notice in chat
-    addChatBubble('money-notice','💰 你给了'+npcName+' ¥'+fmt(pg.amount));
+    addChatBubble('money-notice','💰 你给了'+npcName+' '+fmt(pg.amount));
     // Record in history
     recordMoneyHistory(pg.npcId,'给'+npcName+'¥'+pg.amount,'',pg.amount,'give_to_npc');
     // Refresh UI
@@ -4362,7 +4393,7 @@ function showMoneyDecision(npcId,amount,reason){
     document.body.appendChild(overlay);
   }
   document.getElementById('mdTitle').textContent=npcName+'向你借钱';
-  document.getElementById('mdAmount').textContent='¥'+fmt(amount);
+  document.getElementById('mdAmount').textContent=fmt(amount);
   document.getElementById('mdReason').textContent='原因：'+reason;
   overlay.classList.add('show');
   window._pendingAsk={npcId:npcId,amount:amount,reason:reason};
@@ -4376,14 +4407,14 @@ function resolveMoneyDecision(accepted){
   const npcName=(NPC_PERSONALITIES[pa.npcId]||{}).name||'NPC';
   if(accepted){
     if(G.cash<pa.amount){
-      showToast('现金不足！当前余额¥'+fmt(G.cash));
+      showToast('现金不足！当前余额'+fmt(G.cash));
       window._pendingAsk=null;
       return;
     }
     G.cash=clamp(G.cash-pa.amount,-999999,999999999);
-    addChatBubble('money-notice','💰 你借给了'+npcName+' ¥'+fmt(pa.amount));
+    addChatBubble('money-notice','💰 你借给了'+npcName+' '+fmt(pa.amount));
     recordMoneyHistory(pa.npcId,'借给'+npcName+'¥'+pa.amount,'你借给了'+npcName+'¥'+pa.amount,pa.amount,'lend_to_npc');
-    showToast('已借出 ¥'+fmt(pa.amount));
+    showToast('已借出 '+fmt(pa.amount));
   }else{
     addChatBubble('sys','你拒绝了'+npcName+'的借钱请求');
     recordMoneyHistory(pa.npcId,'拒绝了'+npcName+'借钱¥'+pa.amount,'你拒绝了'+npcName+'的借钱请求',0,'refused_ask');
@@ -4978,4 +5009,84 @@ function pushPhoneThread(thread){
   }
   G.phone.threads.unshift(thread);
 }
-<!-- 1783074382 -->
+
+// ===== AI驱动的偶遇回应生成 =====
+async function generateEncounterAIResponse(sceneKey, npcName, choiceText, choiceEffect, playerState){
+  var scene = ENCOUNTER_SCENES[sceneKey];
+  var traits = (MEETABLE_NPCS[sceneKey]||{}).traits || ['友善'];
+  var npcType = '';
+  switch(sceneKey){
+    case 'courseTeacher': npcType='老师'; break;
+    case 'classmate': npcType='同学'; break;
+    case 'partyFriend': npcType='社交场合认识的人'; break;
+    case 'colleague': npcType='同事'; break;
+    case 'gymBuddy': npcType='健身房认识的人'; break;
+    case 'neighbor': npcType='邻居'; break;
+    default: npcType='路人';
+  }
+  var systemPrompt = '你是人生模拟器游戏中的NPC场景生成器。根据以下信息生成NPC的自然回应。\n\n'+
+    '## NPC信息\n'+
+    '姓名：'+npcName+'，身份：'+npcType+'\n'+
+    '性格特征：'+traits.join('、')+'\n'+
+    '场景：'+scene.scene+'\n'+
+    'NPC开场白：'+scene.npcLine.replace('{name}',npcName)+'\n\n'+
+    '## 玩家状态\n'+
+    '年龄：'+playerState.age+'岁，存款：'+playerState.cash+'元，心情：'+playerState.mood+'/100\n'+
+    '智商：'+playerState.iq+'/150，情商：'+playerState.eq+'/150\n'+
+    '健康：'+playerState.health+'/100\n\n'+
+    '## 玩家选择\n'+
+    '玩家说了：'+choiceText+'\n\n'+
+    '## 输出要求\n'+
+    '1. 用NPC的口吻自然地回应玩家，2-3句话\n'+
+    '2. 根据玩家的选择和状态调整态度（热情/冷淡/中性）\n'+
+    '3. 回应末尾加一个标签表示NPC对加微信的态度：\n'+
+    '   [ADD_FRIEND:yes] - NPC愿意加微信\n'+
+    '   [ADD_FRIEND:no] - NPC不太想加微信\n'+
+    '4. 如果玩家表现好（热情、有帮助、聊得来），倾向yes\n'+
+    '5. 如果玩家表现差（冷淡、敷衍、无礼），倾向no\n'+
+    '6. 也可以根据NPC性格随机决定，比如老师可能更严格，邻居可能更热情\n'+
+    '7. 不要说"作为AI"之类的话，完全以NPC身份回应';
+
+  if(AI_CHAT_CONFIG.enabled && AI_CHAT_CONFIG._fallbackCount < AI_CHAT_CONFIG.maxFallback){
+    try{
+      var resp = await fetch(AI_CHAT_CONFIG.apiUrl, {
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          'Authorization':'Bearer '+AI_CHAT_CONFIG.apiKey
+        },
+        body:JSON.stringify({
+          model:AI_CHAT_CONFIG.model,
+          messages:[
+            {role:'system', content:systemPrompt},
+            {role:'user', content:'玩家选择了：'+choiceText}
+          ],
+          temperature:0.85,
+          max_tokens:200
+        })
+      });
+      if(resp.ok){
+        var data = await resp.json();
+        var text = (data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content)||'';
+        text = text.trim();
+        AI_CHAT_CONFIG._fallbackCount = 0;
+        // 解析标签
+        var wantFriend = true; // 默认愿意
+        var tagMatch = text.match(/\[ADD_FRIEND:(yes|no)\]/i);
+        if(tagMatch){
+          wantFriend = tagMatch[1].toLowerCase() === 'yes';
+          text = text.replace(/\[ADD_FRIEND:(yes|no)\]/gi,'').trim();
+        }
+        return {text:text, wantFriend:wantFriend};
+      }
+    }catch(e){
+      AI_CHAT_CONFIG._fallbackCount = (AI_CHAT_CONFIG._fallbackCount||0)+1;
+    }
+  }
+  // 降级：用固定模板
+  var responses = (MEETABLE_NPCS[sceneKey]||{}).responses || ['嗯嗯'];
+  var fallbackText = responses[Math.floor(Math.random()*responses.length)];
+  // 根据effect判断态度
+  var goodEffect = choiceEffect && (choiceEffect.eq > 0 || choiceEffect.mood > 0 || choiceEffect.health > 0);
+  return {text:fallbackText, wantFriend:goodEffect};
+}
