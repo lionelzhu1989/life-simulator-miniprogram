@@ -1885,9 +1885,17 @@ function closeForbes(){
 async function nextMonth(){
   if(G.gameOver)return;
   if(hasUnread()){
-    const unreadCount=G.phone?G.phone.threads.filter(t=>t.status!=='replied'&&t.rounds[t.currentRound]&&!t.rounds[t.currentRound]._playerChoice).length:0;
-    showToast('📱 还有 '+unreadCount+' 条消息需要回复');
-    switchTab('phone');
+    // 找到未读线程并自动打开
+    const unread=G.phone?G.phone.threads.find(t=>t.status!=='replied'&&t.rounds[t.currentRound]&&!t.rounds[t.currentRound]._playerChoice):null;
+    if(unread){
+      showToast('📱 先回复 '+unread.npcName+' 的消息');
+      G._openThreadId=unread.id;
+      switchTab('phone');
+      setTimeout(()=>{renderChat();document.getElementById('chatOverlay').classList.add('show');},300);
+    }else{
+      showToast('📱 还有消息需要回复');
+      switchTab('phone');
+    }
     return;
   }
   if(G._pendingDecision){showToast('⚡ 请先完成当前事件！');return;}
