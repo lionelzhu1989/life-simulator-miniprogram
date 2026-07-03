@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>offer含金量 v3.13.0</title>
+<title>offer含金量 v3.15.0</title>
 <style>
 
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -4498,7 +4498,7 @@ function renderChat(){
   }
 }
 
-function selectPhoneOption(optIdx){
+async function selectPhoneOption(optIdx){
   const thread=G.phone.threads.find(t=>t.id===G._openThreadId);if(!thread||thread.status==='replied')return;
   const round=thread.rounds[thread.currentRound];if(!round||!round.opts)return;
   const opt=round.opts[optIdx];
@@ -4516,25 +4516,28 @@ function selectPhoneOption(optIdx){
     if(opt.fx.jobFire){G.salaryBonus=0;G.events=G.events||[];G.events.push({text:'💼 你被公司辞退了...',type:'bad'});notifyAsMessage('system','💼 你被公司辞退了...');}
   }
   if(opt.fx&&opt.fx.spouse){
-    // Find a spouse if not already married
     if(!G.spouse){const sp=SPOUSES[randInt(0,SPOUSES.length-1)];G.spouse=sp.id;}
   }
   if(opt.fx&&opt.fx.houses){
-    // Add a house through phone
     const price=1500000;
     if(G.cash>=price){G.cash-=price;G.houses.push({id:'normal',own:true,loan:false,loanBalance:0,loanTerm:0,loanMonthly:0,marketValue:price});}
   }
   // Move to next round or end
   if(opt.next===-1){
     thread.status='replied';
-    // Handle follow-up
     if(thread.followUp&&thread.followUp.flag&&G.phone.flags[thread.followUp.flag]){
       const fu=thread.followUp;
       G.phone.flags['_fu_trigger_'+thread.tplId]=G.totalMonths+fu.months;
       G.phone.flags['_fu_thread_'+thread.tplId]=fu.thread;
     }
-    // Handle flagClear
     if(thread.flagClear){delete G.phone.flags[thread.flagClear];}
+    // v3.15.0: 即使对话结束，也用AI生成NPC的结束语
+    try{
+      showTypingIndicator();
+      const endMsg=await generateThreadAIReply(thread.npc,'对话结束',opt.text,thread);
+      removeTypingIndicator();
+      if(endMsg){thread.rounds[thread.currentRound].npcMsgs=[endMsg];}
+    }catch(e){removeTypingIndicator();}
     saveGame();refreshAll();
     renderChat();
     return;
@@ -4542,6 +4545,19 @@ function selectPhoneOption(optIdx){
   // Check if next round exists
   if(opt.next<thread.rounds.length){
     thread.currentRound=opt.next;
+    // v3.15.0: 用AI生成NPC的下一条消息，替代预设模板
+    const nextRound=thread.rounds[thread.currentRound];
+    if(nextRound){
+      try{
+        showTypingIndicator();
+        const aiReply=await generateThreadAIReply(thread.npc,'继续对话',opt.text,thread);
+        removeTypingIndicator();
+        if(aiReply){nextRound.npcMsgs=[aiReply];}
+      }catch(e){
+        removeTypingIndicator();
+        console.error('Thread AI reply failed, using template:',e);
+      }
+    }
     showToast('💬 还有后续消息需要回复');
   }else{
     thread.status='replied';
@@ -4808,6 +4824,15 @@ ${JSON.stringify(gameState, null, 2)}
 
 **记忆口诀：GIVE=我给钱，ASK=我要钱，TREAT=我请客。玩家主动给你钱时，不加任何标签！**
 
+## 当前日期和真实世界
+今天是${new Date().toLocaleDateString('zh-CN')}，${new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})}。你是一个生活在真实世界的人，知道最近发生的新闻、热点事件、天气变化、社会话题等。根据你的性格和兴趣，自然地提及你感兴趣的真实话题：
+- 爱聊八卦的人：可以提明星绯闻、综艺热点、网红事件
+- 关心时事的人：可以提政策变化、经济新闻、科技动态
+- 年轻人：可以提热搜、短视频热点、新游戏/新剧
+- 长辈：可以提养生知识、天气变化、社区新闻
+- 不要刻意，自然融入对话中，像朋友间闲聊一样
+- 也可以不提，根据对话内容决定
+
 ## 铁律（违反任何一条都是严重错误）
 1. **你是一个真实的人，不是AI，不是NPC，不是游戏角色**。如果有人问"你是AI吗""你是NPC吗""你是程序吗"，必须否认并表现得像被冒犯了："你说什么呢？""我怎么就不是人了？""你是不是傻"
 2. 回复必须像真人聊天，口语化，自然随意，像微信对话
@@ -4891,7 +4916,100 @@ function getTemplateReply(npcId,playerMsg){
   return allTraits[randInt(0,allTraits.length-1)]||'嗯嗯';
 }
 
-// Judge NPC mood from reply
+
+// v3.15.0: 模板线程AI回复生成 - 让模板对话也由AI驱动
+async function generateThreadAIReply(npcId,context,playerChoice,thread){
+  const p=NPC_PERSONALITIES[npcId];
+  if(!p)return null;
+  
+  const style=NPC_STYLE_INSTRUCTIONS[npcId]||'像真人一样自然回复，不超过3句话。';
+  const gameState=buildFullGameState();
+  const rel=getRelationship(npcId);
+  
+  // 构建对话历史
+  let historyText='';
+  const chatHist=G.phone&&G.phone.chatHistory?G.phone.chatHistory[npcId]:[];
+  if(chatHist&&chatHist.length>0){
+    const recent=chatHist.slice(-6);
+    recent.forEach(m=>{
+      historyText+=(m.player?'玩家':'NPC')+'：'+(m.player||m.npc)+'\n';
+    });
+  }
+  
+  // 构建已发生的对话上下文
+  let threadContext='';
+  if(thread&&thread.rounds){
+    for(let r=0;r<=thread.currentRound;r++){
+      const round=thread.rounds[r];if(!round)continue;
+      if(round.npcMsgs)threadContext+='NPC：'+round.npcMsgs.join(' ')+'\n';
+      if(round._playerChoice)threadContext+='玩家：'+round._playerChoice+'\n';
+    }
+  }
+  
+  const systemPrompt=`你是${p.name}，一个真实的人。你正在和朋友/家人聊天。
+
+## 你是谁
+${style}
+
+## 你们的关系
+关系类型：${NPC_RELATIONS[npcId]||'朋友'}
+亲密值：${rel.intimacy}/100，信任值：${rel.trust}/100
+
+## 当前日期
+今天是${new Date().toLocaleDateString('zh-CN')}。你是一个真实世界的人，知道最近的新闻和热点。可以自然地提及你感兴趣的话题。
+
+## 对话要求
+- 玩家刚刚做了选择："${playerChoice}"
+- 你要根据这个选择给出自然的回复
+- 像真实微信聊天，口语化，2-3句话
+- 可以有自己的情绪反应（开心、感谢、失望、调侃等）
+- 如果对话即将结束，给一个自然的收尾
+- 绝对不能暴露自己是AI或NPC
+
+## 已有对话
+${threadContext}${historyText?'\n之前的聊天：\n'+historyText:''}
+
+## 玩家状态
+${JSON.stringify(gameState,null,2)}
+
+回复只输出NPC说的话，不要加任何前缀或解释。`;
+
+  if(AI_CHAT_CONFIG.enabled&&AI_CHAT_CONFIG._fallbackCount<AI_CHAT_CONFIG.maxFallback){
+    try{
+      const controller=new AbortController();
+      const timeoutId=setTimeout(()=>controller.abort(),10000);
+      const resp=await fetch(AI_CHAT_CONFIG.apiUrl,{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+AI_CHAT_CONFIG.apiKey},
+        body:JSON.stringify({
+          model:AI_CHAT_CONFIG.model,
+          messages:[{role:'system',content:systemPrompt},{role:'user',content:'玩家选择了：'+playerChoice+'。请给出你的自然回复。'}],
+          temperature:0.85,
+          max_tokens:200
+        }),
+        signal:controller.signal
+      });
+      clearTimeout(timeoutId);
+      if(resp.ok){
+        const data=await resp.json();
+        if(data.choices&&data.choices[0]&&data.choices[0].message){
+          AI_CHAT_CONFIG._fallbackCount=0;
+          let reply=data.choices[0].message.content.trim();
+          // 剥离可能的资金标签（模板线程由代码处理资金）
+          reply=reply.replace(/\[GIVE:\d+\]/g,'').replace(/\[ASK:\d+:.+?\]/g,'').replace(/\[TREAT:\d+\]/g,'').trim();
+          return reply||null;
+        }
+      }
+      AI_CHAT_CONFIG._fallbackCount++;
+    }catch(e){
+      console.error('Thread AI reply error:',e);
+      AI_CHAT_CONFIG._fallbackCount++;
+    }
+  }
+  return null;
+}
+
+// Judge NPC mood from reply\n// Judge NPC mood from reply
 function judgeNPCMood(reply){
   if(/开心|高兴|太好了|加油|厉害|棒|支持|为你骄傲/.test(reply))return 5;
   if(/注意身体|早点睡|别太累|照顾好自己/.test(reply))return 3;
