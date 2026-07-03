@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>offer含金量 v3.9.5</title>
+<title>offer含金量 v3.10.0</title>
 <style>
 
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -363,6 +363,31 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 .money-give-confirm-card .confirm-btns .btn{flex:1;}
 .chat-bub.money-notice{background:linear-gradient(135deg,#fff3cd,#ffeeba);align-self:center;font-size:12px;color:#856404;padding:6px 14px;border-radius:8px;max-width:90%;text-align:center;}
 .chat-bub.money-transfer{background:linear-gradient(135deg,#d4efdf,#a9dfbf);align-self:center;font-size:12px;color:#1e8449;padding:6px 14px;border-radius:8px;max-width:90%;text-align:center;}
+
+
+/* ===== 玩法指南 ===== */
+.guide-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:3000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s;}
+.guide-overlay.show{opacity:1;pointer-events:auto;}
+.guide-box{background:#fff;border-radius:16px;width:90%;max-width:400px;max-height:80vh;overflow:hidden;display:flex;flex-direction:column;transform:scale(0.9);transition:transform .3s;}
+.guide-overlay.show .guide-box{transform:scale(1);}
+.guide-header{background:linear-gradient(135deg,#3498db,#2980b9);color:#fff;padding:20px;text-align:center;flex-shrink:0;}
+.guide-header h2{font-size:20px;margin-bottom:6px;}
+.guide-header p{font-size:13px;opacity:0.8;}
+.guide-body{flex:1;overflow-y:auto;padding:16px 20px;}
+.guide-step{display:flex;gap:12px;margin-bottom:20px;align-items:flex-start;}
+.guide-num{width:28px;height:28px;background:var(--primary);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;}
+.guide-text h4{font-size:15px;margin-bottom:4px;color:#333;}
+.guide-text p{font-size:13px;color:#666;line-height:1.5;}
+.guide-tip{background:#f0f8ff;border-left:3px solid var(--primary);padding:10px 12px;border-radius:0 8px 8px 0;margin:12px 0;font-size:12px;color:#555;line-height:1.5;}
+.guide-footer{padding:12px 20px;border-top:1px solid #eee;flex-shrink:0;display:flex;gap:10px;}
+.guide-footer .btn{flex:1;}
+.guide-page{display:none;}
+.guide-page.active{display:block;}
+.guide-dots{display:flex;justify-content:center;gap:6px;padding:10px 0;}
+.guide-dot{width:8px;height:8px;background:#ddd;border-radius:50%;transition:background .2s;}
+.guide-dot.active{background:var(--primary);}
+.help-fab{position:fixed;bottom:90px;right:16px;width:44px;height:44px;background:var(--primary);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 4px 12px rgba(52,152,219,0.4);cursor:pointer;z-index:500;transition:transform .2s;}
+.help-fab:active{transform:scale(0.9);}
 
 </style>
 </head>
@@ -4176,7 +4201,7 @@ function hasUnread(){return G.phone&&G.phone.threads.some(t=>{if(t.status==='rep
 function renderPhoneList(){
   const el=document.getElementById('phone-messages');if(!el)return;
   let html='';
-  // v3.9.5: Show message threads
+  // v3.10.0: Show message threads
   if(G.phone&&G.phone.threads.length>0){
     G.phone.threads.forEach(t=>{
       const round=t.rounds[t.currentRound];
@@ -4199,7 +4224,7 @@ function renderPhoneList(){
       html+='</div></div>';
     });
   }
-  // v3.9.5: Show contacts at bottom (clickable, open AI chat)
+  // v3.10.0: Show contacts at bottom (clickable, open AI chat)
   injectDynamicContacts();
   const contacts=Object.keys(NPC_PERSONALITIES);
   if(contacts.length>0){
@@ -4235,7 +4260,7 @@ function openThread(id){
   if(thread.status==='unread'){thread.status='reading';thread.readMonth=G.totalMonths;}
   G._openThreadId=id;
   renderChat();
-  // v3.9.5: 显示模板选项，隐藏AI输入框
+  // v3.10.0: 显示模板选项，隐藏AI输入框
   const opts=document.getElementById('chatOpts');
   const area=document.getElementById('chatInputArea');
   if(opts)opts.style.display='flex';
@@ -4343,7 +4368,7 @@ function closeChat(){
   document.getElementById('chatOverlay').classList.remove('show');
   G._openThreadId=null;G._openProactiveNpc=null;
   renderPhoneList();renderContacts();updatePhoneBadge();
-  // v3.9.5: If still unread, hint the player
+  // v3.10.0: If still unread, hint the player
   if(hasUnread()){
     const unreadCount=G.phone.threads.filter(t=>t.status!=='replied'&&t.rounds[t.currentRound]&&!t.rounds[t.currentRound]._playerChoice).length;
     if(unreadCount>0)setTimeout(()=>showToast('📱 还有 '+unreadCount+' 条消息待处理'),600);
@@ -6031,6 +6056,139 @@ if(_origTriggerStockNews){
 }
 
 </script>
+
+<!-- 玩法指南 -->
+<div class="guide-overlay" id="guideOverlay" onclick="if(event.target===this)closeGuide()">
+  <div class="guide-box">
+    <div class="guide-header">
+      <h2>📖 玩法说明</h2>
+      <p>从0到首富的人生模拟器</p>
+    </div>
+    <div class="guide-body" id="guideBody">
+      <!-- Page 1: Basic -->
+      <div class="guide-page active" id="guidePage1">
+        <div class="guide-step">
+          <div class="guide-num">1</div>
+          <div class="guide-text">
+            <h4>🚀 度过一月</h4>
+            <p>点击底部「🚀 度过一月」按钮推进时间。每月会随机触发事件、收入、支出。</p>
+          </div>
+        </div>
+        <div class="guide-step">
+          <div class="guide-num">2</div>
+          <div class="guide-text">
+            <h4>📊 提升属性</h4>
+            <p>健康❤️、心情😊、智商🧠、情商💬 四维属性影响事件结果。在「📚成长」页学习充电可提升属性。</p>
+          </div>
+        </div>
+        <div class="guide-step">
+          <div class="guide-num">3</div>
+          <div class="guide-text">
+            <h4>💼 升职加薪</h4>
+            <p>在「💼工作」页查看职业路线。满足条件后可升职，薪资翻倍。不同年龄解锁不同职业。</p>
+          </div>
+        </div>
+        <div class="guide-tip">
+          💡 <b>小提示：</b>心情太低会生病，健康太低会猝死。保持属性平衡很重要！
+        </div>
+      </div>
+      <!-- Page 2: Investment -->
+      <div class="guide-page" id="guidePage2">
+        <div class="guide-step">
+          <div class="guide-num">4</div>
+          <div class="guide-text">
+            <h4>📈 股票投资</h4>
+            <p>在「📈投资」页买股票。关注新闻事件对股价的影响，低买高卖赚差价。</p>
+          </div>
+        </div>
+        <div class="guide-step">
+          <div class="guide-num">5</div>
+          <div class="guide-text">
+            <h4>🏠 房产商铺</h4>
+            <p>买房收租、开店赚钱。房产每月增值，商铺每月产出租金或利润。</p>
+          </div>
+        </div>
+        <div class="guide-step">
+          <div class="guide-num">6</div>
+          <div class="guide-text">
+            <h4>🚀 科技投资</h4>
+            <p>投资AI、新能源等高科技项目。周期长但回报高，点击可查看进度和收益。</p>
+          </div>
+        </div>
+        <div class="guide-tip">
+          💡 <b>小提示：</b>在投资页点击已拥有的商铺/项目，可查看盈亏详情和ROI！
+        </div>
+      </div>
+      <!-- Page 3: Social -->
+      <div class="guide-page" id="guidePage3">
+        <div class="guide-step">
+          <div class="guide-num">7</div>
+          <div class="guide-text">
+            <h4>📱 手机消息</h4>
+            <p>NPC会主动给你发消息（事业机会、社交邀请、人生事件）。点击「📱手机」查看并回复。</p>
+          </div>
+        </div>
+        <div class="guide-step">
+          <div class="guide-num">8</div>
+          <div class="guide-text">
+            <h4>💬 AI聊天</h4>
+            <p>消息列表底部的联系人可发起AI自由聊天。输入任何内容，NPC会根据人设回应。</p>
+          </div>
+        </div>
+        <div class="guide-step">
+          <div class="guide-num">9</div>
+          <div class="guide-text">
+            <h4>👥 社交聚会</h4>
+            <p>首页点击「🤝社交聚会」花¥3000，可偶遇新朋友并加微信，拓展人脉。</p>
+          </div>
+        </div>
+        <div class="guide-tip">
+          💡 <b>重要：</b>有未读消息时无法推进月份！先处理完消息再继续。
+        </div>
+      </div>
+      <!-- Page 4: Advanced -->
+      <div class="guide-page" id="guidePage4">
+        <div class="guide-step">
+          <div class="guide-num">10</div>
+          <div class="guide-text">
+            <h4>🏆 成就系统</h4>
+            <p>完成特定条件解锁成就。成就越多，五维评分越高。</p>
+          </div>
+        </div>
+        <div class="guide-step">
+          <div class="guide-num">11</div>
+          <div class="guide-text">
+            <h4>♻️ 重生系统</h4>
+            <p>人生结束后获得轮回点(LP)，用于解锁永久加成。下一轮起步更强！</p>
+          </div>
+        </div>
+        <div class="guide-step">
+          <div class="guide-num">12</div>
+          <div class="guide-text">
+            <h4>🎯 终极目标</h4>
+            <p>成为人生首富！积累财富、拓展人脉、解锁成就，打造你的传奇人生。</p>
+          </div>
+        </div>
+        <div class="guide-tip">
+          💡 <b>现在就开始：</b>点击「🚀度过一月」按钮，开启你的人生之旅！
+        </div>
+      </div>
+    </div>
+    <div class="guide-dots">
+      <div class="guide-dot active" onclick="goGuidePage(1)"></div>
+      <div class="guide-dot" onclick="goGuidePage(2)"></div>
+      <div class="guide-dot" onclick="goGuidePage(3)"></div>
+      <div class="guide-dot" onclick="goGuidePage(4)"></div>
+    </div>
+    <div class="guide-footer">
+      <button class="btn btn-outline btn-sm" id="guidePrev" onclick="prevGuidePage()" style="display:none;">上一页</button>
+      <button class="btn btn-primary btn-sm" id="guideNext" onclick="nextGuidePage()">下一页</button>
+      <button class="btn btn-success btn-sm" id="guideClose" onclick="closeGuide()" style="display:none;">开始游戏</button>
+    </div>
+  </div>
+</div>
+<div class="help-fab" id="helpFab" onclick="openGuide()">❓</div>
+
 </body>
 </html>
 
