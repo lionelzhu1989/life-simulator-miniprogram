@@ -334,6 +334,59 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 .notif-ic{width:36px;height:36px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;margin-right:10px;}
 .notif-body{flex:1;}.notif-title{font-size:13px;font-weight:500;}.notif-txt{font-size:12px;color:var(--text-light);margin-top:2px;}.notif-tm{font-size:11px;color:var(--text-light);margin-top:4px;}
 @keyframes bubIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+/* Schedule tab */
+.schedule-item{display:flex;align-items:center;padding:12px 14px;background:#fff;border-radius:10px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.06);transition:all .15s;position:relative;overflow:hidden;}
+.schedule-item:active{transform:scale(0.98);}
+.schedule-item.past{opacity:.5;}
+.schedule-item.current{border-left:3px solid var(--primary);background:#f0f8ff;}
+.schedule-item.future{border-left:3px solid #ddd;}
+.schedule-av{width:42px;height:42px;border-radius:21px;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;margin-right:12px;}
+.schedule-bd{flex:1;min-width:0;}
+.schedule-nm{font-size:14px;font-weight:600;color:#333;}
+.schedule-desc{font-size:12px;color:var(--text-light);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.schedule-meta{display:flex;gap:6px;margin-top:4px;}
+.schedule-tag{font-size:10px;padding:2px 6px;border-radius:4px;font-weight:500;}
+.schedule-cost{background:#fff3e0;color:#e65100;}
+.schedule-annual{background:#e8f5e9;color:#2e7d32;}
+.schedule-status{font-size:11px;color:#999;flex-shrink:0;text-align:right;margin-left:8px;}
+.schedule-status.done{color:#27ae60;}
+.schedule-status.cancelled{color:#e74c3c;}
+.schedule-empty{text-align:center;padding:40px 0;color:#999;}
+.schedule-section{font-size:11px;color:#999;padding:4px 16px;margin-top:8px;margin-bottom:4px;font-weight:500;}
+.relation-badge{display:inline-block;font-size:10px;padding:1px 6px;border-radius:8px;font-weight:600;margin-left:4px;}
+.relation-crush{background:#fce4ec;color:#e91e63;}
+.relation-dating{background:#f3e5f5;color:#9c27b0;}
+.relation-engaged{background:#fff3e0;color:#ff9800;}
+.relation-married{background:#ffebee;color:#f44336;}
+.relation-friend{background:#e3f2fd;color:#1976d2;}
+.relation-affair{background:#fce4ec;color:#c62828;}
+
+/* Schedule tab */
+.schedule-item{display:flex;align-items:center;padding:12px 14px;background:#fff;border-radius:10px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.06);transition:all .15s;position:relative;overflow:hidden;}
+.schedule-item:active{transform:scale(0.98);}
+.schedule-item.past{opacity:.5;}
+.schedule-item.current{border-left:3px solid var(--primary);background:#f0f8ff;}
+.schedule-item.future{border-left:3px solid #ddd;}
+.schedule-av{width:42px;height:42px;border-radius:21px;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;margin-right:12px;}
+.schedule-bd{flex:1;min-width:0;}
+.schedule-nm{font-size:14px;font-weight:600;color:#333;}
+.schedule-desc{font-size:12px;color:var(--text-light);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.schedule-meta{display:flex;gap:6px;margin-top:4px;}
+.schedule-tag{font-size:10px;padding:2px 6px;border-radius:4px;font-weight:500;}
+.schedule-cost{background:#fff3e0;color:#e65100;}
+.schedule-annual{background:#e8f5e9;color:#2e7d32;}
+.schedule-status{font-size:11px;color:#999;flex-shrink:0;text-align:right;margin-left:8px;}
+.schedule-status.done{color:#27ae60;}
+.schedule-status.cancelled{color:#e74c3c;}
+.schedule-empty{text-align:center;padding:40px 0;color:#999;}
+.schedule-section{font-size:11px;color:#999;padding:4px 16px;margin-top:8px;margin-bottom:4px;font-weight:500;}
+.relation-badge{display:inline-block;font-size:10px;padding:1px 6px;border-radius:8px;font-weight:600;margin-left:4px;}
+.relation-crush{background:#fce4ec;color:#e91e63;}
+.relation-dating{background:#f3e5f5;color:#9c27b0;}
+.relation-engaged{background:#fff3e0;color:#ff9800;}
+.relation-married{background:#ffebee;color:#f44336;}
+.relation-friend{background:#e3f2fd;color:#1976d2;}
+.relation-affair{background:#fce4ec;color:#c62828;}
 .phone-hint{background:linear-gradient(135deg,#fff3cd,#ffeeba);color:#856404;padding:10px 14px;border-radius:10px;font-size:13px;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
 /* ====== Life Events Card ====== */
 .event-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid #f5f5f5;cursor:pointer;}
@@ -565,11 +618,13 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
     <div class="phone-tabs">
       <div class="phone-tab active" onclick="switchPhoneTab('messages')">💬 消息</div>
       <div class="phone-tab" onclick="switchPhoneTab('contacts')">📇 通讯录</div>
+      <div class="phone-tab" onclick="switchPhoneTab('schedule')">📅 日程</div>
       <div class="phone-tab" onclick="switchPhoneTab('moments')">📷 朋友圈</div>
       <div class="phone-tab" onclick="switchPhoneTab('notifications')" style="position:relative;">🔔 通知<span class="notif-badge" id="notifBadge" style="display:none;">0</span></div>
     </div>
     <div id="phone-messages" class="phone-content active"></div>
     <div id="phone-contacts" class="phone-content"></div>
+    <div id="phone-schedule" class="phone-content"></div>
     <div id="phone-moments" class="phone-content"></div>
     <div id="phone-notifications" class="phone-content"></div>
 
@@ -1461,8 +1516,9 @@ function defaultState(){
     activeNews:[],decisionCount:0,
     unlockedTiers:{},luxuryItems:[],
     forbesShown:false,shortPositions:{},phone:{threads:[],moments:[],aiMoments:[],notifications:[],flags:{},lastTriggerMonth:0,nextId:1,chatHistory:{}},
-    lifeEvents:[],socialContacts:[],
-    romance:{npcId:null,stage:'none',affection:0,metMonth:0,lastInteraction:0}
+    lifeEvents:[],socialContacts:[],relationships:{},
+    romance:{npcId:null,stage:'none',affection:0,metMonth:0,lastInteraction:0},
+    scheduledDates:[]
   };
 }
 
@@ -1533,6 +1589,8 @@ function migrateSave(){
   if(!G.shortPositions)G.shortPositions={};
   if(!G.lifeEvents)G.lifeEvents=[];
   if(!G.socialContacts)G.socialContacts=[];
+  if(!G.relationships)G.relationships={};
+  if(!G.scheduledDates)G.scheduledDates=[];
   if(!G.romance)G.romance={npcId:null,stage:'none',affection:0,metMonth:0,lastInteraction:0};
   if(!G.phone)G.phone={threads:[],moments:[],aiMoments:[],notifications:[],flags:{},lastTriggerMonth:0,nextId:1,chatHistory:{},activeChats:[]};
   if(!G.phone.aiMoments)G.phone.aiMoments=[];
@@ -2032,7 +2090,7 @@ function advanceMonth(){
     if(G._recentEvents)G._recentEvents.push('🥚彩蛋：'+egg.text.replace(/[\u{1F300}-\u{1FFFF}]/gu,'').substring(0,20));
   }
   // Phone triggers
-  if(!G.gameOver){initPhoneState();triggerFollowUps();triggerPhoneMessages();if(Math.random()<0.50)triggerAIMoments().catch(()=>{});if(Math.random()<0.40)triggerMoments();generateNotifications();generateGossipEvent();triggerGathering();}
+  if(!G.gameOver){initPhoneState();triggerFollowUps();triggerPhoneMessages();processScheduledDates();if(Math.random()<0.50)triggerAIMoments().catch(()=>{});if(Math.random()<0.40)triggerMoments();generateNotifications();generateGossipEvent();triggerGathering();}
   // 社交拓展：每月有概率触发偶遇场景
   if(!G.gameOver && !G._encounter && !G._pendingDecision){
     tryTriggerEncounter();
@@ -3707,6 +3765,9 @@ function injectDynamicContacts(){
   initSocialContacts();
   G.socialContacts.forEach(function(c){
     if(!NPC_PERSONALITIES[c.id]){
+      // Get dynamic relationship
+      const rel=getRelationship(c.id);
+      const relDef=RELATION_TYPES[rel.type]||RELATION_TYPES.stranger;
       NPC_PERSONALITIES[c.id] = {
         name: c.name,
         avatar: c.avatar,
@@ -3720,12 +3781,29 @@ function injectDynamicContacts(){
         followups: c.followups
       };
       NPC_STYLE_INSTRUCTIONS[c.id] = 
-        '你是玩家的'+(c.relation||'朋友')+'，'+c.name+'。'+
+        '你是玩家的'+relDef.label+'，'+c.name+'。'+
         '你们在第'+c.metMonth+'个月'+c.metWhere+'。'+
         '你的性格是'+c.traits.join('、')+'。'+
-        '关系等级：'+['陌生人','认识','熟悉','好友'][c.friendLevel]+'。'+
+        '关系类型：'+relDef.label+'。'+
+        '亲密值：'+rel.intimacy+'/100，信任值：'+rel.trust+'/100，好感度：'+rel.affection+'/100。'+
+        '已聊天'+(rel.chatCount||0)+'次，约会'+(rel.dateCount||0)+'次。'+
+        '根据关系调整语气：陌生人要礼貌，朋友可以随意，恋人要亲密暧昧。'+
         '像真人一样自然回复，不超过3-4句话。';
-      NPC_RELATIONS[c.id] = c.relation || '朋友';
+      NPC_RELATIONS[c.id] = relDef.label;
+    }else{
+      // Update existing personality with current relationship state
+      const rel=getRelationship(c.id);
+      const relDef=RELATION_TYPES[rel.type]||RELATION_TYPES.stranger;
+      NPC_STYLE_INSTRUCTIONS[c.id] = 
+        '你是玩家的'+relDef.label+'，'+c.name+'。'+
+        '你们在第'+c.metMonth+'个月'+c.metWhere+'。'+
+        '你的性格是'+c.traits.join('、')+'。'+
+        '关系类型：'+relDef.label+'。'+
+        '亲密值：'+rel.intimacy+'/100，信任值：'+rel.trust+'/100，好感度：'+rel.affection+'/100。'+
+        '已聊天'+(rel.chatCount||0)+'次，约会'+(rel.dateCount||0)+'次。'+
+        '根据关系调整语气：陌生人要礼貌，朋友可以随意，恋人要亲密暧昧。'+
+        '像真人一样自然回复，不超过3-4句话。';
+      NPC_RELATIONS[c.id] = relDef.label;
     }
   });
 }
@@ -4256,9 +4334,12 @@ function _getNotificationsHTML(){
 
 function renderPhoneList(){
   const el=document.getElementById('phone-messages');if(!el)return;
+  injectDynamicContacts();
   let html='';
-  // v3.12.0: Show message threads
-  if(G.phone&&G.phone.threads.length>0){
+  // Collect all items: template threads + social contacts (WeChat unified chat list)
+  const allItems=[];
+  // 1. Template threads (NPC calls/SMS/gatherings/gossip)
+  if(G.phone&&G.phone.threads){
     G.phone.threads.forEach(t=>{
       const round=t.rounds[t.currentRound];
       let preview='[对话进行中]';
@@ -4269,44 +4350,66 @@ function renderPhoneList(){
       for(let i=t.currentRound;i<t.rounds.length;i++){
         if(!t.rounds[i]._playerChoice)unreadCount++;
       }
-      const timeStr=getTimeStr(t.receivedMonth);
       const unread=t.status==='unread'||(t.status==='reading'&&unreadCount>0);
-      const cls=unread?'msg-item msg-unread':'msg-item msg-read';
-      const pvCls=unread?'msg-pv msg-pv-unread':'msg-pv';
-      html+='<div class="'+cls+'" onclick="openThread('+t.id+')">';
-      html+='<div class="msg-av">'+t.npcAvatar;
-      if(unread)html+='<div class="unread-dot"></div>';
-      html+='</div>';
-      html+='<div class="msg-bd"><div class="msg-nm">'+t.npcName+(t.type==='call'?' 📞':t.type==='sms'?' 💬':t.type==='gathering'?' 🎉':'')+'</div>';
-      html+='<div class="'+pvCls+'">'+preview+'</div></div>';
-      html+='<div class="msg-mt"><div class="msg-tm">'+timeStr+'</div>';
-      if(unread)html+='<div class="msg-bg">'+(unreadCount>1?unreadCount+'条':'新')+'</div>';
-      html+='</div></div>';
+      allItems.push({
+        _type:'thread',_id:t.id,_sortTime:t.receivedMonth*100+99,
+        avatar:t.npcAvatar,name:t.npcName+(t.type==='call'?' 📞':t.type==='sms'?' 💬':t.type==='gathering'?' 🎉':t.type==='wechat'?' 💬':''),
+        preview:preview,time:getTimeStr(t.receivedMonth),
+        unread:unread,unreadCount:unreadCount,onclick:'openThread('+t.id+')'
+      });
     });
   }
-  // v3.12.0: Show contacts at bottom (clickable, open AI chat)
-  injectDynamicContacts();
-  const contacts=Object.keys(NPC_PERSONALITIES);
-  if(contacts.length>0){
-    html+='<div style="padding:8px 16px;font-size:11px;color:#999;border-top:1px solid #f0f0f0;margin-top:8px;">💬 联系人（点击开始聊天）</div>';
-    contacts.forEach(npcId=>{
-      const p=NPC_PERSONALITIES[npcId];
-      if(!p)return;
-      if(npcId==='spouse'&&!G.spouse)return;
-      if(npcId==='exColleague'&&G.totalMonths<12)return;
-      if(npcId==='mentor'&&G.totalMonths<18)return;
-      if(npcId==='gymCoach'&&G.totalMonths<6)return;
-      // Check if there's an active chat with this NPC
-      const hasActive=G.phone&&G.phone.activeChats&&G.phone.activeChats.some(ch=>ch.npcId===npcId&&ch.status==='active');
-      html+='\u003cdiv class="msg-item" onclick="openProactiveChat(\''+npcId+'\')" style="cursor:pointer;"\u003e';
-      html+='<div class="msg-av">'+p.avatar+'</div>';
-      html+='<div class="msg-bd"><div class="msg-nm">'+p.name+'</div>';
-      html+='<div class="msg-pv">'+p.traits.slice(0,2).join('·')+'</div></div>';
-      html+='<div class="msg-mt">';
-      if(hasActive)html+='<div class="msg-bg">新</div>';
-      html+='</div></div>';
+  // 2. Social contacts (WeChat-style: show as chat items)
+  (G.socialContacts||[]).forEach(function(c){
+    const p=NPC_PERSONALITIES[c.id];
+    const name=p?p.name:c.name;
+    const avatar=p?p.avatar:c.avatar;
+    const friendLabels=['','认识','熟悉','好友'];
+    const friendIcons=['','👋','🤝','❤️'];
+    // Determine preview and time
+    const history=(G.phone&&G.phone.chatHistory)?(G.phone.chatHistory[c.id]||[]):[];
+    let preview=friendLabels[c.friendLevel]||'';
+    let sortTime=c.metMonth||0;
+    let unread=false;
+    if(history.length>1){
+      // Has actual conversation - show last NPC message
+      const lastNpc=history.filter(h=>h.npc).pop();
+      if(lastNpc){
+        preview=lastNpc.npc.replace(/^[^:]+[：:]/,'').substring(0,32);
+        // Check if last message is NPC-initiated (unread)
+        const lastIdx=history.indexOf(lastNpc);
+        const afterLast=history.slice(lastIdx+1);
+        if(afterLast.length===0||!afterLast[afterLast.length-1].player){
+          unread=true;
+        }
+      }
+      if(c.lastChatMonth)sortTime=c.lastChatMonth;
+    }else{
+      preview=friendIcons[c.friendLevel]+' '+preview+(c.metWhere?' · '+c.metWhere:'');
+    }
+    allItems.push({
+      _type:'contact',_id:c.id,_sortTime:sortTime,
+      avatar:avatar,name:name,preview:preview,
+      time:getTimeStr(c.metMonth||0),unread:unread,unreadCount:0,
+      onclick:'openProactiveChat(\''+c.id.replace(/'/g,"\\'")+'\')'
     });
-  }
+  });
+  // 3. Sort by recency (most recent first)
+  allItems.sort((a,b)=>b._sortTime-a._sortTime);
+  // 4. Render unified chat list
+  allItems.forEach(item=>{
+    const cls=item.unread?'msg-item msg-unread':'msg-item msg-read';
+    const pvCls=item.unread?'msg-pv msg-pv-unread':'msg-pv';
+    html+='<div class="'+cls+'" onclick="'+item.onclick+'">';
+    html+='<div class="msg-av">'+item.avatar;
+    if(item.unread)html+='<div class="unread-dot"></div>';
+    html+='</div>';
+    html+='<div class="msg-bd"><div class="msg-nm">'+item.name+'</div>';
+    html+='<div class="'+pvCls+'">'+item.preview+'</div></div>';
+    html+='<div class="msg-mt"><div class="'+pvCls.replace('msg-pv','msg-tm')+'">'+item.time+'</div>';
+    if(item.unread)html+='<div class="msg-bg">'+(item.unreadCount>1?item.unreadCount+'条':'新')+'</div>';
+    html+='</div></div>';
+  });
   if(!html||html===''){
     html='<div class="text-center text-sm text-muted" style="padding:40px 0;"><div style="font-size:48px;margin-bottom:12px;">📱</div>消息会在人生旅途中陆续到来<br>点击"度过一月"推进人生</div>';
   }
@@ -4659,7 +4762,9 @@ ${JSON.stringify(gameState, null, 2)}
 4. 要参考玩家的状态（知道他最近升职了、买了房、学了什么课程等），但不要像读数据一样列出来，要自然地在对话中提到
 5. 不要说"作为AI""作为一个NPC"之类的话
 6. 可以有自己的情绪（开心、担心、生气、惊讶）
-7. 资金标签必须严格按格式写，不要编造不存在的标签`;
+7. 资金标签必须严格按格式写，不要编造不存在的标签
+8. 当你聊到自己的朋友、同事、熟人时，如果你想介绍给玩家认识，在回复末尾加：[INTRODUCE:朋友名字]。例如你说"我有个朋友叫小王，改天介绍你们认识"，就加[INTRODUCE:小王]。不要给已有联系人重复介绍`;
+
 
   // 用户消息
   const userContent=historyText?
@@ -4860,6 +4965,42 @@ function processChatEffects(reply,npcId){
     // Show money decision dialog (deferred to after reply is displayed)
     setTimeout(function(){showMoneyDecision(npcId,amount,reason);},500);
   }
+  // Parse INTRODUCE tag - NPC introduces a new friend to the player
+  const introMatch=reply.match(/\[INTRODUCE:([^\]]+)\]/);
+  if(introMatch&&npcId&&npcId.startsWith('contact_')){
+    const newName=introMatch[1];
+    const existing=(G.socialContacts||[]).find(c=>c.name===newName);
+    if(!existing){
+      // Create a new social contact introduced by this NPC
+      const introducer=(G.socialContacts||[]).find(c=>c.id===npcId);
+      const categories=['classmate','colleague','gymBuddy','partyFriend','neighbor'];
+      const sceneKey=categories[Math.floor(Math.random()*categories.length)];
+      const template=MEETABLE_NPCS[sceneKey]||{};
+      const newContact={
+        id:'contact_'+Date.now()+'_'+Math.random().toString(36).substr(2,4),
+        templateId:sceneKey,name:newName,avatar:template.avatar||'👤',
+        category:sceneKey,relation:'朋友介绍',
+        traits:(template.traits||['友善','随和']).slice(),
+        responses:(template.responses||['嗯嗯','好的','没问题']).slice(),
+        followups:(template.followups||['最近怎么样？','有空聊聊']).slice(),
+        metMonth:G.totalMonths,metWhere:introducer?(introducer.name+'介绍'):'朋友介绍',
+        friendLevel:1,chatCount:0,lastChatMonth:0
+      };
+      G.socialContacts.push(newContact);
+      // Initialize chat history
+      if(!G.phone)G.phone={threads:[],moments:[],notifications:[],flags:{},lastTriggerMonth:0,nextId:1,chatHistory:{},activeChats:[]};
+      if(!G.phone.chatHistory)G.phone.chatHistory={};
+      G.phone.chatHistory[newContact.id]=[{
+        player:'',npc:newName+'通过'+(introducer?introducer.name:'朋友')+'添加了你',
+        timestamp:Date.now()
+      }];
+      // Inject into NPC system
+      injectDynamicContacts();
+      triggered.push('👋 '+newName+'被介绍给你了！去通讯录看看');
+      addNotification('system','👋 新朋友：'+newName+'（'+(introducer?introducer.name:'朋友')+'介绍）');
+      saveGame();
+    }
+  }
   // Show triggered effects as system messages
   if(triggered.length>0){
     const body=document.getElementById('chatBody');
@@ -4888,7 +5029,7 @@ function processChatEffects(reply,npcId){
     else G.romance.stage='normal';
     saveGame();
   }
-  return reply.replace(/\[GIVE:\d+\]/g,'').replace(/\[TREAT:\d+\]/g,'').replace(/\[ASK:\d+:.+?\]/g,'').trim();
+  return reply.replace(/\[GIVE:\d+\]/g,'').replace(/\[TREAT:\d+\]/g,'').replace(/\[ASK:\d+:.+?\]/g,'').replace(/\[INTRODUCE:[^\]]+\]/g,'').trim();
 }
 
 // Detect player money giving intent
@@ -5144,10 +5285,19 @@ async function _doSendMessage(msg,npcId){
   if(npcId && npcId.startsWith('contact_')){
     var contact=(G.socialContacts||[]).find(function(c){return c.id===npcId;});
     if(contact) updateFriendLevel(contact);
+    // Update dynamic relationship
+    updateRelationship(npcId,{intimacy:+3,trust:+1,lastActivity:G.totalMonths});
+    checkRelationshipProgression(npcId);
   }
   // Apply mood effect from reply sentiment
   const moodEffect=judgeNPCMood(reply);
   G.mood=clamp(G.mood+moodEffect,0,200);
+  // Detect schedule intent from AI reply
+  const scheduleInfo=detectScheduleIntent(cleanReply);
+  if(scheduleInfo&&npcId&&npcId.startsWith('contact_')){
+    // Show schedule confirmation in chat
+    setTimeout(()=>{showScheduleConfirm(npcId,scheduleInfo);},500);
+  }
   // Save game
   saveGame();
   // Re-enable send button
@@ -5612,17 +5762,18 @@ function updateNotifBadge(){
 function switchPhoneTab(tab){
   document.querySelectorAll('.phone-tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.phone-content').forEach(c=>c.classList.remove('active'));
-  const tabNames=['messages','contacts','moments','notifications'];
+  const tabNames=['messages','contacts','schedule','moments','notifications'];
   const idx=tabNames.indexOf(tab);
   if(idx>=0){const allTabs=document.querySelectorAll('.phone-tab');if(allTabs[idx])allTabs[idx].classList.add('active');}
   const el=document.getElementById('phone-'+tab);
   if(el)el.classList.add('active');
   if(tab==='messages')renderPhoneList();
   else if(tab==='contacts')renderContacts();
+  else if(tab==='schedule')renderSchedule();
   else if(tab==='moments')renderMoments();
   else if(tab==='notifications')renderNotifications();
 }
-function refreshPhone(){renderPhoneList();renderContacts();renderMoments();renderNotifications();updatePhoneBadge();updateNotifBadge();updatePhoneHint();}
+function refreshPhone(){renderPhoneList();renderContacts();renderSchedule();renderMoments();renderNotifications();updatePhoneBadge();updateNotifBadge();updatePhoneHint();}
 function updatePhoneBadge(){
   const badge=document.getElementById('phoneBadge');if(!badge)return;
   const msgCount=G.phone?G.phone.threads.filter(t=>t.status!=='replied'&&t.rounds[t.currentRound]&&!t.rounds[t.currentRound]._playerChoice).length:0;
@@ -5653,6 +5804,345 @@ function getTimeStr(month){
   if(diff===1)return'1个月前';
   if(diff<12)return diff+'个月前';
   return Math.floor(diff/12)+'年前';
+}
+
+// ========== 日程系统 ==========
+function addScheduleEvent(type,npcId,npcName,npcAvatar,title,month,cost,annualLeave,description){
+  if(!G.scheduledDates)G.scheduledDates=[];
+  const event={
+    id:Date.now()+'_'+Math.random().toString(36).substr(2,4),
+    type:type,npcId:npcId,npcName:npcName,npcAvatar:npcAvatar||'👤',
+    title:title,month:month,cost:cost||0,annualLeave:annualLeave||0,
+    description:description||'',status:'upcoming',
+    createdMonth:G.totalMonths,triggeredMonth:null
+  };
+  G.scheduledDates.push(event);
+  saveGame();
+  // Add notification
+  addNotification('system','📅 新日程：'+title+'（'+getTimeStr(month)+'）');
+  return event;
+}
+
+function renderSchedule(){
+  const el=document.getElementById('phone-schedule');if(!el)return;
+  if(!G.scheduledDates||G.scheduledDates.length===0){
+    el.innerHTML='<div class="schedule-empty"><div class="schedule-empty-icon">📅</div>暂无日程<br><span style="font-size:12px;color:#bbb;">和朋友聊天时约饭/聚会/旅游<br>会自动添加到这里</span></div>';
+    return;
+  }
+  // Sort by month (upcoming first)
+  const sorted=[...G.scheduledDates].sort((a,b)=>a.month-b.month);
+  const upcoming=sorted.filter(e=>e.status==='upcoming');
+  const done=sorted.filter(e=>e.status==='done');
+  const cancelled=sorted.filter(e=>e.status==='cancelled');
+  let html='';
+  if(upcoming.length>0){
+    html+='<div class="schedule-section">即将到来</div>';
+    upcoming.forEach(e=>{
+      const isPast=e.month<G.totalMonths;
+      const isCurrent=e.month===G.totalMonths;
+      const cls=isPast?'past':isCurrent?'current':'future';
+      html+='<div class="schedule-item '+cls+'">';
+      html+='<div class="schedule-av">'+e.npcAvatar+'</div>';
+      html+='<div class="schedule-bd"><div class="schedule-nm">'+e.title+'</div>';
+      html+='<div class="schedule-desc">和'+e.npcName+' · '+getTimeStr(e.month)+'</div>';
+      html+='<div class="schedule-meta">';
+      if(e.cost>0)html+='<span class="schedule-tag schedule-cost">💰 预计¥'+fmt(e.cost)+'</span>';
+      if(e.annualLeave>0)html+='<span class="schedule-tag schedule-annual">🏖️ '+e.annualLeave+'天年假</span>';
+      html+='</div></div>';
+      if(isPast){html+='<div class="schedule-status">已过期</div>';}
+      else if(isCurrent){html+='<div class="schedule-status" style="color:var(--primary);font-weight:600;">本月</div>';}
+      else{html+='<div class="schedule-status">'+e.month+'月</div>';}
+      html+='</div>';
+    });
+  }
+  if(done.length>0){
+    html+='<div class="schedule-section">已完成</div>';
+    done.slice(-5).reverse().forEach(e=>{
+      html+='<div class="schedule-item past">';
+      html+='<div class="schedule-av">'+e.npcAvatar+'</div>';
+      html+='<div class="schedule-bd"><div class="schedule-nm">'+e.title+'</div>';
+      html+='<div class="schedule-desc">和'+e.npcName+'</div></div>';
+      html+='<div class="schedule-status done">✓ 完成</div></div>';
+    });
+  }
+  if(cancelled.length>0){
+    html+='<div class="schedule-section">已取消</div>';
+    cancelled.slice(-3).reverse().forEach(e=>{
+      html+='<div class="schedule-item past">';
+      html+='<div class="schedule-av">'+e.npcAvatar+'</div>';
+      html+='<div class="schedule-bd"><div class="schedule-nm">'+e.title+'</div>';
+      html+='<div class="schedule-desc">和'+e.npcName+'</div></div>';
+      html+='<div class="schedule-status cancelled">✗ 取消</div></div>';
+    });
+  }
+  el.innerHTML=html;
+}
+
+function processScheduledDates(){
+  if(!G.scheduledDates)return;
+  G.scheduledDates.forEach(e=>{
+    if(e.status!=='upcoming')return;
+    if(e.month<G.totalMonths){
+      // Past event - auto mark as expired
+      e.status='expired';
+    }else if(e.month===G.totalMonths){
+      // Current month - trigger the event!
+      triggerScheduleEvent(e);
+    }
+  });
+  saveGame();
+}
+
+function triggerScheduleEvent(event){
+  if(!event||event.status!=='upcoming')return;
+  // Deduct cost
+  if(event.cost>0){
+    if(G.cash>=event.cost){
+      G.cash-=event.cost;
+      showToast('💸 '+event.title+'花费 ¥'+fmt(event.cost));
+    }else{
+      // Not enough money - borrow from savings
+      const shortfall=event.cost-G.cash;
+      G.cash=0;
+      if(G.savings>=shortfall){
+        G.savings-=shortfall;
+        showToast('💸 '+event.title+'花费 ¥'+fmt(event.cost)+'（存款支付'+fmt(shortfall)+'）');
+      }else{
+        // Can't afford at all
+        G.savings=0;
+        showToast('💸 '+event.title+'花费 ¥'+fmt(event.cost)+'（存款不足，信用卡透支）');
+      }
+    }
+  }
+  // Deduct annual leave
+  if(event.annualLeave>0){
+    if(!G.annualLeave)G.annualLeave=0;
+    if(G.annualLeave>=event.annualLeave){
+      G.annualLeave-=event.annualLeave;
+      showToast('🏖️ 消耗年假 '+event.annualLeave+' 天');
+    }else{
+      const needed=event.annualLeave-(G.annualLeave||0);
+      G.annualLeave=0;
+      showToast('🏖️ 年假不足，'+needed+'天按事假处理（扣工资）');
+      // Deduct salary for unpaid leave days
+      const dailySalary=(G.salary||5000)/22;
+      G.cash-=dailySalary*needed;
+    }
+  }
+  // Update relationship
+  if(event.npcId&&event.npcId.startsWith('contact_')){
+    const contact=(G.socialContacts||[]).find(c=>c.id===event.npcId);
+    if(contact){
+      updateRelationship(event.npcId,{
+        intimacy:+15,trust:+5,
+        lastActivity:G.totalMonths,
+        lastActivityType:event.type
+      });
+      // Check for relationship progression
+      checkRelationshipProgression(event.npcId);
+    }
+  }
+  // Generate AI scenario for the event
+  generateEventScenario(event);
+  // Mark as done
+  event.status='done';
+  event.triggeredMonth=G.totalMonths;
+  saveGame();
+  // Add notification
+  addNotification('system','✅ '+event.title+' 已完成');
+}
+
+function generateEventScenario(event){
+  // Build context for AI to generate a scenario
+  const costDesc=event.cost>0?'花了¥'+fmt(event.cost)+'，':'';
+  const leaveDesc=event.annualLeave>0?'请了'+event.annualLeave+'天年假，':'';
+  const scenarioMap={
+    dinner:'一起吃了顿饭，'+costDesc+'聊得很开心',
+    movie:'一起看了场电影，'+costDesc+'氛围不错',
+    date:'约会了，'+costDesc+'感情升温',
+    gathering:'朋友聚会，'+costDesc+'热闹非凡',
+    trip:'出去旅游了，'+leaveDesc+costDesc+'玩得很尽兴',
+    karaoke:'去唱了K，'+costDesc+'唱到嗨',
+    hotSpring:'泡了温泉，'+costDesc+'超级放松',
+    shopping:'逛街购物，'+costDesc+'买了不少东西',
+    sports:'一起运动了，'+leaveDesc+'出了一身汗'
+  };
+  const summary=scenarioMap[event.type]||event.title+'，'+costDesc+'度过了一段美好时光';
+  // Add to life events
+  if(!G.lifeEvents)G.lifeEvents=[];
+  G.lifeEvents.push({
+    text:event.npcAvatar+' '+event.title+' —— '+summary,
+    month:G.totalMonths,type:'social'
+  });
+  // Update mood
+  G.mood=clamp(G.mood+10,0,200);
+  showToast('💕 '+event.title+'，心情+10');
+}
+
+// ========== 关系状态系统 ==========
+const RELATION_TYPES={
+  stranger:{label:'陌生人',color:'#999',icon:'👤'},
+  acquaintance:{label:'认识',color:'#3498db',icon:'👋'},
+  friend:{label:'朋友',color:'#27ae60',icon:'🤝'},
+  close_friend:{label:'好友',color:'#e74c3c',icon:'❤️'},
+  crush:{label:'暗恋',color:'#e91e63',icon:'💓'},
+  dating:{label:'恋爱中',color:'#9c27b0',icon:'💕'},
+  engaged:{label:'已订婚',color:'#ff9800',icon:'💍'},
+  married:{label:'已结婚',color:'#f44336',icon:'💒'},
+  affair:{label:'情妇',color:'#c62828',icon:'🔥'},
+  ex:{label:'前任',color:'#999',icon:'💔'}
+};
+
+function getRelationship(npcId){
+  if(!G.relationships)G.relationships={};
+  if(!G.relationships[npcId]){
+    G.relationships[npcId]={
+      type:'stranger',intimacy:0,trust:0,affection:0,
+      metMonth:G.totalMonths,lastInteraction:0,
+      chatCount:0,giftCount:0,dateCount:0,
+      flags:{}
+    };
+  }
+  return G.relationships[npcId];
+}
+
+function updateRelationship(npcId,changes){
+  const rel=getRelationship(npcId);
+  if(changes.type)rel.type=changes.type;
+  if(changes.intimacy)rel.intimacy=clamp(rel.intimacy+changes.intimacy,0,100);
+  if(changes.trust)rel.trust=clamp(rel.trust+changes.trust,0,100);
+  if(changes.affection)rel.affection=clamp(rel.affection+changes.affection,0,100);
+  if(changes.lastActivity)rel.lastInteraction=changes.lastActivity;
+  if(changes.lastActivityType)rel.lastActivityType=changes.lastActivityType;
+  rel.chatCount=(rel.chatCount||0)+1;
+  if(changes.giftCount)rel.giftCount=(rel.giftCount||0)+1;
+  if(changes.dateCount)rel.dateCount=(rel.dateCount||0)+1;
+  saveGame();
+}
+
+function checkRelationshipProgression(npcId){
+  const rel=getRelationship(npcId);
+  const contact=(G.socialContacts||[]).find(c=>c.id===npcId);
+  if(!contact)return;
+  const name=contact.name;
+  // Progression rules based on intimacy + trust + chatCount
+  const score=rel.intimacy+rel.trust+rel.chatCount*5;
+  if(rel.type==='stranger'&&score>=30){
+    rel.type='acquaintance';
+    contact.friendLevel=1;
+    showToast('💡 你和'+name+'成为了认识的人');
+  }else if(rel.type==='acquaintance'&&score>=80){
+    rel.type='friend';
+    contact.friendLevel=2;
+    showToast('🤝 你和'+name+'成为了朋友');
+  }else if(rel.type==='friend'&&score>=150&&rel.intimacy>=40){
+    rel.type='close_friend';
+    contact.friendLevel=3;
+    showToast('❤️ 你和'+name+'成为了好友');
+  }else if((rel.type==='friend'||rel.type==='close_friend')&&rel.intimacy>=60&&rel.affection>=30){
+    rel.type='crush';
+    showToast('💓 你对'+name+'产生了好感');
+  }else if(rel.type==='crush'&&rel.intimacy>=75&&rel.affection>=50){
+    rel.type='dating';
+    showToast('💕 你和'+name+'开始交往了！');
+  }else if(rel.type==='dating'&&rel.intimacy>=90&&rel.trust>=80){
+    rel.type='engaged';
+    showToast('💍 你和'+name+'订婚了！');
+  }else if(rel.type==='engaged'&&rel.intimacy>=95&&rel.trust>=90){
+    rel.type='married';
+    showToast('💒 恭喜！你和'+name+'结婚了！');
+    // Set as spouse
+    G.spouse={name:name,avatar:contact.avatar,metMonth:G.totalMonths};
+  }
+  // Affair option (if already married to someone else)
+  if(G.spouse&&G.spouse.name!==name&&rel.type==='dating'&&rel.intimacy>=70){
+    // Can become affair
+    rel.type='affair';
+    showToast('🔥 你和'+name+'发展成了秘密关系...');
+  }
+}
+
+function getRelationLabel(npcId){
+  const rel=getRelationship(npcId);
+  const def=RELATION_TYPES[rel.type]||RELATION_TYPES.stranger;
+  return'<span class="relation-badge relation-'+rel.type+'">'+def.icon+' '+def.label+'</span>';
+}
+
+// ========== AI日程检测 ==========
+function detectScheduleIntent(text){
+  if(!text)return null;
+  // Detect scheduling patterns in AI reply
+  const patterns=[
+    {regex:/(?:我们|咱们)(?:去|一起)(?:吃|约|聚)(.+?)(?:[吧啊。!！]|$)/,type:'dinner',cost:200},
+    {regex:/(?:去|看)(?:一场|个)(.+?)(?:电影|片)(?:[吧啊。!！]|$)/,type:'movie',cost:150},
+    {regex:/(?:周末|明天|下周)(?:一起|去|约)(.+?)(?:[吧啊。!！]|$)/,type:'dinner',cost:200},
+    {regex:/(?:吃饭|晚餐|午饭|午餐|火锅|烧烤|日料|西餐)/,type:'dinner',cost:200},
+    {regex:/(?:看电影|看片|看电影去)/,type:'movie',cost:150},
+    {regex:/(?:唱歌|唱K|KTV)/,type:'karaoke',cost:300},
+    {regex:/(?:旅游|旅行|出去玩|度[假蜜]月)/,type:'trip',cost:3000,annualLeave:3},
+    {regex:/(?:泡温泉|温泉)/,type:'hotSpring',cost:500},
+    {regex:/(?:逛街|购物|买买买)/,type:'shopping',cost:500},
+    {regex:/(?:运动|健身|打球|跑步|爬山)/,type:'sports',cost:100},
+    {regex:/(?:聚会|聚一聚|聚餐|饭局)/,type:'gathering',cost:300},
+    {regex:/(?:约会|date)/,type:'date',cost:300}
+  ];
+  for(const p of patterns){
+    if(p.regex.test(text)){
+      // Try to extract time reference
+      let month=G.totalMonths+1; // Default next month
+      if(/明天|后天/.test(text))month=G.totalMonths;
+      else if(/下周/.test(text))month=G.totalMonths+1;
+      else if(/下个月|下月/.test(text))month=G.totalMonths+1;
+      else if(/这个月|本月/.test(text))month=G.totalMonths;
+      return{type:p.type,cost:p.cost||0,annualLeave:p.annualLeave||0,month:month};
+    }
+  }
+  return null;
+}
+
+function createScheduleFromAI(npcId,scheduleInfo){
+  const p=NPC_PERSONALITIES[npcId];
+  const name=p?p.name:'朋友';
+  const avatar=p?p.avatar:'👤';
+  const typeNames={dinner:'吃饭',movie:'看电影',date:'约会',gathering:'聚会',trip:'旅游',karaoke:'唱K',hotSpring:'泡温泉',shopping:'逛街',sports:'运动'};
+  const title=(typeNames[scheduleInfo.type]||'活动')+' · '+name;
+  const event=addScheduleEvent(
+    scheduleInfo.type,npcId,name,avatar,title,
+    scheduleInfo.month,scheduleInfo.cost,scheduleInfo.annualLeave,
+    '和'+name+(typeNames[scheduleInfo.type]||'活动')
+  );
+  showToast('📅 已添加日程：'+title);
+  return event;
+}
+
+// ========== 给玩家显示日程确认（在聊天中） ==========
+function showScheduleConfirm(npcId,scheduleInfo){
+  const p=NPC_PERSONALITIES[npcId];
+  const name=p?p.name:'朋友';
+  const typeNames={dinner:'吃饭',movie:'看电影',date:'约会',gathering:'聚会',trip:'旅游',karaoke:'唱K',hotSpring:'泡温泉',shopping:'逛街',sports:'运动'};
+  const actName=typeNames[scheduleInfo.type]||'活动';
+  const costStr=scheduleInfo.cost>0?'预计花费 ¥'+fmt(scheduleInfo.cost):'免费';
+  const leaveStr=scheduleInfo.annualLeave>0?'，需'+scheduleInfo.annualLeave+'天年假':'';
+  const body=document.getElementById('chatBody');
+  // Add system message
+  const sysHtml='<div class="chat-bub sys" style="max-width:90%;text-align:center;"><div style="font-size:13px;font-weight:600;margin-bottom:6px;">📅 '+name+'约你'+actName+'</div><div style="font-size:12px;color:#666;">'+costStr+leaveStr+'</div><div style="margin-top:8px;display:flex;gap:8px;justify-content:center;"><span onclick="confirmSchedule(\''+npcId+'\','+scheduleInfo.type.length+','+JSON.stringify(scheduleInfo).replace(/"/g,'&quot;')+',true)" style="background:#27ae60;color:#fff;padding:4px 12px;border-radius:12px;font-size:12px;cursor:pointer;">接受</span><span onclick="confirmSchedule(\''+npcId+'\','+scheduleInfo.type.length+','+JSON.stringify(scheduleInfo).replace(/"/g,'&quot;')+',false)" style="background:#e74c3c;color:#fff;padding:4px 12px;border-radius:12px;font-size:12px;cursor:pointer;">婉拒</span></div></div>';
+  body.insertAdjacentHTML('beforeend',sysHtml);
+  body.scrollTop=body.scrollHeight;
+}
+
+function confirmSchedule(npcId,typeLen,scheduleInfo,accept){
+  if(accept){
+    createScheduleFromAI(npcId,scheduleInfo);
+    // Send acceptance message
+    const p=NPC_PERSONALITIES[npcId];
+    const responses=['好的，到时候见！','没问题！','期待！','好啊好啊！'];
+    addChatBubble('player',responses[Math.floor(Math.random()*responses.length)]);
+    // Update relationship
+    updateRelationship(npcId,{intimacy:+5,affection:+3,lastActivity:G.totalMonths});
+  }else{
+    addChatBubble('player','这次可能不太方便，下次吧');
+    updateRelationship(npcId,{intimacy:-2,lastActivity:G.totalMonths});
+  }
 }
 
 
@@ -6540,6 +7030,11 @@ async function generateEncounterAIResponse(sceneKey, npcName, choiceText, choice
 // ===== Helper: 将事件转为NPC消息（让玩家在消息栏看到） =====
 function notifyAsMessage(npcId,text){
   if(!G.phone)return;
+  // System messages go to notifications tab, not messages tab
+  if(npcId==='system'){
+    addNotification('system',text);
+    return;
+  }
   const npc=NPCS[npcId]||{name:'系统',avatar:'📱'};
   const thread={
     id:G.phone.nextId++,npcId:npcId,npcName:npc.name,npcAvatar:npc.avatar,
