@@ -1898,7 +1898,15 @@ async function nextMonth(){
     }
     return;
   }
-  if(G._pendingDecision){showToast('⚡ 请先完成当前事件！');return;}
+  if(G._pendingDecision){
+    // v3.15.8: 自动弹出待处理事件，而不是只显示toast
+    if(window._currentDecision){
+      showDecisionEvent(window._currentDecision);
+    }else{
+      showToast('⚡ 请先完成当前事件！');
+    }
+    return;
+  }
   // 即时更新月份显示，消除卡顿感
   const btn=document.getElementById('nextMonthBtn');
   btn.disabled=true;btn.textContent='⏳ 进行中...';
@@ -6240,12 +6248,13 @@ async function generateScheduleSceneAI(event,npcId,npcName,npcTraits,relType,act
     colleague:'- 对话要得体，有职场社交感\n- 选项要有社交互动（聊工作、吐槽、networking等）\n',
     acquaintance:'- 对话要客气友好\n- 选项要有建立关系的互动\n'
   };
-  const prompt='你是人生模拟游戏的场景生成器。请为约会场景生成NPC开场白和4个玩家选项。\n\n'+
+  const prompt='你是人生模拟游戏的场景生成器。请为以下活动生成NPC开场白和4个玩家选项。\n\n'+
     '## 角色\n- NPC：'+npcName+'（'+npcTraits+'）\n'+
     '- 关系：'+relLabels[relType]+'\n- 活动：'+activityName+'\n\n'+
     (relNote?relNote+'\n\n':'')+
     '## 关系要求\n'+(relReqs[relType]||relReqs.acquaintance)+
-    '- 第4个选项要搞笑、意外或略尴尬（制造笑点）\n\n'+
+    '- 第4个选项要搞笑、意外或略尴尬（制造笑点）\n'+
+    '- 活动可以是任何类型（密室逃脱、剧本杀、露营、钓鱼、看展、逛夜市、打游戏、健身、滑雪等），根据活动特点设计有趣的互动\n\n'+
     '## 输出纯JSON（不要代码块）\n'+
     '{"npcOpening":"NPC开场白1-2句","options":[{"text":"带emoji的选项1"},{"text":"选项2"},{"text":"选项3"},{"text":"搞笑选项4"}]}\n'+
     '每条text不超过20字。';
@@ -6393,9 +6402,9 @@ async function createScheduleThread(event){
       ]
     }
   };
-  // 先尝试AI生成场景，失败则用硬编码
+  // v3.15.8: 活动类型自由化——AI可以生成任何活动，不再限9种
   const typeNames={dinner:'吃饭',movie:'看电影',date:'约会',gathering:'聚会',trip:'旅游',karaoke:'唱K',hotSpring:'泡温泉',shopping:'逛街',sports:'运动'};
-  const actName=typeNames[event.type]||'活动';
+  const actName=typeNames[event.type]||event.type||'活动';
   const relType=_getRelationshipType(event.npcId);
   const traits=(p.traits||[]).join('/');
   const aiScene=await generateScheduleSceneAI(event,event.npcId,name,traits||'普通人',relType,actName);
@@ -6404,7 +6413,8 @@ async function createScheduleThread(event){
     // AI生成成功：用AI内容 + 关系类型效果模板
     npcMsg=aiScene.npcOpening;
     const effects=_SCENE_EFFECTS[relType]||_SCENE_EFFECTS.acquaintance;
-    const cash=_SCENE_CASH[event.type]||_SCENE_CASH.dinner;
+    // v3.15.8: 未知活动类型用通用花费模板
+    const cash=_SCENE_CASH[event.type]||[{cash:-100},{cash:0},{cash:-50},{cash:0}];
     opts=aiScene.options.slice(0,4).map((o,i)=>{
       const fx=Object.assign({},effects[i]||effects[3],cash[i]||{});
       return {text:o.text,fx:fx,next:-1,_scheduleResult:o.text};
