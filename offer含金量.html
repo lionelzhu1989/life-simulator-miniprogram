@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>offer含金量 v3.9.3</title>
+<title>offer含金量 v3.9.4</title>
 <style>
 
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -527,14 +527,12 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
     <div class="phone-hint" id="phoneHint" style="display:none;">⚠️ <span id="phoneHintText">有未读消息需要处理</span></div>
     <div class="phone-tabs">
       <div class="phone-tab active" onclick="switchPhoneTab('messages')">💬 消息</div>
-      <div class="phone-tab" onclick="switchPhoneTab('contacts')">📒 通讯录</div>
       <div class="phone-tab" onclick="switchPhoneTab('moments')">📷 朋友圈</div>
-      <div class="phone-tab" onclick="switchPhoneTab('notifications')">🔔 通知</div>
     </div>
     <div id="phone-messages" class="phone-content active"></div>
-    <div id="phone-contacts" class="phone-content"></div>
+    <div id="phone-contacts" class="phone-content" style="display:none;"></div>
     <div id="phone-moments" class="phone-content"></div>
-    <div id="phone-notifications" class="phone-content"></div>
+    <div id="phone-notifications" class="phone-content" style="display:none" style="display:none;"></div>
   </div>
 
   <div class="tab-bar">
@@ -4061,32 +4059,56 @@ function hasUnread(){return G.phone&&G.phone.threads.some(t=>{if(t.status==='rep
 
 function renderPhoneList(){
   const el=document.getElementById('phone-messages');if(!el)return;
-  if(!G.phone||G.phone.threads.length===0){
-    el.innerHTML='<div class="text-center text-sm text-muted" style="padding:40px 0;"><div style="font-size:48px;margin-bottom:12px;">📱</div>消息会在人生旅途中陆续到来<br>点击"度过一月"推进人生</div>';
-    updatePhoneHint();return;
-  }
   let html='';
-  G.phone.threads.forEach(t=>{
-    const round=t.rounds[t.currentRound];
-    let preview='[对话进行中]';
-    if(round&&round.npcMsgs&&round.npcMsgs.length>0)preview=round.npcMsgs[round.npcMsgs.length-1].replace(/\[GIVE:\d+\]/g,'').replace(/\[TREAT:\d+\]/g,'').replace(/\[ASK:\d+:.+?\]/g,'').trim().substring(0,32);
-    if(round&&round.npc&&round.npc.length>0)preview=round.npc[round.npc.length-1].substring(0,32);
-    if(t.status==='replied')preview='[已回复]';
-    // Count unread rounds
-    let unreadCount=0;
-    for(let i=t.currentRound;i<t.rounds.length;i++){
-      if(!t.rounds[i]._playerChoice)unreadCount++;
-    }
-    const timeStr=getTimeStr(t.receivedMonth);
-    const unread=t.status==='unread'||(t.status==='reading'&&unreadCount>0);
-    html+='<div class="msg-item" onclick="openThread('+t.id+')" style="'+(unread?'font-weight:600;':'')+'">';
-    html+='<div class="msg-av">'+t.npcAvatar+'</div>';
-    html+='<div class="msg-bd"><div class="msg-nm">'+t.npcName+(t.type==='call'?' 📞':t.type==='sms'?' 💬':t.type==='gathering'?' 🎉':'')+'</div>';
-    html+='<div class="msg-pv">'+preview+'</div></div>';
-    html+='<div class="msg-mt"><div class="msg-tm">'+timeStr+'</div>';
-    if(unread)html+='<div class="msg-bg">'+(unreadCount>1?unreadCount+'条':'新')+'</div>';
-    html+='</div></div>';
-  });
+  // v3.9.4: Show message threads
+  if(G.phone&&G.phone.threads.length>0){
+    G.phone.threads.forEach(t=>{
+      const round=t.rounds[t.currentRound];
+      let preview='[对话进行中]';
+      if(round&&round.npcMsgs&&round.npcMsgs.length>0)preview=round.npcMsgs[round.npcMsgs.length-1].replace(/\[GIVE:\d+\]/g,'').replace(/\[TREAT:\d+\]/g,'').replace(/\[ASK:\d+:.+?\]/g,'').trim().substring(0,32);
+      if(round&&round.npc&&round.npc.length>0)preview=round.npc[round.npc.length-1].substring(0,32);
+      if(t.status==='replied')preview='[已回复]';
+      let unreadCount=0;
+      for(let i=t.currentRound;i<t.rounds.length;i++){
+        if(!t.rounds[i]._playerChoice)unreadCount++;
+      }
+      const timeStr=getTimeStr(t.receivedMonth);
+      const unread=t.status==='unread'||(t.status==='reading'&&unreadCount>0);
+      html+='<div class="msg-item" onclick="openThread('+t.id+')" style="'+(unread?'font-weight:600;':'')+'">';
+      html+='<div class="msg-av">'+t.npcAvatar+'</div>';
+      html+='<div class="msg-bd"><div class="msg-nm">'+t.npcName+(t.type==='call'?' 📞':t.type==='sms'?' 💬':t.type==='gathering'?' 🎉':'')+'</div>';
+      html+='<div class="msg-pv">'+preview+'</div></div>';
+      html+='<div class="msg-mt"><div class="msg-tm">'+timeStr+'</div>';
+      if(unread)html+='<div class="msg-bg">'+(unreadCount>1?unreadCount+'条':'新')+'</div>';
+      html+='</div></div>';
+    });
+  }
+  // v3.9.4: Show contacts at bottom (clickable, open AI chat)
+  injectDynamicContacts();
+  const contacts=Object.keys(NPC_PERSONALITIES);
+  if(contacts.length>0){
+    html+='<div style="padding:8px 16px;font-size:11px;color:#999;border-top:1px solid #f0f0f0;margin-top:8px;">💬 联系人（点击开始聊天）</div>';
+    contacts.forEach(npcId=>{
+      const p=NPC_PERSONALITIES[npcId];
+      if(!p)return;
+      if(npcId==='spouse'&&!G.spouse)return;
+      if(npcId==='exColleague'&&G.totalMonths<12)return;
+      if(npcId==='mentor'&&G.totalMonths<18)return;
+      if(npcId==='gymCoach'&&G.totalMonths<6)return;
+      // Check if there's an active chat with this NPC
+      const hasActive=G.phone&&G.phone.activeChats&&G.phone.activeChats.some(ch=>ch.npcId===npcId&&ch.status==='active');
+      html+='<div class="msg-item" onclick="openProactiveChat(''+npcId+'')" style="cursor:pointer;">';
+      html+='<div class="msg-av">'+p.avatar+'</div>';
+      html+='<div class="msg-bd"><div class="msg-nm">'+p.name+'</div>';
+      html+='<div class="msg-pv">'+p.traits.slice(0,2).join('·')+'</div></div>';
+      html+='<div class="msg-mt">';
+      if(hasActive)html+='<div class="msg-bg">新</div>';
+      html+='</div></div>';
+    });
+  }
+  if(!html){
+    html='<div class="text-center text-sm text-muted" style="padding:40px 0;"><div style="font-size:48px;margin-bottom:12px;">📱</div>消息会在人生旅途中陆续到来<br>点击"度过一月"推进人生</div>';
+  }
   el.innerHTML=html;
   updatePhoneHint();
 }
@@ -4097,7 +4119,7 @@ function openThread(id){
   if(thread.status==='unread'){thread.status='reading';thread.readMonth=G.totalMonths;}
   G._openThreadId=id;
   renderChat();
-  // v3.9.3: 显示模板选项，隐藏AI输入框
+  // v3.9.4: 显示模板选项，隐藏AI输入框
   const opts=document.getElementById('chatOpts');
   const area=document.getElementById('chatInputArea');
   if(opts)opts.style.display='flex';
@@ -4205,7 +4227,7 @@ function closeChat(){
   document.getElementById('chatOverlay').classList.remove('show');
   G._openThreadId=null;G._openProactiveNpc=null;
   renderPhoneList();renderContacts();updatePhoneBadge();
-  // v3.9.3: If still unread, hint the player
+  // v3.9.4: If still unread, hint the player
   if(hasUnread()){
     const unreadCount=G.phone.threads.filter(t=>t.status!=='replied'&&t.rounds[t.currentRound]&&!t.rounds[t.currentRound]._playerChoice).length;
     if(unreadCount>0)setTimeout(()=>showToast('📱 还有 '+unreadCount+' 条消息待处理'),600);
@@ -5232,16 +5254,15 @@ function renderNotifications(){
 function switchPhoneTab(tab){
   document.querySelectorAll('.phone-tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.phone-content').forEach(c=>c.classList.remove('active'));
-  const tabNames=['messages','contacts','moments','notifications'];
+  const tabNames=['messages','moments'];
   const idx=tabNames.indexOf(tab);
   if(idx>=0){const allTabs=document.querySelectorAll('.phone-tab');if(allTabs[idx])allTabs[idx].classList.add('active');}
-  document.getElementById('phone-'+tab).classList.add('active');
+  const el=document.getElementById('phone-'+tab);
+  if(el)el.classList.add('active');
   if(tab==='messages')renderPhoneList();
-  else if(tab==='contacts')renderContacts();
   else if(tab==='moments')renderMoments();
-  else if(tab==='notifications')renderNotifications();
 }
-function refreshPhone(){injectDynamicContacts();renderPhoneList();renderContacts();renderMoments();renderNotifications();updatePhoneBadge();updatePhoneHint();}
+function refreshPhone(){renderPhoneList();renderMoments();updatePhoneBadge();updatePhoneHint();}
 function updatePhoneBadge(){
   const badge=document.getElementById('phoneBadge');if(!badge)return;
   const count=G.phone?G.phone.threads.filter(t=>t.status!=='replied'&&t.rounds[t.currentRound]&&!t.rounds[t.currentRound]._playerChoice).length:0;
