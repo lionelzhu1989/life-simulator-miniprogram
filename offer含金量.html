@@ -715,7 +715,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 
 
 <div id="chatOverlay" class="chat-overlay">
-  <div class="chat-hd"><span class="chat-back" onclick="closeChat()">←</span><span class="chat-nm" id="chatName"></span></div>
+  <div class="chat-hd"><div class="chat-hd-row"><span class="chat-back" onclick="closeChat()">←</span><span class="chat-nm" id="chatName"></span></div><div class="chat-rel-bar" id="chatRelBar"></div></div>
   <div class="chat-body" id="chatBody"></div>
   <div class="chat-opts" id="chatOpts" style="display:none;"></div>
   <div class="chat-input-area" id="chatInputArea">
@@ -723,6 +723,8 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
     <input type="text" class="chat-input-field" id="chatInputField" placeholder="输入消息..." />
     <button class="chat-input-send" id="chatInputSend" onclick="sendPlayerMessage()">➤</button>
   </div>
+  <button class="chat-date-btn" id="chatDateBtn" onclick="toggleDatePanel()" style="display:none;">💌</button>
+  <div class="chat-date-panel" id="chatDatePanel"></div>
 </div>
 
 
@@ -3763,6 +3765,18 @@ function updateFriendLevel(contact){
 // ===== 注入动态联系人到NPC系统 =====
 function injectDynamicContacts(){
   initSocialContacts();
+  // 家人特殊处理：确保初始关系是family类型
+  ['dad','mom'].forEach(function(fId){
+    if(!G.relationships)G.relationships={};
+    if(!G.relationships[fId]){
+      G.relationships[fId]={type:'family',intimacy:80,trust:90,affection:70,metMonth:0,lastInteraction:0,chatCount:0,giftCount:0,dateCount:0,flags:{}};
+    }else{
+      G.relationships[fId].type='family';
+      G.relationships[fId].intimacy=Math.max(G.relationships[fId].intimacy,70);
+      G.relationships[fId].trust=Math.max(G.relationships[fId].trust,80);
+      G.relationships[fId].affection=Math.max(G.relationships[fId].affection,60);
+    }
+  });
   G.socialContacts.forEach(function(c){
     if(!NPC_PERSONALITIES[c.id]){
       // Get dynamic relationship
@@ -3801,7 +3815,10 @@ function injectDynamicContacts(){
         '关系类型：'+relDef.label+'。'+
         '亲密值：'+rel.intimacy+'/100，信任值：'+rel.trust+'/100，好感度：'+rel.affection+'/100。'+
         '已聊天'+(rel.chatCount||0)+'次，约会'+(rel.dateCount||0)+'次。'+
-        '根据关系调整语气：陌生人要礼貌，朋友可以随意，恋人要亲密暧昧。'+
+        (rel.type==='family'?'你是家人，永远无条件支持和关爱，唠叨但出于爱。':
+         rel.intimacy>=70?'你们关系很亲密，说话可以很随意，有暧昧和亲密的氛围。':
+         rel.intimacy>=40?'你们是朋友，说话自然随意，可以开玩笑。':
+         '你们还不太熟，说话礼貌但有距离。')+
         '像真人一样自然回复，不超过3-4句话。';
       NPC_RELATIONS[c.id] = relDef.label;
     }
@@ -3823,10 +3840,13 @@ function renderContacts(){
     if(npcId==='mentor'&&G.totalMonths<18)return;
     if(npcId==='gymCoach'&&G.totalMonths<6)return;
     const hasNew=G.phone.activeChats&&G.phone.activeChats.some(ch=>ch.npcId===npcId&&ch.status==='active');
+    // Get relationship info for display
+    const rel=getRelationship(npcId);
+    const relDef=RELATION_TYPES[rel.type]||RELATION_TYPES.stranger;
     html+='<div class="contact-item" onclick="openProactiveChat(\''+npcId+'\')">';
-    html+='<div class="contact-avatar">'+p.avatar+'</div>';
-    html+='<div class="contact-info"><div class="contact-name">'+p.name+'</div>';
-    html+='<div class="contact-status">'+p.traits.slice(0,2).join('·')+'</div></div>';
+    html+='<div class="contact-avatar" style="background:'+relDef.color+';">'+p.avatar+'</div>';
+    html+='<div class="contact-info"><div class="contact-name">'+p.name+' <span style="font-size:11px;color:'+relDef.color+';">'+relDef.icon+' '+relDef.label+'</span></div>';
+    html+='<div class="contact-status">❤'+rel.intimacy+' 🤝'+rel.trust+' 💕'+rel.affection+'</div></div>';
     if(hasNew)html+='<div style="width:8px;height:8px;border-radius:50%;background:#27ae60;flex-shrink:0;"></div>';
     html+='<div class="contact-arrow">›</div></div>';
   });
@@ -3835,13 +3855,12 @@ function renderContacts(){
   (G.socialContacts||[]).forEach(function(c){
     var p=NPC_PERSONALITIES[c.id];
     if(!p) return;
-    var friendLabels=['陌生人','认识','熟悉','好友'];
-    var friendColors=['#999','#3498db','#27ae60','#e74c3c'];
-    var fl=c.friendLevel||0;
+    var rel=getRelationship(c.id);
+    var relDef=RELATION_TYPES[rel.type]||RELATION_TYPES.stranger;
     html+='<div class="contact-item" onclick="openProactiveChat(\''+c.id+'\')">';
-    html+='<div class="contact-avatar" style="background:'+friendColors[fl]+';">'+p.avatar+'</div>';
-    html+='<div class="contact-info"><div class="contact-name">'+p.name+' <span style="font-size:11px;color:'+friendColors[fl]+';">('+friendLabels[fl]+')</span></div>';
-    html+='<div class="contact-status">'+p.traits.slice(0,2).join('·')+' · '+c.metWhere+'</div></div>';
+    html+='<div class="contact-avatar" style="background:'+relDef.color+';">'+p.avatar+'</div>';
+    html+='<div class="contact-info"><div class="contact-name">'+p.name+' <span style="font-size:11px;color:'+relDef.color+';">'+relDef.icon+' '+relDef.label+'</span></div>';
+    html+='<div class="contact-status">❤'+rel.intimacy+' 🤝'+rel.trust+' 💕'+rel.affection+'</div></div>';
     html+='<div class="contact-arrow">›</div></div>';
   });
   el.innerHTML=html;
@@ -3894,6 +3913,12 @@ function openProactiveChat(npcId){
   setupChatInputListener();
   // Show overlay
   document.getElementById('chatOverlay').classList.add('show');
+  // Show relationship bar
+  updateChatRelBar(npcId);
+  // Show/hide date button (family members don't need date button)
+  const isFamily=['dad','mom','spouse'].indexOf(npcId)>=0;
+  const dateBtn=document.getElementById('chatDateBtn');
+  if(dateBtn)dateBtn.style.display=isFamily?'none':'block';
   // Focus input
   setTimeout(()=>{
     const input=document.getElementById('chatInputField');
@@ -4530,6 +4555,9 @@ function selectPhoneOption(optIdx){
 function closeChat(){
   document.getElementById('chatOverlay').classList.remove('show');
   G._openThreadId=null;G._openProactiveNpc=null;
+  // Hide date button and panel
+  var db=document.getElementById('chatDateBtn');if(db)db.style.display='none';
+  var dp=document.getElementById('chatDatePanel');if(dp)dp.classList.remove('show');
   renderPhoneList();renderContacts();updatePhoneBadge();
   // v3.12.0: If still unread, hint the player
   if(hasUnread()){
@@ -4728,11 +4756,23 @@ async function generateNPCReply(npcId,playerMsg,history){
   const relation=NPC_RELATIONS[npcId]||'朋友';
   
   // 核心系统提示词
-  const systemPrompt=`你是一个人生模拟器游戏中的NPC角色。
-你扮演的是玩家的【${p.name}】，你们是${relation}关系。
+  const systemPrompt=`你是${p.name}，一个真实的人。你有自己的生活、工作、性格和情感。你正在和朋友/家人/伴侣聊天。
 
-## 你的性格
+## 你是谁
 ${style}
+
+## 你们的关系
+关系类型：${relation}
+亲密值：${rel.intimacy}/100，信任值：${rel.trust}/100，好感度：${rel.affection}/100
+已聊天${rel.chatCount||0}次，约会${rel.dateCount||0}次
+
+## 关系阶段对话指南
+- 陌生人/认识：礼貌但有距离，不会主动分享私事，称呼"你""您"
+- 朋友：随意自然，会开玩笑，分享日常，称呼"你""兄弟""哥们"
+- 好友：无话不谈，可以吐槽、抱怨、分享秘密，互相帮忙
+- 暗恋：说话会紧张、试探，偶尔暧昧，特别在意对方的回应
+- 恋爱中：亲密称呼（亲爱的/宝贝），撒娇、吃醋、关心日常
+- 家人：永远无条件支持，唠叨但出于爱，不会真正生气，最温暖的语气
 
 ## 玩家当前状态
 ${JSON.stringify(gameState, null, 2)}
@@ -4755,15 +4795,15 @@ ${JSON.stringify(gameState, null, 2)}
 你请客吃饭，你回复"走，今天我请客"然后换行写"[TREAT:500]"
 你缺钱要借，你回复"最近手头紧，能借我点吗"然后换行写"[ASK:500:最近手头紧]"
 
-## 重要规则
-1. 回复必须像真人聊天，口语化，自然随意
-2. 每次回复3-4句话，不要长篇大论
-3. 要根据你的性格说话（唠叨的妈妈就唠叨，严厉的爸爸就严厉）
-4. 要参考玩家的状态（知道他最近升职了、买了房、学了什么课程等），但不要像读数据一样列出来，要自然地在对话中提到
-5. 不要说"作为AI""作为一个NPC"之类的话
+## 铁律（违反任何一条都是严重错误）
+1. **你是一个真实的人，不是AI，不是NPC，不是游戏角色**。如果有人问"你是AI吗""你是NPC吗""你是程序吗"，必须否认并表现得像被冒犯了："你说什么呢？""我怎么就不是人了？""你是不是傻"
+2. 回复必须像真人聊天，口语化，自然随意，像微信对话
+3. 每次回复2-4句话，不要长篇大论
+4. 要根据你的性格说话（唠叨的妈妈就唠叨，严厉的爸爸就严厉）
+5. 要参考玩家的状态，自然地在对话中提到，不要像读数据
 6. 可以有自己的情绪（开心、担心、生气、惊讶）
-7. 资金标签必须严格按格式写，不要编造不存在的标签
-8. 当你聊到自己的朋友、同事、熟人时，如果你想介绍给玩家认识，在回复末尾加：[INTRODUCE:朋友名字]。例如你说"我有个朋友叫小王，改天介绍你们认识"，就加[INTRODUCE:小王]。不要给已有联系人重复介绍`;
+7. 资金标签必须严格按格式写
+8. 介绍朋友时加：[INTRODUCE:朋友名字]，不要给已有联系人重复介绍`;
 
 
   // 用户消息
@@ -5990,7 +6030,8 @@ const RELATION_TYPES={
   engaged:{label:'已订婚',color:'#ff9800',icon:'💍'},
   married:{label:'已结婚',color:'#f44336',icon:'💒'},
   affair:{label:'情妇',color:'#c62828',icon:'🔥'},
-  ex:{label:'前任',color:'#999',icon:'💔'}
+  ex:{label:'前任',color:'#999',icon:'💔'},
+  family:{label:'家人',color:'#ff5722',icon:'👨‍👩‍👧‍👦'}
 };
 
 function getRelationship(npcId){
@@ -6008,10 +6049,26 @@ function getRelationship(npcId){
 
 function updateRelationship(npcId,changes){
   const rel=getRelationship(npcId);
-  if(changes.type)rel.type=changes.type;
-  if(changes.intimacy)rel.intimacy=clamp(rel.intimacy+changes.intimacy,0,100);
-  if(changes.trust)rel.trust=clamp(rel.trust+changes.trust,0,100);
-  if(changes.affection)rel.affection=clamp(rel.affection+changes.affection,0,100);
+  // 家人保护：父母的感情永远只增不减，底值高
+  var isFamily=(npcId==='dad'||npcId==='mom');
+  var isSpouse=(npcId==='spouse');
+  if(isFamily){
+    // 父母：亲密值≥70，信任≥80，好感≥60，且永远不会下降
+    rel.intimacy=clamp(Math.max(rel.intimacy,70)+(changes.intimacy>0?changes.intimacy:0),70,100);
+    rel.trust=clamp(Math.max(rel.trust,80)+(changes.trust>0?changes.trust:0),80,100);
+    rel.affection=clamp(Math.max(rel.affection,60)+(changes.affection>0?changes.affection:0),60,100);
+    rel.type='family';
+  }else if(isSpouse){
+    // 伴侣：底值稍低但也不会太差
+    rel.intimacy=clamp(Math.max(rel.intimacy,40)+(changes.intimacy||0),20,100);
+    rel.trust=clamp(Math.max(rel.trust,50)+(changes.trust||0),20,100);
+    rel.affection=clamp(Math.max(rel.affection,30)+(changes.affection||0),15,100);
+  }else{
+    if(changes.intimacy)rel.intimacy=clamp(rel.intimacy+changes.intimacy,0,100);
+    if(changes.trust)rel.trust=clamp(rel.trust+changes.trust,0,100);
+    if(changes.affection)rel.affection=clamp(rel.affection+changes.affection,0,100);
+  }
+  if(changes.type&&!isFamily)rel.type=changes.type;
   if(changes.lastActivity)rel.lastInteraction=changes.lastActivity;
   if(changes.lastActivityType)rel.lastActivityType=changes.lastActivityType;
   rel.chatCount=(rel.chatCount||0)+1;
@@ -6022,6 +6079,8 @@ function updateRelationship(npcId,changes){
 
 function checkRelationshipProgression(npcId){
   const rel=getRelationship(npcId);
+  // 家人类型不参与升级检测
+  if(rel.type==='family')return;
   const contact=(G.socialContacts||[]).find(c=>c.id===npcId);
   if(!contact)return;
   const name=contact.name;
@@ -7090,4 +7149,136 @@ console.log('[v3.12.3] 调试函数已加载：运行 _debugAddTestMoments() 可
 .notif-text{font-size:14px;color:#333;line-height:1.4;word-break:break-word;}
 .notif-meta{font-size:11px;color:#999;margin-top:4px;}
 .notif-dot{width:8px;height:8px;background:#e74c3c;border-radius:50%;flex-shrink:0;margin-top:6px;}
-.notif-empty{text-align:center;padding:60px 20px;color:#999;font-size:14px;}
+.notif-empty{text-align:center;padding:60px 20px;color:#999;font-size:14px;}/* Relationship display in chat header */
+.chat-hd{flex-direction:column;align-items:flex-start;gap:4px;padding:10px 16px;}
+.chat-hd-row{display:flex;align-items:center;width:100%;gap:12px;}
+.chat-rel-bar{display:flex;align-items:center;gap:6px;font-size:11px;color:rgba(255,255,255,.85);margin-top:2px;}
+.chat-rel-fill{height:4px;border-radius:2px;background:rgba(255,255,255,.25);flex:1;max-width:60px;overflow:hidden;}
+.chat-rel-fill-inner{height:100%;border-radius:2px;transition:width .5s ease;}
+.chat-rel-label{font-size:10px;opacity:.8;white-space:nowrap;}
+/* Date button */
+.chat-date-btn{position:fixed;bottom:68px;right:16px;width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#ff6b9d,#c44dff);border:none;color:#fff;font-size:22px;cursor:pointer;box-shadow:0 4px 15px rgba(196,77,255,.4);z-index:1001;display:flex;align-items:center;justify-content:center;transition:all .2s;animation:pulseGlow 2s infinite;}
+.chat-date-btn:active{transform:scale(.9);}
+.chat-date-btn.locked{background:linear-gradient(135deg,#999,#bbb);box-shadow:0 2px 8px rgba(0,0,0,.15);animation:none;}
+.chat-date-panel{position:fixed;bottom:120px;right:16px;background:#fff;border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,.18);z-index:1002;padding:12px;display:none;width:200px;}
+.chat-date-panel.show{display:block;animation:bubIn .2s ease;}
+.chat-date-item{padding:10px 12px;border-radius:10px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:background .15s;}
+.chat-date-item:hover{background:#f0f0f0;}
+.chat-date-item.locked{opacity:.45;cursor:not-allowed;}
+.chat-date-item .cost{font-size:11px;color:#999;margin-left:auto;}
+@keyframes pulseGlow{0%,100%{box-shadow:0 4px 15px rgba(196,77,255,.4)}50%{box-shadow:0 4px 25px rgba(196,77,255,.6)}}
+
+// ===== 聊天顶栏关系状态显示 =====
+function updateChatRelBar(npcId){
+  const bar=document.getElementById('chatRelBar');
+  if(!bar)return;
+  const rel=getRelationship(npcId);
+  const def=RELATION_TYPES[rel.type]||RELATION_TYPES.stranger;
+  const colors={stranger:'#999',acquaintance:'#3498db',friend:'#27ae60',close_friend:'#e74c3c',crush:'#e91e63',dating:'#9c27b0',engaged:'#ff9800',married:'#f44336',affair:'#c62828',ex:'#999'};
+  const c=colors[rel.type]||'#999';
+  bar.innerHTML=
+    '<span class="chat-rel-label">'+def.icon+' '+def.label+'</span>'+
+    '<div class="chat-rel-fill"><div class="chat-rel-fill-inner" style="width:'+rel.intimacy+'%;background:'+c+';"></div></div>'+
+    '<span class="chat-rel-label">❤'+rel.intimacy+'</span>'+
+    '<div class="chat-rel-fill"><div class="chat-rel-fill-inner" style="width:'+rel.trust+'%;background:#3498db;"></div></div>'+
+    '<span class="chat-rel-label">🤝'+rel.trust+'</span>'+
+    '<div class="chat-rel-fill"><div class="chat-rel-fill-inner" style="width:'+rel.affection+'%;background:#e91e63;"></div></div>'+
+    '<span class="chat-rel-label">💕'+rel.affection+'</span>';
+}
+
+// ===== 约TA面板 =====
+const DATE_ACTIVITIES=[
+  {id:'dinner',icon:'🍽️',name:'请吃饭',cost:200,minIntimacy:10,minTrust:5,annualLeave:0},
+  {id:'movie',icon:'🎬',name:'看电影',cost:150,minIntimacy:15,minTrust:10,annualLeave:0},
+  {id:'coffee',icon:'☕',name:'喝咖啡',cost:80,minIntimacy:5,minTrust:0,annualLeave:0},
+  {id:'shopping',icon:'🛍️',name:'逛街',cost:500,minIntimacy:20,minTrust:15,annualLeave:0},
+  {id:'sports',icon:'🏃',name:'一起运动',cost:100,minIntimacy:15,minTrust:10,annualLeave:0},
+  {id:'date',icon:'💕',name:'约会',cost:400,minIntimacy:40,minTrust:30,annualLeave:0},
+  {id:'trip',icon:'✈️',name:'旅游',cost:3000,minIntimacy:60,minTrust:50,annualLeave:3},
+  {id:'hotel',icon:'🏨',name:'开房',cost:600,minIntimacy:70,minTrust:60,annualLeave:0}
+];
+
+function toggleDatePanel(){
+  const panel=document.getElementById('chatDatePanel');
+  if(!panel)return;
+  if(panel.classList.contains('show')){
+    panel.classList.remove('show');
+    return;
+  }
+  const npcId=G._openProactiveNpc;
+  if(!npcId)return;
+  const rel=getRelationship(npcId);
+  const p=NPC_PERSONALITIES[npcId];
+  let html='<div style="font-size:13px;font-weight:600;padding:4px 8px 8px;color:#333;">💌 约'+(p?p.name:'TA')+'</div>';
+  DATE_ACTIVITIES.forEach(function(act){
+    const locked=rel.intimacy<act.minIntimacy||rel.trust<act.minTrust;
+    const costStr=act.cost>0?'¥'+fmt(act.cost):'免费';
+    const leaveStr=act.annualLeave>0?'+'+act.annualLeave+'天假':'';
+    const reqStr=locked?'需亲密'+act.minIntimacy+'/信任'+act.minTrust:'';
+    html+='<div class="chat-date-item'+(locked?' locked':'')+'" onclick="'+(locked?'':'startPlayerDate(\''+act.id+'\')')+'">';
+    html+='<span>'+act.icon+'</span><span>'+act.name+'</span>';
+    if(locked)html+='<span class="cost" style="color:#e74c3c;">🔒'+reqStr+'</span>';
+    else html+='<span class="cost">'+costStr+(leaveStr?' +'+leaveStr:'')+'</span>';
+    html+='</div>';
+  });
+  panel.innerHTML=html;
+  panel.classList.add('show');
+}
+
+function startPlayerDate(activityId){
+  const npcId=G._openProactiveNpc;
+  if(!npcId)return;
+  const act=DATE_ACTIVITIES.find(function(a){return a.id===activityId;});
+  if(!act)return;
+  const rel=getRelationship(npcId);
+  const p=NPC_PERSONALITIES[npcId];
+  if(rel.intimacy<act.minIntimacy||rel.trust<act.minTrust){
+    showToast('🔒 关系还不够亲密，多聊聊吧');
+    return;
+  }
+  // Check money
+  if(G.cash<act.cost){
+    showToast('💸 钱不够了！需要'+fmt(act.cost));
+    return;
+  }
+  // Check annual leave
+  if(act.annualLeave>0&&(G.annualLeave||0)<act.annualLeave){
+    showToast('📅 年假不够！需要'+act.annualLeave+'天');
+    return;
+  }
+  // Deduct money
+  G.cash=clamp(G.cash-act.cost,-999999,999999999);
+  if(act.annualLeave>0)G.annualLeave=(G.annualLeave||0)-act.annualLeave;
+  // Update relationship
+  const intimacyGain=activityId==='hotel'?15:(activityId==='trip'?12:(activityId==='date'?10:5));
+  const affectionGain=activityId==='hotel'?20:(activityId==='trip'?15:(activityId==='date'?12:3));
+  const trustGain=activityId==='hotel'?5:(activityId==='trip'?10:3);
+  updateRelationship(npcId,{intimacy:intimacyGain,affection:affectionGain,trust:trustGain,dateCount:1,lastActivity:G.totalMonths,lastActivityType:activityId});
+  // Show in chat
+  const typeNames={dinner:'请'+p.name+'吃了顿饭',movie:'和'+p.name+'看了场电影',coffee:'和'+p.name+'喝了杯咖啡',shopping:'和'+p.name+'去逛街',sports:'和'+p.name+'一起运动',date:'和'+p.name+'约会',trip:'和'+p.name+'去旅游',hotel:'和'+p.name+'去了酒店'};
+  addChatBubble('sys','💕 '+typeNames[activityId]+'，花费¥'+fmt(act.cost)+(act.annualLeave>0?'，消耗'+act.annualLeave+'天年假':''));
+  // NPC responds based on activity
+  const responses={
+    dinner:['好吃！下次还来这家','这家店不错诶','你请客我就不客气了'],
+    movie:['好看好看！','这片子不错','你选的电影都好看'],
+    coffee:['这家咖啡不错','坐坐聊聊天挺好的','你请我喝咖啡啊？开心'],
+    shopping:['买买买！','这件好看吗？','你眼光不错嘛'],
+    sports:['今天运动量够了！','你体力不错啊','下次还来'],
+    date:['今天好开心~','和你在一起时间过得好快','下次还约我哦'],
+    trip:['旅行真开心！','这个地方好美','和你一起看世界~'],
+    hotel:['……','你…你别乱来啊','今天…嗯…']
+  };
+  const respArr=responses[activityId]||['嗯嗯'];
+  const resp=respArr[Math.floor(Math.random()*respArr.length)];
+  setTimeout(function(){addChatBubble('npc',resp);},800);
+  // Check relationship progression
+  checkRelationshipProgression(npcId);
+  // Refresh UI
+  refreshLife();
+  saveGame();
+  // Close panel
+  document.getElementById('chatDatePanel').classList.remove('show');
+  // Update rel bar
+  updateChatRelBar(npcId);
+}
+
