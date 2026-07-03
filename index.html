@@ -371,7 +371,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 
 
 /* ===== 玩法指南 ===== */
-.guide-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:3000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s;}
+.guide-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:3000;display:none;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s;}
 .guide-overlay.show{opacity:1;pointer-events:auto;}
 .guide-box{background:#fff;border-radius:16px;width:90%;max-width:400px;max-height:80vh;overflow:hidden;display:flex;flex-direction:column;transform:scale(0.9);transition:transform .3s;}
 .guide-overlay.show .guide-box{transform:scale(1);}
@@ -2588,44 +2588,6 @@ function openBusinessDetail(id){
   content+='</div>';
   showModal({title:b.icon+' '+b.name+' · 经营详情',content:content});
 }
-
-// ===== Tech Investment Detail =====
-function openProjectDetail(id){
-  const active=G.techInvestments.find(x=>x.id===id);
-  const tech=TECH_INVESTMENTS.find(x=>x.id===id);
-  if(!active||!tech)return;
-  const pct=Math.round(((tech.returnMonths-active.monthsRemaining)/tech.returnMonths)*100);
-  let content='<div style="text-align:center;margin-bottom:16px;">';
-  content+='<div style="font-size:48px;margin-bottom:8px;">'+tech.icon+'</div>';
-  content+='<div style="font-size:18px;font-weight:600;">'+tech.name+'</div>';
-  content+='</div>';
-  content+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">';
-  content+='<div style="background:#f8f9fa;padding:12px;border-radius:8px;text-align:center;"><div style="font-size:11px;color:#999;">投入金额</div><div style="font-weight:600;">'+fmt(active.investAmount)+'</div></div>';
-  content+='<div style="background:#f8f9fa;padding:12px;border-radius:8px;text-align:center;"><div style="font-size:11px;color:#999;">投资周期</div><div style="font-weight:600;">'+tech.returnMonths+'个月</div></div>';
-  content+='</div>';
-  content+='<div style="background:#eaf6ff;padding:16px;border-radius:8px;margin-bottom:16px;">';
-  content+='<div style="font-size:12px;color:#666;">投资进度</div>';
-  content+='<div style="background:#ddd;border-radius:4px;height:8px;margin:8px 0;"><div style="background:#3498db;height:100%;border-radius:4px;width:'+pct+'%;"></div></div>';
-  content+='<div style="font-size:12px;color:#999;text-align:center;">'+pct+'% 完成 | 剩余 '+active.monthsRemaining+' 个月</div>';
-  content+='</div>';
-  content+='<div style="font-size:12px;color:#666;margin-bottom:8px;">📊 预期回报</div>';
-  tech.outcomes.forEach(o=>{
-    const cls=o.type==='good'?'#27ae60':'#e74c3c';
-    content+='<div style="display:flex;justify-content:space-between;padding:8px 12px;background:#f8f9fa;border-radius:6px;margin-bottom:4px;">';
-    content+='<span>'+o.text+'</span>';
-    content+='<span style="color:'+cls+';font-weight:600;">'+Math.round(o.chance*100)+'% · '+o.multiplier+'x</span>';
-    content+='</div>';
-  });
-  if(active.events&&active.events.length>0){
-    content+='<div style="margin-top:16px;font-size:12px;color:#666;margin-bottom:8px;">📋 事件记录</div>';
-    active.events.forEach(e=>{
-      content+='<div style="padding:8px 12px;background:#f8f9fa;border-radius:6px;margin-bottom:4px;font-size:13px;">'+e.text+'</div>';
-    });
-  }
-  content+='<div style="margin-top:16px;"><button class="btn btn-block" style="background:#f0f0f0;" onclick="closeModal()">关闭</button></div>';
-  showModal({title:tech.icon+' '+tech.name+' · 投资详情',content:content});
-}
-
 function refreshBusiness(){
   let html='';
   // Investment summary
