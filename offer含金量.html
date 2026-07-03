@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>offer含金量 v3.9.4</title>
+<title>offer含金量 v3.9.5</title>
 <style>
 
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -1808,13 +1808,19 @@ function advanceMonth(){
   G.businesses.forEach(b=>{
     const info=BUSINESSES.find(x=>x.id===b.id);
     if(!info)return;
+    if(!b.totalIncome)b.totalIncome=0;if(!b.totalLoss)b.totalLoss=0;if(!b.monthsOwned)b.monthsOwned=0;
+    b.monthsOwned++;
     if(Math.random()<info.risk){
       const loss=info.price*randFloat(0.1,0.3);
       bizIncome-=loss;
+      b.totalLoss+=loss;
+      b.lastMonthIncome=-loss;
       G.events.push({text:info.icon+' '+info.name+' 本月亏损 '+fmt(loss),type:'bad'});
     }else{
       const inc=randInt(info.monthlyIncome[0],info.monthlyIncome[1]);
       bizIncome+=inc;
+      b.totalIncome+=inc;
+      b.lastMonthIncome=inc;
     }
   });
   income+=bizIncome;
@@ -2490,27 +2496,137 @@ function sellHouse(houseId){
 }
 
 // ========== 商业投资 ==========
+// ===== Business Detail Modal =====
+function openBusinessDetail(id){
+  const b=BUSINESSES.find(x=>x.id===id);
+  const owned=G.businesses.find(x=>x.id===id);
+  if(!b||!owned)return;
+  const profit=(owned.totalIncome||0)-(owned.totalLoss||0);
+  const avgMonthly=owned.monthsOwned>0?Math.round((owned.totalIncome||0)/owned.monthsOwned):0;
+  const roi=owned.monthsOwned>0?((profit/b.price)*100).toFixed(1):'0.0';
+  let content='<div style="text-align:center;margin-bottom:16px;">';
+  content+='<div style="font-size:48px;margin-bottom:8px;">'+b.icon+'</div>';
+  content+='<div style="font-size:18px;font-weight:600;">'+b.name+'</div>';
+  content+='</div>';
+  content+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">';
+  content+='<div style="background:#f8f9fa;padding:12px;border-radius:8px;text-align:center;"><div style="font-size:11px;color:#999;">投入成本</div><div style="font-weight:600;">'+fmt(b.price)+'</div></div>';
+  content+='<div style="background:#f8f9fa;padding:12px;border-radius:8px;text-align:center;"><div style="font-size:11px;color:#999;">持有月数</div><div style="font-weight:600;">'+(owned.monthsOwned||0)+'个月</div></div>';
+  content+='<div style="background:#f0faf4;padding:12px;border-radius:8px;text-align:center;"><div style="font-size:11px;color:#999;">累计收入</div><div style="font-weight:600;color:#27ae60;">'+fmt(owned.totalIncome||0)+'</div></div>';
+  content+='<div style="background:#fef2f2;padding:12px;border-radius:8px;text-align:center;"><div style="font-size:11px;color:#999;">累计亏损</div><div style="font-weight:600;color:#e74c3c;">'+fmt(owned.totalLoss||0)+'</div></div>';
+  content+='</div>';
+  content+='<div style="background:'+(profit>=0?'#f0faf4':'#fef2f2')+';padding:16px;border-radius:8px;text-align:center;margin-bottom:16px;">';
+  content+='<div style="font-size:12px;color:#666;">净利润</div>';
+  content+='<div style="font-size:24px;font-weight:700;color:'+(profit>=0?'#27ae60':'#e74c3c')+';">'+fmt(profit)+'</div>';
+  content+='<div style="font-size:12px;color:#999;">ROI: '+roi+'% | 月均: '+fmt(avgMonthly)+'</div>';
+  content+='</div>';
+  content+='<div style="font-size:12px;color:#666;margin-bottom:8px;">📈 经营数据</div>';
+  content+='<div style="font-size:13px;line-height:1.8;">';
+  content+='• 风险等级: '+Math.round(b.risk*100)+'%（每月有'+Math.round(b.risk*100)+'%概率亏损）<br>';
+  content+='• 理论月收入: '+fmt(b.monthlyIncome[0])+' ~ '+fmt(b.monthlyIncome[1])+'<br>';
+  content+='• 上月盈亏: '+(owned.lastMonthIncome>=0?'+':'')+fmt(owned.lastMonthIncome||0)+'<br>';
+  content+='• 回本进度: '+(b.price>0?Math.min(100,Math.round(((owned.totalIncome||0)/b.price)*100)):0)+'%';
+  content+='</div>';
+  const sellPrice=Math.round(b.price*0.6);
+  content+='<div style="margin-top:16px;display:flex;gap:8px;">';
+  content+='<button class="btn btn-danger" style="flex:1;" onclick="sellBusiness(\''+b.id+'\');closeModal();">转让 ('+fmt(sellPrice)+')</button>';
+  content+='<button class="btn" style="flex:1;background:#f0f0f0;" onclick="closeModal()">关闭</button>';
+  content+='</div>';
+  showModal({title:b.icon+' '+b.name+' · 经营详情',content:content});
+}
+
+// ===== Tech Investment Detail =====
+function openProjectDetail(id){
+  const active=G.techInvestments.find(x=>x.id===id);
+  const tech=TECH_INVESTMENTS.find(x=>x.id===id);
+  if(!active||!tech)return;
+  const pct=Math.round(((tech.returnMonths-active.monthsRemaining)/tech.returnMonths)*100);
+  let content='<div style="text-align:center;margin-bottom:16px;">';
+  content+='<div style="font-size:48px;margin-bottom:8px;">'+tech.icon+'</div>';
+  content+='<div style="font-size:18px;font-weight:600;">'+tech.name+'</div>';
+  content+='</div>';
+  content+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">';
+  content+='<div style="background:#f8f9fa;padding:12px;border-radius:8px;text-align:center;"><div style="font-size:11px;color:#999;">投入金额</div><div style="font-weight:600;">'+fmt(active.investAmount)+'</div></div>';
+  content+='<div style="background:#f8f9fa;padding:12px;border-radius:8px;text-align:center;"><div style="font-size:11px;color:#999;">投资周期</div><div style="font-weight:600;">'+tech.returnMonths+'个月</div></div>';
+  content+='</div>';
+  content+='<div style="background:#eaf6ff;padding:16px;border-radius:8px;margin-bottom:16px;">';
+  content+='<div style="font-size:12px;color:#666;">投资进度</div>';
+  content+='<div style="background:#ddd;border-radius:4px;height:8px;margin:8px 0;"><div style="background:#3498db;height:100%;border-radius:4px;width:'+pct+'%;"></div></div>';
+  content+='<div style="font-size:12px;color:#999;text-align:center;">'+pct+'% 完成 | 剩余 '+active.monthsRemaining+' 个月</div>';
+  content+='</div>';
+  content+='<div style="font-size:12px;color:#666;margin-bottom:8px;">📊 预期回报</div>';
+  tech.outcomes.forEach(o=>{
+    const cls=o.type==='good'?'#27ae60':'#e74c3c';
+    content+='<div style="display:flex;justify-content:space-between;padding:8px 12px;background:#f8f9fa;border-radius:6px;margin-bottom:4px;">';
+    content+='<span>'+o.text+'</span>';
+    content+='<span style="color:'+cls+';font-weight:600;">'+Math.round(o.chance*100)+'% · '+o.multiplier+'x</span>';
+    content+='</div>';
+  });
+  if(active.events&&active.events.length>0){
+    content+='<div style="margin-top:16px;font-size:12px;color:#666;margin-bottom:8px;">📋 事件记录</div>';
+    active.events.forEach(e=>{
+      content+='<div style="padding:8px 12px;background:#f8f9fa;border-radius:6px;margin-bottom:4px;font-size:13px;">'+e.text+'</div>';
+    });
+  }
+  content+='<div style="margin-top:16px;"><button class="btn btn-block" style="background:#f0f0f0;" onclick="closeModal()">关闭</button></div>';
+  showModal({title:tech.icon+' '+tech.name+' · 投资详情',content:content});
+}
+
 function refreshBusiness(){
   let html='';
+  // Investment summary
+  if(G.businesses.length>0){
+    let totalInvest=0,totalIncome=0,totalLoss=0;
+    G.businesses.forEach(b=>{
+      const info=BUSINESSES.find(x=>x.id===b.id);if(!info)return;
+      totalInvest+=info.price;
+      totalIncome+=(b.totalIncome||0);
+      totalLoss+=(b.totalLoss||0);
+    });
+    const profit=totalIncome-totalLoss;
+    html+='<div style="background:linear-gradient(135deg,#f0f9ff,#e8f4fd);padding:12px 16px;border-radius:8px;margin-bottom:12px;">';
+    html+='<div style="font-size:12px;color:#666;">📊 投资总览</div>';
+    html+='<div style="display:flex;justify-content:space-between;margin-top:8px;">';
+    html+='<div><div style="font-size:11px;color:#999;">总投入</div><div style="font-weight:600;">'+fmt(totalInvest)+'</div></div>';
+    html+='<div><div style="font-size:11px;color:#999;">累计收入</div><div style="font-weight:600;color:#27ae60;">'+fmt(totalIncome)+'</div></div>';
+    html+='<div><div style="font-size:11px;color:#999;">累计亏损</div><div style="font-weight:600;color:#e74c3c;">'+fmt(totalLoss)+'</div></div>';
+    html+='<div><div style="font-size:11px;color:#999;">净利润</div><div style="font-weight:600;color:'+(profit>=0?'#27ae60':'#e74c3c')+';">'+fmt(profit)+'</div></div>';
+    html+='</div></div>';
+  }
   BUSINESSES.forEach(b=>{
     const owned=G.businesses.find(x=>x.id===b.id);
     const total=calcTotalAsset();
     const locked=b.unlockAsset>0&&total<b.unlockAsset&&!owned;
     let action='';
-    if(owned)action='<span class="tag tag-green">已拥有</span>';
+    if(owned){
+      const profit=(owned.totalIncome||0)-(owned.totalLoss||0);
+      action='<span style="font-size:12px;color:'+(profit>=0?'#27ae60':'#e74c3c')+';">净利润 '+fmt(profit)+'</span>';
+    }
     else if(locked)action='<span class="text-sm text-muted">🔒 资产'+fmtShort(b.unlockAsset)+'</span>';
     else action='<button class="btn btn-primary btn-sm" onclick="buyBusiness(\''+b.id+'\')">加盟 '+fmt(b.price)+'</button>';
-    html+='<div class="list-item"><div class="list-info"><div class="name">'+b.icon+' '+b.name+'</div><div class="desc">投入：'+fmt(b.price)+' | 月收入：'+fmt(b.monthlyIncome[0])+'~'+fmt(b.monthlyIncome[1])+'</div></div><div class="list-action">'+action+'</div></div>';
+    const clickAction=owned?'openBusinessDetail(\''+b.id+'\')':'';
+    html+='<div class="list-item" style="'+(owned?'cursor:pointer;':'')+'" '+(clickAction?'onclick="'+clickAction+'"':'')+'>';
+    html+='<div class="list-info"><div class="name">'+b.icon+' '+b.name+'</div>';
+    html+='<div class="desc">投入：'+fmt(b.price)+' | 风险：'+Math.round(b.risk*100)+'% | 月收入：'+fmt(b.monthlyIncome[0])+'~'+fmt(b.monthlyIncome[1])+'</div>';
+    if(owned){
+      html+='<div class="desc" style="color:#999;font-size:11px;">持有'+(owned.monthsOwned||0)+'个月 | 上月：'+(owned.lastMonthIncome>=0?'+':'')+fmt(owned.lastMonthIncome||0)+'</div>';
+    }
+    html+='</div><div class="list-action">'+action+'</div></div>';
   });
   document.getElementById('businessList').innerHTML=html;
   let myHtml='';
   G.businesses.forEach(b=>{
     const info=BUSINESSES.find(x=>x.id===b.id);if(!info)return;
-    myHtml+='<div class="list-item"><div class="list-info"><div class="name">'+info.icon+' '+info.name+'</div><div class="desc">投入：'+fmt(info.price)+' | 月均收入：'+fmt((info.monthlyIncome[0]+info.monthlyIncome[1])/2)+'</div></div><div class="list-action"><button class="btn btn-danger btn-sm" onclick="sellBusiness(\''+b.id+'\')">转让</button></div></div>';
+    const profit=(b.totalIncome||0)-(b.totalLoss||0);
+    myHtml+='<div class="list-item" onclick="openBusinessDetail(\''+b.id+'\')" style="cursor:pointer;">';
+    myHtml+='<div class="list-info"><div class="name">'+info.icon+' '+info.name+'</div>';
+    myHtml+='<div class="desc">投入：'+fmt(info.price)+' | 持有'+(b.monthsOwned||0)+'个月</div>';
+    myHtml+='<div class="desc" style="font-size:11px;">累计收入：'+fmt(b.totalIncome||0)+' | 累计亏损：'+fmt(b.totalLoss||0)+' | <span style="color:'+(profit>=0?'#27ae60':'#e74c3c')+';">净利润：'+fmt(profit)+'</span></div>';
+    myHtml+='</div><div class="list-action"><span style="font-size:12px;color:#3498db;">详情 ›</span></div></div>';
   });
   if(!myHtml)myHtml='<div class="text-center text-sm text-muted" style="padding:16px 0;">暂无商铺</div>';
   document.getElementById('myBusinesses').innerHTML=myHtml;
 }
+
 function buyBusiness(id){
   const b=BUSINESSES.find(x=>x.id===id);
   if(G.businesses.find(x=>x.id===id)){showToast('已拥有！');return;}
@@ -4060,7 +4176,7 @@ function hasUnread(){return G.phone&&G.phone.threads.some(t=>{if(t.status==='rep
 function renderPhoneList(){
   const el=document.getElementById('phone-messages');if(!el)return;
   let html='';
-  // v3.9.4: Show message threads
+  // v3.9.5: Show message threads
   if(G.phone&&G.phone.threads.length>0){
     G.phone.threads.forEach(t=>{
       const round=t.rounds[t.currentRound];
@@ -4083,7 +4199,7 @@ function renderPhoneList(){
       html+='</div></div>';
     });
   }
-  // v3.9.4: Show contacts at bottom (clickable, open AI chat)
+  // v3.9.5: Show contacts at bottom (clickable, open AI chat)
   injectDynamicContacts();
   const contacts=Object.keys(NPC_PERSONALITIES);
   if(contacts.length>0){
@@ -4119,7 +4235,7 @@ function openThread(id){
   if(thread.status==='unread'){thread.status='reading';thread.readMonth=G.totalMonths;}
   G._openThreadId=id;
   renderChat();
-  // v3.9.4: 显示模板选项，隐藏AI输入框
+  // v3.9.5: 显示模板选项，隐藏AI输入框
   const opts=document.getElementById('chatOpts');
   const area=document.getElementById('chatInputArea');
   if(opts)opts.style.display='flex';
@@ -4227,7 +4343,7 @@ function closeChat(){
   document.getElementById('chatOverlay').classList.remove('show');
   G._openThreadId=null;G._openProactiveNpc=null;
   renderPhoneList();renderContacts();updatePhoneBadge();
-  // v3.9.4: If still unread, hint the player
+  // v3.9.5: If still unread, hint the player
   if(hasUnread()){
     const unreadCount=G.phone.threads.filter(t=>t.status!=='replied'&&t.rounds[t.currentRound]&&!t.rounds[t.currentRound]._playerChoice).length;
     if(unreadCount>0)setTimeout(()=>showToast('📱 还有 '+unreadCount+' 条消息待处理'),600);
