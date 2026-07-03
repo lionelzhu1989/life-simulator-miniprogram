@@ -4768,7 +4768,8 @@ async function generateNPCReply(npcId,playerMsg,history){
     });
   }
   
-  // 关系称呼
+  // 关系数据
+  const rel=getRelationship(npcId);
   const relation=NPC_RELATIONS[npcId]||'朋友';
   
   // 核心系统提示词（v3.15.1：人设优先，精简数据）
