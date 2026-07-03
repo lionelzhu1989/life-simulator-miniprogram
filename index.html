@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>offer含金量</title>
+<title>offer含金量 v2.1</title>
 <style>
 
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -243,6 +243,14 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 .phone-tab{flex:1;padding:10px 4px;text-align:center;font-size:12px;font-weight:500;color:var(--text-light);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;}
 .phone-tab.active{color:var(--primary);border-bottom-color:var(--primary);background:rgba(52,152,219,.05);}
 .phone-content{display:none;}.phone-content.active{display:block;}
+.contact-list{display:flex;flex-direction:column;gap:2px;}
+.contact-item{display:flex;align-items:center;gap:12px;padding:12px 16px;background:#fff;cursor:pointer;transition:background .15s;}
+.contact-item:active{background:#f0f0f0;}
+.contact-avatar{width:42px;height:42px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.contact-info{flex:1;min-width:0;}
+.contact-name{font-size:15px;font-weight:500;color:#333;}
+.contact-status{font-size:12px;color:#999;margin-top:2px;}
+.contact-arrow{color:#ccc;font-size:14px;}
 .msg-item{display:flex;align-items:center;padding:13px 0;border-bottom:1px solid #f0f0f0;cursor:pointer;transition:background .15s;}
 .msg-item:active{background:#f8f8f8;}
 .msg-av{width:46px;height:46px;border-radius:23px;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;margin-right:12px;}
@@ -338,7 +346,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
     <div class="card">
       <div class="card-title"><span class="icon">⚡</span>主动操作</div>
       <div style="display:flex;gap:10px;">
-        <button class="btn btn-primary" style="flex:1;padding:12px 8px;font-size:13px;" onclick="studyCharge()">📚 学习充电<br><span class="text-sm" style="opacity:.8">¥5000 · IQ+3</span></button>
+        <button class="btn btn-primary" style="flex:1;padding:12px 8px;font-size:13px;" onclick="showLearningPanel()">📚 学习充电<br><span class="text-sm" style="opacity:.8">📖 选择课程</span></button>
         <button class="btn btn-success" style="flex:1;padding:12px 8px;font-size:13px;" onclick="socialGathering()">🤝 社交聚会<br><span class="text-sm" style="opacity:.8">¥3000 · EQ+3</span></button>
       </div>
     </div>
@@ -396,7 +404,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
     </div>
   </div>
 
-  <!-- 任务页 -->
+  <!-- 成就页 -->
   <div id="page-task" class="page">
     <div class="card">
       <div class="card-title"><span class="icon">🎯</span>月度任务</div>
@@ -410,10 +418,6 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
       <div class="card-title"><span class="icon">📊</span>五维评分</div>
       <div id="fiveDim"></div>
     </div>
-  </div>
-
-  <!-- 更多页 -->
-  <div id="page-more" class="page">
     <div class="card">
       <div class="card-title"><span class="icon">🏆</span>财富排行榜</div>
       <div id="rankList"></div>
@@ -423,6 +427,15 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
       <p class="text-sm text-muted mb-8">人生结束后获得轮回点(LP)，用于解锁永久加成，下轮起步更强！</p>
       <div class="flex-between mb-8"><span class="text-sm">当前LP</span><span style="font-weight:700;color:var(--warning);" id="lpDisplay">0</span></div>
       <button class="btn btn-warning btn-block btn-sm" onclick="showRebirthPanel()">查看重生升级</button>
+    </div>
+  </div>
+
+  <!-- 成长页 -->
+  <div id="page-more" class="page">
+    <div class="card">
+      <div class="card-title"><span class="icon">📚</span>学习充电</div>
+      <p class="text-sm text-muted mb-8">提升技能，解锁更多机会</p>
+      <div id="learningList"></div>
     </div>
     <div class="card">
       <div class="card-title"><span class="icon">📤</span>分享</div>
@@ -439,20 +452,22 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
     <div class="phone-hint" id="phoneHint" style="display:none;">⚠️ <span id="phoneHintText">有未读消息需要处理</span></div>
     <div class="phone-tabs">
       <div class="phone-tab active" onclick="switchPhoneTab('messages')">💬 消息</div>
+      <div class="phone-tab" onclick="switchPhoneTab('contacts')">📒 通讯录</div>
       <div class="phone-tab" onclick="switchPhoneTab('moments')">📷 朋友圈</div>
       <div class="phone-tab" onclick="switchPhoneTab('notifications')">🔔 通知</div>
     </div>
     <div id="phone-messages" class="phone-content active"></div>
+    <div id="phone-contacts" class="phone-content"></div>
     <div id="phone-moments" class="phone-content"></div>
     <div id="phone-notifications" class="phone-content"></div>
   </div>
 
   <div class="tab-bar">
-    <div class="tab-item active" onclick="switchTab('life')"><span class="tab-icon">🏠</span><span>人生</span></div>
+    <div class="tab-item active" onclick="switchTab('life')"><span class="tab-icon">🏠</span><span>首页</span></div>
     <div class="tab-item" onclick="switchTab('work')"><span class="tab-icon">💼</span><span>工作</span></div>
     <div class="tab-item" onclick="switchTab('invest')"><span class="tab-icon">📈</span><span>投资</span></div>
-    <div class="tab-item" onclick="switchTab('task')"><span class="tab-icon">🎯</span><span>任务</span></div>
-    <div class="tab-item" onclick="switchTab('more')"><span class="tab-icon">⭐</span><span>更多</span></div>
+    <div class="tab-item" onclick="switchTab('more')"><span class="tab-icon">📚</span><span>成长</span></div>
+    <div class="tab-item" onclick="switchTab('task')"><span class="tab-icon">🎯</span><span>成就</span></div>
     <div class="tab-item" onclick="switchTab('phone')" id="phoneTabItem" style="position:relative;"><span class="tab-icon">📱</span><span>手机</span><span class="phone-badge" id="phoneBadge" style="display:none;">0</span></div>
   </div>
 </div>
@@ -591,17 +606,17 @@ const BUSINESSES=[
   {id:'fitness',name:'健身俱乐部',price:2000000,icon:'🏋️',monthlyIncome:[40000,100000],risk:0.15,unlockAsset:20000000}
 ];
 const TECH_INVESTMENTS=[
-  {id:'ai',name:'AI创业公司',minInvest:50000,returnMonths:12,outcomes:[
+  {id:'ai',name:'AI创业公司',icon:'🤖',minInvest:50000,returnMonths:12,outcomes:[
     {chance:0.25,multiplier:3.0,text:'🚀 AI公司上市，3倍回报！',type:'good'},
     {chance:0.35,multiplier:1.5,text:'📈 AI公司融资成功，1.5倍回报',type:'good'},
     {chance:0.40,multiplier:0.3,text:'💀 AI公司倒闭，亏损70%',type:'bad'}
   ]},
-  {id:'energy',name:'新能源项目',minInvest:80000,returnMonths:18,outcomes:[
+  {id:'energy',name:'新能源项目',icon:'⚡',minInvest:80000,returnMonths:18,outcomes:[
     {chance:0.20,multiplier:4.0,text:'🚀 新能源大爆发，4倍回报！',type:'good'},
     {chance:0.30,multiplier:1.8,text:'📈 新能源稳步增长，1.8倍回报',type:'good'},
     {chance:0.50,multiplier:0.2,text:'💀 新能源项目失败，亏损80%',type:'bad'}
   ]},
-  {id:'biotech',name:'生物科技',minInvest:60000,returnMonths:15,outcomes:[
+  {id:'biotech',name:'生物科技',icon:'🧬',minInvest:60000,returnMonths:15,outcomes:[
     {chance:0.15,multiplier:5.0,text:'🚀 新药研发成功，5倍回报！',type:'good'},
     {chance:0.25,multiplier:2.0,text:'📈 生物科技被收购，2倍回报',type:'good'},
     {chance:0.60,multiplier:0.1,text:'💀 临床试验失败，几乎全亏',type:'bad'}
@@ -806,7 +821,7 @@ const LUXURY_ITEMS=[
 const FORBES_NAMES=['马化腾','马云','钟睒睒','张一鸣','黄峥','李嘉诚','刘强东','雷军','王健林','李彦宏'];
 
 // ===== NPC System =====
-const NPCS={mom:{name:'妈妈',avatar:'👩'},dad:{name:'爸爸',avatar:'👨'},boss:{name:'张总',avatar:'👨‍💼'},colleague:{name:'小李',avatar:'👩‍💻'},hr:{name:'HR王姐',avatar:'👩‍💼'},bestie:{name:'老王',avatar:'🍻'},classmate:{name:'小张',avatar:'🎓'},mysterious:{name:'神秘人',avatar:'🎭'},banker:{name:'刘经理',avatar:'🏦'},realtor:{name:'小陈',avatar:'🏠'},spouse:{name:'配偶',avatar:'💑'},child:{name:'孩子',avatar:'👦'},delivery:{name:'快递',avatar:'📦'},system:{name:'系统',avatar:'📱'},wife:{name:'老婆',avatar:'👩'},husband:{name:'老公',avatar:'👨'}};
+const NPCS={mom:{name:'妈妈',avatar:'👩'},dad:{name:'爸爸',avatar:'👨'},boss:{name:'张总',avatar:'👨‍💼'},colleague:{name:'小李',avatar:'👩‍💻'},hr:{name:'HR王姐',avatar:'👩‍💼'},bestie:{name:'老王',avatar:'🍻'},classmate:{name:'小张',avatar:'🎓'},mysterious:{name:'神秘人',avatar:'🎭'},banker:{name:'刘经理',avatar:'🏦'},realtor:{name:'小陈',avatar:'🏠'},spouse:{name:'配偶',avatar:'💑'},child:{name:'孩子',avatar:'👦'},delivery:{name:'快递',avatar:'📦'},system:{name:'系统',avatar:'📱'},wife:{name:'老婆',avatar:'👩'},husband:{name:'老公',avatar:'👨'},gymCoach:{name:'健身教练',avatar:'🏋️'},neighbor:{name:'邻居老赵',avatar:'🧑‍🦳'},exColleague:{name:'前同事小周',avatar:'👨‍🔬'},mentor:{name:'导师李教授',avatar:'🧑‍🏫'},scammer:{name:'神秘号码',avatar:'📱'}};
 const PHONE_MESSAGES=[
 // ====== FAMILY ======
 {id:'mom_nag',npc:'mom',type:'wechat',ageMin:23,ageMax:35,chance:0.12,cooldown:24,rounds:[
@@ -1184,7 +1199,7 @@ function showFloatText(text,positive){
 function switchTab(name){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
-  const tabs=['life','work','invest','task','more','phone'];
+  const tabs=['life','work','invest','more','task','phone'];
   document.querySelectorAll('.tab-item').forEach((t,i)=>t.classList.toggle('active',tabs[i]===name));
   refreshPage(name);
 }
@@ -1212,6 +1227,55 @@ function initStockPrices(){STOCKS.forEach(s=>{if(!G.stockPrices[s.code])G.stockP
 
 // ========== 刷新UI ==========
 function refreshAll(){refreshLife();refreshHeader();updatePhoneBadge();}
+function refreshLearning(){
+  const el=document.getElementById('learningList');if(!el)return;
+  if(!G.learning)G.learning={completed:[],studying:null,studyEndMonth:0};
+  let html='';
+  // Currently studying progress
+  if(G.learning.studying){
+    const course=COURSES.find(c=>c.id===G.learning.studying);
+    if(course){
+      const remaining=Math.max(0,G.learning.studyEndMonth-G.totalMonths);
+      const total=course.months;
+      const pct=Math.round(((total-remaining)/total)*100);
+      html+='<div style="background:linear-gradient(135deg,#e8f4fd,#d6eaf8);padding:12px;border-radius:8px;margin-bottom:12px;">';
+      html+='<div style="display:flex;justify-content:space-between;align-items:center;">';
+      html+='<span style="font-size:14px;font-weight:600;">📖 正在学习：'+course.icon+' '+course.name+'</span>';
+      html+='<span style="font-size:12px;color:#3498db;font-weight:600;">'+pct+'%</span></div>';
+      html+='<div style="height:6px;background:#d0e8f7;border-radius:3px;margin-top:8px;"><div style="height:100%;background:#3498db;border-radius:3px;width:'+pct+'%;transition:width .3s;"></div></div>';
+      html+='<div style="font-size:11px;color:#777;margin-top:6px;">剩余 '+Math.max(0,remaining)+' 个月完成</div>';
+      html+='</div>';
+    }
+  }
+  if(G.learning.completed.length>0){
+    html+='<div style="font-size:12px;color:#999;margin-bottom:10px;">已完成 '+G.learning.completed.length+' 门课程</div>';
+  }
+  // All courses list
+  COURSES.forEach(c=>{
+    const done=G.learning.completed.includes(c.id);
+    const studying=G.learning.studying===c.id;
+    const available=!done&&!studying&&(!c.cond||c.cond());
+    const canAfford=G.cash>=c.cost;
+    let statusText='',statusColor='';
+    if(done){statusText='✅ 已完成';statusColor='#27ae60';}
+    else if(studying){statusText='📖 学习中';statusColor='#3498db';}
+    else if(!available){statusText='🔒 未解锁';statusColor='#999';}
+    else if(!canAfford){statusText='💸 余额不足';statusColor='#e74c3c';}
+    else{statusText='💰 '+fmt(c.cost);statusColor='#e67e22';}
+    html+='<div style="display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid #f0f0f0;">';
+    html+='<div style="font-size:28px;">'+c.icon+'</div>';
+    html+='<div style="flex:1;"><div style="font-weight:600;font-size:14px;">'+c.name+'</div>';
+    html+='<div style="font-size:12px;color:#999;margin-top:2px;">'+c.desc+'</div>';
+    html+='<div style="font-size:11px;color:#666;margin-top:3px;">IQ+'+c.iqBonus+' EQ+'+c.eqBonus+(c.healthBonus?' HP+'+c.healthBonus:'')+(c.moodBonus?' Mood+'+c.moodBonus:'')+' · '+c.months+'个月</div></div>';
+    html+='<div style="text-align:right;flex-shrink:0;"><div style="font-size:12px;color:'+statusColor+';font-weight:600;">'+statusText+'</div>';
+    if(available&&canAfford&&!G.learning.studying){
+      html+='<button class="btn btn-primary btn-sm" style="margin-top:6px;padding:5px 12px;font-size:12px;" onclick="startStudy(\''+c.id+'\')">开始学习</button>';
+    }
+    html+='</div></div>';
+  });
+  if(!html)html='<div style="font-size:12px;color:#999;padding:8px 0;">暂无学习计划</div>';
+  el.innerHTML=html;
+}
 function refreshHeader(){
   const job=JOBS[G.jobIndex];
   document.getElementById('headerSub').textContent='年龄 '+getAge()+'岁 · '+job.name+' · '+getMonth()+'月';
@@ -1235,8 +1299,8 @@ function setAttrBar(name,val){val=clamp(Math.round(val),0,200);document.getEleme
 function refreshPage(name){
   if(name==='work')refreshWork();
   else if(name==='invest'){refreshInvest('stock');refreshInvest('house');refreshInvest('business');refreshInvest('tech');}
-  else if(name==='task'){refreshTasks();refreshAchievements();refreshFiveDim();}
-  else if(name==='more')refreshMore();
+  else if(name==='task'){refreshTasks();refreshAchievements();refreshFiveDim();renderRanking();}
+  else if(name==='more')refreshLearning();
   else if(name==='phone')refreshPhone();
 }
 
@@ -1332,6 +1396,7 @@ function closeForbes(){
 function nextMonth(){
   if(G.gameOver)return;
   if(hasUnread()){showToast('📱 请先处理所有未读消息！');switchTab('phone');return;}
+  if(G._pendingDecision){showToast('⚡ 请先完成当前事件！');return;}
   advanceMonth();
   saveGame();refreshAll();
   checkAchievements();
@@ -1377,9 +1442,14 @@ function advanceMonth(){
       let r=randFloat(0,1),cumul=0,result=null;
       for(const o of tech.outcomes){cumul+=o.chance;if(r<=cumul){result=o;break;}}
       if(!result)result=tech.outcomes[tech.outcomes.length-1];
-      const payout=Math.round(t.investAmount*result.multiplier);
+      // Health indicator modifier: average of 4 stats affects multiplier
+      const avgHealth=((t.morale||80)+(t.techProgress||20)+(t.funding||50)+(t.market||50))/4;
+      const healthMod=0.5+(avgHealth/100);// 0.5x ~ 1.5x
+      let finalMult=result.multiplier*healthMod;
+      const payout=Math.round(t.investAmount*finalMult);
       G.cash+=payout;
-      G.events.push({text:result.text+' 获得 '+fmt(payout),type:result.type});
+      const healthDesc=avgHealth>=70?'项目运营良好':avgHealth>=40?'项目表现一般':'项目问题重重';
+      G.events.push({text:result.text+' ('+healthDesc+') 获得 '+fmt(payout),type:result.type});
       if(result.multiplier>=3)G.achievements.push('techking');
       return false;
     }
@@ -1468,7 +1538,8 @@ function advanceMonth(){
   G.monthlyTasks['advance']=true;
   G.monthlyTasks['promote']=true;
   // Phone triggers
-  if(!G.gameOver){initPhoneState();triggerFollowUps();if(Math.random()<0.4)triggerPhoneMessages();if(Math.random()<0.12)triggerMoments();generateNotifications();}
+  if(!G.gameOver){initPhoneState();triggerFollowUps();if(Math.random()<0.4)triggerPhoneMessages();if(Math.random()<0.12)triggerMoments();generateNotifications();generateGossipEvent();triggerGathering();}
+  checkStudyProgress();triggerProjectEvents();
   // Guide
   advanceGuide();
   // Game over check
@@ -1513,6 +1584,7 @@ function triggerDecisionEvent(){
 
 function showDecisionEvent(evt){
   G.decisionCount=(G.decisionCount||0)+1;
+  G._pendingDecision=true;
   let optionsHtml='';
   evt.options.forEach((opt,i)=>{
     const locked=(opt.reqIQ&&G.IQ<opt.reqIQ)||(opt.reqEQ&&G.EQ<opt.reqEQ);
@@ -1583,6 +1655,7 @@ function selectDecisionOption(optIndex){
 function closeDecisionEvent(){
   document.getElementById('choiceOverlay').classList.remove('show');
   window._currentDecision=null;
+  G._pendingDecision=false;
 }
 
 // ========== V2: Stock News System ==========
@@ -1995,7 +2068,13 @@ function refreshTech(){
   let myHtml='';
   G.techInvestments.forEach(t=>{
     const tech=TECH_INVESTMENTS.find(x=>x.id===t.id);if(!tech)return;
-    myHtml+='<div class="list-item"><div class="list-info"><div class="name">'+tech.name+'</div><div class="desc">投入：'+fmt(t.investAmount)+' | 剩余：'+t.monthsRemaining+'月</div></div></div>';
+    const pct=Math.round(((tech.returnMonths-t.monthsRemaining)/tech.returnMonths)*100);
+    const pendingCount=t.events?t.events.filter(e=>!e.resolved).length:0;
+    myHtml+='<div class="list-item" onclick="openProjectDetail(\''+t.id+'\')" style="cursor:pointer;">';
+    myHtml+='<div class="list-info"><div class="name">'+tech.icon+' '+tech.name;
+    if(pendingCount>0)myHtml+=' <span style="background:#e74c3c;color:#fff;font-size:10px;padding:1px 6px;border-radius:8px;">'+pendingCount+'待处理</span>';
+    myHtml+='</div><div class="desc">投入：'+fmt(t.investAmount)+' | 进度：'+pct+'% | 剩余：'+t.monthsRemaining+'月</div></div>';
+    myHtml+='<div class="list-action"><span style="font-size:12px;color:#3498db;">详情 ›</span></div></div>';
   });
   if(!myHtml)myHtml='<div class="text-center text-sm text-muted" style="padding:16px 0;">暂无进行中的投资</div>';
   document.getElementById('myTechList').innerHTML=myHtml;
@@ -2004,7 +2083,153 @@ function investTech(id){
   const t=TECH_INVESTMENTS.find(x=>x.id===id);
   if(G.techInvestments.find(x=>x.id===id)){showToast('已有进行中的投资！');return;}
   if(G.cash<t.minInvest){showToast('现金不足！');return;}
-  showModal({title:'投资 '+t.name,content:'最低投入：'+fmt(t.minInvest)+'\n投资周期：'+t.returnMonths+'个月\n结果将在到期时揭晓',success(res){if(res.confirm){G.cash-=t.minInvest;G.techInvestments.push({id:t.id,investAmount:t.minInvest,monthsRemaining:t.returnMonths});G.monthlyTasks['invest_stock']=true;saveGame();refreshTech();refreshLife();showFloatText('🚀 投资成功！',true);}}});
+  showModal({title:'投资 '+t.name,content:'最低投入：'+fmt(t.minInvest)+'\n投资周期：'+t.returnMonths+'个月\n结果将在到期时揭晓\n\n💡 投资后可点击项目查看详情，处理各种突发状况',success(res){if(res.confirm){
+    G.cash-=t.minInvest;
+    G.techInvestments.push({id:t.id,investAmount:t.minInvest,monthsRemaining:t.returnMonths,
+      morale:80,techProgress:20,funding:50,market:50,
+      events:[],eventLog:[],resolved:[]});
+    G.monthlyTasks['invest_stock']=true;saveGame();refreshTech();refreshLife();showFloatText('🚀 投资成功！',true);
+  }}});
+}
+
+// ===== 项目事件系统 =====
+const PROJECT_EVENTS={
+  ai:[
+    {title:'🔥 核心程序员被挖角',desc:'竞品公司开出双倍薪资挖你的CTO，他正在犹豫',type:'crisis',
+      options:[{text:'加薪挽留',cost:30000,effect:{morale:15},result:'CTO留下了，团队士气大振'},{text:'放他走，招新人',effect:{morale:-10,techProgress:-15},result:'CTO走了，项目延期两个月'}]},
+    {title:'📊 数据泄露风险',desc:'安全团队发现系统有漏洞，用户数据可能泄露',type:'crisis',
+      options:[{text:'立即修复（花钱）',cost:50000,effect:{techProgress:10,funding:-10},result:'花了50万修复，但避免了更大的灾难'},{text:'先上线再说',effect:{market:-20},result:'上线后被黑客攻击，口碑崩了'}]},
+    {title:'💰 新投资人意向',desc:'某知名VC对项目感兴趣，想追加投资',type:'opportunity',
+      options:[{text:'接受投资',effect:{funding:25,morale:10},result:'拿到新融资，团队更有信心了'},{text:'拒绝，保持独立',effect:{morale:5},result:'拒绝了投资，虽然没钱但保持了控制权'}]},
+    {title:'🤖 技术路线分歧',desc:'团队对AI模型的选择产生分歧，一方要自研，一方要买现成的',type:'decision',
+      options:[{text:'支持自研',effect:{techProgress:15,funding:-10},result:'自研成功！技术壁垒更强了'},{text:'买现成的快速上线',effect:{techProgress:5,funding:5},result:'快速上线抢占了市场，但技术壁垒不够'}]},
+    {title:'📈 用户增长爆发',desc:'产品突然火了，日活翻了10倍，服务器快撑不住了',type:'opportunity',
+      options:[{text:'紧急扩容',cost:80000,effect:{market:20,techProgress:5},result:'扛住了流量，用户留存率很高'},{text:'限流等待',effect:{market:-5},result:'用户体验差，很多人卸载了'}]},
+    {title:'⚖️ 政策监管',desc:'监管部门要求AI产品备案，流程繁琐且可能不通过',type:'crisis',
+      options:[{text:'全力配合备案',cost:30000,effect:{techProgress:-5,funding:-5},result:'备案通过了，合规运营更安心'},{text:'暂缓上线',effect:{market:-15,morale:-10},result:'错过了最佳上线时机'}]},
+  ],
+  energy:[
+    {title:'🏭 供应链断裂',desc:'核心原材料供应商破产，找不到替代品',type:'crisis',
+      options:[{text:'高价采购替代品',cost:100000,effect:{techProgress:-5,funding:-10},result:'虽然贵但项目继续推进'},{text:'暂停项目',effect:{morale:-15,techProgress:-20},result:'项目停了3个月，错过了窗口期'}]},
+    {title:'📋 政策补贴',desc:'政府出台新能源补贴政策，你的项目符合条件',type:'opportunity',
+      options:[{text:'申请补贴',effect:{funding:20,morale:10},result:'拿到500万补贴，项目起死回生'},{text:'不申请，不想欠人情',effect:{morale:5},result:'没拿补贴，但也避免了政策风险'}]},
+    {title:'⚡ 技术突破',desc:'研发团队在电池能量密度上取得重大突破',type:'opportunity',
+      options:[{text:'申请专利保护',cost:20000,effect:{techProgress:20},result:'专利到手，技术壁垒大幅提升'},{text:'快速量产',effect:{techProgress:10,market:10},result:'快速量产抢占市场'}]},
+    {title:'🌍 国际合作',desc:'一家德国公司想合资开发欧洲市场',type:'opportunity',
+      options:[{text:'合作出海',effect:{funding:15,market:15},result:'成功进入欧洲市场，收入翻倍'},{text:'专注国内市场',effect:{market:5},result:'国内市场做得更扎实了'}]},
+    {title:'💥 工厂事故',desc:'生产车间发生火灾，部分设备损坏',type:'crisis',
+      options:[{text:'保险理赔+重建',cost:60000,effect:{techProgress:-10,morale:-5},result:'重建后产能更大了，但损失不少'},{text:'外包生产',effect:{funding:-10},result:'外包后成本更高，利润变薄了'}]},
+  ],
+  biotech:[
+    {title:'🔬 临床试验失败',desc:'一期临床试验数据不理想，需要调整方案',type:'crisis',
+      options:[{text:'调整方案重来',cost:80000,effect:{techProgress:-10,funding:-15},result:'调整后二期试验成功了！'},{text:'放弃这个方向',effect:{morale:-20},result:'放弃后团队人心涣散'}]},
+    {title:'💊 专利获批',desc:'核心专利获得批准，技术壁垒大幅提升',type:'opportunity',
+      options:[{text:'专利授权收费',effect:{funding:20},result:'光专利费就赚了几百万'},{text:'自己用不授权',effect:{techProgress:10},result:'技术壁垒更强了'}]},
+    {title:'🏥 医院合作',desc:'三甲医院愿意做临床合作，但需要让渡部分权益',type:'decision',
+      options:[{text:'接受合作',effect:{techProgress:15,market:10},result:'合作顺利，产品更快上市'},{text:'拒绝，自己来',effect:{techProgress:-5,funding:-10},result:'自己做太慢了'}]},
+    {title:'🧬 新靶点发现',desc:'实验室发现了一个全新的药物靶点',type:'opportunity',
+      options:[{text:'全力研究新靶点',cost:50000,effect:{techProgress:20,funding:-5},result:'新靶点研究成功！领先竞品两年'},{text:'专注现有管线',effect:{techProgress:5},result:'稳扎稳打，现有管线进展顺利'}]},
+    {title:'📰 负面报道',desc:'媒体曝光你的临床试验有患者不良反应',type:'crisis',
+      options:[{text:'公开回应+暂停试验',cost:20000,effect:{market:-10,morale:-5},result:'危机处理得当，声誉受损有限'},{text:'沉默不回应',effect:{market:-20},result:'舆论发酵，投资人开始撤资'}]},
+  ],
+};
+
+function triggerProjectEvents(){
+  G.techInvestments.forEach(t=>{
+    if(t.monthsRemaining<=0||t.resolved.length>=6)return;// 最多6个事件
+    if(Math.random()>0.45)return;// 45%概率触发
+    const events=PROJECT_EVENTS[t.id];if(!events)return;
+    // 避免重复事件
+    const available=events.filter(e=>!t.resolved.includes(e.title));
+    if(available.length===0)return;
+    const evt=available[randInt(0,available.length-1)];
+    t.events.push({title:evt.title,desc:evt.desc,type:evt.type,options:evt.options,month:G.totalMonths,resolved:false});
+    // 推送到手机消息
+    const thread={
+      id:G.phone.nextId++,npcId:'system',npcName:'项目动态',npcAvatar:'📱',
+      type:'project_event',tplId:'project_'+t.id,
+      rounds:[{
+        npcMsgs:['📊 '+evt.title+'\n'+evt.desc+'\n\n'+evt.options.map((o,i)=>(i+1)+'. '+o.text+(o.cost?' ('+fmt(o.cost)+')':'')).join('\n')],
+        opts:evt.options.map((o,i)=>({text:o.text,fx:o.cost?{cash:-o.cost}:{},next:-1,
+          extraMsg:'选择后生效'}))
+      }],
+      currentRound:0,status:'unread',receivedMonth:G.totalMonths,readMonth:0,
+      flagClear:null,followUp:null,projectId:t.id,projectEventIdx:t.events.length-1
+    };
+    pushPhoneThread(thread);
+  });
+  updatePhoneBadge();updatePhoneHint();
+}
+
+function resolveProjectEvent(projectId,eventIdx,optionIdx){
+  const t=G.techInvestments.find(x=>x.id===projectId);if(!t)return;
+  const evt=t.events[eventIdx];if(!evt||evt.resolved)return;
+  const opt=evt.options[optionIdx];
+  if(opt.cost&&G.cash<opt.cost){showToast('余额不足！');return;}
+  if(opt.cost)G.cash-=opt.cost;
+  // Apply effects
+  if(opt.effect){
+    if(opt.effect.morale)t.morale=clamp(t.morale+(opt.effect.morale||0),0,100);
+    if(opt.effect.techProgress)t.techProgress=clamp(t.techProgress+(opt.effect.techProgress||0),0,100);
+    if(opt.effect.funding)t.funding=clamp(t.funding+(opt.effect.funding||0),0,100);
+    if(opt.effect.market)t.market=clamp(t.market+(opt.effect.market||0),0,100);
+  }
+  evt.resolved=true;evt.chosenOption=optionIdx;evt.result=opt.result;
+  t.resolved.push(evt.title);
+  t.eventLog.push({title:evt.title,result:opt.result,month:G.totalMonths});
+  saveGame();
+  showToast('✅ '+opt.result);
+  refreshTech();
+}
+
+function openProjectDetail(projectId){
+  const t=G.techInvestments.find(x=>x.id===projectId);if(!t)return;
+  const tech=TECH_INVESTMENTS.find(x=>x.id===projectId);if(!tech)return;
+  const pct=Math.round(((tech.returnMonths-t.monthsRemaining)/tech.returnMonths)*100);
+  let html='<div style="max-height:60vh;overflow-y:auto;">';
+  // Progress bar
+  html+='<div style="margin-bottom:12px;">';
+  html+='<div style="display:flex;justify-content:space-between;font-size:12px;color:#666;"><span>项目进度</span><span>'+pct+'%</span></div>';
+  html+='<div style="height:6px;background:#e9ecef;border-radius:3px;margin-top:4px;"><div style="height:100%;background:linear-gradient(90deg,#3498db,#27ae60);border-radius:3px;width:'+pct+'%;"></div></div>';
+  html+='<div style="font-size:11px;color:#999;margin-top:4px;">剩余 '+t.monthsRemaining+' 个月 | 投入 '+fmt(t.investAmount)+'</div></div>';
+  // Project health indicators
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">';
+  [{label:'团队士气',val:t.morale,icon:'💪',color:'#e74c3c'},{label:'技术进度',val:t.techProgress,icon:'🔬',color:'#3498db'},
+   {label:'资金状况',val:t.funding,icon:'💰',color:'#27ae60'},{label:'市场表现',val:t.market,icon:'📈',color:'#f39c12'}].forEach(item=>{
+    html+='<div style="background:#f8f9fa;padding:8px;border-radius:8px;">';
+    html+='<div style="font-size:11px;color:#666;">'+item.icon+' '+item.label+'</div>';
+    html+='<div style="height:4px;background:#e9ecef;border-radius:2px;margin:4px 0;"><div style="height:100%;background:'+item.color+';border-radius:2px;width:'+item.val+'%;"></div></div>';
+    html+='<div style="font-size:12px;font-weight:600;">'+item.val+'</div></div>';
+  });
+  html+='</div>';
+  // Pending events
+  const pending=t.events.filter(e=>!e.resolved);
+  if(pending.length>0){
+    html+='<div style="font-size:13px;font-weight:600;margin-bottom:8px;">⚡ 待处理事件</div>';
+    pending.forEach((evt,pi)=>{
+      const idx=t.events.indexOf(evt);
+      html+='<div style="background:#fff3cd;padding:10px;border-radius:8px;margin-bottom:8px;border-left:3px solid #ffc107;">';
+      html+='<div style="font-weight:500;font-size:13px;">'+evt.title+'</div>';
+      html+='<div style="font-size:12px;color:#666;margin:4px 0;">'+evt.desc+'</div>';
+      evt.options.forEach((opt,oi)=>{
+        html+='<div style="background:#fff;padding:8px;border-radius:6px;margin-top:6px;cursor:pointer;border:1px solid #e9ecef;" onclick="resolveProjectEvent(\''+projectId+'\','+idx+','+oi+')">';
+        html+='<span style="font-size:13px;">'+opt.text+'</span>';
+        if(opt.cost)html+=' <span style="font-size:11px;color:#e74c3c;">('+fmt(opt.cost)+')</span>';
+        html+='</div>';
+      });
+      html+='</div>';
+    });
+  }
+  // Event history
+  if(t.eventLog.length>0){
+    html+='<div style="font-size:13px;font-weight:600;margin:12px 0 8px;">📜 事件记录</div>';
+    t.eventLog.forEach(log=>{
+      html+='<div style="font-size:12px;color:#666;padding:6px 0;border-bottom:1px solid #f0f0f0;">';
+      html+='<span style="color:#999;">M'+log.month+'</span> '+log.title+' → '+log.result+'</div>';
+    });
+  }
+  html+='</div>';
+  showModal({title:'📊 '+tech.name+' 项目详情',content:html,confirmText:'关闭',cancelText:'',success(){}});
 }
 
 // ========== 成就系统 ==========
@@ -2083,7 +2308,7 @@ function claimTaskReward(){
 }
 
 // ========== 排行榜 ==========
-function refreshMore(){renderRanking();}
+function refreshMore(){refreshLearning();}
 function renderRanking(){
   const playerAsset=calcTotalAsset();
   const npcs=NPC_NAMES.map((name,i)=>({name,asset:Math.round(randFloat(50000,50000000)*Math.pow(0.85,i)),isPlayer:false}));
@@ -2229,7 +2454,614 @@ function confirmRestart(){
 
 // ===== Phone System Functions =====
 function initPhoneState(){
-  if(!G.phone)G.phone={threads:[],moments:[],notifications:[],flags:{},lastTriggerMonth:0,nextId:1};
+  if(!G.phone)G.phone={threads:[],moments:[],notifications:[],flags:{},lastTriggerMonth:0,nextId:1,activeChats:[]};
+}
+
+// ===== 通讯录：主动聊天话题库 =====
+const CHAT_TOPICS=[
+// ---- 妈妈 ----
+{npc:'mom',label:'妈妈',topics:[
+  {title:'💬 妈，最近咋样',cond(){return true;},rounds:[
+    {npc:['最近隔壁王阿姨家的儿子考上公务员了，你看看人家！'],opts:[{text:'妈，我工作也不错啊',fx:{mood:-3}},{text:'那挺厉害的',fx:{mood:2}},{text:'公务员有啥好的，工资低',fx:{mood:5,EQ:2}}]},
+    {npc:['对了，你二舅家闺女下个月结婚，你去不去？'],opts:[{text:'去，随多少份子？',fx:{cash:-2000}},{text:'最近忙，不去了',fx:{mood:-5}},{text:'去吧，顺便带女朋友',fx:{mood:-8}}]},
+    {npc:['还有啊，你张婶给你介绍了个对象，条件可好了，在银行上班...'],opts:[{text:'妈，我有安排',fx:{mood:-2}},{text:'行，见见呗',fx:{mood:5,EQ:3},flag:{met_banker_girl:1}}]},
+  ]},
+  {title:'八卦：邻居的秘密',cond(){return G.totalMonths>12;},rounds:[
+    {npc:['哎你知道吗，对面楼老刘，看着老实巴交的，上周被他老婆发现在外面有人！'],opts:[{text:'真的假的？！',fx:{mood:3,IQ:1}}]},
+    {npc:['千真万确！那女的是他以前同事，他老婆翻他手机发现的。现在闹离婚呢，整栋楼都知道了'],opts:[{text:'啧啧啧，知人知面不知心',fx:{mood:2}}]},
+    {npc:['所以说啊，你以后对女朋友好点，别整那些有的没的'],opts:[{text:'知道了妈',fx:{EQ:3}}]},
+  ]},
+  {title:'妈，我想创业',cond(){return G.totalMonths>24&&G.cash>100000;},rounds:[
+    {npc:['创业？！你那工作不是挺好的吗，瞎折腾什么！'],opts:[{text:'我想试试自己的能力',fx:{mood:5,IQ:2}},{text:'就是聊聊',fx:{mood:-2}}]},
+    {npc:['你爸当年也想开饭馆，后来算了吧。不过你大了，自己拿主意吧'],opts:[{text:'谢谢妈支持',fx:{mood:10,EQ:5}},{text:'放心，我有计划的',fx:{mood:5}}]},
+  ]},
+  {title:'妈，我炒股赚了',cond(){return G.totalMonths>6&&G.cash>200000;},rounds:[
+    {npc:['炒股？！你可别把钱都赔进去啊！你三叔当年炒股本金都亏没了！'],opts:[{text:'我有分寸的',fx:{mood:3}},{text:'放心，我赚了不少',fx:{mood:8}}]},
+    {npc:['赚了就好，但别太贪，见好就收。留点钱买套房比啥都强'],opts:[{text:'妈说得对',fx:{EQ:5}},{text:'我知道了',fx:{mood:2}}]},
+  ]},
+]},
+// ---- 爸爸 ----
+{npc:'dad',label:'爸爸',topics:[
+  {title:'💬 爸，最近身体咋样',cond(){return true;},rounds:[
+    {npc:['挺好的，就是血压有点高，医生让少吃咸的'],opts:[{text:'那您注意饮食啊',fx:{mood:5}},{text:'我给您买点保健品',fx:{cash:-3000,mood:8}}]},
+    {npc:['你妈天天念叨你，有空多回来看看'],opts:[{text:'这周末回去',fx:{mood:10}},{text:'最近太忙了...',fx:{mood:-5}}]},
+  ]},
+  {title:'爸，我想聊聊',cond(){return G.totalMonths>36;},rounds:[
+    {npc:['怎么了？工作不顺心？'],opts:[{text:'就是压力有点大',fx:{mood:3}},{text:'我升职了，想跟您说说',fx:{mood:10}}]},
+    {npc:['人这辈子啊，起起落落正常。你爸我年轻时也被裁员过，后来不也挺过来了'],opts:[{text:'您当年怎么挺过来的',fx:{IQ:5,EQ:3}}]},
+    {npc:['就是不要脸皮薄，该争的争，该放的放。你现在有家有口的，比你爸当年强多了'],opts:[{text:'谢谢爸',fx:{mood:10,EQ:5}}]},
+  ]},
+  {title:'爸的退休金',cond(){return G.totalMonths>120;},rounds:[
+    {npc:['退休金够花，你别操心我们。倒是你，工作别太拼了，身体要紧'],opts:[{text:'我知道了',fx:{mood:5}}]},
+    {npc:['你小时候啊，天天骑我脖子上，现在都当爸了...'],opts:[{text:'爸，我会好好的',fx:{mood:8}}]},
+  ]},
+]},
+// ---- 老王/闺蜜 ----
+{npc:'bestie',label:'老王',topics:[
+  {title:'💬 最近有啥八卦',cond(){return true;},rounds:[
+    {npc:['卧槽你听说了吗！咱高中班花李婷，嫁给那个富二代之后，人家公司破产了！'],opts:[{text:'真的？！然后呢',fx:{mood:5,IQ:2}},{text:'唉，世事无常',fx:{mood:2,EQ:3}}]},
+    {npc:['更炸裂的是，她前两天被拍到和她前男友吃饭，就是那个当医生的！'],opts:[{text:'这剧情也太狗血了',fx:{mood:8}},{text:'人之常情吧',fx:{EQ:2}}]},
+    {npc:['还有还有，咱班长张伟，现在做微商，天天在朋友圈刷屏卖减肥药，据说赚了不少'],opts:[{text:'微商也能赚钱？',fx:{mood:2}},{text:'他那产品靠谱吗',fx:{IQ:2}}]},
+  ]},
+  {title:'兄弟，陪我喝酒',cond(){return G.mood<40;},rounds:[
+    {npc:['看你心情不太好，出来喝一杯？老地方，烧烤摊走起'],opts:[{text:'走！',fx:{mood:15,health:-5}},{text:'算了，不想动',fx:{mood:-5}}]},
+    {npc:['来来来，先干一个！有啥不开心的说出来，憋着难受'],opts:[{text:'最近工作压力太大了',fx:{mood:5,EQ:3}},{text:'感情出了点问题',fx:{mood:5,EQ:5}}]},
+    {npc:['兄弟，人生就是这样，没有过不去的坎。你看我，当初被前女友甩了，现在不也挺好的'],opts:[{text:'你那叫活该',fx:{mood:8}},{text:'谢了兄弟',fx:{mood:10,EQ:3}}]},
+  ]},
+  {title:'八卦：老板的绯闻',cond(){return G.totalMonths>18;},rounds:[
+    {npc:['嘿嘿，跟你说个事，你别到处讲啊。你们公司老板，好像和新来的前台有情况'],opts:[{text:'你怎么知道的？',fx:{mood:5,IQ:2}},{text:'不会吧',fx:{mood:3}}]},
+    {npc:['我朋友在你们公司对面上班，中午吃饭的时候看到好几次了，俩人一起从停车场出来'],opts:[{text:'这信息量有点大',fx:{mood:5}}]},
+    {npc:['你说要是被老板娘知道了，会不会很精彩？哈哈'],opts:[{text:'别瞎传，万一不是呢',fx:{EQ:5}},{text:'确实精彩',fx:{mood:3}}]},
+  ]},
+  {title:'我有个赚钱路子',cond(){return G.totalMonths>30&&G.cash>50000;},rounds:[
+    {npc:['兄弟，最近认识一个做币圈的大哥，带我赚了不少，你也来？'],opts:[{text:'什么币？靠谱吗',fx:{IQ:2}},{text:'算了，我不碰这些',fx:{mood:2}},{text:'投多少能赚多少',fx:{mood:5}}]},
+    {npc:['就投个几万块，一个月翻倍不是梦。我上个月投了5万，现在8万了'],opts:[{text:'我再想想',fx:{mood:2}},{text:'行，我试试',fx:{cash:-30000},flag:{crypto_invested:1}}]},
+    {npc:['放心，这大哥有内幕消息，稳得很'],opts:[{text:'好吧，那我试试',fx:{cash:-20000},flag:{crypto_invested:1}},{text:'不了，我怕赔',fx:{mood:2,IQ:3}}]},
+  ]},
+]},
+// ---- 小李/同事 ----
+{npc:'colleague',label:'小李',topics:[
+  {title:'💬 公司最近啥消息',cond(){return true;},rounds:[
+    {npc:['听说了吗，隔壁组裁了3个人，今年指标还没完成呢'],opts:[{text:'我们组没事吧？',fx:{mood:-5}},{text:'大环境都这样',fx:{mood:2}}]},
+    {npc:['暂时还行，但老板心情不太好，你小心点别踩雷'],opts:[{text:'谢了提醒',fx:{mood:3}},{text:'他咋了？',fx:{IQ:2}}]},
+  ]},
+  {title:'老板今天又作妖了',cond(){return G.totalMonths>6;},rounds:[
+    {npc:['今天开会你看到了吧？老板当场发飙，把小张骂哭了'],opts:[{text:'看到了，好尴尬',fx:{mood:3}},{text:'小张也挺冤的',fx:{EQ:3}}]},
+    {npc:['其实是因为老板自己被大老板骂了，拿我们撒气呢'],opts:[{text:'职场就这样',fx:{mood:2,EQ:2}}]},
+    {npc:['对了，下个月团建，听说去海边，你去不去？'],opts:[{text:'去！放松一下',fx:{mood:10}},{text:'没兴趣',fx:{mood:-2}}]},
+  ]},
+  {title:'同事的秘密恋情',cond(){return G.totalMonths>24;},rounds:[
+    {npc:['你猜我今天看到啥了？市场部的Sarah和研发部的Mike，在楼下咖啡厅牵手！'],opts:[{text:'他俩？不是各自有对象吗？',fx:{mood:8,IQ:3}},{text:'关我啥事',fx:{mood:2}}]},
+    {npc:['更绝的是，Sarah男朋友就是咱们组的David！这下好看了'],opts:[{text:'这也太乱了吧',fx:{mood:5}},{text:'职场恋情确实复杂',fx:{EQ:3}}]},
+    {npc:['你说要不要提醒David？'],opts:[{text:'别，别掺和',fx:{EQ:5}},{text:'找个机会暗示一下吧',fx:{EQ:3}}]},
+  ]},
+]},
+// ---- 张总/老板 ----
+{npc:'boss',label:'张总',topics:[
+  {title:'💬 工作汇报',cond(){return true;},rounds:[
+    {npc:['嗯，你最近表现还行，继续保持'],opts:[{text:'谢谢张总',fx:{mood:5}},{text:'有什么需要改进的吗？',fx:{IQ:3}}]},
+    {npc:['下个季度有个大项目，你有兴趣参与吗？'],opts:[{text:'当然有！',fx:{mood:8,IQ:2}},{text:'什么项目？先了解下',fx:{IQ:3}}]},
+  ]},
+  {title:'我想谈谈薪资',cond(){return G.monthsAtJob>12;},rounds:[
+    {npc:['嗯...你确实做了不少贡献。不过公司今年预算紧...'],opts:[{text:'我理解，但希望考虑',fx:{mood:-3}},{text:'那有没有其他激励方式？',fx:{IQ:5}}]},
+    {npc:['这样吧，年底评估的时候我帮你争取一下'],opts:[{text:'谢谢张总',fx:{mood:5}},{text:'能具体点吗？',fx:{mood:2,IQ:2}}]},
+  ]},
+  {title:'办公室政治',cond(){return G.totalMonths>36;},rounds:[
+    {npc:['最近李副总那边有点小动作，你注意一下'],opts:[{text:'什么情况？',fx:{IQ:5}},{text:'好的，我会注意',fx:{mood:2}}]},
+    {npc:['他想把自己的人塞进你的项目组，你心里有数就行'],opts:[{text:'明白，我有分寸',fx:{mood:3,EQ:3}}]},
+    {npc:['你是我看好人，好好干'],opts:[{text:'谢谢张总信任',fx:{mood:10}}]},
+  ]},
+]},
+// ---- 小张/同学 ----
+{npc:'classmate',label:'小张',topics:[
+  {title:'💬 同学聚会',cond(){return G.totalMonths>12;},rounds:[
+    {npc:['下周六同学聚会，在XX酒店，你来不来？老同学好久没见了'],opts:[{text:'来！必须来',fx:{mood:10}},{text:'看情况吧',fx:{mood:2}}]},
+    {npc:['听说王磊现在做直播带货，月入百万呢。还有刘芳嫁了个外国人，在美国定居了'],opts:[{text:'混得都比我好啊',fx:{mood:-5}},{text:'各有各的活法',fx:{mood:3,EQ:5}}]},
+    {npc:['对了，你还记得班花陈雪吗？她好像离婚了，带个孩子'],opts:[{text:'啊？她不是嫁得挺好的吗',fx:{mood:5,IQ:2}},{text:'唉，不容易',fx:{EQ:3}}]},
+  ]},
+  {title:'你还记得那个谁吗',cond(){return G.totalMonths>24;},rounds:[
+    {npc:['你还记得高中那个总欺负你的刘强吗？'],opts:[{text:'记得，怎么了',fx:{mood:2}},{text:'别提了',fx:{mood:-3}}]},
+    {npc:['他现在送外卖呢，上次给我送餐，整个人老了好多。看着挺心酸的'],opts:[{text:'人生无常啊',fx:{mood:3,EQ:5}}]},
+    {npc:['所以说，当年学习好的不一定混得好，学习差的也不一定混得差'],opts:[{text:'这话在理',fx:{IQ:3,EQ:3}}]},
+  ]},
+  {title:'同学借钱',cond(){return G.cash>100000&&G.totalMonths>36;},rounds:[
+    {npc:['老同学，有个事不好意思开口...我最近周转不开，能借我5万块吗？'],opts:[{text:'行，转你',fx:{cash:-50000},flag:{lent_to_classmate:1}},{text:'不好意思，我最近也紧',fx:{mood:-3}},{text:'借多少？3万行吗',fx:{cash:-30000},flag:{lent_to_classmate:1}}]},
+    {npc:['太感谢了！下个月一定还你'],opts:[{text:'不急',fx:{mood:3}},{text:'记得还啊',fx:{mood:2}}]},
+  ]},
+]},
+// ---- 刘经理/银行 ----
+{npc:'banker',label:'刘经理',topics:[
+  {title:'💬 理财推荐',cond(){return G.cash>50000;},rounds:[
+    {npc:['朱先生您好，最近我们行有款新的理财产品，年化4.5%，保本保息'],opts:[{text:'听起来不错，详细介绍下',fx:{IQ:3}},{text:'太低了，有没有收益高的',fx:{mood:2}}]},
+    {npc:['还有一款挂钩黄金的结构性存款，最高能到8%，但有浮动风险'],opts:[{text:'我考虑考虑',fx:{mood:2}},{text:'来一个试试',fx:{cash:-50000},flag:{bank_product:1}}]},
+  ]},
+  {title:'贷款咨询',cond(){return true;},rounds:[
+    {npc:['朱先生，您目前的信用评级很好，如果需要贷款，利率可以给到最低'],opts:[{text:'现在利率多少？',fx:{IQ:3}}]},
+    {npc:['首套房3.85%，二套4.5%。如果您有公积金，还能再低一点'],opts:[{text:'我再考虑',fx:{mood:2}}]},
+  ]},
+  {title:'内幕消息',cond(){return G.totalMonths>48;},rounds:[
+    {npc:['朱先生，私下跟您说，我们行几个大客户最近在抄底某只股票，我不能说名字...'],opts:[{text:'什么板块的？',fx:{IQ:5,mood:5}}]},
+    {npc:['好像是科技板块的，具体我也不方便多说。您自己判断吧'],opts:[{text:'谢了，我留意',fx:{mood:3,IQ:2}}]},
+  ]},
+]},
+// ---- 小陈/中介 ----
+{npc:'realtor',label:'小陈',topics:[
+  {title:'💬 最近房价',cond(){return true;},rounds:[
+    {npc:['朱哥！最近看了几套房，有套特别适合您。市中心精装三房，业主急售降价20万！'],opts:[{text:'多少平？什么价？',fx:{IQ:2}},{text:'暂时不考虑',fx:{mood:2}}]},
+    {npc:['120平，现在只要280万，去年同户型卖到320万呢！过了这村没这店了'],opts:[{text:'我考虑下',fx:{mood:2}},{text:'太贵了，有便宜点的吗',fx:{mood:2}}]},
+  ]},
+  {title:'投资房产',cond(){return G.cash>300000;},rounds:[
+    {npc:['朱哥，新区那边有个商铺，回报率8%，月租金能到5000！'],opts:[{text:'具体说说',fx:{IQ:3}}]},
+    {npc:['投资型产品，50万一套，签15年租约，稳赚不赔。好多客户都买了'],opts:[{text:'我看看',fx:{mood:3}},{text:'风险太大了',fx:{mood:2,IQ:3}}]},
+  ]},
+]},
+// ---- 配偶/老婆 ----
+{npc:'spouse',label:'配偶',topics:[
+  {title:'💬 今晚吃什么',cond(){return G.spouse;},rounds:[
+    {npc:['你回来啦！今晚想吃什么？'],opts:[{text:'随便，你做什么我吃什么',fx:{mood:8}},{text:'出去吃吧，我请客',fx:{cash:-500,mood:10}}]},
+    {npc:['那我做个红烧肉吧，你最爱吃的'],opts:[{text:'好嘞！',fx:{mood:10}},{text:'又吃这个...',fx:{mood:-3}}]},
+  ]},
+  {title:'聊聊未来',cond(){return G.spouse&&G.totalMonths>24;},rounds:[
+    {npc:['老公/老婆，你觉得我们要不要换个大点的房子？'],opts:[{text:'好啊，我也有这想法',fx:{mood:5}},{text:'现在这样挺好的',fx:{mood:2}},{text:'等攒够钱再说',fx:{mood:3}}]},
+    {npc:['嗯，不管怎样，有你在就好'],opts:[{text:'我也是',fx:{mood:15,EQ:5}}]},
+  ]},
+  {title:'吵架了',cond(){return G.spouse;},rounds:[
+    {npc:['我们能不能好好谈谈？最近总觉得你心不在焉的'],opts:[{text:'对不起，最近压力太大了',fx:{mood:5,EQ:5}},{text:'我怎么了？',fx:{mood:-3}}]},
+    {npc:['你每天回来就玩手机，也不陪我说话...'],opts:[{text:'你说得对，我改',fx:{mood:10,EQ:8}},{text:'我工作也很累啊',fx:{mood:-5}}]},
+    {npc:['我知道你累，但我也需要你关心一下我啊'],opts:[{text:'以后每天陪你散步',fx:{mood:15,EQ:10}}]},
+  ]},
+]},
+];
+
+// ===== NPC人设系统 =====
+const NPC_PERSONALITIES={
+  mom:{name:'妈妈',avatar:'👩',traits:['唠叨','关心','爱攀比','节俭','护犊子'],
+    greetings:[{text:'妈，最近咋样？',tag:'日常'},{text:'妈，我工作上遇到点事',tag:'求助'},{text:'妈，我赚了点钱',tag:'分享'},{text:'妈，我想你了',tag:'温情'}],
+    responses:{日常:['最近还行，就是想你了','你吃了吗？别老不吃早饭','你三叔家儿子又升职了'],求助:['怎么了？跟妈说说','工作上的事别太往心里去','实在不行就换一个'],分享:['赚了就好，但别太张扬','留着别乱花，以后用钱的地方多','你三叔家儿子也赚了不少呢'],温情:['妈也想你啊，有空回来看看','你过得好妈就放心了','别光想，回来吃顿饭']},
+    followups:['对了，你二舅家闺女下个月结婚你去不去？','你张婶又给你介绍对象了...','隔壁王阿姨问我你有没有女朋友','你什么时候回来吃饭？','你小时候啊，天天骑我脖子上...']},
+  dad:{name:'爸爸',avatar:'👨',traits:['沉默','严厉','偶尔温情','报喜不报忧'],
+    greetings:[{text:'爸，身体咋样？',tag:'日常'},{text:'爸，想跟你聊聊',tag:'谈心'},{text:'爸，我升职了',tag:'分享'}],
+    responses:{日常:['挺好的，别操心','老样子','工作忙就不用老打电话'],谈心:['怎么了？','说吧','工作不顺心？'],分享:['嗯，好好干','别骄傲','继续努力']},
+    followups:['你妈天天念叨你，有空多回来','你小时候啊，天天骑我脖子上...','人这辈子起起落落正常，别太在意','钱不够花跟爸说，虽然不多','我当年也被裁员过，后来不也挺过来了']},
+  bestie:{name:'老王',avatar:'🍻',traits:['八卦','直爽','爱喝酒','损友','讲义气'],
+    greetings:[{text:'老王，最近有啥八卦？',tag:'八卦'},{text:'老王，出来喝一杯？',tag:'喝酒'},{text:'老王，我跟你说个事',tag:'倾诉'}],
+    responses:{八卦:['卧槽你终于问了！我憋好久了','来来来，坐好听我说','嘿嘿，这个你可得做好心理准备'],喝酒:['走起！老地方烧烤摊','必须的，我正愁没人陪','等我，我带两瓶好酒'],倾诉:['说！我听着呢','咋了兄弟，谁欺负你了','别憋着，说出来痛快']},
+    followups:['咱高中班花李婷离婚了你知道吗？','还有个更炸裂的，咱班长现在做微商...','隔壁老刘被他老婆抓包了！','你们公司那个谁，好像跟前台有情况','我有个赚钱路子，币圈的，来不来？']},
+  colleague:{name:'小李',avatar:'👩‍💻',traits:['谨慎','消息灵通','爱吐槽','职场生存'],
+    greetings:[{text:'小李，公司最近啥情况？',tag:'打听'},{text:'小李，今天那个会你怎么看？',tag:'吐槽'},{text:'小李，我打算跳槽',tag:'秘密'}],
+    responses:{打听:['别提了，又在裁员呢','暂时还行，但老板心情不太好','隔壁组走了好几个人了'],吐槽:['你也看到了吧？老板今天又发飙了','我觉得他是被大老板骂了拿我们撒气','唉，职场就这样'],秘密:['真的？你有目标了吗','别声张，我帮你留意','你走了我咋办']},
+    followups:['下个月团建你去不去？','市场部Sarah跟研发部Mike...','听说年终奖要打折','老板最近在面试新人，你小心点','你知道谁要跳槽吗？']},
+  boss:{name:'张总',avatar:'👨‍💼',traits:['圆滑','惜字如金','画饼','施压','偶尔真诚'],
+    greetings:[{text:'张总，最近工作上想跟您聊聊',tag:'汇报'},{text:'张总，想谈谈我的发展',tag:'谈发展'},{text:'张总，有个想法想跟您说',tag:'提案'}],
+    responses:{汇报:['嗯，说','你最近表现还行，继续保持','有什么问题直接说'],谈发展:['你有想法是好事','好好干，机会是给有准备的人的','年底评估的时候我帮你争取'],提案:['哦？说来听听','想法是好的，但要考虑实际','你先做个方案出来']},
+    followups:['下个季度有个大项目，你有兴趣吗？','李副总那边有点小动作，你注意一下','你是我看好人，好好干','公司准备上市，你要是能扛住这一波...','说实话，我看好你']},
+  classmate:{name:'小张',avatar:'🎓',traits:['攀比','怀旧','消息灵通','爱炫耀'],
+    greetings:[{text:'小张，最近混得咋样？',tag:'叙旧'},{text:'小张，同学聚会搞起来？',tag:'聚会'},{text:'小张，你还记得XX吗？',tag:'回忆'}],
+    responses:{叙旧:['还行吧，就是忙','比上不足比下有余','你呢？听说你混得不错'],聚会:['好啊！我来组织','必须的，好久没聚了','我看看时间，定好了通知你'],回忆:['记得啊！怎么突然提起他','你说那个谁啊，我现在还经常想起','哈哈，那时候的事...']},
+    followups:['听说王磊现在做直播带货，月入百万','你还记得班花陈雪吗？她好像离婚了','咱班长现在做微商，天天刷屏','刘强现在送外卖，上次碰到的','有个同学找我借钱，你说借不借？']},
+  banker:{name:'刘经理',avatar:'🏦',traits:['专业','殷勤','推销','信息差'],
+    greetings:[{text:'刘经理，最近有什么好产品？',tag:'理财'},{text:'刘经理，我想了解一下贷款',tag:'贷款'},{text:'刘经理，最近市场怎么看？',tag:'市场'}],
+    responses:{理财:['朱先生您好！正好有款产品适合您','最近我们行有款新产品，年化4.5%','保本保息的，很适合稳健型客户'],贷款:['您目前信用评级很好，利率可以给到最低','首套房3.85%，公积金还能再低','需要的话我帮您算个额度'],市场:['最近市场波动比较大，建议分散投资','我们几个大客户在抄底某个板块','具体我不能多说，您自己判断']},
+    followups:['还有一款挂钩黄金的结构性存款，最高8%','如果您有闲置资金，可以考虑大额存单','最近黄金涨得厉害，要不要配置一点？','朱先生，私下跟您说，几个大客户最近在...','基金定投其实也不错，要不要了解一下？']},
+  realtor:{name:'小陈',avatar:'🏠',traits:['热情','夸大','逼单','信息量大'],
+    greetings:[{text:'小陈，最近房价咋样？',tag:'行情'},{text:'小陈，有啥好盘推荐？',tag:'看房'},{text:'小陈，我想投资房产',tag:'投资'}],
+    responses:{行情:['朱哥！正好有事跟您说','最近市场回暖了，好多客户在看房','现在不买以后更贵'],看房:['朱哥！我手上正好有几套好房源','有套特别适合您，业主急售降价20万！','过了这村没这店了'],投资:['朱哥有眼光！新区那边有个商铺','回报率8%，月租金能到5000','好多客户都买了，稳赚不赔']},
+    followups:['120平只要280万，去年同户型卖到320万','还有一套学区房，业主急售，价格好商量','要不要周末去看看？我安排专车接送','这套真的很抢手，今天已经三个人问了','首付可以分期，要不要了解一下？']},
+  neighbor:{name:'邻居老赵',avatar:'🧑‍🦳',traits:['热心','八卦','操心','小区万事通'],
+    greetings:[{text:'赵叔，最近身体咋样？',tag:'日常'},{text:'赵叔，小区有啥新鲜事？',tag:'八卦'},{text:'赵叔，您看这个小区还行吗？',tag:'咨询'}],
+    responses:{日常:['挺好的，就是闲得慌','你工作忙不忙？我看你天天早出晚归','年轻人拼是好事，但也得注意身体'],八卦:['小朱！出大事了！物业经理卷钱跑了','楼上那对小两口天天吵架','对面楼老刘被他老婆抓包了'],咨询:['这小区还行，就是物业差点意思','住久了就有感情了','你要是买，我帮你砍价']},
+    followups:['听说卷了两百多万，好多业主气疯了','楼上那对昨晚又摔东西了','隔壁老王家儿子考上公务员了','你三姑问你啥时候带女朋友回来','你看对面楼老王，看着老实...']},
+  exColleague:{name:'前同事小周',avatar:'👨‍🔬',traits:['怀旧','感慨','信息量大','爱比较'],
+    greetings:[{text:'小周，好久不见！',tag:'叙旧'},{text:'小周，以前公司咋样了？',tag:'打听'},{text:'小周，你现在在哪高就？',tag:'近况'}],
+    responses:{叙旧:['老朱！好久不见！你怎么样','想死我了！最近在哪发财','哎呀，终于联系上了'],打听:['别提了，又裁员了','走了好几个人，现在人心惶惶','老板还是那个德行'],近况:['还行，在一家新公司','在创业呢，折腾折腾','刚跳槽，还在适应']},
+    followups:['咱以前那公司，又裁员了！','你还记得咱以前那个总监吗？被猎头挖走了','最惨的是小李，刚买了房就被裁了','所以说打工没安全感，还是得有副业','我听说前公司上市了，可惜没拿到期权']},
+  mentor:{name:'导师李教授',avatar:'🧑‍🏫',traits:['睿智','温和','惜字如金','有深度'],
+    greetings:[{text:'李老师，想请教您一个问题',tag:'请教'},{text:'李老师，最近在忙什么？',tag:'问候'},{text:'李老师，我遇到人生困惑了',tag:'迷茫'}],
+    responses:{请教:['嗯，说来听听','你这个问题问得好','这个嘛...要看你怎么想'],问候:['还行，在做研究','你呢？最近怎么样','有空来坐坐'],迷茫:['人生困惑是正常的','你先想想，你真正想要什么','35岁之前拼能力，35岁之后拼选择']},
+    followups:['记住，不要为了短期利益放弃长期价值','你现在做的每件事，都在为10年后的自己铺路','我最近在研究一个新课题，你有兴趣参与吗？','每个人答案不同，但核心是不后悔','你现在最大的困惑是什么？']},
+  gymCoach:{name:'健身教练',avatar:'🏋️',traits:['热情','直率','爱劝人健身','八卦体质'],
+    greetings:[{text:'教练，最近有啥训练计划？',tag:'训练'},{text:'教练，健身房有啥八卦？',tag:'八卦'},{text:'教练，我最近状态不好',tag:'吐槽'}],
+    responses:{训练:['兄弟来了！最近体脂有点高啊','得加点有氧了，不然白练','今天练哪个部位？'],八卦:['来来来，坐好听我说','这个你可得做好心理准备','嘿嘿，健身房的瓜可多了'],吐槽:['咋了兄弟？说出来','别憋着，练一场就好了','谁惹你了？']},
+    followups:['隔壁健身房那个教练，带学员跑了','那个富婆每月花2万请私教，结果...','那个天天来练的大哥，据说欠了一屁股债','选教练得选靠谱的，像我这种不多了','你上次说要减脂，进展咋样了？']},
+  scammer:{name:'神秘号码',avatar:'📱',traits:['诈骗','套路','紧迫感'],
+    greetings:[{text:'你好？谁啊？',tag:'接电话'}],
+    responses:{接电话:['您好，这里是XX银行，您的账户存在异常','恭喜您中奖100万！请先缴纳手续费','您的快递丢失了，需要理赔']},
+    followups:['请按1转接人工客服...','请把资金转入安全账户...','需先缴纳手续费5000元...']},
+  spouse:{name:'配偶',avatar:'💑',traits:['亲密','唠叨','需要陪伴','偶尔吵架'],
+    greetings:[{text:'亲爱的，今天辛苦了',tag:'温情'},{text:'我们聊聊吧',tag:'谈心'},{text:'今晚吃什么？',tag:'日常'},{text:'最近压力好大',tag:'倾诉'}],
+    responses:{温情:['你回来啦！','你也是，别太累了','有你在真好'],谈心:['怎么了？','你说，我听着','我们确实该好好聊聊'],日常:['你想吃什么？我做','出去吃吧，我请客','冰箱里有菜，随便做点'],倾诉:['怎么了？跟我说说','不管怎样我都在','别太累了，身体要紧']},
+    followups:['你最近回来就玩手机，也不陪我说话','我们能不能换个大点的房子？','你记不记得今天是什么日子？','我妈说让我们周末回去吃饭','有你在真好，不管怎样']},
+};
+
+// ===== 渲染通讯录（人设驱动） =====
+function renderContacts(){
+  const el=document.getElementById('phone-contacts');if(!el)return;
+  if(!G.phone)G.phone={threads:[],moments:[],notifications:[],flags:{},lastTriggerMonth:0,nextId:1,activeChats:[]};
+  if(!G.phone.activeChats)G.phone.activeChats=[];
+  let html='<div style="padding:12px 16px 8px;font-size:12px;color:#999;">点击头像开始对话</div>';
+  Object.keys(NPC_PERSONALITIES).forEach(npcId=>{
+    const p=NPC_PERSONALITIES[npcId];
+    if(npcId==='spouse'&&!G.spouse)return;
+    if(npcId==='exColleague'&&G.totalMonths<12)return;
+    if(npcId==='mentor'&&G.totalMonths<18)return;
+    if(npcId==='gymCoach'&&G.totalMonths<6)return;
+    const hasNew=G.phone.activeChats&&G.phone.activeChats.some(ch=>ch.npcId===npcId&&ch.status==='active');
+    html+='<div class="contact-item" onclick="openProactiveChat(\''+npcId+'\')">';
+    html+='<div class="contact-avatar">'+p.avatar+'</div>';
+    html+='<div class="contact-info"><div class="contact-name">'+p.name+'</div>';
+    html+='<div class="contact-status">'+p.traits.slice(0,2).join('·')+'</div></div>';
+    if(hasNew)html+='<div style="width:8px;height:8px;border-radius:50%;background:#27ae60;flex-shrink:0;"></div>';
+    html+='<div class="contact-arrow">›</div></div>';
+  });
+  el.innerHTML=html;
+}
+
+// ===== 打开主动聊天（选择开场白） =====
+function openProactiveChat(npcId){
+  if(!G.phone)G.phone={threads:[],moments:[],notifications:[],flags:{},lastTriggerMonth:0,nextId:1,activeChats:[]};
+  if(!G.phone.activeChats)G.phone.activeChats=[];
+  const p=NPC_PERSONALITIES[npcId];if(!p)return;
+  G._openProactiveNpc=npcId;
+  // Use full-screen chat overlay
+  document.getElementById('chatName').textContent=p.avatar+' '+p.name;
+  const body=document.getElementById('chatBody');
+  body.innerHTML='<div style="text-align:center;padding:20px 0;color:#999;font-size:13px;"><div style="font-size:28px;margin-bottom:8px;">'+p.avatar+'</div>'+p.name+' · '+p.traits.join('/')+'<br><br>选择一个话题开始聊天 ↓</div>';
+  const opts=document.getElementById('chatOpts');
+  let optsHtml='';
+  p.greetings.forEach((g,i)=>{
+    optsHtml+='<div class="chat-opt" onclick="startProactiveChatWith(\''+npcId+'\','+i+')">'+g.text+'</div>';
+  });
+  optsHtml+='<div class="chat-opt" onclick="closeChat()" style="color:#999;">👋 返回通讯录</div>';
+  opts.innerHTML=optsHtml;
+  document.getElementById('chatOverlay').classList.add('show');
+}
+
+// ===== 开始对话（选择开场白后） =====
+function startProactiveChatWith(npcId,greetingIdx){
+  const p=NPC_PERSONALITIES[npcId];if(!p)return;
+  const greeting=p.greetings[greetingIdx];
+  const respArr=p.responses[greeting.tag];
+  if(!respArr||respArr.length===0){showToast('对话出错了');return;}
+  // Apply personality mood effect
+  const moodMap={日常:3,求助:5,分享:8,温情:12,八卦:5,喝酒:8,倾诉:5,打听:3,吐槽:3,秘密:5,汇报:3,谈发展:5,提案:3,叙旧:5,聚会:8,回忆:5,理财:3,贷款:3,市场:5,行情:3,看房:5,投资:5,训练:3,接电话:-5,温情:10,谈心:5,倾诉:8};
+  const mood=moodMap[greeting.tag]||3;
+  G.mood=clamp(G.mood+mood,0,200);
+  // Create active chat
+  const chat={id:G.phone.nextId++,npcId:npcId,npcName:p.name,npcAvatar:p.avatar,status:'active',greetingTag:greeting.tag,
+    playerMsg:greeting.text,npcResponses:respArr.slice(),currentResponse:0,followups:p.followups.slice(),
+    effect:{mood:mood}};
+  G.phone.activeChats.unshift(chat);
+  G._openProactiveChat=chat.id;
+  saveGame();updatePhoneBadge();
+  // Build chat in overlay
+  const body=document.getElementById('chatBody');
+  body.innerHTML='';
+  body.insertAdjacentHTML('beforeend','<div class="chat-bub player">'+greeting.text+'</div>');
+  body.insertAdjacentHTML('beforeend','<div class="chat-bub npc">'+respArr[randInt(0,respArr.length-1)]+'</div>');
+  body.scrollTop=body.scrollHeight;
+  // Show follow-ups
+  const opts=document.getElementById('chatOpts');
+  let optsHtml='';
+  const followups=chat.followups.slice(0,3);
+  followups.forEach((f,i)=>{
+    optsHtml+='<div class="chat-opt" onclick="continueProactiveChat(\''+npcId+'\','+i+')">💬 '+f+'</div>';
+  });
+  optsHtml+='<div class="chat-opt" onclick="endProactiveChat()" style="color:#999;">👋 结束对话</div>';
+  opts.innerHTML=optsHtml;
+}
+
+// ===== 继续对话 =====
+function continueProactiveChat(npcId,followupIdx){
+  const p=NPC_PERSONALITIES[npcId];if(!p)return;
+  const chat=G.phone.activeChats.find(c=>c.npcId===npcId&&c.status==='active');
+  if(!chat)return;
+  const followup=chat.followups[followupIdx];
+  if(!followup)return;
+  chat.followups.splice(followupIdx,1);
+  // NPC personality-based response
+  const trait=p.traits[randInt(0,p.traits.length-1)];
+  const traitMap={
+    '唠叨':['你听我说啊，这个事很重要','我说你啊，就是不听','年轻人就是不听老人言...'],
+    '关心':['你没事吧？','别太累了','身体要紧'],
+    '爱攀比':['你看人家XXX，多厉害','你看看你再看看人家','人家条件比你好多了'],
+    '节俭':['别乱花钱','省着点用','以后用钱的地方多着呢'],
+    '护犊子':['谁欺负你了？告诉我','我儿子/女儿最棒了','别怕，有妈/爸在'],
+    '八卦':['嘿嘿，你知道吗','这个事可有意思了','让我给你扒一扒'],
+    '直爽':['我就直说了','别磨叽','痛快点'],
+    '爱喝酒':['来喝一个','边喝边说','干了这杯再说'],
+    '损友':['就你？哈哈','你可拉倒吧','不是我说你...'],
+    '讲义气':['兄弟的事就是我的事','放心，有我呢','需要帮忙说一声'],
+    '谨慎':['这个...不太好说','你确定要听？','说了你别到处讲'],
+    '消息灵通':['这个我知道！','我听说是这样的','消息绝对靠谱'],
+    '爱吐槽':['你说这叫什么事啊','太过分了','我忍很久了'],
+    '职场生存':['小心点','别站错队','多做少说'],
+    '圆滑':['这个嘛...要看情况','你说得有道理','我考虑考虑'],
+    '惜字如金':['嗯','哦','好'],
+    '画饼':['机会是给有准备的人的','好好干，以后有的是机会','公司不会亏待你的'],
+    '施压':['这个季度指标还没完成呢','你要加油了','竞争很激烈啊'],
+    '偶尔真诚':['说实话，我看好你','加油，我相信你','别太有压力'],
+    '攀比':['你看人家混得多好','你再看看你','差距啊'],
+    '怀旧':['还记得那时候吗','真怀念啊','时间过得真快'],
+    '爱炫耀':['这个我熟','我跟你说啊','这你就不知道了吧'],
+    '专业':['从专业角度来说','建议你这样操作','风险控制很重要'],
+    '殷勤':['朱先生您放心','有什么需要随时联系','我帮您安排'],
+    '推销':['这款产品真的很适合您','现在买最划算','错过就没这个价了'],
+    '信息差':['这个信息一般人不知道','我告诉你个消息','内部消息'],
+    '热情':['来了来了！','欢迎欢迎','有什么需要的？'],
+    '夸大':['这个绝对好','百分百没问题','包你满意'],
+    '逼单':['今天不买明天就涨价了','就剩这一套了','犹豫就没了'],
+    '热心':['有什么事尽管说','别客气','邻里之间互相帮忙'],
+    '操心':['你这事我帮你操心','我帮你问问','别着急'],
+    '小区万事通':['这个我清楚','小区的事我都知道','问我就对了'],
+    '感慨':['人生啊...','不容易','慢慢来'],
+    '有深度':['你再想想','这个问题不简单','值得深思'],
+    '温和':['别着急','慢慢来','没事的'],
+    '亲密':['有你真好','我也想你','你是最棒的'],
+    '需要陪伴':['你能不能陪陪我','别老是忙','我想和你待会儿'],
+    '偶尔吵架':['你又怎么了','能不能讲点道理','我不想吵'],
+    '诈骗':['请配合我们的工作','这是最后机会','千万别告诉别人'],
+    '套路':['只要按照步骤操作','很简单','几分钟就好'],
+    '紧迫感':['时间紧迫','就现在','来不及了'],
+    '爱劝人健身':['你得练练了','光说不练假把式','来练一场就好了'],
+    '八卦体质':['嘿嘿，这个你听不听？','让我给你扒一扒','这个瓜可大了'],
+  };
+  const traitResponses=traitMap[trait]||['嗯嗯','是确实'];
+  const npcReply=traitResponses[randInt(0,traitResponses.length-1)];
+  // Append to chat overlay
+  const body=document.getElementById('chatBody');
+  body.insertAdjacentHTML('beforeend','<div class="chat-bub player">'+followup+'</div>');
+  body.insertAdjacentHTML('beforeend','<div class="chat-bub npc">'+npcReply+'</div>');
+  body.scrollTop=body.scrollHeight;
+  // Update options
+  const opts=document.getElementById('chatOpts');
+  let optsHtml='';
+  if(chat.followups.length>0){
+    chat.followups.slice(0,3).forEach((f,i)=>{
+      optsHtml+='<div class="chat-opt" onclick="continueProactiveChat(\''+npcId+'\','+i+')">💬 '+f+'</div>';
+    });
+  }else{
+    optsHtml+='<div style="text-align:center;color:#999;font-size:12px;padding:8px;">'+p.name+'：没什么好聊的了</div>';
+  }
+  optsHtml+='<div class="chat-opt" onclick="endProactiveChat()" style="color:#999;">👋 结束对话</div>';
+  opts.innerHTML=optsHtml;
+}
+
+// ===== 结束对话 =====
+function endProactiveChat(){
+  const chat=G.phone.activeChats.find(c=>c.npcId===G._openProactiveNpc&&c.status==='active');
+  if(chat)chat.status='ended';
+  G._openProactiveChat=null;G._openProactiveNpc=null;
+  saveGame();updatePhoneBadge();closeChat();
+}
+
+// ===== 学习充电系统 =====
+const COURSES=[
+  {id:'english',name:'英语口语班',icon:'🇬🇧',cost:5000,months:3,iqBonus:5,eqBonus:2,desc:'提升英语能力，外企机会+1',cond(){return true;}},
+  {id:'python',name:'Python编程',icon:'💻',cost:8000,months:4,iqBonus:8,eqBonus:0,desc:'掌握编程技能，解锁科技岗位',cond(){return true;}},
+  {id:'mba',name:'MBA研修班',icon:'🎓',cost:50000,months:6,iqBonus:15,eqBonus:10,desc:'系统学习管理，晋升管理层必备',cond(){return G.totalMonths>24;}},
+  {id:'cpa',name:'CPA考证班',icon:'📋',cost:12000,months:5,iqBonus:10,eqBonus:3,desc:'注册会计师证书，财务岗位敲门砖',cond(){return G.totalMonths>12;}},
+  {id:'design',name:'UI设计课',icon:'🎨',cost:6000,months:3,iqBonus:4,eqBonus:5,desc:'掌握设计技能，副业接单赚钱',cond(){return true;}},
+  {id:'fitness',name:'健身私教课',icon:'💪',cost:3000,months:2,iqBonus:0,eqBonus:3,healthBonus:15,moodBonus:5,desc:'强身健体，提升形象',cond(){return true;}},
+  {id:'cooking',name:'烹饪研习班',icon:'👨‍🍳',cost:2000,months:2,iqBonus:0,eqBonus:5,moodBonus:8,desc:'学做菜，提升生活品质',cond(){return true;}},
+  {id:'photo',name:'摄影大师班',icon:'📸',cost:4000,months:2,iqBonus:2,eqBonus:4,desc:'记录生活之美，副业拍照赚钱',cond(){return true;}},
+  {id:'piano',name:'钢琴课程',icon:'🎹',cost:8000,months:6,iqBonus:3,eqBonus:8,moodBonus:10,desc:'陶冶情操，社交加分项',cond(){return G.totalMonths>12;}},
+  {id:'realestate',name:'房产投资课',icon:'🏠',cost:15000,months:3,iqBonus:8,eqBonus:2,desc:'学习房产投资策略',cond(){return G.cash>100000;}},
+  {id:'stock_class',name:'股票进阶课',icon:'📈',cost:10000,months:3,iqBonus:10,eqBonus:0,desc:'技术分析+价值投资',cond(){return G.totalMonths>12;}},
+  {id:'public_speak',name:'演讲口才班',icon:'🎤',cost:5000,months:2,iqBonus:2,eqBonus:10,desc:'提升表达能力，职场社交利器',cond(){return true;}},
+];
+
+function showLearningPanel(){
+  if(!G.learning)G.learning={completed:[],studying:null,studyEndMonth:0};
+  let html='<div style="max-height:60vh;overflow-y:auto;">';
+  // Currently studying
+  if(G.learning.studying){
+    const course=COURSES.find(c=>c.id===G.learning.studying);
+    const remaining=G.learning.studyEndMonth-G.totalMonths;
+    html+='<div style="background:#e8f4fd;padding:12px;border-radius:8px;margin-bottom:12px;">';
+    html+='<div style="font-weight:600;">📖 正在学习：'+course.icon+' '+course.name+'</div>';
+    html+='<div class="text-sm text-muted" style="margin-top:4px;">剩余 '+Math.max(0,remaining)+' 个月完成</div>';
+    html+='</div>';
+  }
+  // Available courses
+  COURSES.forEach(c=>{
+    const done=G.learning.completed.includes(c.id);
+    const studying=G.learning.studying===c.id;
+    const available=!done&&!studying&&(!c.cond||c.cond());
+    const canAfford=G.cash>=c.cost;
+    let statusText='',statusColor='';
+    if(done){statusText='✅ 已完成';statusColor='#27ae60';}
+    else if(studying){statusText='📖 学习中';statusColor='#3498db';}
+    else if(!available){statusText='🔒 未解锁';statusColor='#999';}
+    else if(!canAfford){statusText='💸 余额不足';statusColor='#e74c3c';}
+    else{statusText='💰 '+fmt(c.cost);statusColor='#e67e22';}
+    html+='<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f0f0f0;">';
+    html+='<div style="font-size:24px;">'+c.icon+'</div>';
+    html+='<div style="flex:1;"><div style="font-weight:500;font-size:14px;">'+c.name+'</div>';
+    html+='<div class="text-sm text-muted">'+c.desc+'</div>';
+    html+='<div class="text-sm" style="margin-top:2px;">IQ+'+c.iqBonus+' EQ+'+c.eqBonus+(c.healthBonus?' HP+'+c.healthBonus:'')+' · '+c.months+'个月</div></div>';
+    html+='<div style="text-align:right;"><div style="font-size:12px;color:'+statusColor+';font-weight:500;">'+statusText+'</div>';
+    if(available&&canAfford&&!G.learning.studying){
+      html+='<button class="btn btn-primary btn-sm" style="margin-top:4px;padding:4px 10px;font-size:12px;" onclick="startStudy(\''+c.id+'\')">开始学习</button>';
+    }
+    html+='</div></div>';
+  });
+  html+='</div>';
+  showModal({title:'📚 学习充电中心',content:html,confirmText:'关闭',cancelText:'',success(){}});
+}
+
+function startStudy(courseId){
+  const course=COURSES.find(c=>c.id===courseId);
+  if(!course||G.cash<course.cost){showToast('余额不足！');return;}
+  if(G.learning.studying){showToast('正在学习中，完成后再报新课程');return;}
+  G.cash-=course.cost;
+  G.learning.studying=courseId;
+  G.learning.studyEndMonth=G.totalMonths+course.months;
+  showToast('📖 开始学习 '+course.name+'！'+course.months+'个月后完成');
+  saveGame();refreshAll();refreshLearning();
+}
+
+function checkStudyProgress(){
+  if(!G.learning||!G.learning.studying)return;
+  if(G.totalMonths>=G.learning.studyEndMonth){
+    const course=COURSES.find(c=>c.id===G.learning.studying);
+    G.learning.completed.push(G.learning.studying);
+    G.IQ=clamp(G.IQ+(course.iqBonus||0),0,200);
+    G.EQ=clamp(G.EQ+(course.eqBonus||0),0,200);
+    if(course.healthBonus)G.health=clamp(G.health+course.healthBonus,0,200);
+    if(course.moodBonus)G.mood=clamp(G.mood+course.moodBonus,0,200);
+    G.events.push({text:'🎓 完成学习：'+course.name+'！IQ+'+(course.iqBonus||0)+' EQ+'+(course.eqBonus||0),type:'good'});
+    showToast('🎉 恭喜完成 '+course.name+'！');
+    addNotification('achievement','🎓 完成学习：'+course.name);
+    G.learning.studying=null;G.learning.studyEndMonth=0;
+    saveGame();
+  }
+}
+
+// ===== 聚会系统 =====
+const GATHERINGS=[
+  {id:'classmate_dinner',name:'同学聚餐',npc:'classmate',icon:'🍽️',cost:200,moodBonus:8,eqBonus:3,desc:'老同学聚餐叙旧',
+   declineMsgs:['同学聚餐你都不来，太不合群了吧','大家都在问你呢，下次一定要来！'],
+   declineEffects:{mood:-5,eq:-2}},
+  {id:'team_build',name:'公司团建',npc:'colleague',icon:'🏖️',cost:0,moodBonus:12,eqBonus:5,desc:'团队建设活动',
+   declineMsgs:['团建都不来，老板会不高兴的','你不在大家都放不开啊'],
+   declineEffects:{mood:-8,eq:-3}},
+  {id:'birthday_party',name:'朋友生日趴',npc:'bestie',icon:'🎂',cost:300,moodBonus:10,eqBonus:4,desc:'给朋友庆生',
+   declineMsgs:['生日都不来，还是不是兄弟了','大家都等着你切蛋糕呢'],
+   declineEffects:{mood:-6,eq:-4}},
+  {id:'wedding',name:'参加婚礼',npc:'classmate',icon:'💒',cost:600,moodBonus:5,eqBonus:2,desc:'见证幸福时刻',
+   declineMsgs:['人家一辈子就结一次婚，你不来太说不过去了'],
+   declineEffects:{mood:-3,eq:-5}},
+  {id:'funeral',name:'参加葬礼',npc:'dad',icon:'🕯️',cost:200,moodBonus:-5,eqBonus:8,desc:'送别故人',
+   declineMsgs:['这种时候都不出现，人家会记一辈子的'],
+   declineEffects:{mood:-10,eq:-8}},
+  {id:'reunion',name:'老乡聚会',npc:'mom',icon:'🏠',cost:150,moodBonus:6,eqBonus:2,desc:'老乡见老乡',
+   declineMsgs:['你三姑特意问你来不来呢'],
+   declineEffects:{mood:-3,eq:-2}},
+  {id:'class_party',name:'KTV唱歌',npc:'bestie',icon:'🎤',cost:150,moodBonus:15,eqBonus:3,desc:'嗨唱一晚',
+   declineMsgs:['来吧来吧，少了你没意思'],
+   declineEffects:{mood:-4,eq:-1}},
+  {id:'networking',name:'行业交流会',npc:'boss',icon:'🤝',cost:0,moodBonus:3,eqBonus:8,desc:'拓展人脉',
+   declineMsgs:['多认识点人没坏处，下次别推了'],
+   declineEffects:{mood:-2,eq:-3}},
+];
+
+function triggerGathering(){
+  if(Math.random()>0.25)return;// 25%概率触发
+  const eligible=GATHERINGS.filter(g=>{
+    if(g.npc==='spouse'&&!G.spouse)return false;
+    if(g.npc==='boss'&&G.jobIndex<3)return false;
+    return true;
+  });
+  if(eligible.length===0)return;
+  const g=eligible[randInt(0,eligible.length-1)];
+  const npc=NPCS[g.npc]||{name:'朋友',avatar:'👤'};
+  // Create as phone thread
+  const thread={
+    id:G.phone.nextId++,npcId:g.npc,npcName:npc.name,npcAvatar:npc.avatar,
+    type:'gathering',tplId:g.id,
+    rounds:[{
+      npcMsgs:[npc.name+'邀请你参加'+g.icon+' '+g.name+'，'+g.desc+(g.cost>0?'（预计花费'+fmt(g.cost)+'）':'')],
+      opts:[
+        {text:'✅ 好的，我去！',fx:{mood:g.moodBonus,eq:g.eqBonus,cash:-g.cost},next:-1},
+        {text:'❌ 不好意思，去不了',fx:{mood:g.declineEffects.mood,eq:g.declineEffects.eq},next:-1,
+         extraMsg:npc.name+': '+g.declineMsgs[randInt(0,g.declineMsgs.length-1)]},
+      ]
+    }],
+    currentRound:0,status:'unread',receivedMonth:G.totalMonths,readMonth:0,flagClear:null,followUp:null
+  };
+  pushPhoneThread(thread);
+  saveGame();updatePhoneBadge();updatePhoneHint();
+}
+
+// ===== 新增NPC：健身房教练/邻居/前同事/导师 =====
+const EXTRA_NPCS={gymCoach:{name:'健身教练',avatar:'🏋️'},neighbor:{name:'邻居老赵',avatar:'🧑‍🦳'},exColleague:{name:'前同事小周',avatar:'👨‍🔬'},mentor:{name:'导师李教授',avatar:'🧑‍🏫'},scammer:{name:'神秘号码',avatar:'📱'},delivery:{name:'快递小哥',avatar:'🛵'}};
+
+// ===== 扩展通讯录聊天话题 =====
+const EXTRA_CHAT_TOPICS=[
+// ---- 健身教练 ----
+{npc:'gymCoach',label:'健身教练',topics:[
+  {title:'💪 最近训练计划',cond(){return G.totalMonths>6;},rounds:[
+    {npc:['兄弟来了！最近体脂有点高啊，得加点有氧了'],opts:[{text:'行，听你的',fx:{health:5,mood:3}},{text:'我最近太忙了',fx:{mood:-2}}]},
+    {npc:['我跟你说，隔壁健身房那个教练，带学员跑到人家老婆床上去了！'],opts:[{text:'什么？！这么狗血',fx:{mood:5,IQ:2}}]},
+    {npc:['所以说选教练得选靠谱的，像我这种老实人不多了哈哈'],opts:[{text:'你确实挺实在的',fx:{mood:3}}]},
+  ]},
+  {title:'🏋️ 健身房八卦',cond(){return G.totalMonths>12;},rounds:[
+    {npc:['你知道吗，健身房那个富婆，每个月花2万请私教，结果教练跟前台好上了'],opts:[{text:'这剧情...',fx:{mood:5}}]},
+    {npc:['还有那个天天来练的大哥，据说欠了一屁股债，就靠健身房社交拉客户'],opts:[{text:'健身房水真深',fx:{mood:3,IQ:2}}]},
+  ]},
+]},
+// ---- 邻居老赵 ----
+{npc:'neighbor',label:'邻居老赵',topics:[
+  {title:'🧑‍🦳 邻居闲聊',cond(){return true;},rounds:[
+    {npc:['小朱啊，最近工作忙不忙？我看你天天早出晚归的'],opts:[{text:'还行吧，习惯了',fx:{mood:2}},{text:'是挺累的',fx:{mood:-2}}]},
+    {npc:['年轻人拼是好事，但也得注意身体。你看隔壁老王，前年还在跑步呢，今年就...唉'],opts:[{text:'赵叔说得对',fx:{EQ:3}}]},
+  ]},
+  {title:'八卦：小区大事',cond(){return G.totalMonths>6;},rounds:[
+    {npc:['小朱！出大事了！物业经理卷钱跑了！'],opts:[{text:'真的？那我们的物业费...',fx:{mood:-3,IQ:2}}]},
+    {npc:['听说卷了两百多万，好多业主都气疯了。现在在组织维权呢'],opts:[{text:'我也去看看',fx:{mood:2}},{text:'算了，金额不大就认了',fx:{mood:-2}}]},
+    {npc:['还有啊，楼上那对小两口，天天吵架，昨晚还摔东西了'],opts:[{text:'唉，家家有本难念的经',fx:{EQ:3}}]},
+  ]},
+]},
+// ---- 前同事小周 ----
+{npc:'exColleague',label:'前同事小周',topics:[
+  {title:'👨‍🔬 老同事叙旧',cond(){return G.totalMonths>18;},rounds:[
+    {npc:['老朱！好久不见！听说你跳槽了？现在在哪高就？'],opts:[{text:'还行，在一家新公司',fx:{mood:5}},{text:'别提了，还在找',fx:{mood:-3}}]},
+    {npc:['我跟你说，咱以前那公司，又裁员了！走了好几个人'],opts:[{text:'还好我走了',fx:{mood:8}},{text:'唉，希望他们找到好工作',fx:{EQ:3}}]},
+    {npc:['对了，你还记得咱以前那个总监吗？他被猎头挖到对手公司了，年薪翻倍'],opts:[{text:'厉害啊',fx:{mood:3,IQ:2}}]},
+  ]},
+  {title:'🔥 职场爆料',cond(){return G.totalMonths>24;},rounds:[
+    {npc:['老朱，跟你说个事，咱以前那个部门，现在整个被砍了'],opts:[{text:'啊？那里面的人呢',fx:{mood:3,IQ:2}}]},
+    {npc:['有的转岗了，有的直接走了。最惨的是小李，刚买了房就被裁了'],opts:[{text:'太惨了',fx:{mood:2,EQ:3}}]},
+    {npc:['所以说啊，打工真的没安全感，还是得有自己的副业'],opts:[{text:'确实',fx:{mood:2,IQ:3}}]},
+  ]},
+]},
+// ---- 导师李教授 ----
+{npc:'mentor',label:'导师李教授',topics:[
+  {title:'🧑‍🏫 请教导师',cond(){return G.totalMonths>36;},rounds:[
+    {npc:['小朱啊，好久没联系了。最近在忙什么？'],opts:[{text:'在工作，想跟您请教',fx:{mood:5,IQ:3}}]},
+    {npc:['嗯，我最近在研究一个新课题，你有没有兴趣参与？虽然没钱但对履历有帮助'],opts:[{text:'有！',fx:{mood:8,IQ:5}},{text:'考虑考虑',fx:{mood:2}}]},
+  ]},
+  {title:'📖 人生建议',cond(){return true;},rounds:[
+    {npc:['小朱，你觉得人生最重要的是什么？'],opts:[{text:'赚钱',fx:{mood:2}},{text:'家庭',fx:{mood:5,EQ:5}},{text:'自由',fx:{mood:3}}]},
+    {npc:['嗯，每个人答案不同。但我告诉你，35岁之前拼能力，35岁之后拼人脉和选择'],opts:[{text:'受教了',fx:{IQ:5,EQ:5}}]},
+    {npc:['记住，不要为了短期利益放弃长期价值。你现在做的每件事，都在为10年后的自己铺路'],opts:[{text:'记住了',fx:{mood:5,IQ:3}}]},
+  ]},
+]},
+// ---- 诈骗电话 ----
+{npc:'scammer',label:'神秘号码',topics:[
+  {title:'📱 诈骗电话',cond(){return G.totalMonths>6;},rounds:[
+    {npc:['您好，这里是XX银行，您的账户存在异常，请按1转接人工客服...'],opts:[{text:'按1看看',fx:{cash:-5000},flag:{scammed:1}},{text:'挂断',fx:{mood:2,IQ:3}}]},
+    {npc:['(如果是按1)您好先生，您的账户涉嫌洗钱，需要配合调查，请把资金转入安全账户...'],opts:[{text:'好像不太对劲',fx:{IQ:5}},{text:'好的我转',fx:{cash:-20000},flag:{scammed_big:1}}]},
+  ]},
+  {title:'📱 中奖短信',cond(){return G.totalMonths>12;},rounds:[
+    {npc:['恭喜您中奖100万！请点击链接领取，需先缴纳手续费5000元'],opts:[{text:'这种骗局',fx:{mood:2,IQ:3}}]},
+    {npc:['(如果感兴趣)您好，我是领奖中心，手续费到账后24小时内发放奖金...'],opts:[{text:'算了不领了',fx:{mood:1}},{text:'汇款',fx:{cash:-5000},flag:{scammed:1}}]},
+  ]},
+]},
+];
+
+// Merge extra topics into CHAT_TOPICS
+EXTRA_CHAT_TOPICS.forEach(ext=>{
+  const existing=CHAT_TOPICS.find(t=>t.npc===ext.npc);
+  if(existing){existing.topics=existing.topics.concat(ext.topics);}
+  else{CHAT_TOPICS.push(ext);}
+});
+function generateGossipEvent(){
+  if(!G.phone||!G.phone.activeChats)return;
+  if(Math.random()>0.3)return;// 30%概率触发
+  const gossipTemplates=[
+    {npc:'bestie',texts:['刚听说！你以前追过的那个女生，现在整容了，完全认不出来！','你知道吗，咱们那个高中班主任，被学生举报收礼，现在调去当门卫了！','我前同事跳槽去了字节，年薪直接翻倍，太离谱了！']},
+    {npc:'colleague',texts:['财务部的小王，昨天被查出简历造假，直接开除了！','听说隔壁公司在挖我们组的人，给的薪资特别高','公司茶水间有人打架，因为抢微波炉用！']},
+    {npc:'classmate',texts:['你还记得隔壁班那个学霸吗？现在在送外卖，上次我看到他了','大学室友创业做电商，去年亏了200万，现在在卖房还债','高中那个暗恋你的女生，现在是网红了，粉丝50多万']},
+    {npc:'mom',texts:['你舅舅家的表弟，不学好，欠了网贷被人追债','隔壁老李的儿子考上清华了，你看看人家','你小学同学现在是大学教授了，出息了']},
+  ];
+  const tpl=gossipTemplates[Math.floor(Math.random()*gossipTemplates.length)];
+  const npc=NPCS[tpl.npc];
+  const msg=tpl.texts[Math.floor(Math.random()*tpl.texts.length)];
+  // Create a notification
+  addNotification('system','💬 '+npc.name+'发来八卦：'+msg);
+  G.phone.flags['_gossip_'+G.totalMonths]=msg;
+  saveGame();
 }
 
 function triggerPhoneMessages(){
@@ -2263,6 +3095,13 @@ function addPhoneThread(tpl){
   let npcName=NPCS[tpl.npc]?NPCS[tpl.npc].name:tpl.npc;
   let npcAvatar=NPCS[tpl.npc]?NPCS[tpl.npc].avatar:'👤';
   if(tpl.npc==='spouse'&&G.spouse){const sp=SPOUSES.find(s=>s.id===G.spouse);if(sp)npcName=sp.name;}
+  // Group by NPC: if existing unread/reading thread from same NPC, append as new round
+  const existing=G.phone.threads.find(t=>t.npcId===tpl.npc&&t.status!=='replied');
+  if(existing){
+    existing.rounds.push(...JSON.parse(JSON.stringify(tpl.rounds)));
+    G.phone.flags['last_'+tpl.id]=G.totalMonths;
+    updatePhoneBadge();return;
+  }
   const thread={
     id:G.phone.nextId++,npcId:tpl.npc,npcName:npcName,npcAvatar:npcAvatar,
     tplId:tpl.id,type:tpl.type||'wechat',
@@ -2271,12 +3110,12 @@ function addPhoneThread(tpl){
     followUp:tpl.followUp?JSON.parse(JSON.stringify(tpl.followUp)):null,
     flagClear:tpl.flagClear||null
   };
-  G.phone.threads.unshift(thread);
+  pushPhoneThread(thread);
   G.phone.flags['last_'+tpl.id]=G.totalMonths;
   updatePhoneBadge();
 }
 
-function hasUnread(){return G.phone&&G.phone.threads.some(t=>t.status!=='replied');}
+function hasUnread(){return G.phone&&G.phone.threads.some(t=>{if(t.status==='replied')return false;const r=t.rounds[t.currentRound];return r&&!r._playerChoice;});}
 
 function renderPhoneList(){
   const el=document.getElementById('phone-messages');if(!el)return;
@@ -2288,16 +3127,22 @@ function renderPhoneList(){
   G.phone.threads.forEach(t=>{
     const round=t.rounds[t.currentRound];
     let preview='[对话进行中]';
-    if(round&&round.npcMsgs&&round.npcMsgs.length>0)preview=round.npcMsgs[round.npcMsgs.length-1].substring(0,28)+'...';
+    if(round&&round.npcMsgs&&round.npcMsgs.length>0)preview=round.npcMsgs[round.npcMsgs.length-1].substring(0,32);
+    if(round&&round.npc&&round.npc.length>0)preview=round.npc[round.npc.length-1].substring(0,32);
     if(t.status==='replied')preview='[已回复]';
+    // Count unread rounds
+    let unreadCount=0;
+    for(let i=t.currentRound;i<t.rounds.length;i++){
+      if(!t.rounds[i]._playerChoice)unreadCount++;
+    }
     const timeStr=getTimeStr(t.receivedMonth);
-    const unread=t.status==='unread';
+    const unread=t.status==='unread'||(t.status==='reading'&&unreadCount>0);
     html+='<div class="msg-item" onclick="openThread('+t.id+')" style="'+(unread?'font-weight:600;':'')+'">';
     html+='<div class="msg-av">'+t.npcAvatar+'</div>';
-    html+='<div class="msg-bd"><div class="msg-nm">'+t.npcName+(t.type==='call'?' 📞':t.type==='sms'?' 💬':'')+'</div>';
+    html+='<div class="msg-bd"><div class="msg-nm">'+t.npcName+(t.type==='call'?' 📞':t.type==='sms'?' 💬':t.type==='gathering'?' 🎉':'')+'</div>';
     html+='<div class="msg-pv">'+preview+'</div></div>';
     html+='<div class="msg-mt"><div class="msg-tm">'+timeStr+'</div>';
-    if(unread)html+='<div class="msg-bg">新</div>';
+    if(unread)html+='<div class="msg-bg">'+(unreadCount>1?unreadCount+'条':'新')+'</div>';
     html+='</div></div>';
   });
   el.innerHTML=html;
@@ -2407,8 +3252,8 @@ function selectPhoneOption(optIdx){
 
 function closeChat(){
   document.getElementById('chatOverlay').classList.remove('show');
-  G._openThreadId=null;
-  renderPhoneList();updatePhoneBadge();
+  G._openThreadId=null;G._openProactiveChat=null;
+  renderPhoneList();renderContacts();updatePhoneBadge();
 }
 
 function applyPhoneFx(fx){
@@ -2520,13 +3365,16 @@ function renderNotifications(){
 function switchPhoneTab(tab){
   document.querySelectorAll('.phone-tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.phone-content').forEach(c=>c.classList.remove('active'));
-  event.currentTarget.classList.add('active');
+  const tabNames=['messages','contacts','moments','notifications'];
+  const idx=tabNames.indexOf(tab);
+  if(idx>=0){const allTabs=document.querySelectorAll('.phone-tab');if(allTabs[idx])allTabs[idx].classList.add('active');}
   document.getElementById('phone-'+tab).classList.add('active');
   if(tab==='messages')renderPhoneList();
+  else if(tab==='contacts')renderContacts();
   else if(tab==='moments')renderMoments();
   else if(tab==='notifications')renderNotifications();
 }
-function refreshPhone(){renderPhoneList();renderMoments();renderNotifications();updatePhoneBadge();updatePhoneHint();}
+function refreshPhone(){renderPhoneList();renderContacts();renderMoments();renderNotifications();updatePhoneBadge();updatePhoneHint();}
 function updatePhoneBadge(){
   const badge=document.getElementById('phoneBadge');if(!badge)return;
   const count=G.phone?G.phone.threads.filter(t=>t.status!=='replied').length:0;
@@ -2555,7 +3403,7 @@ window.addEventListener('load',()=>{
   if(loadGame()&&!G.gameOver){
     document.getElementById('welcomePage').style.display='none';
     document.getElementById('gameApp').style.display='flex';
-    initStockPrices();refreshAll();
+    initStockPrices();initPhoneState();refreshAll();
   }
 });
 const AI_ENGINE={
@@ -2870,3 +3718,17 @@ if(_origTriggerStockNews){
 </script>
 </body>
 </html>
+
+// ===== 归档：按NPC合并消息线程 =====
+function pushPhoneThread(thread){
+  // If same NPC has unread/reading thread, merge rounds into it
+  const existing=G.phone.threads.find(t=>t.npcId===thread.npcId&&t.status!=='replied');
+  if(existing){
+    existing.rounds.push(...thread.rounds);
+    // Keep the latest metadata
+    if(thread.projectId)existing.projectId=thread.projectId;
+    if(thread.projectEventIdx!==undefined)existing.projectEventIdx=thread.projectEventIdx;
+    updatePhoneBadge();updatePhoneHint();return;
+  }
+  G.phone.threads.unshift(thread);
+}
