@@ -4034,14 +4034,21 @@ ${JSON.stringify(gameState, null, 2)}
 
 ## 资金互动规则（必须严格执行）
 当对话涉及金钱时，你必须在回复末尾添加对应的标签（每个标签独占一行）：
-- 如果你要给玩家钱（比如给零花钱、还钱、投资支持），在回复最后加：[GIVE:金额数字]
-- 如果你要请玩家吃饭/消费，加：[TREAT:金额数字]
-- 如果你要向玩家借钱/要钱，加：[ASK:金额数字:简短原因]
+- 如果**你要给玩家钱**（比如给零花钱、还钱、投资支持、发红包），在回复最后加：[GIVE:金额数字]
+- 如果**你要请玩家吃饭/消费**，加：[TREAT:金额数字]
+- 如果**你要向玩家借钱/要钱**（玩家给你钱你才加这个），加：[ASK:金额数字:简短原因]
+
+⚠️ 关键区分：
+- 你主动给玩家钱 → [GIVE]，绝对不是[ASK]
+- 玩家说"借我点钱" → 你同意的话用[GIVE]，你不想给就说不加标签
+- 你缺钱想向玩家借 → 才用[ASK]
+- 方向搞反是严重错误！钱从你口袋到玩家 = GIVE，钱从玩家口袋到你 = ASK
 
 例如：
 用户说"给点零花钱"，你回复"行，拿去花吧"然后换行写"[GIVE:2000]"
-用户说"借我点钱交房租"，你回复"这么多？我也没多少啊"然后换行写"[ASK:1000:交房租]"
+用户说"借我点钱交房租"，你回复"这么多？行吧拿去"然后换行写"[GIVE:1000]"
 你请客吃饭，你回复"走，今天我请客"然后换行写"[TREAT:500]"
+你缺钱要借，你回复"最近手头紧，能借我点吗"然后换行写"[ASK:500:最近手头紧]"
 
 ## 重要规则
 1. 回复必须像真人聊天，口语化，自然随意
@@ -4209,6 +4216,15 @@ function processChatEffects(reply,npcId){
       triggered.push(trigger.msg);
     }
   });
+  // 安全纠错：如果文字内容是NPC给钱，但标签方向搞反了（用了ASK），自动纠正为GIVE
+  var hasGiveText=/(给你|转你|塞给你|发红包|给你钱|给你转|孝敬你)/.test(reply);
+  var hasAskTag=/\[ASK:\d+/.test(reply);
+  var hasGiveTag=/\[GIVE:\d+/.test(reply);
+  if(hasGiveText && hasAskTag && !hasGiveTag){
+    // 把 [ASK:金额:原因] 纠正为 [GIVE:金额]
+    reply=reply.replace(/\[ASK:(\d+):[^\]]*\]/g, function(m,p1){ return '[GIVE:'+p1+']'; });
+    triggered.push('🔄 系统纠正了资金方向');
+  }
   // Parse GIVE tag from AI reply - NPC gives money to player
   const giveMatch=reply.match(/\[GIVE:(\d+)\]/);
   if(giveMatch){
