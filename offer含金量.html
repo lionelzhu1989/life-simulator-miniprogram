@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>offer含金量 v3.0</title>
+<title>offer含金量 v3.5</title>
 <style>
 
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -303,6 +303,19 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 .moment-act{cursor:pointer;padding:4px 8px;border-radius:4px;}
 .moment-act:active{background:#f0f0f0;}
 .moment-act.liked{color:#e74c3c;}
+.moment-comments{margin-top:8px;padding:8px;background:#f7f7f7;border-radius:8px;}
+.moment-comment{display:flex;gap:6px;margin-bottom:6px;font-size:12px;line-height:1.4;}
+.moment-comment .mc-av{width:20px;height:20px;border-radius:10px;background:#e8e8e8;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;}
+.moment-comment .mc-nm{color:var(--primary);font-weight:500;}
+.moment-comment .mc-txt{color:#333;}
+.moment-player-comment{color:var(--primary)!important;font-weight:500;}
+.moment-likes{font-size:11px;color:var(--text-light);margin-top:4px;padding:4px 0;}
+.moment-input-wrap{display:flex;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid #eee;}
+.moment-input{flex:1;border:1px solid #ddd;border-radius:16px;padding:6px 12px;font-size:12px;outline:none;}
+.moment-input:focus{border-color:var(--primary);}
+.moment-send{background:var(--primary);color:#fff;border:none;border-radius:16px;padding:6px 12px;font-size:12px;cursor:pointer;}
+.moment-ask{display:inline-block;margin-top:6px;font-size:11px;color:var(--primary);cursor:pointer;padding:3px 8px;border:1px solid var(--primary);border-radius:12px;}
+.moment-ask:active{background:rgba(52,152,219,.1);}
 .notif-item{display:flex;align-items:flex-start;padding:12px 0;border-bottom:1px solid #f0f0f0;}
 .notif-ic{width:36px;height:36px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;margin-right:10px;}
 .notif-body{flex:1;}.notif-title{font-size:13px;font-weight:500;}.notif-txt{font-size:12px;color:var(--text-light);margin-top:2px;}.notif-tm{font-size:11px;color:var(--text-light);margin-top:4px;}
@@ -382,6 +395,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
   <div id="page-life" class="page active">
     <div id="tierBanner"></div>
     <div id="eventArea"></div>
+    <div id="romanceStatus" style="display:none;"></div>
     <div class="card">
       <div class="card-title"><span class="icon">💰</span>资产概览</div>
       <div class="money-big" id="totalAsset">¥0</div>
@@ -701,11 +715,11 @@ const DECISION_EVENTS=[
       {icon:'✈️',title:'出国交换一年',desc:'开阔眼界，但要花不少钱',tag:'特殊',tagCls:'tag-golden',reqIQ:110,reqEQ:80,
         effect:{cash:-50000,IQ:12,EQ:10,mood:15},result:'你在国外交换了一年，英语突飞猛进建立了国际视野，这段经历让你终身受益。'}
     ]},
-  {id:'campus_02',ageMin:19,ageMax:22,title:'💕 校园爱情',scene:'社团活动中，你认识了一个很聊得来的人。TA经常找你聊天，帮你带早餐，你们一起自习到深夜……你感觉到，TA可能对你有意思。',
+  {id:'campus_02',ageMin:19,ageMax:22,title:'💕 小雨的心意',scene:'小雨最近总是找你聊天，约你自习、吃饭、散步。今天她发来消息："周末一起去新开的甜品店吗？" 但你这周末有重要的课程报告要赶。',
     options:[
-      {icon:'💌',title:'勇敢表白',desc:'青春不留遗憾',tag:'勇敢',tagCls:'tag-safe',effect:{mood:20,EQ:5},result:'你鼓起勇气表白了！对方答应了，你们在一起了。大学的恋爱纯真而美好。'},
-      {icon:'🤔',title:'保持暧昧',desc:'享受暧昧但不承诺',tag:'犹豫',tagCls:'tag-risk',effect:{mood:5},result:'暧昧了一段时间，最后TA找到了别人。你有些后悔，但学业倒是没耽误。'},
-      {icon:'💪',title:'专注学业/事业',desc:'感情随缘，先提升自己',tag:'理性',tagCls:'tag-safe',effect:{IQ:5,mood:-5},result:'你选择专注自我提升，虽然错过了可能的恋情，但学业进步很大。'}
+      {icon:'💌',title:'答应小雨一起去',desc:'甜品和她都很重要',tag:'勇敢',tagCls:'tag-safe',effect:{mood:20,EQ:5},result:'你放下报告去了甜品店，小雨笑得很开心。你们聊了一下午，关系更近了一步。报告嘛……通宵赶完的。'},
+      {icon:'🤔',title:'跟小雨说下次再去',desc:'学业优先，下次一定',tag:'犹豫',tagCls:'tag-risk',effect:{mood:-5},result:'你跟小雨说了下周再去，她说"好吧"语气有点失落。之后她找你的频率明显低了，你有些后悔。'},
+      {icon:'💪',title:'两边都要',desc:'报告白天赶，晚上约她',tag:'拼命',tagCls:'tag-golden',effect:{mood:10,IQ:3},result:'你白天疯狂赶报告，晚上约小雨去了甜品店。虽然累但很充实，小雨说"你真厉害，两边都能搞定"。'}
     ]},
   {id:'campus_03',ageMin:20,ageMax:22,title:'🏢 实习选择',scene:'暑假到了，你拿到了两份实习Offer：一家是大厂但岗位一般，一家是小公司但能做核心业务。你怎么选？',
     options:[
@@ -721,6 +735,22 @@ const DECISION_EVENTS=[
       {icon:'🤝',title:'私下沟通',desc:'和对手谈谈，寻求合作而非对抗',tag:'高EQ',tagCls:'tag-golden',reqEQ:110,
         effect:{EQ:8,mood:5},result:'你主动找到对手提出合作方案，双方都获得了成长。这种成熟的处理方式让老师印象深刻。'}
     ]},
+  {id:'campus_romance_01',ageMin:18,ageMax:22,title:'📱 小雨的消息',scene:'你正在宿舍打游戏，小雨发来消息："你是不是又在打游戏？！我给你发了三条消息你都没回！" 你看了看，确实有3条未读。',options:[
+    {icon:'😅',title:'赶紧回复道歉',desc:'小雨生气了就麻烦了',tag:'认怂',tagCls:'tag-safe',effect:{mood:5,EQ:3},result:'你赶紧发了一串道歉表情包，小雨回了个"哼"但明显消气了。你说下次一定秒回，她发了个偷笑的表情。'},
+    {icon:'🎮',title:'打完这把再说',desc:'游戏不能坑队友',tag:'直男',tagCls:'tag-risk',effect:{mood:-5},result:'你打完游戏才回复，小雨已经不理你了。花了两天才哄好，期间她发了条朋友圈"有些人还不如游戏重要"。'},
+    {icon:'📱',title:'边打边回',desc:'两不耽误',tag:'聪明',tagCls:'tag-golden',reqEQ:105,effect:{mood:3},result:'你一边操作一边秒回小雨，虽然游戏输了但小雨很开心。她说"你居然能一边打游戏一边陪我聊天，厉害了"。'}
+  ]},
+  {id:'campus_romance_02',ageMin:19,ageMax:22,title:'🎂 小雨的生日',scene:'今天是小雨的生日！你早就记在日历上了。问题是，送什么礼物？预算有限，但又不能太敷衍。',options:[
+    {icon:'💐',title:'亲手做礼物+请吃饭',desc:'用心比花钱重要',tag:'浪漫',tagCls:'tag-safe',effect:{mood:15,EQ:5},result:'你花了一周做了一本纪念相册，记录了你们认识以来的点滴。小雨看到后眼眶红了，说"这是收到过最好的礼物"。'},
+    {icon:'💄',title:'买个大牌口红',desc:'女生都喜欢',tag:'稳妥',tagCls:'tag-safe',effect:{cash:-500,mood:10},result:'你买了支热门色号的口红，小雨很开心但说"你怎么知道我用这个牌子"，你偷偷做了功课的事被她发现了。'},
+    {icon:'🎉',title:'策划惊喜派对',desc:'叫上朋友们一起庆祝',tag:'高风险',tagCls:'tag-golden',reqEQ:110,effect:{mood:20,cash:-800},result:'你偷偷联系了小雨的室友们，策划了一场惊喜派对。小雨感动得哭了，说"你怎么这么好"。'},
+    {icon:'🤷',title:'发个红包算了',desc:'简单直接',tag:'直男',tagCls:'tag-risk',effect:{cash:-200,mood:-5},result:'你发了个520红包，小雨收了但没怎么说话。后来你才知道，她室友的男朋友准备了烛光晚餐……对比之下你的红包确实寒酸了点。'}
+  ]},
+  {id:'campus_romance_03',ageMin:20,ageMax:22,title:'😤 小雨吃醋了',scene:'小雨看到你朋友圈里和一个女同学的合照，发来消息："这个女生是谁啊？你们好像很熟的样子？" 语气明显不太高兴。',options:[
+    {icon:'解释',title:'好好解释',desc:'把事情说清楚',tag:'真诚',tagCls:'tag-safe',effect:{mood:5,EQ:5},result:'你耐心解释了这是小组作业的同学，还翻出聊天记录给她看。小雨说"好吧，我就是随便问问"，但明显松了口气。'},
+    {icon:'😏',title:'故意逗她',desc:'吃醋说明在乎嘛',tag:'调皮',tagCls:'tag-risk',effect:{mood:3},result:'你故意说"你是不是吃醋了？"小雨秒回"谁吃醋了！你想多了！"但发了一连串生气的表情。你哄了半天才好。'},
+    {icon:'🤦',title:'嫌她小题大做',desc:'这也值得生气？',tag:'直男',tagCls:'tag-risk',effect:{mood:-10},result:'你说"就是普通同学啊，你也太敏感了"。小雨三天没理你，你慌了。最后还是买了她爱喝的奶茶才缓和。'}
+  ]},
 
   // === Workplace early 22-30 ===
   {id:'work_01',ageMin:23,ageMax:28,title:'💼 跳槽还是留下',scene:'你在现在的工作干了两年，能力提升了不少。猎头找上门，一家竞品公司开出了1.5倍的薪资想挖你。但你对现在的团队有感情，老板也一直在培养你。',
@@ -887,7 +917,7 @@ const LUXURY_ITEMS=[
 const FORBES_NAMES=['马化腾','马云','钟睒睒','张一鸣','黄峥','李嘉诚','刘强东','雷军','王健林','李彦宏'];
 
 // ===== NPC System =====
-const NPCS={mom:{name:'妈妈',avatar:'👩'},dad:{name:'爸爸',avatar:'👨'},boss:{name:'张总',avatar:'👨‍💼'},colleague:{name:'小李',avatar:'👩‍💻'},hr:{name:'HR王姐',avatar:'👩‍💼'},bestie:{name:'老王',avatar:'🍻'},classmate:{name:'小张',avatar:'🎓'},mysterious:{name:'神秘人',avatar:'🎭'},banker:{name:'刘经理',avatar:'🏦'},realtor:{name:'小陈',avatar:'🏠'},spouse:{name:'配偶',avatar:'💑'},child:{name:'孩子',avatar:'👦'},delivery:{name:'快递',avatar:'📦'},system:{name:'系统',avatar:'📱'},wife:{name:'老婆',avatar:'👩'},husband:{name:'老公',avatar:'👨'},gymCoach:{name:'健身教练',avatar:'🏋️'},neighbor:{name:'邻居老赵',avatar:'🧑‍🦳'},exColleague:{name:'前同事小周',avatar:'👨‍🔬'},mentor:{name:'导师李教授',avatar:'🧑‍🏫'},scammer:{name:'神秘号码',avatar:'📱'}};
+const NPCS={mom:{name:'妈妈',avatar:'👩'},dad:{name:'爸爸',avatar:'👨'},boss:{name:'张总',avatar:'👨‍💼'},colleague:{name:'小李',avatar:'👩‍💻'},hr:{name:'HR王姐',avatar:'👩‍💼'},bestie:{name:'老王',avatar:'🍻'},classmate:{name:'小张',avatar:'🎓'},mysterious:{name:'神秘人',avatar:'🎭'},banker:{name:'刘经理',avatar:'🏦'},realtor:{name:'小陈',avatar:'🏠'},spouse:{name:'配偶',avatar:'💑'},child:{name:'孩子',avatar:'👦'},delivery:{name:'快递',avatar:'📦'},system:{name:'系统',avatar:'📱'},wife:{name:'老婆',avatar:'👩'},husband:{name:'老公',avatar:'👨'},gymCoach:{name:'健身教练',avatar:'🏋️'},neighbor:{name:'邻居老赵',avatar:'🧑‍🦳'},exColleague:{name:'前同事小周',avatar:'👨‍🔬'},mentor:{name:'导师李教授',avatar:'🧑‍🏫'},scammer:{name:'神秘号码',avatar:'📱'},campusGirl:{name:'小雨',avatar:'👧'}};
 const PHONE_MESSAGES=[
 // ====== FAMILY ======
 {id:'mom_nag',npc:'mom',type:'wechat',ageMin:23,ageMax:35,chance:0.12,cooldown:24,rounds:[
@@ -1218,8 +1248,9 @@ function defaultState(){
     // V2 new fields
     activeNews:[],decisionCount:0,
     unlockedTiers:{},luxuryItems:[],
-    forbesShown:false,shortPositions:{},phone:{threads:[],moments:[],notifications:[],flags:{},lastTriggerMonth:0,nextId:1,chatHistory:{}},
-    lifeEvents:[],socialContacts:[]
+    forbesShown:false,shortPositions:{},phone:{threads:[],moments:[],aiMoments:[],notifications:[],flags:{},lastTriggerMonth:0,nextId:1,chatHistory:{}},
+    lifeEvents:[],socialContacts:[],
+    romance:{npcId:null,stage:'none',affection:0,metMonth:0,lastInteraction:0}
   };
 }
 
@@ -1281,6 +1312,9 @@ function switchInvestTab(name){
 // ========== 初始化 ==========
 function startGame(){
   if(loadGame()&&!G.gameOver){
+    // Migration: ensure romance state exists for old saves
+    if(!G.romance)G.romance={npcId:null,stage:'none',affection:0,metMonth:0,lastInteraction:0};
+    if(!G.phone.aiMoments)G.phone.aiMoments=[];
     document.getElementById('welcomePage').style.display='none';
     document.getElementById('gameApp').style.display='flex';
     initStockPrices();initPhoneState();refreshAll();return;
@@ -1362,6 +1396,20 @@ function refreshLife(){
   renderTierBanner();
   renderLifeEvents();
   renderRecentMsgs();
+  // 恋爱状态显示（18-23岁）
+  const age=getAge();
+  const romanceEl=document.getElementById('romanceStatus');
+  if(romanceEl){
+    if(age>=18&&age<=23&&G.romance&&G.romance.npcId==='campusGirl'){
+      const aff=G.romance.affection;
+      const hearts=aff>=80?'💕💕💕💕':aff>=60?'💕💕💕🤍':aff>=40?'💕💕🤍🤍':aff>=20?'💕🤍🤍🤍':'🤍🤍🤍🤍';
+      const stageText=G.romance.stage==='dating'?'❤️ 已在一起':G.romance.stage==='close'?'💗 暧昧升温':G.romance.stage==='normal'?'💙 普通朋友':'🤍 刚认识';
+      romanceEl.innerHTML='<div style="background:linear-gradient(135deg,#fff0f5,#ffe4e8);border-radius:10px;padding:8px 12px;margin-top:8px;"><div style="font-size:12px;font-weight:600;color:#e74c3c;">👧 小雨 · '+stageText+'</div><div style="font-size:11px;margin-top:3px;">好感度：'+hearts+' '+aff+'</div></div>';
+      romanceEl.style.display='block';
+    }else{
+      romanceEl.style.display='none';
+    }
+  }
   document.getElementById('nextMonthBtn').disabled=G.gameOver;
 }
 
@@ -1529,6 +1577,28 @@ function nextMonth(){
   checkAchievements();
   if(G.gameOver)setTimeout(()=>showGameOver(),500);
 }
+const TEMPLATE_SMALL_EVENTS=[
+  {text:'💰 朋友还钱，收到3000元',type:'good',effect:{money:3000}},
+  {text:'💪 坚持健身，健康+3',type:'good',effect:{health:3}},
+  {text:'📚 课余学习，智商+2',type:'neutral',effect:{IQ:2,mood:-2}},
+  {text:'🎭 参加社团活动，情商+2',type:'neutral',effect:{EQ:2}},
+  {text:'🍻 朋友聚会，心情+5',type:'neutral',effect:{mood:5,money:-300}},
+  {text:'📱 手机被偷',type:'bad',effect:{money:-3000,mood:-5}},
+  {text:'🏥 生病住院',type:'bad',effect:{money:-8000,health:-8}},
+  {text:'🎰 买彩票中了2000元',type:'good',effect:{money:2000}},
+  {text:'📉 股市震荡，持仓亏损10%',type:'bad',effect:{stockLoss:0.1}},
+  {text:'📜 考下专业证书，智商+3',type:'neutral',effect:{IQ:3}},
+  {text:'☕ 路上遇到老同学，聊了半小时',type:'good',effect:{EQ:2,mood:3}},
+  {text:'🛒 超市打折，囤了一堆日用品',type:'neutral',effect:{money:-500,mood:3}},
+  {text:'🎵 堵车时听到一首好歌，心情变好',type:'good',effect:{mood:5}},
+  {text:'🌧️ 忘带伞淋了雨',type:'bad',effect:{health:-2,mood:-3}},
+  {text:'🎉 收到意外奖金500元',type:'good',effect:{money:500}},
+  {text:'💤 昨晚失眠，今天状态差',type:'bad',effect:{health:-3,mood:-5}},
+  {text:'🏃 晨跑时捡到100元',type:'good',effect:{money:100,mood:3}},
+  {text:'🍜 吃了碗超好吃的面，心情+4',type:'good',effect:{mood:4,money:-30}},
+  {text:'📚 看了一本好书，智商+2情商+1',type:'good',effect:{IQ:2,EQ:1}},
+  {text:'😤 被领导无故批评，心情-8',type:'bad',effect:{mood:-8}}
+];
 function advanceMonth(){
   G.totalMonths++;G.monthsAtJob++;G.events=[];
   G._encounterActive=false; // 重置月度场景标记
@@ -1640,36 +1710,42 @@ function advanceMonth(){
     triggerStockNews();
   }
   G.houses.forEach(h=>{const info=HOUSES.find(x=>x.id===h.id);const change=(Math.random()-0.45)*0.05*h.marketValue/12;h.marketValue=Math.round(h.marketValue+change);if(info)h.marketValue=Math.max(info.price*0.3,h.marketValue);});
-  // V2: Decision events (20% chance per month, age-appropriate)
-  if(Math.random()<0.20){
+  // V2: Decision events (40% chance per month, age-appropriate)
+  if(Math.random()<0.40){
     triggerDecisionEvent();
   }
-  // V2: Small random events still happen (15%)
-  if(Math.random()<0.15){
-    const smallEvents=[
-      {text:'💰 朋友还钱，收到3000元',type:'good',effect:{money:3000}},
-      {text:'💪 坚持健身，健康+3',type:'good',effect:{health:3}},
-      {text:'📚 课余学习，智商+2',type:'neutral',effect:{IQ:2,mood:-2}},
-      {text:'🎭 参加社团活动，情商+2',type:'neutral',effect:{EQ:2}},
-      {text:'🍻 朋友聚会，心情+5',type:'neutral',effect:{mood:5,money:-300}},
-      {text:'📱 手机被偷',type:'bad',effect:{money:-3000,mood:-5}},
-      {text:'🏥 生病住院',type:'bad',effect:{money:-8000,health:-8}},
-      {text:'🎰 买彩票中了2000元',type:'good',effect:{money:2000}},
-      {text:'📉 股市震荡，持仓亏损10%',type:'bad',effect:{stockLoss:0.1}},
-      {text:'📜 考下专业证书，智商+3',type:'neutral',effect:{IQ:3}}
-    ];
-    const evt=smallEvents[randInt(0,smallEvents.length-1)];
-    applySmallEvent(evt);
+  // V2: Small random events (35% chance, AI优先模板降级)
+  if(Math.random()<0.35){
+    if(AI_ENGINE.enabled&&AI_ENGINE._fallbackCount<AI_ENGINE.maxFallback){
+      callAI(buildSmallEventPrompt,'small').then(result=>{
+        if(result&&result.text){
+          applySmallEvent({text:result.text,type:result.type||'neutral',effect:result.effect||{}});
+        }else{
+          applySmallEvent(TEMPLATE_SMALL_EVENTS[randInt(0,TEMPLATE_SMALL_EVENTS.length-1)]);
+        }
+      }).catch(()=>{applySmallEvent(TEMPLATE_SMALL_EVENTS[randInt(0,TEMPLATE_SMALL_EVENTS.length-1)]);});
+    }else{
+      applySmallEvent(TEMPLATE_SMALL_EVENTS[randInt(0,TEMPLATE_SMALL_EVENTS.length-1)]);
+    }
   }
   const nm=getMonth();G.events.unshift({text:'📅 '+getAge()+'年'+nm+'月 · 净收入：'+fmt(net),type:net>=0?'good':'bad'});
   // Monthly task auto-complete
   G.monthlyTasks['advance']=true;
   G.monthlyTasks['promote']=true;
   // Phone triggers
-  if(!G.gameOver){initPhoneState();triggerFollowUps();if(Math.random()<0.4)triggerPhoneMessages();if(Math.random()<0.12)triggerMoments();generateNotifications();generateGossipEvent();triggerGathering();}
+  if(!G.gameOver){initPhoneState();triggerFollowUps();if(Math.random()<0.55)triggerPhoneMessages();if(Math.random()<0.50)triggerAIMoments().catch(()=>{if(Math.random()<0.15)triggerMoments();});generateNotifications();generateGossipEvent();triggerGathering();}
   // 社交拓展：每月有概率触发偶遇场景
   if(!G.gameOver && !G._encounter && !G._pendingDecision){
     tryTriggerEncounter();
+  }
+  // 恋爱状态：太久不聊天好感度衰减
+  if(G.romance&&G.romance.npcId==='campusGirl'&&getAge()<=23){
+    const monthsSinceInteraction=G.totalMonths-G.romance.lastInteraction;
+    if(monthsSinceInteraction>2){
+      G.romance.affection=clamp(G.romance.affection-Math.min(monthsSinceInteraction*2,10),0,100);
+      if(G.romance.affection<20)G.romance.stage='normal';
+      if(G.romance.affection<=0){G.romance.stage='none';G.romance.npcId=null;}
+    }
   }
   checkStudyProgress();triggerProjectEvents();
   // Guide
@@ -1781,6 +1857,17 @@ function selectDecisionOption(optIndex){
   closeDecisionEvent();
   showModal({title:evt.title,content:resultText,showCancel:false,confirmText:'继续'});
   G.events.push({text:evt.title+': '+opt.title,type:'neutral'});
+  // 恋爱事件更新恋爱状态
+  if(evt.id&&evt.id.indexOf('campus_romance')>=0){
+    if(!G.romance)G.romance={npcId:null,stage:'none',affection:0,metMonth:0,lastInteraction:0};
+    if(!G.romance.npcId){G.romance.npcId='campusGirl';G.romance.metMonth=G.totalMonths;G.romance.stage='normal';}
+    const affChange=opt.effect.mood>10?15:opt.effect.mood>5?8:opt.effect.mood<-5?-10:-3;
+    G.romance.affection=clamp(G.romance.affection+affChange,0,100);
+    G.romance.lastInteraction=G.totalMonths;
+    if(G.romance.affection>=80)G.romance.stage='dating';
+    else if(G.romance.affection>=50)G.romance.stage='close';
+    else G.romance.stage='normal';
+  }
   saveGame();refreshAll();
 }
 
@@ -2812,6 +2899,10 @@ const NPC_PERSONALITIES={
     greetings:[{text:'亲爱的，今天辛苦了',tag:'温情'},{text:'我们聊聊吧',tag:'谈心'},{text:'今晚吃什么？',tag:'日常'},{text:'最近压力好大',tag:'倾诉'}],
     responses:{温情:['你回来啦！','你也是，别太累了','有你在真好'],谈心:['怎么了？','你说，我听着','我们确实该好好聊聊'],日常:['你想吃什么？我做','出去吃吧，我请客','冰箱里有菜，随便做点'],倾诉:['怎么了？跟我说说','不管怎样我都在','别太累了，身体要紧']},
     followups:['你最近回来就玩手机，也不陪我说话','我们能不能换个大点的房子？','你记不记得今天是什么日子？','我妈说让我们周末回去吃饭','有你在真好，不管怎样']},
+  campusGirl:{name:'小雨',avatar:'👧',traits:['活泼','可爱','有点小脾气','会撒娇','直率'],
+    greetings:[{text:'在吗？',tag:'日常'},{text:'你在干嘛呀？',tag:'日常'},{text:'今天好无聊啊',tag:'吐槽'},{text:'我跟你说个事！',tag:'分享'},{text:'你是不是又在打游戏？',tag:'质问'}],
+    responses:{日常:['在呢','刚忙完','怎么了？'],吐槽:['哈哈怎么了','来聊聊','我陪你呀'],分享:['什么事？说来听听','快说快说','又有什么八卦'],质问:['没有啊！','就玩了一会儿','你管我呢（偷笑）']},
+    followups:['明天一起去图书馆吗？','食堂新出了个窗口，要不要试试','今天上课好困啊，都怪你昨晚跟我聊太晚','你周末有空吗？想去看电影','我室友说你长得挺帅的嘛','你怎么不主动找我聊天呀','今天天气好好，想出去走走','我刚拍了张自拍，你看看好看吗']},
 };
 
 
@@ -3631,12 +3722,20 @@ function generateGossipEvent(){
     {npc:'colleague',texts:['财务部的小王，昨天被查出简历造假，直接开除了！','听说隔壁公司在挖我们组的人，给的薪资特别高','公司茶水间有人打架，因为抢微波炉用！']},
     {npc:'classmate',texts:['你还记得隔壁班那个学霸吗？现在在送外卖，上次我看到他了','大学室友创业做电商，去年亏了200万，现在在卖房还债','高中那个暗恋你的女生，现在是网红了，粉丝50多万']},
     {npc:'mom',texts:['你舅舅家的表弟，不学好，欠了网贷被人追债','隔壁老李的儿子考上清华了，你看看人家','你小学同学现在是大学教授了，出息了']},
+    {npc:'campusGirl',texts:['今天食堂看到你了，你旁边那个女生是谁啊？🙄','我室友说在图书馆看到你和一个女生聊得很开心嘛','你昨天朋友圈发的那张照片，点赞的那个女生是你高中同学？','你最近怎么都不找我聊天了，是不是不想理我了','今天路上遇到你了，你怎么没看到我？还是假装没看到？']},
   ];
   const tpl=gossipTemplates[Math.floor(Math.random()*gossipTemplates.length)];
   const npc=NPCS[tpl.npc];
   const msg=tpl.texts[Math.floor(Math.random()*tpl.texts.length)];
-  // Create a notification
-  addNotification('system','💬 '+npc.name+'发来八卦：'+msg);
+  // 创建为消息而非通知——让NPC发一条消息过来
+  const thread={
+    id:G.phone.nextId++,npcId:tpl.npc,npcName:npc.name,npcAvatar:npc.avatar,
+    tplId:'gossip_'+tpl.npc+'_'+G.totalMonths,type:'wechat',
+    rounds:[{npcMsgs:[msg],opts:[{text:'哦？说来听听',fx:{mood:2},next:-1},{text:'真假的？',fx:{mood:1},next:-1},{text:'知道了',fx:{},next:-1}]}],
+    currentRound:0,status:'unread',receivedMonth:G.totalMonths,readMonth:null,
+    followUp:null,flagClear:null
+  };
+  pushPhoneThread(thread);
   G.phone.flags['_gossip_'+G.totalMonths]=msg;
   saveGame();
 }
@@ -4232,8 +4331,7 @@ function processChatEffects(reply,npcId){
     G.cash=clamp(G.cash+amount,-999999,999999999);
     const npcName=(NPC_PERSONALITIES[npcId]||{}).name||'NPC';
     triggered.push('💰 '+npcName+'给了你'+fmt(amount));
-    // Show money transfer notice in chat
-    addChatBubble('money-transfer','💰 收到转账 '+fmt(amount));
+    // 不再显示显式的转账标志，让NPC在对话中自然说出
     // Record in history
     recordMoneyHistory(npcId,'',npcName+'给了你¥'+amount,amount,'npc_gave');
     refreshLife();
@@ -4267,6 +4365,22 @@ function processChatEffects(reply,npcId){
     body.scrollTop=body.scrollHeight;
   }
   // Clean action tags from displayed reply
+  // 恋爱状态更新：与小雨聊天增加好感度
+  if(npcId==='campusGirl'){
+    if(!G.romance)G.romance={npcId:null,stage:'none',affection:0,metMonth:0,lastInteraction:0};
+    if(!G.romance.npcId){
+      G.romance.npcId='campusGirl';
+      G.romance.metMonth=G.totalMonths;
+      G.romance.stage='normal';
+    }
+    G.romance.affection=clamp(G.romance.affection+randInt(3,8),0,100);
+    G.romance.lastInteraction=G.totalMonths;
+    // Stage progression
+    if(G.romance.affection>=80)G.romance.stage='dating';
+    else if(G.romance.affection>=50)G.romance.stage='close';
+    else G.romance.stage='normal';
+    saveGame();
+  }
   return reply.replace(/\[GIVE:\d+\]/g,'').replace(/\[TREAT:\d+\]/g,'').replace(/\[ASK:\d+:.+?\]/g,'').trim();
 }
 
@@ -4300,7 +4414,7 @@ function detectPlayerGiveIntent(msg){
       return{amount:randInt(200,1000),type:'treat'};
     }
   }
-  // Lend patterns
+  // Lend patterns - 玩家借给NPC钱（"借你500"、"借给1000"）
   const lendPatterns=[
     /借你(\d+)/,/借给(\d+)/,/借你(\d+)块/
   ];
@@ -4311,6 +4425,17 @@ function detectPlayerGiveIntent(msg){
         const num=parseInt(m[i]);
         if(!isNaN(num)&&num>0)return{amount:num,type:'lend'};
       }
+    }
+  }
+  // 玩家向NPC借钱（"借我500"、"借给我1000"）- 不触发给钱确认，直接让AI处理
+  const borrowPatterns=[
+    /借我(\d+)/,/借给我(\d+)/,/借我(\d+)块/
+  ];
+  for(const bp of borrowPatterns){
+    const m=msg.match(bp);
+    if(m){
+      // 玩家向NPC借钱，不触发给钱确认，返回null让AI处理
+      return null;
     }
   }
   return null;
@@ -4583,20 +4708,102 @@ function triggerMoments(){
 
 function renderMoments(){
   const el=document.getElementById('phone-moments');if(!el)return;
-  if(!G.phone||G.phone.moments.length===0){
+  const aiM=G.phone&&G.phone.aiMoments?G.phone.aiMoments:[];
+  const tplM=G.phone?G.phone.moments:[];
+  const all=[...aiM.map(m=>({...m,_isAI:true})),...tplM.map(m=>({...m,_isAI:false}))];
+  all.sort((a,b)=>b.month-a.month);
+  if(all.length===0){
     el.innerHTML='<div class="text-center text-sm text-muted" style="padding:40px 0;"><div style="font-size:48px;margin-bottom:12px;">📷</div>朋友圈暂时没有新动态</div>';return;
   }
   let html='';
-  G.phone.moments.forEach(m=>{
+  all.forEach(m=>{
+    const isAI=m._isAI;
     html+='<div class="moment-card">';
     html+='<div class="moment-hd"><div class="moment-av">'+m.npcAvatar+'</div><div class="moment-nm">'+m.npcName+'</div><div class="moment-tm">'+getTimeStr(m.month)+'</div></div>';
     html+='<div class="moment-txt">'+m.text+'</div>';
-    html+='<div class="moment-acts">';
-    html+='<div class="moment-act '+(m.liked?'liked':'')+'" onclick="likeMoment('+m.id+')">'+(m.liked?'❤️':'🤍')+' '+(m.likeCount+(m.liked?1:0))+'</div>';
-    html+='<div class="moment-act" onclick="commentMoment('+m.id+')">💬 评论</div>';
-    html+='</div></div>';
+    // AI moments: show comments and likes
+    if(isAI){
+      const comments=m.comments||[];
+      const pComments=m.playerComments||[];
+      const allComments=[...comments,...pComments];
+      if(allComments.length>0){
+        html+='<div class="moment-comments">';
+        allComments.forEach(c=>{
+          html+='<div class="moment-comment"><div class="mc-av">'+c.npcAvatar+'</div><div><span class="mc-nm'+(c.byPlayer?' moment-player-comment':'')+'">'+c.npcName+':</span> <span class="mc-txt">'+c.text+'</span></div></div>';
+        });
+        html+='</div>';
+      }
+      // Likes
+      const likedNpcs=(m.likes||[]).map(id=>{const n=NPCS[id];return n?n.name:null;}).filter(Boolean);
+      if(likedNpcs.length>0||m.playerLiked){
+        html+='<div class="moment-likes">❤️ '+(m.playerLiked?'你, ':'')+likedNpcs.join('、')+' 觉得很赞</div>';
+      }
+      // Action buttons
+      html+='<div class="moment-acts">';
+      html+='<div class="moment-act '+(m.playerLiked?'liked':'')+'" onclick="likeAIGMoment('+m.id+')">'+(m.playerLiked?'❤️':'🤍')+' '+(m.playerLiked?likedNpcs.length+1:likedNpcs.length)+'</div>';
+      html+='<div class="moment-act" onclick="showMomentCommentInput('+m.id+')">💬 评论</div>';
+      html+='</div>';
+      // Comment input area (hidden by default)
+      html+='<div id="moment-input-'+m.id+'" style="display:none;margin-top:8px;">';
+      html+='<div class="moment-input-wrap">';
+      html+='<input class="moment-input" id="moment-tf-'+m.id+'" placeholder="写评论...">';
+      html+='<button class="moment-send" onclick="submitMomentComment('+m.id+')">发送</button>';
+      html+='</div></div>';
+      // "Ask NPC about this" button
+      html+='<div class="moment-ask" onclick="askAboutMoment('+m.id+')">💬 问问TA这件事</div>';
+    }else{
+      // Template moments: original behavior
+      html+='<div class="moment-acts">';
+      html+='<div class="moment-act '+(m.liked?'liked':'')+'" onclick="likeMoment('+m.id+')">'+(m.liked?'❤️':'🤍')+' '+(m.likeCount+(m.liked?1:0))+'</div>';
+      html+='<div class="moment-act" onclick="commentMoment('+m.id+')">💬 评论</div>';
+      html+='</div>';
+    }
+    html+='</div>';
   });
   el.innerHTML=html;
+}
+
+function likeAIGMoment(id){
+  if(!G.phone||!G.phone.aiMoments)return;
+  const m=G.phone.aiMoments.find(x=>x.id===id);if(!m)return;
+  m.playerLiked=!m.playerLiked;
+  if(m.playerLiked){
+    G.EQ=clamp(G.EQ+10,0,200);
+    showToast('❤️ 点赞成功！情商+10');
+  }
+  renderMoments();saveGame();refreshLife();
+}
+
+function showMomentCommentInput(id){
+  const wrap=document.getElementById('moment-input-'+id);
+  if(wrap)wrap.style.display=wrap.style.display==='none'?'block':'none';
+}
+
+function submitMomentComment(id){
+  if(!G.phone||!G.phone.aiMoments)return;
+  const m=G.phone.aiMoments.find(x=>x.id===id);if(!m)return;
+  const tf=document.getElementById('moment-tf-'+id);
+  const text=tf?tf.value.trim():'';
+  if(!text){showToast('请输入评论内容');return;}
+  if(!m.playerComments)m.playerComments=[];
+  m.playerComments.push({npcId:'player',npcName:'我',npcAvatar:'🧑',text:text,month:G.totalMonths,byPlayer:true});
+  G.EQ=clamp(G.EQ+20,0,200);
+  showToast('💬 评论成功！情商+20');
+  tf.value='';
+  renderMoments();saveGame();refreshLife();
+}
+
+function askAboutMoment(id){
+  if(!G.phone||!G.phone.aiMoments)return;
+  const m=G.phone.aiMoments.find(x=>x.id===id);if(!m)return;
+  // Open chat with the NPC who posted, referencing their post
+  const npcId=m.npcId;
+  const npc=NPCS[npcId];
+  if(!npc){showToast('找不到该联系人');return;}
+  // Store the moment reference for the AI to know about
+  G._askMomentContext={momentId:id,npcId:npcId,text:m.text};
+  // Open proactive chat with this NPC
+  openProactiveChat(npcId);
 }
 
 function likeMoment(id){
@@ -4686,9 +4893,9 @@ window.addEventListener('load',()=>{
 const AI_ENGINE={
   enabled:true,
   proxyUrl:'https://offer-ai-proxy.lionelzhu1989.workers.dev',
-  directUrl:'https://api.deepseek.com/v1/chat/completions',
-  apiKey:'sk-80feb150523e432bba305509fdaa1409',
-  model:'deepseek-chat',
+  directUrl:'https://open.bigmodel.cn/api/paas/v4/chat/completions',
+  apiKey:'00c673fe2f3d47288bbc9a2071c0c606.UtyqaSXj4OFLMA9V',
+  model:'GLM-4-Flash',
   useProxy:false,
   cache:{},// prompt hash → response
   pending:null,// current fetch promise
@@ -4730,34 +4937,178 @@ function buildDecisionPrompt(ctx){
 effect可选字段：cash(金额), health(0-100), mood(0-100), IQ(0-100), EQ(0-100), salaryBonus(小数)
 选项2-3个，至少一个稳健(tag-safe)一个激进(tag-risk)。
 tagCls只能是 tag-safe/tag-risk/tag-golden 之一。
-事件要符合玩家年龄和资产水平，有趣、有反转、贴近真实生活。`
+事件要符合玩家年龄和资产水平，有趣、有反转、贴近真实生活。
+
+【联动规则】（重要！）
+事件应该与玩家当前状态最相关的领域/人物联动，不要硬套。按以下优先级：
+- 18-22岁（校园期）：优先与学业、社团、实习、校园恋爱（小雨）相关，随机选择
+- 23-30岁（职场期）：优先与工作、跳槽、同事、薪资相关
+- 31-40岁（家庭期）：优先与家庭、子女、房贷、婚姻相关
+- 40岁+（成熟期）：优先与投资、健康、事业转型、子女教育相关
+- 如果玩家有房产/股票/创业等特定资产，事件也可以和该资产相关
+- 恋爱（小雨）只是选项之一，不要每次都选小雨
   },{
     role:'user',
     content:`玩家状态：${JSON.stringify(ctx)}
-请生成一个${ctx.age}岁、资产${ctx.totalAsset}的人可能遇到的人生决策事件。事件要和之前的不同，有新鲜感。`
+${'请根据玩家当前年龄（'+ctx.age+'岁）和状态，选择最相关的领域生成一个人生决策事件。'}
+事件要和之前的不同，有新鲜感。`
+  }];
+}
+
+function buildMomentsPrompt(ctx){
+  const npcPool=[
+    {id:'mom',name:'妈妈',avatar:'👩',traits:['唠叨','关心','节俭'],topics:['退休生活','做饭','广场舞','天气']},
+    {id:'dad',name:'爸爸',avatar:'👨',traits:['沉默','报喜不报忧'],topics:['钓鱼','下棋','养花','老战友']},
+    {id:'bestie',name:'老王',avatar:'🍻',traits:['八卦','直爽','爱喝酒'],topics:['喝酒','聚会','吐槽','赚钱']},
+    {id:'colleague',name:'小李',avatar:'💼',traits:['谨慎','消息灵通'],topics:['加班','公司八卦','行业动态']},
+    {id:'boss',name:'张总',avatar:'👔',traits:['圆滑','画饼'],topics:['管理','行业趋势','投资']},
+    {id:'classmate',name:'小张',avatar:'🎓',traits:['攀比','怀旧'],topics:['聚会','谁混得好','比较']},
+    {id:'banker',name:'刘经理',avatar:'🏦',traits:['专业','推销'],topics:['理财','基金','市场']},
+    {id:'realtor',name:'小陈',avatar:'🏠',traits:['热情','信息量大'],topics:['房价','投资','城市']},
+    {id:'neighbor',name:'邻居老赵',avatar:'🏘️',traits:['热心','八卦'],topics:['小区','菜价','天气']},
+    {id:'exColleague',name:'前同事小周',avatar:'🔄',traits:['怀旧','感慨'],topics:['前公司','跳槽','行业']},
+    {id:'mentor',name:'李教授',avatar:'📖',traits:['睿智','有深度'],topics:['读书','思考','人生']},
+    {id:'gymCoach',name:'健身教练',avatar:'💪',traits:['热情','直率'],topics:['健身','健康','饮食']},
+    {id:'campusGirl',name:'小雨',avatar:'👧',traits:['活泼','可爱','会撒娇'],topics:['日常','学习','约会','校园生活']}
+  ];
+  let available=npcPool.map(n=>n.id);
+  if(!ctx.married) available=available.filter(id=>id!=='spouse');
+  if(ctx.children<=0) available=available.filter(id=>id!=='child');
+  // 18-22岁：小雨高概率出现在朋友圈NPC池
+  if(ctx.age>=18&&ctx.age<=22&&Math.random()<0.4){available=['campusGirl'];}
+  return [{
+    role:'system',
+    content:`你是人生模拟游戏的AI朋友圈引擎。你需要模拟一个NPC在微信朋友圈发了一条动态，以及1-2个其他NPC的评论。
+
+可选NPC及其性格特点：
+${npcPool.filter(n=>available.includes(n.id)).map(n=>`- ${n.id}(${n.name}): 性格${n.traits.join('、')}，常发${n.topics.join('、')}`).join('\n')}
+
+【朋友圈规则】
+1. 选择最合适的NPC发一条朋友圈，内容要符合其性格和玩家当前状态
+2. 朋友圈要自然、真实，像真人发的：有emoji、有生活气息
+3. 给这条朋友圈安排1-2个其他NPC的评论，评论要符合评论者的性格
+4. 评论可以是吐槽、赞同、调侃、追问等
+5. 玩家点赞+10，评论+20 EQ
+
+必须返回严格JSON格式（不要markdown代码块），结构如下：
+{
+  "npc":"npcId",
+  "text":"朋友圈正文内容（50-100字，有emoji，像真人发的朋友圈）",
+  "comments":[
+    {"npc":"评论者npcId","text":"评论内容（15-30字，口语化）"},
+    {"npc":"评论者npcId","text":"评论内容"}
+  ]
+}
+
+【示例1】妈妈发的朋友圈：
+{"npc":"mom","text":"今天天气好，和老姐妹们去公园走了两圈，拍了好多花 🌸 晚上做了红烧排骨，手艺越来越好了！退休生活就是这么朴实无华 😄","comments":[{"npc":"neighbor","text":"张姐这排骨看着就香！"},{"npc":"bestie","text":"阿姨好会享受生活啊"}]}
+
+【示例2】老王发的朋友圈：
+{"npc":"bestie","text":"周五下班，和兄弟们搞一顿！人生苦短，先干为敬 🍺🍺🍺","comments":[{"npc":"colleague","text":"羡慕了，我们还在加班"},{"npc":"classmate","text":"老王你这酒量越来越好了"}]}
+
+【示例3】小雨发的朋友圈（校园恋爱期间）：
+{"npc":"campusGirl","text":"图书馆占座成功！今天的自习室风景真好 ☀️ 学习使我快乐（并不）"},{"npc":"classmate","text":"你旁边那个位置是给谁留的？😏"},{"npc":"bestie","text":"这图拍得也太好看了吧"}]`
+  },{
+    role:'user',
+    content:`玩家状态：年龄${ctx.age}岁，${ctx.jobLevel||'待业'}，资产${ctx.totalAsset}元，已婚：${ctx.married?'是':'否'}，子女：${ctx.children}人，心情${ctx.mood}，健康${ctx.health}，情商${ctx.EQ}
+请生成一条朋友圈动态及评论。选择最合适的NPC，内容要和玩家当前生活状态有关联。`
   }];
 }
 
 function buildPhonePrompt(ctx){
-  const npcList=Object.keys(NPCS).map(k=>NPCS[k].name+'('+k+')');
-  return[{
+  // 构建所有可聊天NPC的详细人设信息
+  const npcPersonalities = {
+    mom: {name:'妈妈',traits:['唠叨','关心','爱攀比','节俭','护犊子'],topics:['催婚','身体健康','工作累不累','花钱大手大脚','别人家孩子']},
+    dad: {name:'爸爸',traits:['沉默','严厉','偶尔温情','报喜不报忧'],topics:['工作顺不顺','身体怎么样','钱够不够花','少熬夜']},
+    bestie: {name:'老王',traits:['八卦','直爽','爱喝酒','损友','讲义气'],topics:['八卦','喝酒','吐槽','赚钱路子','一起玩']},
+    colleague: {name:'小李',traits:['谨慎','消息灵通','爱吐槽','职场生存'],topics:['公司八卦','老板动向','裁员','跳槽','年终奖']},
+    boss: {name:'张总',traits:['圆滑','惜字如金','画饼','施压','偶尔真诚'],topics:['加班','项目进度','晋升','画饼','表扬']},
+    classmate: {name:'小张',traits:['攀比','怀旧','消息灵通','爱炫耀'],topics:['聚会','谁混得好','谁离婚了','比较收入']},
+    banker: {name:'刘经理',traits:['专业','殷勤','推销','信息差'],topics:['理财产品','存款利率','基金','贷款']},
+    realtor: {name:'小陈',traits:['热情','夸大','逼单','信息量大'],topics:['房价','好房源','投资','学区房']},
+    neighbor: {name:'邻居老赵',traits:['热心','八卦','操心','小区万事通'],topics:['小区新闻','物业','邻里八卦']},
+    exColleague: {name:'前同事小周',traits:['怀旧','感慨','信息量大','爱比较'],topics:['以前公司','跳槽','近况','行业变化']},
+    mentor: {name:'李教授',traits:['睿智','温和','惜字如金','有深度'],topics:['人生建议','职业规划','深度思考']},
+    gymCoach: {name:'健身教练',traits:['热情','直率','爱劝人健身','八卦体质'],topics:['训练计划','健身房八卦','减脂增肌']},
+    spouse: {name:'配偶',traits:['亲密','唠叨','需要陪伴','偶尔吵架'],topics:['日常','陪伴','生活琐事','情感']},
+    child: {name:'孩子',traits:['天真','依赖','成长','叛逆'],topics:['学校','成绩','要钱','叛逆']},
+    mysterious: {name:'神秘人',traits:['神秘','信息量大','偶尔有用'],topics:['行业内幕','赚钱机会','警告']},
+    campusGirl: {name:'小雨',traits:['活泼','可爱','有点小脾气','会撒娇','直率'],topics:['日常','学习','约会','校园生活','情感','八卦']}
+  };
+  
+  // 根据玩家年龄和状态筛选合适的NPC
+  let availableNpcs = ['mom','dad','bestie','colleague','boss','classmate','neighbor','exColleague','mentor','gymCoach'];
+  if(ctx.age >= 25) availableNpcs.push('banker','realtor');
+  if(ctx.married) availableNpcs.push('spouse');
+  if(ctx.children > 0) availableNpcs.push('child');
+  if(Math.random() < 0.1) availableNpcs.push('mysterious');
+  // 校园恋爱：18-22岁期间，小雨高概率主动找玩家聊天
+  if(ctx.age >= 18 && ctx.age <= 22 && Math.random() < 0.45){
+    availableNpcs = ['campusGirl','campusGirl','campusGirl','mom','bestie','classmate'];
+  }
+  
+  return [{
     role:'system',
-    content:`你是人生模拟游戏的手机消息NPC。根据玩家状态，生成一条手机消息（微信聊天）。
+    content:`你是人生模拟游戏的AI对话引擎。你需要模拟不同性格的NPC主动给玩家发微信消息。
+
+【重要】你必须选择一个NPC来发起对话，不要让玩家选择NPC。
+
+可选NPC及其性格特点：
+${availableNpcs.map(id => {
+  const p = npcPersonalities[id];
+  return `- ${id}(${p.name}): 性格${p.traits.join('、')}，常聊${p.topics.join('、')}`;
+}).join('\n')}
+
+【对话规则】
+1. 根据NPC性格生成对话内容，要符合人设
+2. NPC说话要自然，像真人微信聊天
+3. 对话2-4轮，每轮NPC发1-2条消息
+4. 每轮给玩家1-3个回复选项
+5. 对话要和玩家当前状态相关（年龄、职业、资产等）
+6. 可以有emoji但不要太多
+
+【校园恋爱特别规则】（当选择campusGirl时）
+- 小雨是玩家的大学同学/校园暧昧对象，性格活泼可爱，会撒娇
+- 她主动找玩家聊天时，话题围绕：约吃饭、问在干嘛、分享日常、吐槽、撒娇、吃醋
+- 她说话要像真实的女大学生：会用"哈哈哈""emmm""你猜""哼"等语气词
+- 对话要自然推进关系：从日常闲聊→约出去玩→表白→在一起
+- 每次对话后如果有好感度变化，在fx中体现{mood:正数}表示好感提升
+
+【金额标签规则】（重要！）
+- 如果NPC要给玩家钱，在NPC的对话文本中自然地说出来（如"转你500块"、"给你发个红包"）
+- 然后在回复选项中用[GIVE:金额]标签触发转账
+- 如果NPC要向玩家借钱，在NPC的对话文本中自然地说出来（如"能借我2万周转吗"）
+- 然后在回复选项中用[ASK:金额:原因]标签触发决策
+- 【严禁方向搞反！NPC给玩家=用GIVE，NPC向玩家借钱=用ASK】
+
 必须返回严格JSON格式（不要markdown代码块），结构如下：
 {
-  "npc":"npcId（从以下选：mom/dad/spouse/bestie/classmate/colleague/boss/landlord/realtor/banker/mysterious）",
-  "type":"wechat或call或sms",
+  "npc":"npcId",
+  "type":"wechat",
   "rounds":[
     {"npcMsgs":["NPC说的话1","NPC说的话2"],"opts":[{"text":"玩家回复","fx":{},"next":-1}]}
   ]
 }
-fx可选：{mood:数字, health:数字, IQ:数字, EQ:数字, money:数字}
+fx可选：{mood:数字, health:数字, IQ:数字, EQ:数字, cash:数字, salaryBonus:小数}
 next:-1表示对话结束，next:1表示下一轮。
-对话2-4轮，自然真实，像真人在聊天。可以有emoji但不要太多。`
+
+【示例】妈妈发来消息：
+{"npc":"mom","type":"wechat","rounds":[
+  {"npcMsgs":["儿子，最近忙不忙？","妈看你朋友圈老是加班，要注意身体啊"],opts:[{"text":"妈，我挺好的，就是最近项目忙","fx":{},"next":1}]},
+  {"npcMsgs":["别太累了，钱是赚不完的","对了，你二姨家小明都结婚了...你什么时候带个对象回来？"],opts:[{"text":"妈，我有在看了，别催了","fx":{},"next":-1},{"text":"妈，其实我有对象了","fx":{},"next":-1}]}
+]}`
   },{
     role:'user',
-    content:`玩家状态：${JSON.stringify(ctx)}
-请生成一条${ctx.age}岁的人会收到的手机消息。可能是家人问候、同事吐槽、朋友分享、老板安排任务等。要有生活气息。`
+    content:(function(){
+      let base=`玩家状态：年龄${ctx.age}岁，${ctx.jobLevel||'待业'}，资产${ctx.totalAsset}元，已婚：${ctx.married?'是':'否'}，子女：${ctx.children}人，心情${ctx.mood}，健康${ctx.health}`;
+      // If player clicked "ask about moment", include the moment context
+      if(G._askMomentContext){
+        const mc=G._askMomentContext;
+        base+=`\n\n【重要】玩家刚看了${mc.npcId}发的一条朋友圈，内容是："${mc.text}"。玩家想和TA聊这件事。请让该NPC主动发消息，话题围绕这条朋友圈展开（可以是解释、补充、或者聊相关的事）。强制选择npcId=${mc.npcId}。`;
+        delete G._askMomentContext;
+      }
+      return base+`\n请生成一条NPC主动发来的微信消息。选择最合适的NPC，对话要自然、有生活气息。`;
+    })()
   }];
 }
 
@@ -4772,11 +5123,19 @@ function buildSmallEventPrompt(ctx){
   "effect":{效果}
 }
 effect可选：{money:金额, health:数字, mood:数字, IQ:数字, EQ:数字, stockLoss:小数(如0.1)}
-事件要简短有趣，贴近生活。`
+事件要简短有趣，贴近生活。
+
+【联动规则】（重要！）
+事件应与玩家当前年龄/状态最相关的领域联动：
+- 18-22岁：学业、社团、实习、校园恋爱（小雨）随机选
+- 23-30岁：工作、同事、跳槽、社交相关
+- 31-40岁：家庭、子女、健康、理财相关
+- 40岁+：投资、健康、子女教育、事业相关
+- 可以涉及小雨，但不是必须，随机选择最合适的领域。`
   },{
     role:'user',
     content:`玩家：${ctx.age}岁，${ctx.jobLevel}，资产${ctx.totalAsset}，健康${ctx.health}，心情${ctx.mood}
-生成一个小事件。`
+${'请根据玩家年龄和状态选择最相关的小事件。'}`
   }];
 }
 
@@ -4905,6 +5264,41 @@ async function triggerAINews(){
   return true;
 }
 
+// ========== AI朋友圈系统 ==========
+async function triggerAIMoments(){
+  if(!G.phone||!AI_ENGINE.enabled)return;
+  // 30% chance per month, or 50% if EQ>120
+  const chance=G.EQ>120?0.5:0.3;
+  if(Math.random()>chance)return;
+  const result=await callAI(buildMomentsPrompt,'moments');
+  if(!result||!result.npc||!result.text)return;
+  const npcData=NPCS[result.npc]||{name:'未知',avatar:'👤'};
+  const moment={
+    id:G.phone.nextId++,
+    npcId:result.npc,
+    npcName:npcData.name,
+    npcAvatar:npcData.avatar,
+    text:result.text,
+    month:G.totalMonths,
+    playerLiked:false,
+    likes:[],// NPC IDs who liked
+    comments:(result.comments||[]).map(c=>{
+      const cn=NPCS[c.npc]||{name:'未知',avatar:'👤'};
+      return {npcId:c.npc,npcName:cn.name,npcAvatar:cn.avatar,text:c.text,month:G.totalMonths,byPlayer:false};
+    }),
+    playerComments:[]
+  };
+  // Auto-like: 1-3 random NPCs like the post
+  const allNpcIds=Object.keys(NPCS).filter(id=>id!==result.npc&&id!=='system'&&id!=='life');
+  const shuffled=allNpcIds.sort(()=>Math.random()-0.5);
+  moment.likes=shuffled.slice(0,randInt(1,3));
+  if(!G.phone.aiMoments)G.phone.aiMoments=[];
+  G.phone.aiMoments.unshift(moment);
+  // Keep max 30 AI moments
+  if(G.phone.aiMoments.length>30)G.phone.aiMoments=G.phone.aiMoments.slice(0,30);
+  saveGame();
+}
+
 // ========== Enhanced advance functions with AI ==========
 const _origTriggerDecisionEvent=triggerDecisionEvent;
 const _origTriggerPhoneMessages=triggerPhoneMessages;
@@ -4920,10 +5314,11 @@ window.triggerDecisionEvent=function(){
   }
 };
 
-// Override triggerPhoneMessages to try AI first
+// Override triggerPhoneMessages to try AI first - 所有通讯录NPC都能主动找你
 window.triggerPhoneMessages=function(){
   if(!G.phone)return;
-  if(AI_ENGINE.enabled&&Math.random()<0.5){
+  // 70%概率用AI生成NPC主动消息，让通讯录里的人都能找你
+  if(AI_ENGINE.enabled&&Math.random()<0.7){
     triggerAIPhoneMessage().then(used=>{
       if(!used){
         // Fallback to template
