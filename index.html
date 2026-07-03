@@ -4509,8 +4509,8 @@ async function selectPhoneOption(optIdx){
   if(opt.reqEQ&&G.EQ<opt.reqEQ)return;
   // Record player choice
   round._playerChoice=opt.text;
-  // Apply effects
-  applyPhoneFx(opt.fx);
+  // Apply effects (pass npcId for relationship effects)
+  applyPhoneFx(opt.fx, thread.npc);
   // Set flags
   if(opt.flag){for(const k in opt.flag)G.phone.flags[k]=opt.flag[k];}
   // Handle special game integrations
@@ -5490,7 +5490,7 @@ function showChatInputArea(show){
   if(opts)opts.style.display=show?'none':'flex';
 }
 
-function applyPhoneFx(fx){
+function applyPhoneFx(fx,npcId){
   if(!fx)return;
   if(fx.cash)G.cash=clamp(G.cash+fx.cash,-999999,999999999);
   if(fx.mood)G.mood=clamp(G.mood+fx.mood,0,200);
@@ -5499,6 +5499,22 @@ function applyPhoneFx(fx){
   if(fx.EQ)G.EQ=clamp(G.EQ+fx.EQ,0,200);
   if(fx.salaryBonus)G.salaryBonus+=fx.salaryBonus;
   if(fx.stockLoss){for(const code in G.stockHoldings){G.stockPrices[code]=Math.max(1,G.stockPrices[code]*(1+fx.stockLoss));}}
+  // 关系效果：亲密度、信任度、好感度
+  if(npcId&&(fx.affection||fx.intimacy||fx.trust)){
+    if(npcId==='campusGirl'&&G.romance){
+      G.romance.affection=clamp(G.romance.affection+(fx.affection||0),0,100);
+      G.romance.lastInteraction=G.totalMonths;
+      if(G.romance.affection>=60)G.romance.stage='dating';
+      else if(G.romance.affection>=30)G.romance.stage='crush';
+    }
+    if(npcId!=='campusGirl'){
+      if(!G.relationships)G.relationships={};
+      if(!G.relationships[npcId])G.relationships[npcId]={type:'stranger',intimacy:0,trust:0,affection:0,metMonth:G.totalMonths,lastInteraction:0};
+      G.relationships[npcId].intimacy=clamp(G.relationships[npcId].intimacy+(fx.intimacy||0),0,100);
+      G.relationships[npcId].trust=clamp(G.relationships[npcId].trust+(fx.trust||0),0,100);
+      G.relationships[npcId].lastInteraction=G.totalMonths;
+    }
+  }
 }
 
 function triggerFollowUps(){
@@ -6125,10 +6141,10 @@ function createScheduleThread(event){
         '这家店环境不错吧？我提前订的位子，靠窗的哦'
       ],
       opts:[
-        {text:'🎉 今天我请客！随便点',fx:{cash:-200,mood:8},next:-1,effect:'豪爽请客，'+name+'很开心'},
-        {text:'📱 先拍个照发朋友圈',fx:{mood:5,EQ:2},next:-1,effect:'拍了合照，互动感满满'},
-        {text:'😊 和'+name+'聊了聊最近的生活',fx:{mood:10},next:-1,effect:'聊得很深入，关系更近了'},
-        {text:'😅 吃完发现忘带钱包了',fx:{mood:-3},next:-1,effect:'尴尬但'+name+'帮你付了'}
+        {text:'🎉 今天我请客！随便点',fx:{cash:-200,mood:5,affection:5},next:-1,effect:'豪爽请客，'+name+'很开心'},
+        {text:'📱 先拍个照发朋友圈',fx:{mood:3,affection:3},next:-1,effect:'拍了合照，互动感满满'},
+        {text:'😊 和'+name+'聊了聊最近的生活',fx:{mood:5,affection:8,trust:3},next:-1,effect:'聊得很深入，关系更近了'},
+        {text:'😅 吃完发现忘带钱包了',fx:{mood:-3,affection:2},next:-1,effect:'尴尬但'+name+'帮你付了'}
       ]
     },
     movie:{
@@ -6138,10 +6154,10 @@ function createScheduleThread(event){
         '快快快，要开场了！爆米花要大份还是小份？'
       ],
       opts:[
-        {text:'🍿 买了超大桶爆米花和两杯饮料',fx:{cash:-80,mood:6},next:-1,effect:'仪式感拉满'},
-        {text:'😉 看电影时偷偷牵了'+name+'的手',fx:{mood:12,EQ:3},next:-1,effect:'心跳加速，气氛暧昧'},
-        {text:'💬 一起讨论剧情，聊得停不下来',fx:{mood:8},next:-1,effect:'看完电影又聊了很久'},
-        {text:'😴 看到一半睡着了...',fx:{mood:-5},next:-1,effect:name+'有点无语，但还是把外套给你盖上了'}
+        {text:'🍿 买了超大桶爆米花和两杯饮料',fx:{cash:-80,mood:5,affection:4},next:-1,effect:'仪式感拉满'},
+        {text:'😉 看电影时偷偷牵了'+name+'的手',fx:{mood:8,affection:12},next:-1,effect:'心跳加速，气氛暧昧'},
+        {text:'💬 一起讨论剧情，聊得停不下来',fx:{mood:5,affection:6,trust:2},next:-1,effect:'看完电影又聊了很久'},
+        {text:'😴 看到一半睡着了...',fx:{mood:-5,affection:-2},next:-1,effect:name+'有点无语，但还是把外套给你盖上了'}
       ]
     },
     date:{
@@ -6151,10 +6167,10 @@ function createScheduleThread(event){
         '我们去哪玩？我想去那个新开的咖啡馆坐坐'
       ],
       opts:[
-        {text:'🌹 送了一束花',fx:{cash:-100,mood:10},next:-1,effect:name+'收到花很开心'},
-        {text:'📸 一起拍了很多照片',fx:{mood:8,EQ:2},next:-1,effect:'留下了很多美好回忆'},
-        {text:'🚶 在公园散步聊天',fx:{mood:6},next:-1,effect:'安静又温馨的时光'},
-        {text:'🎯 一起玩了密室逃脱',fx:{cash:-150,mood:12},next:-1,effect:'配合默契，感情升温'}
+        {text:'🌹 送了一束花',fx:{cash:-100,mood:8,affection:10},next:-1,effect:name+'收到花很开心'},
+        {text:'📸 一起拍了很多照片',fx:{mood:5,affection:6},next:-1,effect:'留下了很多美好回忆'},
+        {text:'🚶 在公园散步聊天',fx:{mood:5,affection:8,trust:3},next:-1,effect:'安静又温馨的时光'},
+        {text:'🎯 一起玩了密室逃脱',fx:{cash:-150,mood:10,affection:8},next:-1,effect:'配合默契，感情升温'}
       ]
     },
     gathering:{
@@ -6164,10 +6180,10 @@ function createScheduleThread(event){
         '来来来，先干一杯！'
       ],
       opts:[
-        {text:'🍻 和大家喝得很开心',fx:{mood:8,health:-3},next:-1,effect:'气氛热烈，喝多了'},
-        {text:'🎤 唱了首歌惊艳全场',fx:{mood:10,EQ:2},next:-1,effect:'大家都说你唱得好'},
-        {text:'💰 结账时AA制，大家分摊',fx:{cash:-100,mood:5},next:-1,effect:'公平合理，大家没负担'},
-        {text:'🤫 跟'+name+'聊了些心里话',fx:{mood:6},next:-1,effect:'聚会中难得的真诚时刻'}
+        {text:'🍻 和大家喝得很开心',fx:{mood:5,health:-3,affection:4},next:-1,effect:'气氛热烈，喝多了'},
+        {text:'🎤 唱了首歌惊艳全场',fx:{mood:8,affection:5},next:-1,effect:'大家都说你唱得好'},
+        {text:'💰 结账时AA制，大家分摊',fx:{cash:-100,mood:3,affection:3},next:-1,effect:'公平合理，大家没负担'},
+        {text:'🤫 跟'+name+'聊了些心里话',fx:{mood:5,affection:8,trust:5},next:-1,effect:'聚会中难得的真诚时刻'}
       ]
     },
     trip:{
@@ -6177,10 +6193,10 @@ function createScheduleThread(event){
         '终于出发了！我在车上激动得一晚上没睡好'
       ],
       opts:[
-        {text:'🏨 住了一家超棒的民宿',fx:{cash:-500,mood:12},next:-1,effect:'环境很好，拍了很多美照'},
-        {text:'🏔️ 一起爬山看日出',fx:{mood:15,health:-5},next:-1,effect:'累但值得，日出美哭了'},
-        {text:'🍜 尝遍了当地美食',fx:{cash:-200,mood:10},next:-1,effect:'吃货的天堂'},
-        {text:'📖 在海边安静地待了一下午',fx:{mood:8},next:-1,effect:'难得的放松时光'}
+        {text:'🏨 住了一家超棒的民宿',fx:{cash:-500,mood:10,affection:8},next:-1,effect:'环境很好，拍了很多美照'},
+        {text:'🏔️ 一起爬山看日出',fx:{mood:12,health:-5,affection:10},next:-1,effect:'累但值得，日出美哭了'},
+        {text:'🍜 尝遍了当地美食',fx:{cash:-200,mood:8,affection:6},next:-1,effect:'吃货的天堂'},
+        {text:'📖 在海边安静地待了一下午',fx:{mood:8,affection:8,trust:3},next:-1,effect:'难得的放松时光'}
       ]
     },
     karaoke:{
@@ -6190,10 +6206,10 @@ function createScheduleThread(event){
         '这首歌我会唱！我们一起唱！'
       ],
       opts:[
-        {text:'🎤 和'+name+'合唱了一首情歌',fx:{mood:12,EQ:3},next:-1,effect:'合唱超有默契'},
-        {text:'💃 跳了一段舞',fx:{mood:8},next:-1,effect:'气氛嗨到爆'},
-        {text:'🍹 点了些酒和小吃',fx:{cash:-150,mood:6},next:-1,effect:'边喝边唱，开心'},
-        {text:'📱 给'+name+'录了唱歌视频',fx:{mood:5},next:-1,effect:''+name+'唱得真好听'}
+        {text:'🎤 和'+name+'合唱了一首情歌',fx:{mood:10,affection:10},next:-1,effect:'合唱超有默契'},
+        {text:'💃 跳了一段舞',fx:{mood:8,affection:6},next:-1,effect:'气氛嗨到爆'},
+        {text:'🍹 点了些酒和小吃',fx:{cash:-150,mood:5,affection:4},next:-1,effect:'边喝边唱，开心'},
+        {text:'📱 给'+name+'录了唱歌视频',fx:{mood:5,affection:5},next:-1,effect:''+name+'唱得真好听'}
       ]
     },
     hotSpring:{
@@ -6203,10 +6219,10 @@ function createScheduleThread(event){
         '哇，从这里能看到山景，太美了'
       ],
       opts:[
-        {text:'😌 泡着温泉聊着天，太惬意了',fx:{mood:12,health:5},next:-1,effect:'身心都得到了放松'},
-        {text:'🍷 边泡边喝了杯热茶',fx:{mood:8},next:-1,effect:'悠哉悠哉'},
-        {text:'📸 拍了温泉边的风景照',fx:{mood:5},next:-1,effect:'风景如画'},
-        {text:'💆 做了个SPA按摩',fx:{cash:-200,mood:10},next:-1,effect:'整个人都轻了'}
+        {text:'😌 泡着温泉聊着天，太惬意了',fx:{mood:10,health:5,affection:8},next:-1,effect:'身心都得到了放松'},
+        {text:'🍷 边泡边喝了杯热茶',fx:{mood:8,affection:5},next:-1,effect:'悠哉悠哉'},
+        {text:'📸 拍了温泉边的风景照',fx:{mood:5,affection:4},next:-1,effect:'风景如画'},
+        {text:'💆 做了个SPA按摩',fx:{cash:-200,mood:8,affection:6},next:-1,effect:'整个人都轻了'}
       ]
     },
     shopping:{
@@ -6216,10 +6232,10 @@ function createScheduleThread(event){
         '我看到好多想买的，你帮我参谋参谋~'
       ],
       opts:[
-        {text:'👗 给'+name+'买了一件衣服',fx:{cash:-300,mood:10},next:-1,effect:name+'很开心'},
-        {text:'🛍️ 一起逛了一下午',fx:{cash:-100,mood:8},next:-1,effect:'收获满满'},
-        {text:'☕ 逛累了喝杯奶茶',fx:{cash:-30,mood:5},next:-1,effect:'甜蜜的休息时光'},
-        {text:'💅 一起去做了美甲',fx:{cash:-150,mood:8},next:-1,effect:''+name+'超喜欢'}
+        {text:'👗 给'+name+'买了一件衣服',fx:{cash:-300,mood:8,affection:10},next:-1,effect:name+'很开心'},
+        {text:'🛍️ 一起逛了一下午',fx:{cash:-100,mood:6,affection:6},next:-1,effect:'收获满满'},
+        {text:'☕ 逛累了喝杯奶茶',fx:{cash:-30,mood:5,affection:4},next:-1,effect:'甜蜜的休息时光'},
+        {text:'💅 一起去做了美甲',fx:{cash:-150,mood:6,affection:8},next:-1,effect:''+name+'超喜欢'}
       ]
     },
     sports:{
@@ -6229,10 +6245,10 @@ function createScheduleThread(event){
         '热身好了吗？我们开始吧！'
       ],
       opts:[
-        {text:'💪 拼尽全力赢了比赛',fx:{mood:12,health:-3},next:-1,effect:'虽然累但超有成就感'},
-        {text:'🤝 打了个平手，惺惺相惜',fx:{mood:8},next:-1,effect:'实力相当，下次再战'},
-        {text:'💦 运动完一起去吃了补充能量',fx:{cash:-80,mood:6},next:-1,effect:'运动后的饭特别香'},
-        {text:'🧘 一起做了瑜伽拉伸',fx:{mood:6,health:3},next:-1,effect:'身心舒畅'}
+        {text:'💪 拼尽全力赢了比赛',fx:{mood:10,health:-3,affection:5},next:-1,effect:'虽然累但超有成就感'},
+        {text:'🤝 打了个平手，惺惺相惜',fx:{mood:8,affection:6},next:-1,effect:'实力相当，下次再战'},
+        {text:'💦 运动完一起去吃了补充能量',fx:{cash:-80,mood:5,affection:5},next:-1,effect:'运动后的饭特别香'},
+        {text:'🧘 一起做了瑜伽拉伸',fx:{mood:5,health:3,affection:6},next:-1,effect:'身心舒畅'}
       ]
     }
   };
