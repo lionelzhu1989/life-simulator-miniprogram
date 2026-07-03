@@ -1882,7 +1882,7 @@ function closeForbes(){
 }
 
 // ========== 核心：度过一月 ==========
-function nextMonth(){
+async function nextMonth(){
   if(G.gameOver)return;
   if(hasUnread()){
     const unreadCount=G.phone?G.phone.threads.filter(t=>t.status!=='replied'&&t.rounds[t.currentRound]&&!t.rounds[t.currentRound]._playerChoice).length:0;
@@ -1894,8 +1894,8 @@ function nextMonth(){
   // 即时更新月份显示，消除卡顿感
   const btn=document.getElementById('nextMonthBtn');
   btn.disabled=true;btn.textContent='⏳ 进行中...';
-  requestAnimationFrame(()=>{
-    advanceMonth();
+  requestAnimationFrame(async()=>{
+    await advanceMonth();
     refreshHeader(); // 先刷头部让月份立即可见
     const total=calcTotalAsset();
     document.getElementById('totalAsset').textContent=fmt(total);
@@ -1929,7 +1929,7 @@ const TEMPLATE_SMALL_EVENTS=[
   {text:'📚 看了一本好书，智商+2情商+1',type:'good',effect:{IQ:2,EQ:1}},
   {text:'😤 被领导无故批评，心情-8',type:'bad',effect:{mood:-8}}
 ];
-function advanceMonth(){
+async function advanceMonth(){
   G.totalMonths++;G.monthsAtJob++;G.events=[];
   G._encounterActive=false; // 重置月度场景标记
   if(!G._recentEvents)G._recentEvents=[]; // 连锁反应记忆（最近事件记录）
@@ -2094,7 +2094,7 @@ function advanceMonth(){
     if(G._recentEvents)G._recentEvents.push('🥚彩蛋：'+egg.text.replace(/[\u{1F300}-\u{1FFFF}]/gu,'').substring(0,20));
   }
   // Phone triggers
-  if(!G.gameOver){initPhoneState();triggerFollowUps();triggerPhoneMessages();processScheduledDates();triggerParentHelp();if(Math.random()<0.50)triggerAIMoments().catch(()=>{});if(Math.random()<0.40)triggerMoments();generateNotifications();generateGossipEvent();triggerGathering();}
+  if(!G.gameOver){initPhoneState();triggerFollowUps();triggerPhoneMessages();await processScheduledDates();triggerParentHelp();if(Math.random()<0.50)triggerAIMoments().catch(()=>{});if(Math.random()<0.40)triggerMoments();generateNotifications();generateGossipEvent();triggerGathering();}
   // 社交拓展：每月有概率触发偶遇场景
   if(!G.gameOver && !G._encounter && !G._pendingDecision){
     tryTriggerEncounter();
@@ -2116,9 +2116,9 @@ function advanceMonth(){
   else if(getAge()>=80&&Math.random()<0.3){G.gameOver=true;G.gameOverReason='安享晚年，人生圆满结束';}
 }
 
-function fastForward(years){
+async function fastForward(years){
   G.events=[];
-  for(let i=0;i<years*12;i++){if(G.gameOver)break;advanceMonth();}
+  for(let i=0;i<years*12;i++){if(G.gameOver)break;await advanceMonth();}
   saveGame();refreshAll();checkAchievements();
   if(G.gameOver)setTimeout(()=>showGameOver(),500);
   else showToast('⏩ 快进了'+years+'年！');
@@ -6053,27 +6053,27 @@ function renderSchedule(){
   el.innerHTML=html;
 }
 
-function processScheduledDates(){
+async function processScheduledDates(){
   if(!G.scheduledDates)return;
   // 清理超过6个月的过期日程，避免数组无限增长
   G.scheduledDates=G.scheduledDates.filter(e=>{
     if(e.status==='expired'&&e.month<G.totalMonths-6)return false;
     return true;
   });
-  G.scheduledDates.forEach(e=>{
-    if(e.status!=='upcoming')return;
+  for(const e of G.scheduledDates){
+    if(e.status!=='upcoming')continue;
     if(e.month<G.totalMonths){
       // Past event - auto mark as expired
       e.status='expired';
     }else if(e.month===G.totalMonths){
       // Current month - trigger the event!
-      triggerScheduleEvent(e);
+      await triggerScheduleEvent(e);
     }
-  });
+  }
   saveGame();
 }
 
-function triggerScheduleEvent(event){
+async function triggerScheduleEvent(event){
   if(!event||event.status!=='upcoming')return;
   // 费用由createScheduleThread的选项扣除，这里不再重复扣
   // Deduct annual leave
@@ -6118,7 +6118,7 @@ function triggerScheduleEvent(event){
     }
   }
   // v3.15.3: 创建互动对话线程，让玩家体验日程场景
-  createScheduleThread(event);
+  await createScheduleThread(event);
   // Mark as done
   event.status='done';
   event.triggeredMonth=G.totalMonths;
@@ -6127,8 +6127,80 @@ function triggerScheduleEvent(event){
   addNotification('system','✅ '+event.title+' 已完成');
 }
 
+// v3.15.5: AI场景生成 —— 根据关系类型生成不同的互动内容
+function _getRelationshipType(npcId){
+  if(npcId==='campusGirl')return'romance';
+  if(npcId==='mom'||npcId==='dad'||npcId==='spouse')return'family';
+  if(npcId==='bestie'||npcId==='classmate'||npcId==='exColleague')return'friend';
+  if(npcId==='colleague'||npcId==='boss'||npcId==='mentor')return'colleague';
+  return'acquaintance';
+}
+const _SCENE_EFFECTS={
+  romance:[
+    {affection:12,mood:8},{affection:8,mood:5},{affection:5,mood:5,trust:2},{affection:-2,mood:-3}
+  ],
+  family:[
+    {intimacy:10,mood:5},{intimacy:6,mood:3},{intimacy:3,mood:5,trust:2},{intimacy:-1,mood:-3}
+  ],
+  friend:[
+    {trust:8,mood:5},{trust:5,mood:5,affection:3},{trust:3,mood:5},{trust:-1,mood:-3}
+  ],
+  colleague:[
+    {trust:6,mood:3},{trust:4,mood:3,affection:2},{trust:3,mood:5},{trust:0,mood:-2}
+  ],
+  acquaintance:[
+    {trust:5,mood:3,affection:3},{trust:3,mood:3},{trust:2,mood:5},{trust:0,mood:-2}
+  ]
+};
+const _SCENE_CASH={
+  movie:[{cash:-80},{cash:0},{cash:0},{cash:0}],
+  dinner:[{cash:-200},{cash:0},{cash:0},{cash:0}],
+  date:[{cash:-100},{cash:0},{cash:0},{cash:-150}],
+  gathering:[{cash:-100},{cash:0},{cash:-100},{cash:0}],
+  trip:[{cash:-500},{cash:0},{cash:-200},{cash:0}],
+  karaoke:[{cash:0},{cash:0},{cash:-150},{cash:0}],
+  hotSpring:[{cash:0},{cash:0},{cash:0},{cash:-200}],
+  shopping:[{cash:-300},{cash:-100},{cash:-30},{cash:-150}],
+  sports:[{cash:0},{cash:0},{cash:-80},{cash:0}]
+};
+async function generateScheduleSceneAI(event,npcId,npcName,npcTraits,relType,activityName){
+  const relLabels={romance:'恋人/暧昧对象',family:'家人',friend:'好友/同学',colleague:'同事/上司',acquaintance:'刚认识的朋友'};
+  const relReqs={
+    romance:'- 对话要甜蜜暧昧，有撒娇或调情\n- 选项要有浪漫互动（牵手、拥抱、表白等）\n- 至少1个花钱选项（买礼物/请客）\n',
+    family:'- 对话要温馨自然，有家人间的关心\n- 选项要有亲情互动（聊天、照顾、陪伴等）\n- 至少1个花钱选项（给爸妈买东西）\n',
+    friend:'- 对话要轻松随意，有玩笑或吐槽\n- 选项要有友情互动（聊天、游戏、吐槽等）\n',
+    colleague:'- 对话要得体，有职场社交感\n- 选项要有社交互动（聊工作、吐槽、networking等）\n',
+    acquaintance:'- 对话要客气友好\n- 选项要有建立关系的互动\n'
+  };
+  const prompt='你是人生模拟游戏的场景生成器。请为约会场景生成NPC开场白和4个玩家选项。\n\n'+
+    '## 角色\n- NPC：'+npcName+'（'+npcTraits+'）\n'+
+    '- 关系：'+relLabels[relType]+'\n- 活动：'+activityName+'\n\n'+
+    '## 关系要求\n'+(relReqs[relType]||relReqs.acquaintance)+
+    '- 第4个选项要搞笑、意外或略尴尬（制造笑点）\n\n'+
+    '## 输出纯JSON（不要代码块）\n'+
+    '{"npcOpening":"NPC开场白1-2句","options":[{"text":"带emoji的选项1"},{"text":"选项2"},{"text":"选项3"},{"text":"搞笑选项4"}]}\n'+
+    '每条text不超过20字。';
+  try{
+    const resp=await fetch(AI_ENGINE.useProxy?AI_ENGINE.proxyUrl:AI_ENGINE.directUrl,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+AI_ENGINE.apiKey},
+      body:JSON.stringify({model:AI_ENGINE.model,messages:[{role:'user',content:prompt}],temperature:0.92,max_tokens:500})
+    });
+    const data=await resp.json();
+    const txt=(data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content)||'';
+    const match=txt.match(/\{[\s\S]*\}/);
+    if(match){
+      const parsed=JSON.parse(match[0]);
+      if(parsed.npcOpening&&Array.isArray(parsed.options)&&parsed.options.length>=4){
+        return parsed;
+      }
+    }
+  }catch(e){console.log('AI scene gen failed:',e);}
+  return null;
+}
+
 // v3.15.3: 日程触发 → 创建互动对话线程（让玩家体验场景，不只是扣钱）
-function createScheduleThread(event){
+async function createScheduleThread(event){
   const p=NPC_PERSONALITIES[event.npcId]||{name:event.npcName||'朋友',avatar:event.npcAvatar||'👤'};
   const name=p.name;const avatar=p.avatar;
   const isRomance=(event.npcId==='campusGirl');
@@ -6252,12 +6324,36 @@ function createScheduleThread(event){
       ]
     }
   };
-  const scene=scenes[event.type]||scenes.dinner;
-  const npcMsg=scene.npcLines[Math.floor(Math.random()*scene.npcLines.length)];
-  const opts=scene.opts.map(o=>({
-    text:o.text,fx:o.fx||{},next:-1,
-    _scheduleResult:o.effect
-  }));
+  // 先尝试AI生成场景，失败则用硬编码
+  const typeNames={dinner:'吃饭',movie:'看电影',date:'约会',gathering:'聚会',trip:'旅游',karaoke:'唱K',hotSpring:'泡温泉',shopping:'逛街',sports:'运动'};
+  const actName=typeNames[event.type]||'活动';
+  const relType=_getRelationshipType(event.npcId);
+  const traits=(p.traits||[]).join('/');
+  const aiScene=await generateScheduleSceneAI(event,event.npcId,name,traits||'普通人',relType,actName);
+  let npcMsg,opts;
+  if(aiScene){
+    // AI生成成功：用AI内容 + 关系类型效果模板
+    npcMsg=aiScene.npcOpening;
+    const effects=_SCENE_EFFECTS[relType]||_SCENE_EFFECTS.acquaintance;
+    const cash=_SCENE_CASH[event.type]||_SCENE_CASH.dinner;
+    opts=aiScene.options.slice(0,4).map((o,i)=>{
+      const fx=Object.assign({},effects[i]||effects[3],cash[i]||{});
+      return {text:o.text,fx:fx,next:-1,_scheduleResult:o.text};
+    });
+    // 补齐不足4个的情况
+    while(opts.length<4){
+      const i=opts.length;
+      opts.push({text:'😊 和'+name+'聊了聊',fx:Object.assign({},effects[i]||effects[3],cash[i]||{}),next:-1,_scheduleResult:'聊得很开心'});
+    }
+  }else{
+    // AI失败，用硬编码场景
+    const scene=scenes[event.type]||scenes.dinner;
+    npcMsg=scene.npcLines[Math.floor(Math.random()*scene.npcLines.length)];
+    opts=scene.opts.map(o=>({
+      text:o.text,fx:o.fx||{},next:-1,
+      _scheduleResult:o.effect
+    }));
+  }
   // 创建聊天线程
   const thread={
     id:G.phone.nextId++,
