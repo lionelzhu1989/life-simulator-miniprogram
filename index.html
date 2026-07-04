@@ -1735,7 +1735,11 @@ function defaultState(){
     liqun:[{role:'npc',msg:'兄弟！在吗？我老板又搞事了，天天说要拥抱变化，我服了！',_playerRead:true}],
     qinzhao:[{role:'npc',msg:'兄弟！下班了没？走，去健身房！我今天练腿！',_playerRead:true}]
   }},
-    lifeEvents:[],socialContacts:[{id:'liqun',name:'李群',avatar:'🧑‍💼',relation:'好友'},{id:'qinzhao',name:'秦朝',avatar:'💪',relation:'好友'}],relationships:{},
+    lifeEvents:[],
+    socialContacts:[
+      {id:'liqun',name:'李群',avatar:'🧑‍💼',relation:'好友',traits:['吐槽老板','自称硬邦邦','直爽','职场老油条'],responses:['别提了，老板又搞事了','腹肌人天天说要拥抱变化','活着就是为了硬邦邦！'],followups:['你说腹肌人是不是都这样？','我听说隔壁组也天天加班','我打算跳槽了'],metMonth:1,metWhere:'网易云音乐'},
+      {id:'qinzhao',name:'秦朝',avatar:'💪',relation:'好友',traits:['腹肌人','爱健身','拉人练肌肉','自律狂魔'],responses:['今天练腿！走！','胸肌日，要不要一起？','我刚突破PR'],followups:['走，我带你练腿','自律给我自由','健身房新来了个教练'],metMonth:1,metWhere:'健身房'}
+    ],relationships:{},
     savings:0,careerBranches:[],
     romance:{npcId:null,stage:'none',affection:0,metMonth:0,lastInteraction:0},
     scheduledDates:[]
@@ -1777,13 +1781,16 @@ window.closeModal = hideModal;
 function closeModalBg(e){if(e.target===document.getElementById('modalOverlay'))hideModal();}
 let toastTimer=null;
 function showToast(msg,dur){const el=document.getElementById('toastEl');el.textContent=msg;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),dur||1800);}
+let _floatTextStack = [];
 function showFloatText(text,positive){
   const el=document.createElement('div');
   el.className='float-text '+(positive?'positive':'negative');
   el.textContent=text;
-  el.style.left='50%';el.style.top='35%';el.style.transform='translateX(-50%)';
+  const topOffset = _floatTextStack.length * 32;
+  _floatTextStack.push(topOffset);
+  el.style.left='50%';el.style.top=(35 + topOffset / window.innerHeight * 100) + '%';el.style.transform='translateX(-50%)';
   document.body.appendChild(el);
-  setTimeout(()=>el.remove(),1500);
+  setTimeout(()=>{el.remove();_floatTextStack.shift();},1500);
 }
 
 // ========== Tab系统 ==========
