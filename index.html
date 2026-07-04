@@ -6337,8 +6337,14 @@ async function sendPlayerMessage(){
     input.focus();
     return;
   }
+  // v4.1.18: Detect game action intent from chat (after sending message)
+  const gameAction=detectGameActionIntent(msg);
   // Normal message flow
   _doSendMessage(msg,G._openProactiveNpc);
+  // Show action card 700ms after message sent
+  if(gameAction && G._openProactiveNpc){
+    setTimeout(()=>showGameActionConfirm(G._openProactiveNpc, gameAction),700);
+  }
 }
 
 // Internal send message function
