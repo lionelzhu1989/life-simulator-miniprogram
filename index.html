@@ -8626,6 +8626,27 @@ function _tut_checkAutoAdvance(){
   if(!G.tutorialCompleted) G.tutorialCompleted=[];
   const curStep = TUTORIAL_STEPS[_tut_state.currentIdx];
   if(!curStep) return;
+  // If current step has a trigger that is now satisfied, complete it and advance
+  if(curStep.trigger && !G.tutorialCompleted.includes(curStep.id)){
+    if(_tut_shouldShow(curStep.id)){
+      // Trigger condition met (e.g., month1 satisfied), advance to next
+      if(curStep.target){
+        const el = document.getElementById(curStep.target);
+        if(el) el.classList.remove('tut-highlight');
+      }
+      G.tutorialCompleted.push(curStep.id);
+      const nextIdx = _tut_state.currentIdx + 1;
+      if(nextIdx < TUTORIAL_STEPS.length){
+        _tut_showOverlay(nextIdx);
+        return;
+      }else{
+        saveGame();
+        document.getElementById('tutOverlay').remove();
+        showToast('教程完成！');
+        return;
+      }
+    }
+  }
   // Check if next step's trigger is now satisfied
   const nextIdx = _tut_state.currentIdx + 1;
   if(nextIdx >= TUTORIAL_STEPS.length) return;
@@ -8633,7 +8654,6 @@ function _tut_checkAutoAdvance(){
   if(!nextStep) return;
   if(G.tutorialCompleted.includes(nextStep.id)) return;
   if(_tut_shouldShow(nextStep.id)){
-    // Remove highlight on current step's target
     if(curStep.target){
       const el = document.getElementById(curStep.target);
       if(el) el.classList.remove('tut-highlight');
