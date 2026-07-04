@@ -6339,10 +6339,12 @@ async function sendPlayerMessage(){
   }
   // v4.1.18: Detect game action intent from chat (after sending message)
   const gameAction=detectGameActionIntent(msg);
+  console.log('[DEBUG sendPM] gameAction:', gameAction, 'msg:', msg, 'openNpc:', G._openProactiveNpc);
   // Normal message flow
   _doSendMessage(msg,G._openProactiveNpc);
   // Show action card 700ms after message sent
   if(gameAction && G._openProactiveNpc){
+    console.log('[DEBUG sendPM] scheduling showGameActionConfirm');
     setTimeout(()=>showGameActionConfirm(G._openProactiveNpc, gameAction),700);
   }
 }
@@ -6449,8 +6451,13 @@ async function _doSendMessage(msg,npcId){
   }
   // v4.1.18: 检测玩家游戏行为意图（买房/买股票/考证/创业等联动）
   const gameAction=detectGameActionIntent(msg);
+  console.log('[DEBUG] detectGameActionIntent:', gameAction, 'npcId:', npcId, 'openNpc:', G._openProactiveNpc);
   if(gameAction&&npcId){
-    setTimeout(()=>{showGameActionConfirm(npcId,gameAction);},700);
+    console.log('[DEBUG] gameAction confirmed, will show card in 700ms');
+    setTimeout(()=>{
+      console.log('[DEBUG] showGameActionConfirm firing', npcId, gameAction);
+      showGameActionConfirm(npcId,gameAction);
+    },700);
   }
   // Save game
   saveGame();
@@ -7549,6 +7556,7 @@ function getRelationLabel(npcId){
 function detectGameActionIntent(text){
   if(!text||text.length>100)return null;
   const msg=text.toLowerCase();
+  console.log('[DEBUG detectGameActionIntent] input:', text, 'lowered:', msg);
   // v4.1.18: 否定句不触发（"不想买房""买房太贵""股票都是骗人的"）
   if(/不想|不愿|不去|不能|不敢|不值得|太贵|太早|再等等|以后再说|下辈子|算了吧/.test(msg))return null;
   const actions=[
