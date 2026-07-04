@@ -130,11 +130,13 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 .float-text.positive{color:var(--success);}
 .float-text.negative{color:var(--danger);}
 @keyframes floatUp{0%{opacity:1;transform:translateY(0);}100%{opacity:0;transform:translateY(-60px);}}
-.ai-float-btn{position:fixed;bottom:210px;right:16px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border-radius:20px;padding:10px 16px;display:flex;align-items:center;gap:6px;box-shadow:0 4px 16px rgba(102,126,234,.4);z-index:999;cursor:pointer;animation:pulse 2s infinite;font-size:12px;max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ai-float-btn{position:fixed;bottom:210px;right:16px;width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;font-size:20px;cursor:pointer;box-shadow:0 4px 16px rgba(102,126,234,.4);z-index:999;display:flex;align-items:center;justify-content:center;transition:all .2s;}
 .ai-float-icon{font-size:20px;}
 .ai-float-text{font-size:12px;font-weight:600;}
 .ai-float-close{position:absolute;top:-6px;right:-6px;width:18px;height:18px;background:#999;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;line-height:1;}
 @keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.05);}}
+.fab-close{position:absolute;top:-6px;right:-6px;width:18px;height:18px;background:#999;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;line-height:1;cursor:pointer;z-index:10;}
+.fab-close:active{transform:scale(.85);}
 .guide-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:4000;display:none;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s;}
 .guide-overlay.show{opacity:1;pointer-events:auto;}
 .guide-box{background:#fff;border-radius:16px;padding:28px 24px;text-align:center;max-width:300px;transform:scale(0.8);transition:transform .3s;}
@@ -650,7 +652,6 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
         <button class="btn btn-outline btn-sm" onclick="socialGathering()" style="font-size:11px;">🤝 社交聚会 ¥1500</button>
         <button class="btn btn-outline btn-sm" onclick="coffeeSocial()" style="font-size:11px;">☕ 咖啡社交 ¥500</button>
         <button class="btn btn-outline btn-sm" onclick="fastForward(5)">⏩ 快进5年</button>
-        <button class="btn btn-outline btn-sm" onclick="fastForward(10)">⏩ 快进10年</button>
       </div>
       <div class="text-sm text-muted mt-8" id="yearHint">点击按钮推进人生</div>
     </div>
@@ -814,12 +815,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 
 <div class="toast" id="toastEl"></div>
 
-<div id="aiFloatBtn" class="ai-float-btn" onclick="handleAIClick()">
-  <div class="ai-float-icon">🤖</div>
-  <div class="ai-float-text">AI校招</div>
-  <div class="ai-float-close" onclick="event.stopPropagation();closeAIFloat()">×</div>
-</div>
-
+<div id="aiFloatBtn" class="ai-float-btn" onclick="handleAIClick()">🤖<span class="fab-close" onclick="event.stopPropagation();closeAIFloat()">×</span></div>
 <!-- v3.12.1: Old simple guide removed, using new 4-page guide at bottom of file -->
 
 <div class="promo-overlay" id="promoOverlay">
@@ -8394,7 +8390,7 @@ if(_origTriggerStockNews){
     </div>
   </div>
 </div>
-<div class="help-fab" id="helpFab" onclick="openGuide()">❓</div>
+<div class="help-fab" id="helpFab" onclick="openGuide()">❓<span class="fab-close" onclick="event.stopPropagation();document.getElementById('helpFab').style.display='none';">×</span></div>
 
 
 <!-- v4.0.0 Upgrade JS -->
@@ -8580,6 +8576,7 @@ function showTutorial(stepId){
 }
 
 function _tut_showOverlay(idx){
+  _tut_state.currentIdx = idx;
   const step = TUTORIAL_STEPS[idx];
   if(!step) return;
   const existing = document.getElementById('tutOverlay');
@@ -9080,7 +9077,7 @@ console.log('v4.0.0 loaded');
 </script>
 
 <!-- v4.0.0: 浮动快捷入口 -->
-<button class="v4-fab" onclick="showV4QuickMenu()" title="更多功能">⚡</button>
+<button class="v4-fab" onclick="showV4QuickMenu()" title="更多功能">⚡<span class="fab-close" onclick="event.stopPropagation();this.parentElement.parentElement.style.display='none';">×</span></button>
 <div id="v4QuickMenu" class="v4-quick-menu" style="display:none;">
   <div class="v4-menu-item" onclick="showPlaybook();document.getElementById('v4QuickMenu').style.display='none';">📖玩法手册</div>
   <div class="v4-menu-item" onclick="showRadarModal();document.getElementById('v4QuickMenu').style.display='none';">📊雷达图</div>
