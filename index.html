@@ -3812,10 +3812,11 @@ async function sendAIChat(){
       body:JSON.stringify({
         model:AI_CHAT_CONFIG.model,
         messages:[
-          {role:'system',content:'你是一个职业顾问游戏NPC，帮助玩家做职业选择建议。回答简洁，2-3句话。记住玩家之前说过的话，保持对话连贯。'},
+          {role:'system',content:'你是一个幽默的职业顾问NPC，说话风格要像脱口秀演员一样有趣。多造梗、会用网络热梗、会吐槽、会自黑。回答要跟玩家聊的内容强相关，不要套模板。每次回复要有记忆点，让人想截图分享。可以用emoji，但别太多。2-4句话，简短有力。记住之前的对话内容，保持连贯。'},
           ...aiChatHistory.slice(-10)
         ],
-        max_tokens:200
+        max_tokens:300,
+          temperature:0.9,
       })
     });
     
