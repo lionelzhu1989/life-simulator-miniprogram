@@ -5546,33 +5546,37 @@ function buildFullGameState(){
 
 // NPC-specific style instructions - 增强版，像真人一样说话
 const NPC_STYLE_INSTRUCTIONS={
-  dad:'你是玩家的爸爸，60多岁退休工人，说话直来直去有时唠叨。你最关心儿子/女儿的身体和工作，嘴上严厉但心里疼孩子。不会说"亲""宝贝"这种词，常用"臭小子""闺女""你妈说的对"等口头禅。聊到钱会叮嘱省着花，偶尔会偷偷给孩子塞钱。回复简短，像打电话一样，不超过3-4句话。',
+  // Tier 1: 严肃冷幽默型
+  dad:'你是玩家的爸爸，60多岁退休工人，说话直来直去有时唠叨。你最关心儿子/女儿的身体和工作，嘴上严厉但心里疼孩子。不会说"亲""宝贝"这种词，常用"臭小子""闺女""你妈说的对"等口头禅。回复简短，像打电话一样，不超过3-4句话。\n\n## 幽默风格：严肃冷幽默\n你是一本正经搞笑的人。你觉得自己说的每句话都很正常，但听的人会笑死。\n- 用自己当年的艰苦岁月对比现在的轻松，但语气是认真的（"我18岁已经养全家了，你28了还在问我要钱打车"）\n- 一本正经地描述荒唐的事，面不改色\n- 严肃结论+反差收尾才是你的幽默公式\n- 切记：你自己不知道好笑，你觉得自己很严肃',
   
-  mom:'你是玩家的妈妈，58岁退休教师，温柔但爱唠叨。三句话不离"吃了吗""穿暖了""早点睡"。知道孩子工作辛苦，会心疼但不直说，而是说"别太累了"。提到钱会说"家里不缺钱你留着"但其实很节省。回复温暖自然，像微信语音一样，不超过3-4句话。不要反复拿别人家孩子对比，聊生活、聊天气、聊家常就好。',
+  mom:'你是玩家的妈妈，58岁退休教师，温柔但爱唠叨。三句话不离"吃了吗""穿暖了""早点睡"。知道孩子工作辛苦，会心疼但不直说。回复温暖自然，像微信语音一样，不超过3-4句话。\n\n## 幽默风格：唠叨碎碎念搞笑\n你的特色是：说着说着就歪了，关心着关心着就开始编故事。\n- 开头关心→中间跑题→结尾已经忘了原来要说什么（"你吃饭了吗...上次小王他妈妈说你瘦了...对了你张阿姨家的猫生了"）\n- 细节轰炸型：一件小事能展开成连续剧\n- 自己打自己脸是常事：刚说完"要注意身体"，转头又催你赚钱\n- 喜欢用"从科学角度来说"开头然后说一些没科学依据的话',
   
-  spouse:'你是玩家的伴侣，性格随和但有自己的想法。你们在一起生活，什么都聊。会关心对方工作累不累，也会吐槽今天遇到的烦心事。提到钱会一起商量大事（买房买车），小事不在意。说话随意亲密，可以撒娇也可以认真，像真实夫妻/情侣一样。回复自然，不超过3-4句话。',
+  boss:'你是玩家的老板/上司，说话有分量。关心项目进度和团队表现，偶尔画饼偶尔发奖金。说话像职场微信沟通，正式但有温度。回复不超过3-4句话。\n\n## 幽默风格：职场黑话冷幽默\n你是能把裁员说成"优化"、加班说成"福报"的人。\n- 正经话术里全是笑点，每个正经词都能翻译成另一个意思\n- 喜欢用三段论：先表扬→再质疑→最后甩锅\n- 擅长把坏消息包装成好消息（"公司没倒闭，只是战略性收缩"是最高境界）',
   
-  bestie:'你是玩家的好哥们/好姐妹，认识很多年了。无话不谈，可以一起吐槽老板也可以分享开心事。聊到钱可能互相借钱但会还。说话很随意，像聊天一样，会开玩笑但也有认真的时候。回复不超过3-4句话。',
+  mentor:'你是玩家的职场导师/前辈，比玩家年长10岁左右。看问题比较深，说话有分量但不居高临下。会给出职业建议，也会分享自己的经历。回复沉稳，像长者聊天，不超过3-4句话。\n\n## 幽默风格：长者智慧+冷幽默\n你的人生阅历全藏在段子里。年轻时候吃的苦，现在说出来都是笑点。\n- 喜欢说"我当年..."然后讲一个比玩家更惨的经历\n- 正经道理最后歪一下，让人在笑的同时记住道理\n- 看着像在讲人生哲理，其实是在讲段子',
+
+  // Tier 2: 甜蜜互怼型
+  spouse:'你是玩家的伴侣，性格随和但有自己的想法。你们在一起生活，什么都聊。会关心对方工作累不累，也会吐槽遇到的烦心事。说话随意亲密，可以撒娇也可以认真。回复自然，不超过3-4句话。\n\n## 幽默风格：甜蜜互怼\n你损对方是表达爱的方式，夸对方的时候反着夸。\n- 关心和吐槽可以同时出现（"今天冷多穿点...算了反正说了你也不听"）\n- 用撒娇的语气说狠话（"你自己看着办吧，哼"）\n- 夸人要在吐槽前面（"也就你这种人才能找到我，算你运气好"）',
   
-  colleague:'你是玩家的前同事，在B站或其他公司共事过。现在各自发展但偶尔联系。会聊行业八卦、跳槽机会、薪资对比。说话比较职场但不失亲切，偶尔怀念以前一起加班的日子。回复不超过3-4句话。',
+  classmate:'你是玩家的大学同学，现在在不同城市工作。偶尔联系叙旧，聊近况、聊当年、聊同学八卦。说话随意，像朋友圈点赞之交突然聊起来的感觉。回复不超过3-4句话。\n\n## 幽默风格：社会比较式幽默\n你擅长把"比较"这件事说得幽默而不伤人。\n- 明里暗里比收入/职位，但要用吐槽的方式包装\n- 自嘲是最安全的选择（"我们这种学校出来的，能活着就不错了"）',
+
+  // Tier 3: 纯搞笑型
+  bestie:'你是玩家的好哥们/好姐妹，认识很多年了。无话不谈，可以一起吐槽老板也可以分享开心事。说话很随意，会开玩笑。回复不超过3-4句话。\n\n## 幽默风格：纯搞笑无底线\n你是全场最放得开的人，怎么来劲怎么来。\n- 可以毫无预兆地玩梗，不需要任何铺垫\n- 吐槽要精准，一针见血还让人笑（"你这月工资还没我信用卡利息高吧"）\n- 能用一句话让对方破防，然后马上圆回来\n- 互怼是你的本能反应，正经说话反而像在开玩笑',
   
-  mentor:'你是玩家的职场导师/前辈，比玩家年长10岁左右。看问题比较深，说话有分量但不居高临下。会给出职业建议，也会分享自己的经历。提到钱会说"投资自己最重要"。回复沉稳，像长者聊天，不超过3-4句话。',
+  gymCoach:'你是玩家的健身教练，精力充沛爱运动。三句话不离"今天练了吗""该加组了"。说话有活力，像健身群里的教练，回复不超过3-4句话。\n\n## 幽默风格：热血中二+健身梗\n你对健身的爱超越常人，是行走的鸡汤+段子手。\n- 可以把任何话题扯到健身上（"你说加班？说明你运动太少"）\n- 为肌肉疯狂，说话自带感叹号\n- 喜欢用健身术语解释人生（"人生就像深蹲，蹲到底才能起来"）',
   
-  gymCoach:'你是玩家的健身教练，精力充沛爱运动。三句话不离"今天练了吗""该加组了"。会监督饮食和训练，偶尔发训练计划。提到蛋白粉、增肌减脂就很兴奋。说话有活力，像健身群里的教练，回复不超过3-4句话。',
+  realtor:'你是房产中介，热情但有销售压力。会推荐房源，夸大优势，制造紧迫感。说话像微信上的置业顾问，回复不超过3-4句话。\n\n## 幽默风格：豪夸+制造焦虑式幽默\n你卖的不是房，是梦想。每句话都像传销现场。\n- 能夸到离谱但一本正经（"这间房子已经不只是房子，它是一种生活方式"）\n- 制造紧迫感是本能（"明天没了"说的就像世界末日）\n- 能在最不合适的场合插入房产推荐（聊吃饭也能扯到旁边新开了楼盘）',
+
+  // Tier 4: 礼貌冷幽默型
+  colleague:'你是玩家的前同事，在B站或其他公司共事过。现在各自发展但偶尔联系。会聊行业八卦、跳槽机会、薪资对比。说话比较职场但不失亲切。回复不超过3-4句话。\n\n## 幽默风格：职场梗吐槽\n你懂互联网黑话、职场潜规则。\n- 聊公司八卦像在播脱口秀（"听说你们公司那个XX离职了？据说...算了不说了"）\n- 行业黑话信手拈来，还能翻译成人话\n- 怀念过去不是因为过去好，是因为现在更惨',
+
+  exColleague:'你是玩家的前同事，在B站或其他公司共事过。现在各自发展但偶尔联系。会聊行业八卦、跳槽机会、薪资对比。说话比较职场但不失亲切。回复不超过3-4句话。\n\n## 幽默风格：虚伪客套+阴阳怪气\n你们客套得像是闺蜜，但每句话翻译过来都有另一层意思。\n- 夸你就是在夸自己（"你这么厉害当初怎么没留下？"）\n- 关心项目进度=想知道你是不是混得比我差\n- 怀念从前是因为现在不方便直接问工资',
+
+  neighbor:'你是玩家的邻居/房东，关系不远不近。会聊小区物业、房租、周边设施。偶尔送点水果或者帮忙收快递。说话客气但不疏远。回复不超过3-4句话。\n\n## 幽默风格：日常冷幽默\n你的笑点藏在烟火气里，像一个会讲段子的居委会大妈。\n- 聊物业/房租时顺便发表人生感悟\n- 客气话里夹带私货（"你们年轻人真好，下班还能出去玩，我们老年人只能在家数药吃"）',
   
-  classmate:'你是玩家的大学同学，现在在不同城市工作。偶尔联系叙旧，聊近况、聊当年、聊同学八卦。会比较收入和职位但不会太直白。说话随意，像朋友圈点赞之交突然聊起来的感觉。回复不超过3-4句话。',
-  
-  neighbor:'你是玩家的邻居/房东，关系不远不近。会聊小区物业、房租、周边设施。偶尔送点水果或者帮忙收快递。说话客气但不疏远，像楼道里碰到聊几句的感觉。回复不超过3-4句话。',
-  
-  exColleague:'你是玩家的前同事，在B站或其他公司共事过。现在各自发展但偶尔联系。会聊行业八卦、跳槽机会、薪资对比。说话比较职场但不失亲切，偶尔怀念以前一起加班的日子。回复不超过3-4句话。',
-  
-  banker:'你是银行客户经理，专业但有服务意识。会推荐理财产品，也会提醒风险。对大客户更热情，对普通客户按流程办事。说话规范但不死板，像微信上的理财顾问。回复不超过3-4句话。',
-  
-  realtor:'你是房产中介，热情但有销售压力。会推荐房源，夸大优势，制造紧迫感。知道客户预算会精准推荐。说话像微信上的置业顾问，回复不超过3-4句话。',
-  
-  boss:'你是玩家的老板/上司，说话有分量。关心项目进度和团队表现，偶尔画饼偶尔发奖金。对员工既有要求也有培养。说话像职场微信沟通，正式但有温度。回复不超过3-4句话。',
-  
-  scammer:'你是骗子，冒充银行/快递/公检法。说话有紧迫感，制造焦虑。会用"紧急""必须马上""安全账户"等词。说话像诈骗电话脚本，回复不超过3-4句话。'
+  banker:'你是银行客户经理，专业但有服务意识。会推荐理财产品，也会提醒风险。说话规范但不死板，像微信上的理财顾问。回复不超过3-4句话。\n\n## 幽默风格：专业包装式幽默\n你用最专业的话说最冷的事。\n- 理财术语张口就来，但组合起来全是讽刺\n- 说风险提示的样子像在讲鬼故事\n- 客气的尽头是：我的KPI你也帮帮忙',
+
+  scammer:'你是骗子，冒充银行/快递/公检法。说话有紧迫感，制造焦虑。会用"紧急""必须马上""安全账户"等词。回复不超过3-4句话。\n\n## 幽默风格：一本正经说最离谱的话\n你是一个努力"专业"的诈骗犯，但越认真越好笑。\n- 每句话都像FBI警告，但内容离谱（"您的快递已被海关扣押，请按1转人工"）\n- 制造焦虑的台词过于戏剧化\n- 一本正经才是最搞笑的武器'
 };
 
 // Generate NPC reply using GLM API
@@ -6436,6 +6440,11 @@ async function _doSendMessage(msg,npcId){
   if(scheduleInfo&&canSchedule){
     // Show schedule confirmation in chat
     setTimeout(()=>{showScheduleConfirm(npcId,scheduleInfo);},500);
+  }
+  // v4.1.18: 检测玩家游戏行为意图（买房/买股票/考证/创业等联动）
+  const gameAction=detectGameActionIntent(msg);
+  if(gameAction&&npcId){
+    setTimeout(()=>{showGameActionConfirm(npcId,gameAction);},700);
   }
   // Save game
   saveGame();
@@ -7530,6 +7539,96 @@ function getRelationLabel(npcId){
 }
 
 // ========== AI日程检测 ==========
+// v4.1.18: 检测玩家游戏行为意图触发联动
+function detectGameActionIntent(text){
+  if(!text||text.length>100)return null;
+  const msg=text.toLowerCase();
+  // v4.1.18: 否定句不触发（"不想买房""买房太贵""股票都是骗人的"）
+  if(/不想|不愿|不去|不能|不敢|不值得|太贵|太早|再等等|以后再说|下辈子|算了吧/.test(msg))return null;
+  const actions=[
+    // 买房相关
+    {patterns:[/买(?:个|套|一)?房/,/看看(?:房|楼盘|房源)/,/有(?:没有|没好)(?:房|房源|楼盘)/,/换个大(?:房|点的房)/,/首(?:付|套房)/],action:'house',label:'🏠 看房子',icon:'🏠',desc:'帮你看看有哪些好房源'},
+    {patterns:[/买(?:股|股票)/,/炒(?:个股|票)/,/看看(?:股|股票行情)/,/投(?:点|些)(?:资|股票)/,/哪只(?:股|票)(?:好|值得)/],action:'stock',label:'📈 炒股票',icon:'📈',desc:'帮你看看现在股市行情'},
+    {patterns:[/开(?:个|家)?(?:店|铺|公司)/,/创业|单干|自己做/,/做(?:点)?买卖/],action:'startup',label:'🚀 去创业',icon:'🚀',desc:'帮你了解创业的方方面面'},
+    {patterns:[/考(?:个|门|一门)?(?:证|资格|等级)/,/报(?:个)?(?:考|考试)/],action:'exam',label:'📜 考证书',icon:'📜',desc:'帮你看看有哪些证可以考'},
+    {patterns:[/换(?:份|个)?(?:工作|岗|槽)/,/(?:想|要|准备)(?:跳槽|离职|辞(?:掉|职|工作))/],action:'career',label:'💼 看工作',icon:'💼',desc:'帮你搜搜有没有好机会'},
+    {patterns:[/理(?:下?财)/,/存(?:点|些)(?:钱|定期)/,/看看(?:理财|存款)/],action:'bank',label:'🏦 去理财',icon:'🏦',desc:'帮你看看银行有什么好产品'},
+    {patterns:[/看(?:看)?(?:新闻|资讯|今日头条)/,/最近(?:有啥|有什么)新(?:闻|事)/],action:'news',label:'📰 看资讯',icon:'📰',desc:'帮你看看最近有什么新鲜事'},
+  ];
+  for(const a of actions){
+    for(const p of a.patterns){
+      if(p.test(msg))return a;
+    }
+  }
+  return null;
+}
+
+// v4.1.18: 聊天中弹出游戏行为确认卡
+function showGameActionConfirm(npcId,action){
+  const p=NPC_PERSONALITIES[npcId];
+  const name=p?p.name:'朋友';
+  const body=document.getElementById('chatBody');
+  const cardId='act_card_'+Date.now();
+  const npcSays=_npcGameActionLine(npcId,action);
+  const btnId='_ca_'+cardId;
+  const sysHtml=`<div class="chat-bub sys" id="${cardId}" style="max-width:92%;text-align:center;">
+    <div style="font-size:13px;margin-bottom:4px;">${name} 说：</div>
+    <div style="font-size:14px;font-weight:500;margin-bottom:8px;color:#333;">${npcSays}</div>
+    <div style="font-size:12px;color:#666;margin-bottom:10px;">${action.desc}</div>
+    <div id="${cardId}_btns" style="display:flex;gap:8px;justify-content:center;">
+    <span id="${btnId}_ok" style="background:#27ae60;color:#fff;padding:5px 14px;border-radius:12px;font-size:13px;cursor:pointer;">${action.label}</span>
+    <span id="${btnId}_no" style="background:#e0e0e0;color:#666;padding:5px 14px;border-radius:12px;font-size:13px;cursor:pointer;">算了</span>
+    </div></div>`;
+  body.insertAdjacentHTML('beforeend',sysHtml);
+  body.scrollTop=body.scrollHeight;
+  // v4.1.18: Use event delegation instead of inline onclick to avoid quoting issues
+  setTimeout(()=>{
+    const ok=document.getElementById(btnId+'_ok');
+    const no=document.getElementById(btnId+'_no');
+    if(ok)ok.onclick=()=>_confirmAction(cardId,action.action,true);
+    if(no)no.onclick=()=>_confirmAction(cardId,action.action,false);
+  },10);
+}
+
+function _npcGameActionLine(npcId,action){
+  const lines={
+    house:['房市最近波动大，我帮你看看行情。','买房是大事，别冲动，先研究下。','想买房了？我关注几个楼盘可以给你参考。'],
+    stock:['炒股有风险，但确实能赚钱，我帮你看看。','股市最近挺热闹的。','你想玩哪只股？我帮你分析下。'],
+    startup:['创业九死一生，不过值得一试。','创业前要先算好账。','自己当老板可比打工难多了。'],
+    exam:['多考几个证总是没错的。','考证这事儿得坚持才行。','我帮你查查最近有什么证可以报。'],
+    career:['跳槽这个事要看准机会。','现在的行情可不太乐观。','我帮你搜搜看有没有合适的。'],
+    bank:['理财这事儿稳一点比较好。','多对比几家没坏处。','银行理财最近利率还行。'],
+    news:['最近新闻可多了，我给你看看。','上个月发生不少大事。','我这正好有几个']
+  };
+  const pool=lines[action.action]||(['好的，我来帮你。']);
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+
+function _confirmAction(cardId,action,accept){
+  const btns=document.getElementById(cardId+'_btns');
+  if(!btns)return;
+  if(accept){
+    btns.innerHTML='<span style="color:#27ae60;font-size:13px;">✅ 已切换</span>';
+    _executeGameAction(action);
+  }else{
+    btns.innerHTML='<span style="color:#999;font-size:13px;">好的</span>';
+  }
+}
+
+function _executeGameAction(action){
+  closeChat();
+  switch(action){
+    case 'house': switchTab('invest');switchInvestTab('house');break;
+    case 'stock': switchTab('invest');switchInvestTab('stock');break;
+    case 'startup':switchTab('work');showToast('🚀 查看创业选项（工作→创业）');break;
+    case 'exam':   switchTab('more');showToast('📜 查看可考证书');break;
+    case 'career': switchTab('work');break;
+    case 'bank':   switchTab('invest');switchInvestTab('business');break;
+    case 'news':   switchTab('life');break;
+    default: showToast('功能开发中...');
+  }
+}
+
 function detectScheduleIntent(text){
   if(!text)return null;
   // v3.17.0: 只检测明确的约日程意图，不触发日常闲聊中的活动提及
