@@ -5066,9 +5066,6 @@ function loadGame(slot){var s=getSaves();if(!s[slot]){showToast('⚠️ 插槽'+
 function autoSave(){try{localStorage.setItem(AUTO_SAVE_KEY,JSON.stringify({gameState:gameState,ts:Date.now()}))}catch(e){}}
 function hasAutoSave(){return !!localStorage.getItem(AUTO_SAVE_KEY)}
 function loadAutoSave(){try{var d=JSON.parse(localStorage.getItem(AUTO_SAVE_KEY));gameState=d.gameState;renderAll();showToast('♻️ 已恢复自动存档','success');return true}catch(e){return false}}
-</script>
-</body>
-</html>
 
 // ===== 归档：按NPC合并消息线程 =====
 function pushPhoneThread(thread){
@@ -5164,3 +5161,7 @@ async function generateEncounterAIResponse(sceneKey, npcName, choiceText, choice
   var goodEffect = choiceEffect && (choiceEffect.eq > 0 || choiceEffect.mood > 0 || choiceEffect.health > 0);
   return {text:fallbackText, wantFriend:goodEffect};
 }
+
+</script>
+</body>
+</html>
