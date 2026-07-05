@@ -2327,7 +2327,9 @@ function refreshHouse(){
     if(owned){const tagCls=owned.loan?'tag-orange':'tag-green';action='<span class="tag '+tagCls+'">'+(owned.loan?'按揭中':'已拥有')+'</span>';}
     else if(locked)action='<span class="text-sm text-muted">🔒 资产'+fmtShort(h.unlockAsset)+'</span>';
     else action='<button class="btn btn-primary btn-sm" onclick="buyHouse(\''+h.id+'\')">购买</button>';
-    html+='<div class="list-item"><div class="list-info"><div class="name">'+h.name+' <span class="text-sm text-muted">'+h.area+'㎡</span></div><div class="desc">价格：'+fmt(h.price)+' | 月租：'+fmt(h.rent)+'/月</div></div><div class="list-action">'+action+'</div></div>';
+    const annualYield=((h.rent*12)/h.price*100).toFixed(1);
+    const paybackMonths=Math.round(h.price/h.rent);
+    html+='<div class="list-item"><div class="list-info"><div class="name">'+h.name+' <span class="text-sm text-muted">'+h.area+'㎡</span></div><div class="desc">价格：'+fmt(h.price)+' | 月租：'+fmt(h.rent)+'/月</div><div class="desc" style="font-size:11px;color:#666;">预期年化：<b style="color:#27ae60;">'+annualYield+'%</b> | 风险：<b style="color:#27ae60;">低(租金稳定)</b> | 回本：约'+paybackMonths+'月</div></div><div class="list-action">'+action+'</div></div>';
   });
   document.getElementById('houseList').innerHTML=html;
   let myHtml='';let totalRent=0;
