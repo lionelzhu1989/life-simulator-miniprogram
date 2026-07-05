@@ -424,10 +424,33 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 .ach-name{flex:1;font-size:14px}
 .ach-cond{font-size:11px;color:#999}
 .ach-unlocked{color:#4CAF50;font-size:12px}
+
+/* ====== Onboarding Tutorial ====== */
+.ob-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;animation:fadeIn .3s}
+.ob-card{background:#fff;border-radius:16px;padding:24px 20px;width:85%;max-width:340px;box-shadow:0 8px 40px rgba(0,0,0,.3)}
+.ob-step{display:none}.ob-step.active{display:block}
+.ob-title{font-size:18px;font-weight:700;margin-bottom:12px}
+.ob-body{font-size:14px;line-height:1.7;color:#555;margin-bottom:20px;min-height:80px}
+.ob-actions{display:flex;justify-content:space-between;gap:8px}
+.ob-actions button{flex:1;padding:10px;border:none;border-radius:8px;font-size:14px;cursor:pointer}
+.ob-actions .btn-prev{background:#f0f0f0;color:#333}
+.ob-actions .btn-next{background:#4472C4;color:#fff}
+.ob-progress{display:flex;gap:6px;margin-bottom:16px;justify-content:center}
+.pdot{width:8px;height:8px;border-radius:50%;background:#ddd;transition:all .3s}
+.pdot.active{background:#4472C4;transform:scale(1.2)}
+.pdot.done{background:#4CAF50}
+.ob-skip{font-size:12px;color:#999;background:none;border:none;cursor:pointer;margin-top:12px;width:100%;text-align:center}
+
+.age-bar{display:flex;align-items:center;gap:8px;padding:10px 16px;background:#f8f9fa;border-bottom:1px solid #eee}
+.cur-age{font-size:18px;font-weight:700;color:#4472C4;min-width:60px}
+.life-prog{flex:1;height:6px;background:#ddd;border-radius:3px;overflow:hidden}
+.life-prog-fill{height:100%;background:linear-gradient(90deg,#4472C4,#E06030);border-radius:3px;transition:width .3s}
+.life-pct{font-size:12px;color:#999;min-width:36px;text-align:right}
 </style>
 </head>
 <body>
 <div class="toast-container" id="toastContainer"></div>
+<div class="age-bar" id="ageBar"></div>
 <div id="welcomePage" class="welcome-page">
   <div style="font-size:64px;margin-bottom:16px;">🎓</div>
   <h1>offer含金量</h1>
@@ -1750,6 +1773,9 @@ function advanceMonth(){
   // Monthly task auto-complete
   G.monthlyTasks['advance']=true;
   G.monthlyTasks['promote']=true;
+  // V2: Monthly task system
+  G.monthCount=(G.monthCount||0)+1;
+  if(G.monthCount%30===0){genMonthlyTasks()}else{checkMonthlyTasks()};
   // Phone triggers
   if(!G.gameOver){initPhoneState();triggerFollowUps();if(Math.random()<0.4)triggerPhoneMessages();if(Math.random()<0.12)triggerMoments();generateNotifications();generateGossipEvent();triggerGathering();}
   // 社交拓展：每月有概率触发偶遇场景
@@ -1767,7 +1793,7 @@ function advanceMonth(){
   // Game over check
   if(G.health<=0){G.gameOver=true;G.gameOverReason='健康归零，人生结束';}
   else if(getAge()>=80&&Math.random()<0.3){G.gameOver=true;G.gameOverReason='安享晚年，人生圆满结束';}
-}
+updateAgeDisplay();}
 
 // ========== 家庭系统 ==========
 function marry(npc){if(G.family.spouse){showToast('您已结婚','info');return}if(G.cash<(npc.dowry||50000)){showToast('资金不足（需¥'+(npc.dowry||50000)+'）','warning');return}G.cash-=(npc.dowry||50000);G.family.spouse={name:npc.name,age:G.age,type:npc.spouseType||'neutral',intimacy:80,icon:npc.icon||'❤️'};G.mood=Math.min(100,G.mood+15);showToast('🎉 与'+npc.name+'结婚！','success',2000)}
@@ -1788,6 +1814,11 @@ function applySmallEvent(evt){
   if(eff.stockLoss){for(const code in G.stockHoldings){G.stockPrices[code]=Math.max(1,G.stockPrices[code]*(1-eff.stockLoss));}}
   G.events.push(e);
 }
+
+// ========== V2: Monthly Task System ==========
+function genMonthlyTasks(){var allTaskDefs=[{id:'income',title:'月收入达到¥5万',check:function(){return(G.lastMonthInc||0)>=50000},reward:{cash:5000,mood:10}},{id:'social',title:'本月结交3位新朋友',check:function(){return(G.newContacts||0)>=3},reward:{mood:15}},{id:'health',title:'保持健康≥80',check:function(){return G.health>=80},reward:{health:5}},{id:'invest',title:'投资收益超¥1万',check:function(){return(G.lastMonthInvInc||0)>=10000},reward:{cash:20000}},{id:'family',title:'陪伴家人（心情≥70）',check:function(){return G.mood>=70&&G.family&&G.family.spouse},reward:{prestige:5}},{id:'study',title:'提升任意属性到60',check:function(){return Math.max(G.iq||0,G.charm||0,G.strength||0)>=60},reward:{attrPts:1}}];G.monthlyTasks=[];var picked=[];var pool=allTaskDefs.slice();while(G.monthlyTasks.length<3&&pool.length>0){var idx=Math.floor(Math.random()*pool.length);var t=pool.splice(idx,1)[0];G.monthlyTasks.push({defId:t.id,title:t.title,progress:0,done:false,check:t.check,reward:t.reward})}G.newContacts=0;G.lastMonthInc=0;G.lastMonthInvInc=0}
+function checkMonthlyTasks(){if(!G.monthlyTasks)return;for(var i=0;i<G.monthlyTasks.length;i++){var t=G.monthlyTasks[i];if(t.done)continue;if(t.check()){t.done=true;var rw=t.reward;if(rw.cash){G.cash+=rw.cash;showToast('✓ '+t.title+' +¥'+rw.cash,'success')}if(rw.mood){G.mood=Math.min(100,G.mood+rw.mood);showToast('✓ '+t.title+' +心情'+rw.mood,'success')}if(rw.health){G.health=Math.min(100,G.health+rw.health)}if(rw.attrPts){G.attrPoints=(G.attrPoints||0)+rw.attrPts;showToast('✓ '+t.title+' +属性点'+rw.attrPts,'success')}if(rw.prestige&&G.family){G.family.prestige=(G.family.prestige||0)+rw.prestige}}}}
+function renderMonthlyTasks(){if(!G.monthlyTasks||!G.monthlyTasks.length)return '';var html='<div style="padding:12px"><h4>📋 月度任务</h4>';for(var i=0;i<G.monthlyTasks.length;i++){var t=G.monthlyTasks[i];html+='<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee;opacity:'+(t.done?.5:1)+'"><span style="flex:1;font-size:13px">'+(t.done?'✓ ':'○ ')+t.title+'</span>'+(t.done?'<span style="color:#4CAF50;font-size:12px">已完成</span>':'')+'</div>'}html+='</div>';return html}
 
 // ========== V2: Decision Event System ==========
 function triggerDecisionEvent(){
@@ -5317,6 +5348,9 @@ function resetGame(rbCount){
   switchTab('life');
   if(inheritBonus>0)showToast('继承资产+¥'+inheritBonus,'success')
 }
+
+
+function updateAgeDisplay(){var age=G.age||18;var lifeExpect=80;var pct=Math.min(100,(age/lifeExpect)*100);var el=document.getElementById('ageBar');if(!el)return;el.innerHTML='<span class="cur-age">'+Math.floor(age)+'岁</span><div class="life-prog"><div class="life-prog-fill" style="width:'+pct+'%"></div></div><span class="life-pct">'+Math.floor(pct)+'%</span>'}
 
 </script>
 
