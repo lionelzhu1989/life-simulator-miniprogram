@@ -410,6 +410,20 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 .pie-legend{display:flex;justify-content:center;gap:12px;margin-top:8px;flex-wrap:wrap}
 .pie-legend span{display:flex;align-items:center;font-size:12px;color:#666}
 .pie-legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px}
+.dim-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f5f5f5}
+.dim-name{width:50px;font-weight:600;font-size:13px;color:#333}
+.dim-bar{flex:1;height:8px;background:#eee;border-radius:4px;overflow:hidden}
+.dim-fill{height:100%;background:linear-gradient(90deg,#4472C4,#6a9fd8);border-radius:4px;transition:width .3s}
+.dim-score{width:80px;text-align:right;font-size:12px;color:#666}
+.dim-tip{display:block;font-size:11px;color:#999;padding-left:58px;padding-bottom:6px}
+.ach-tier{margin:12px 0}
+.ach-tier-title{font-size:14px;font-weight:600;margin-bottom:8px;padding-left:8px;border-left:3px solid #FFD700}
+.ach-item{display:flex;align-items:center;gap:10px;padding:10px 8px;border-bottom:1px solid #f5f5f5}
+.ach-item.locked{opacity:.4;filter:grayscale(.5)}
+.ach-icon{font-size:20px;width:32px;text-align:center}
+.ach-name{flex:1;font-size:14px}
+.ach-cond{font-size:11px;color:#999}
+.ach-unlocked{color:#4CAF50;font-size:12px}
 </style>
 </head>
 <body>
@@ -5244,6 +5258,15 @@ function switchTab(tab){var items=document.querySelectorAll('.tab-item');for(var
 // ====== 数据可视化图表 ======
 function renderAssetTrend(){var h=G.assetHistory||[];var recent=h.slice(-12);if(recent.length<2)return '<div class="chart-box"><div class="chart-title">📈 年度资产趋势</div><div style="font-size:12px;color:#999;text-align:center;padding:16px">刚起步，暂无历史</div></div>';var max=Math.max.apply(null,recent);if(max<=0)max=100;var bars='';for(var i=0;i<recent.length;i++){var pct=Math.max(2,(recent[i]/max)*80);bars+='<div class="chart-bar" style="height:'+pct+'px" title="¥'+fmt(recent[i])+'"></div>'}return '<div class="chart-box"><div class="chart-title">📈 近期资产趋势</div><div class="mini-chart">'+bars+'</div><div style="font-size:11px;text-align:right;color:#999">最高: ¥'+fmt(max)+'</div></div>'}
 function renderAssetPie(){var segs=[{l:'现金',v:G.cash||0,c:'#4472C4'},{l:'股票',v:G.stockVal||0,c:'#E06030'},{l:'商铺',v:G.bizVal||0,c:'#4CAF50'},{l:'投资',v:G.investVal||0,c:'#9C27B0'}];var tot=segs.reduce(function(s,x){return s+x.v},0)||1;var cum=0;var stops=segs.map(function(s){if(s.v<=0)return null;var st=cum;var deg=(s.v/tot)*360;cum+=deg;return s.c+' '+st+'deg '+cum+'deg'}).filter(function(x){return x});var grad=stops.length?stops.join(', '):'#eee 0deg 360deg';return '<div class="chart-box"><div class="chart-title">🥧 资产结构</div><div style="width:120px;height:120px;border-radius:50%;margin:0 auto;background:conic-gradient('+grad+')"></div><div class="pie-legend">'+segs.map(function(s){return '<span><i style="background:'+s.c+'"></i>'+s.l+'</span>'}).join('')+'</div></div>'}
+
+
+calcWealthScore=function(){return Math.min(1000,Math.floor((G.cash+(G.stockVal||0)+(G.bizVal||0))/10000))};
+calcFameScore=function(){return Math.min(1000,Math.floor(((G.career&&G.career.level?G.career.level*100:0)+(G.family?G.family.prestige*10:0))))};
+calcHappyScore=function(){return Math.min(1000,Math.floor((G.health+G.mood*2+((G.family&&G.family.spouse)?100:0))/40*100))};
+calcWisdomScore=function(){return Math.min(1000,Math.floor(G.iq*5+(G.eduLevel||0)*50))};
+calcLegacyScore=function(){return Math.min(1000,Math.floor(((G.family&&G.family.children?G.family.children.length*50:0)+(G.rebirthCount||0)*30)))};
+renderDims=function(){var dims=[{n:'财富',s:calcWealthScore(),mx:1000,t:'总资产每¥1万=1分'},{n:'声望',s:calcFameScore(),mx:1000,t:'职业职位+家族声望'},{n:'幸福',s:calcHappyScore(),mx:1000,t:'心情+健康+家庭'},{n:'智慧',s:calcWisdomScore(),mx:1000,t:'智商+学历'},{n:'传承',s:calcLegacyScore(),mx:1000,t:'家族+轮回'}];var html='';for(var i=0;i<dims.length;i++){var d=dims[i];var pct=(d.s/d.mx*100).toFixed(1);html+='<div class="dim-row"><span class="dim-name">'+d.n+'</span><div class="dim-bar"><div class="dim-fill" style="width:'+pct+'%"></div></div><span class="dim-score">'+d.s+'/'+d.mx+'</span></div><span class="dim-tip">'+d.t+'</span>'}return html};
+renderAchievements=function(){var list=[{id:'first_job',name:'初出茅庐',icon:'🎒',cond:'获得第一份工作',tier:'bronze'},{id:'million',name:'百万富翁',icon:'💰',cond:'资产超过¥100万',tier:'bronze'},{id:'marriage',name:'步入婚姻',icon:'💍',cond:'与伴侣结婚',tier:'bronze'},{id:'first_child',name:'为人父母',icon:'👶',cond:'拥有第一个子女',tier:'silver'},{id:'billion',name:'亿万富翁',icon:'💎',cond:'资产超过¥1亿',tier:'silver'},{id:'startup',name:'创业者',icon:'🚀',cond:'成功创业一次',tier:'silver'},{id:'grandchild',name:'四世同堂',icon:'👴',cond:'迎来孙辈',tier:'gold'},{id:'legend',name:'传奇人生',icon:'👑',cond:'累计轮回10次',tier:'gold'}];var tiers=[{id:'gold',name:'🏆 金',c:'#FFD700'},{id:'silver',name:'🥈 银',c:'#C0C0C0'},{id:'bronze',name:'🥉 铜',c:'#CD7F32'}];var html='';for(var t=0;t<tiers.length;t++){html+='<div class="ach-tier"><div class="ach-tier-title" style="border-left-color:'+tiers[t].c+'">'+tiers[t].name+'</div>';for(var i=0;i<list.length;i++){var a=list[i];if(a.tier!==tiers[t].id)continue;var unlocked=G.achievements&&G.achievements[a.id];html+='<div class="ach-item '+(unlocked?'':'locked')+'"><span class="ach-icon">'+(unlocked?a.icon:'🔒')+'</span><span class="ach-name">'+a.name+'</span><span class="ach-cond">'+a.cond+'</span>'+(unlocked?'<span class="ach-unlocked">✓</span>':'')+'</div>'}html+='</div>'}return html};
 </script>
 
 <!-- ===== Bottom Tab Navigation ===== -->
