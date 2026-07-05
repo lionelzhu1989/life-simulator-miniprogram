@@ -311,7 +311,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 .chat-overlay.show{display:flex;}
 .chat-hd{background:var(--header-bg);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0;}
 .chat-back{font-size:24px;cursor:pointer;padding:4px;line-height:1;}
-.chat-nm{font-size:17px;font-weight:600;}
+.chat-nm{font-size:17px;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .chat-body{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;-webkit-overflow-scrolling:touch;background:#ededed;word-break:break-word;}
 .chat-bub{max-width:78%;padding:10px 14px;border-radius:14px;font-size:14px;line-height:1.55;word-break:break-word;animation:bubIn .25s ease;}
 .chat-bub.npc{background:#fff;align-self:flex-start;border-bottom-left-radius:4px;box-shadow:0 1px 2px rgba(0,0,0,.06);}
@@ -323,7 +323,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 .chat-opt:active{background:#eef6ff;border-color:var(--primary);transform:scale(0.98);}
 /* AI Chat Input Area */
 .chat-input-area{padding:10px 12px;background:#f7f7f7;border-top:1px solid #e5e5e5;display:flex;align-items:center;gap:8px;flex-shrink:0;}
-.chat-input-back{width:36px;height:36px;border-radius:50%;background:#e0e0e0;border:none;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s;}
+.chat-input-voice{width:36px;height:36px;border-radius:50%;background:#e0e0e0;border:none;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s;}.chat-input-voice.recording{background:#ff4444;animation:pulse 1s infinite;}@keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.1);}}
 .chat-input-back:active{background:#d0d0d0;}
 .chat-input-field{flex:1;height:38px;border:1.5px solid #ddd;border-radius:19px;padding:0 14px;font-size:14px;outline:none;background:#fff;transition:border .2s;resize:none;font-family:inherit;}
 .chat-input-field:focus{border-color:var(--primary);}
@@ -1187,11 +1187,11 @@ function triggerParentHelp(){
 
 
 <div id="chatOverlay" class="chat-overlay">
-  <div class="chat-hd"><div class="chat-hd-row"><span class="chat-back" onclick="closeChat()">←</span><span class="chat-nm" id="chatName"></span></div><div class="chat-rel-bar" id="chatRelBar"></div></div>
+  <div class="chat-hd"><div class="chat-hd-row"><span class="chat-back" onclick="closeChat()">←</span><span class="chat-nm" id="chatName"></span><span class="chat-tts-toggle" id="chatTtsToggle" onclick="toggleTTS()">🔊</span></div><div class="chat-rel-bar" id="chatRelBar"></div></div>
   <div class="chat-body" id="chatBody"></div>
   <div class="chat-opts" id="chatOpts" style="display:none;"></div>
   <div class="chat-input-area" id="chatInputArea">
-    <button class="chat-input-back" onclick="closeChat()">📞</button>
+    <button class="chat-input-voice" id="chatVoiceBtn" onclick="toggleVoiceRecord()">🎤</button>
     <input type="text" class="chat-input-field" id="chatInputField" placeholder="输入消息..." />
     <button class="chat-input-send" id="chatInputSend" onclick="sendPlayerMessage()">➤</button>
   </div>
@@ -2178,6 +2178,8 @@ function migrateSave(){
   if(!G.unlockedTiers)G.unlockedTiers={};
   if(!G.luxuryItems)G.luxuryItems=[];
   if(!G.shortPositions)G.shortPositions={};
+  // v4.4.3: Load voice preference
+  var _ve=localStorage.getItem('voiceEnabled');if(_ve!==null)G._voiceEnabled=(_ve==='1');
   if(!G.lifeEvents)G.lifeEvents=[];
   if(!G.socialContacts)G.socialContacts=[];
   if(!G.relationships)G.relationships={};
@@ -2186,6 +2188,11 @@ function migrateSave(){
   if(!G.romance)G.romance={npcId:null,stage:'none',affection:0,metMonth:0,lastInteraction:0};
   if(!G.phone)G.phone={threads:[],moments:[],aiMoments:[],notifications:[],flags:{},lastTriggerMonth:0,nextId:1,chatHistory:{},activeChats:[]};
   if(!G.phone.aiMoments)G.phone.aiMoments=[];
+  // v4.4.3: Voice chat globals
+  if(G._voiceEnabled===undefined)G._voiceEnabled=true;
+  if(G._isRecording===undefined)G._isRecording=false;
+  window._speechRecognition=null;
+  window._speechSynth=window.speechSynthesis||null;
   if(!G.phone.notifications)G.phone.notifications=[];
   if(!G.phone.flags)G.phone.flags={};
   if(!G.phone.threads)G.phone.threads=[];
@@ -5660,6 +5667,7 @@ async function openProactiveChat(npcId){
     removeTypingIndicator();
     if(aiGreeting&&aiGreeting!=='...'){
       addChatBubble('npc',aiGreeting);
+      if(G._voiceEnabled&&window._speechSynth&&aiGreeting&&aiGreeting!=='...')speakText(aiGreeting.replace(/[\*\[\]]/g,''));
     }else{
       addChatBubble('npc','在吗？');
     }
@@ -6370,6 +6378,7 @@ async function selectPhoneOption(optIdx){
 }
 
 function closeChat(){
+  stopSpeaking();
   document.getElementById('chatOverlay').classList.remove('show');
   G._openThreadId=null;G._openProactiveNpc=null;
   // Hide date button and panel
@@ -7442,6 +7451,8 @@ async function _doSendMessage(msg,npcId){
   }
   // Add NPC bubble with cleaned reply
   addChatBubble('npc',cleanReply);
+  // v4.4.3: TTS speak NPC reply
+  if(G._voiceEnabled&&window._speechSynth){if(cleanReply&&cleanReply!=='...')speakText(cleanReply.replace(/[\*\[\]]/g,''));}
   // Save to history
   saveChatHistory(npcId,msg,reply);
   // If in template thread, mark round as answered
@@ -7494,6 +7505,63 @@ async function _doSendMessage(msg,npcId){
 }
 
 // Handle Enter key in input
+
+// ===== v4.4.3: Voice Chat (Web Speech API) =====
+function speakText(text){
+  if(!window._speechSynth||!G._voiceEnabled)return;
+  window._speechSynth.cancel();
+  var utter=new SpeechSynthesisUtterance(text);
+  utter.lang='zh-CN';
+  utter.rate=1.1;
+  utter.pitch=1.0;
+  // Try to use a Chinese voice
+  var voices=window._speechSynth.getVoices();
+  var zhVoice=voices.find(function(v){return v.lang&&v.lang.indexOf('zh')===0;});
+  if(zhVoice)utter.voice=zhVoice;
+  window._speechSynth.speak(utter);
+}
+function stopSpeaking(){
+  if(window._speechSynth)window._speechSynth.cancel();
+}
+function toggleTTS(){
+  G._voiceEnabled=!G._voiceEnabled;
+  var btn=document.getElementById('chatTtsToggle');
+  if(btn){btn.textContent=G._voiceEnabled?'🔊':'🔇';btn.classList.toggle('muted',!G._voiceEnabled);}
+  if(!G._voiceEnabled)stopSpeaking();
+  localStorage.setItem('voiceEnabled',G._voiceEnabled?'1':'0');
+  saveGame();
+}
+function initSpeechRecognition(){
+  if(window._speechRecognition)return window._speechRecognition;
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR)return null;
+  var rec=new SR();
+  rec.lang='zh-CN';
+  rec.interimResults=true;
+  rec.continuous=false;
+  rec.onresult=function(e){
+    var transcript='';
+    for(var i=e.resultIndex;i<e.results.length;i++){transcript+=e.results[i][0].transcript;}
+    document.getElementById('chatInputField').value=transcript;
+    if(e.results[e.results.length-1].isFinal){if(transcript.trim())sendPlayerMessage();}
+  };
+  rec.onerror=function(e){console.error('Speech error:',e.error);showToast('🎤 语音识别失败，请重试');var btn=document.getElementById('chatVoiceBtn');if(btn)btn.classList.remove('recording');G._isRecording=false;};
+  rec.onend=function(){var btn=document.getElementById('chatVoiceBtn');if(btn)btn.classList.remove('recording');G._isRecording=false;};
+  window._speechRecognition=rec;
+  return rec;
+}
+function toggleVoiceRecord(){
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){showToast('❌ 浏览器不支持语音识别');return;}
+  var rec=initSpeechRecognition();
+  if(!rec)return;
+  var btn=document.getElementById('chatVoiceBtn');
+  if(G._isRecording){
+    rec.stop();
+  }else{
+    try{rec.start();G._isRecording=true;if(btn)btn.classList.add('recording');}catch(e){console.error(e);}
+  }
+}
 function setupChatInputListener(){
   const input=document.getElementById('chatInputField');
   if(input){
@@ -9359,6 +9427,11 @@ async function triggerAIMoments(){
   const shuffled=allNpcIds.sort(()=>Math.random()-0.5);
   moment.likes=shuffled.slice(0,randInt(1,3));
   if(!G.phone.aiMoments)G.phone.aiMoments=[];
+  // v4.4.3: Voice chat globals
+  if(G._voiceEnabled===undefined)G._voiceEnabled=true;
+  if(G._isRecording===undefined)G._isRecording=false;
+  window._speechRecognition=null;
+  window._speechSynth=window.speechSynthesis||null;
   G.phone.aiMoments.unshift(moment);
   // Keep max 30 AI moments
   if(G.phone.aiMoments.length>30)G.phone.aiMoments=G.phone.aiMoments.slice(0,30);
