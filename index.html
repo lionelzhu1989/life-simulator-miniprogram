@@ -157,6 +157,9 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 .dim-score{width:36px;font-size:14px;font-weight:700;text-align:right;flex-shrink:0;}
 .task-item{display:flex;align-items:center;padding:12px 0;border-bottom:1px solid #f0f0f0;}
 .task-item:last-child{border-bottom:none;}
+.invest-card{background:#fff;border-radius:12px;padding:16px;margin:10px 0;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.invest-stat{display:flex;justify-content:space-between;padding:6px 0;font-size:13px}
+.risk-low{color:#4CAF50}.risk-mid{color:#FF9800}.risk-high{color:#f44336}.risk-extreme{color:#9C27B0}
 .task-icon{font-size:24px;margin-right:12px;flex-shrink:0;}
 .task-info{flex:1;}
 .task-name{font-size:14px;font-weight:500;}
@@ -370,6 +373,10 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 @keyframes pw{0%,100%{opacity:1}50%{opacity:.6}}
 @keyframes pd{0%,100%{opacity:1}50%{opacity:.4}}
 .attr-threshold{font-size:11px;color:#999;display:block}
+.social-tier{margin:8px 0;background:#f8f9fa;border-radius:8px;padding:12px}
+.social-tier h4{font-size:14px;color:#4472C4;margin-bottom:8px}
+.social-tier .btn-row{display:flex;gap:6px}
+.social-tier button{flex:1;font-size:12px;padding:8px 4px}
 </style>
 </head>
 <body>
@@ -435,7 +442,18 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
         <button class="btn btn-outline btn-sm" onclick="fastForward(10)">⏩ 快进10年</button>
       </div>
       <div style="display:flex;gap:8px;margin-top:8px;justify-content:center;">
-        <button class="btn btn-outline btn-sm" style="font-size:11px;" onclick="socialGathering()">🤝 社交聚会 ¥3000</button>
+        <div class="social-tier">
+          <h4>🤝 社交聚会</h4>
+          <div class="btn-row">
+            <button onclick="socialParty(500)">普通聚会<br>¥500</button>
+            <button onclick="socialParty(3000)">高端聚会<br>¥3000</button>
+            <button onclick="socialParty(10000)">顶级聚会<br>¥10000</button>
+          </div>
+        </div>
+        <div class="social-tier">
+          <h4>💼 新手兼职</h4>
+          <div class="btn-row" id="sideJobBtns"></div>
+        </div>
       </div>
       <div class="text-sm text-muted mt-8" id="yearHint">点击按钮推进人生</div>
     </div>
@@ -661,20 +679,20 @@ const JOBS=[
   {id:'director',name:'总监',salary:500000,requireIQ:120,requireEQ:120,level:5,requireMonths:60}
 ];
 const STOCKS=[
-  {code:'TECH001',name:'互联网科技',basePrice:100,volatility:0.3,sector:'tech'},
-  {code:'HOUSE001',name:'地产龙头',basePrice:50,volatility:0.2,sector:'house'},
-  {code:'BANK001',name:'国有银行',basePrice:30,volatility:0.08,sector:'finance'},
-  {code:'MED001',name:'医药生物',basePrice:80,volatility:0.25,sector:'medical'},
-  {code:'AI001',name:'人工智能',basePrice:150,volatility:0.4,sector:'ai'},
-  {code:'ENERGY001',name:'新能源',basePrice:120,volatility:0.35,sector:'energy'}
+  {code:'TECH001',name:'互联网科技',basePrice:100,volatility:0.3,sector:'tech',minRet:-10,maxRet:30,risk:0.45},
+  {code:'HOUSE001',name:'地产龙头',basePrice:50,volatility:0.2,sector:'house',minRet:-5,maxRet:15,risk:0.3},
+  {code:'BANK001',name:'国有银行',basePrice:30,volatility:0.08,sector:'finance',minRet:3,maxRet:8,risk:0.1},
+  {code:'MED001',name:'医药生物',basePrice:80,volatility:0.25,sector:'medical',minRet:-8,maxRet:25,risk:0.35},
+  {code:'AI001',name:'人工智能',basePrice:150,volatility:0.4,sector:'ai',minRet:-15,maxRet:50,risk:0.55},
+  {code:'ENERGY001',name:'新能源',basePrice:120,volatility:0.35,sector:'energy',minRet:-12,maxRet:40,risk:0.5}
 ];
 const HOUSES=[
-  {id:'old',name:'老破小',price:500000,rent:1500,area:50,unlockAsset:0},
-  {id:'normal',name:'刚需住宅',price:1500000,rent:3500,area:90,unlockAsset:0},
-  {id:'school',name:'学区房',price:3000000,rent:5000,area:80,unlockAsset:5000000},
-  {id:'villa',name:'别墅',price:8000000,rent:12000,area:200,unlockAsset:10000000},
-  {id:'luxury_villa',name:'湖景豪宅',price:30000000,rent:35000,area:350,unlockAsset:50000000},
-  {id:'penthouse',name:'顶层公寓',price:80000000,rent:80000,area:500,unlockAsset:200000000}
+  {id:'old',name:'老破小',price:500000,rent:1500,area:50,unlockAsset:0,minRet:2,maxRet:8,risk:0.15},
+  {id:'normal',name:'刚需住宅',price:1500000,rent:3500,area:90,unlockAsset:0,minRet:3,maxRet:12,risk:0.2},
+  {id:'school',name:'学区房',price:3000000,rent:5000,area:80,unlockAsset:5000000,minRet:4,maxRet:15,risk:0.25},
+  {id:'villa',name:'别墅',price:8000000,rent:12000,area:200,unlockAsset:10000000,minRet:3,maxRet:18,risk:0.3},
+  {id:'luxury_villa',name:'湖景豪宅',price:30000000,rent:35000,area:350,unlockAsset:50000000,minRet:2,maxRet:20,risk:0.35},
+  {id:'penthouse',name:'顶层公寓',price:80000000,rent:80000,area:500,unlockAsset:200000000,minRet:1,maxRet:25,risk:0.4}
 ];
 const LOAN_CONFIG={annualRate:0.045,maxTerm:30,downPaymentOptions:[0.3,0.5,0.7]};
 const SPOUSES=[
@@ -684,25 +702,25 @@ const SPOUSES=[
   {id:'civil',name:'公务员',salary:100000,stability:true}
 ];
 const BUSINESSES=[
-  {id:'milktea',name:'奶茶店加盟',price:50000,icon:'🧋',monthlyIncome:[1500,4000],risk:0.2,unlockAsset:0},
-  {id:'convenience',name:'便利店',price:100000,icon:'🏪',monthlyIncome:[3000,8000],risk:0.15,unlockAsset:0},
-  {id:'express',name:'快递驿站',price:30000,icon:'📦',monthlyIncome:[800,2500],risk:0.1,unlockAsset:0},
-  {id:'restaurant',name:'网红餐厅',price:200000,icon:'🍜',monthlyIncome:[5000,15000],risk:0.25,unlockAsset:0},
-  {id:'chain_hotel',name:'连锁酒店',price:5000000,icon:'🏨',monthlyIncome:[80000,200000],risk:0.12,unlockAsset:50000000},
-  {id:'fitness',name:'健身俱乐部',price:2000000,icon:'🏋️',monthlyIncome:[40000,100000],risk:0.15,unlockAsset:20000000}
+  {id:'milktea',name:'奶茶店加盟',price:50000,icon:'🧋',monthlyIncome:[1500,4000],risk:0.2,unlockAsset:0,minRet:10,maxRet:25},
+  {id:'convenience',name:'便利店',price:100000,icon:'🏪',monthlyIncome:[3000,8000],risk:0.15,unlockAsset:0,minRet:8,maxRet:18},
+  {id:'express',name:'快递驿站',price:30000,icon:'📦',monthlyIncome:[800,2500],risk:0.1,unlockAsset:0,minRet:5,maxRet:12},
+  {id:'restaurant',name:'网红餐厅',price:200000,icon:'🍜',monthlyIncome:[5000,15000],risk:0.25,unlockAsset:0,minRet:5,maxRet:30},
+  {id:'chain_hotel',name:'连锁酒店',price:5000000,icon:'🏨',monthlyIncome:[80000,200000],risk:0.12,unlockAsset:50000000,minRet:6,maxRet:15},
+  {id:'fitness',name:'健身俱乐部',price:2000000,icon:'🏋️',monthlyIncome:[40000,100000],risk:0.15,unlockAsset:20000000,minRet:7,maxRet:18}
 ];
 const TECH_INVESTMENTS=[
-  {id:'ai',name:'AI创业公司',icon:'🤖',minInvest:50000,returnMonths:12,outcomes:[
+  {id:'ai',name:'AI创业公司',icon:'🤖',minInvest:50000,returnMonths:12,minRet:-70,maxRet:200,risk:0.6,outcomes:[
     {chance:0.25,multiplier:3.0,text:'🚀 AI公司上市，3倍回报！',type:'good'},
     {chance:0.35,multiplier:1.5,text:'📈 AI公司融资成功，1.5倍回报',type:'good'},
     {chance:0.40,multiplier:0.3,text:'💀 AI公司倒闭，亏损70%',type:'bad'}
   ]},
-  {id:'energy',name:'新能源项目',icon:'⚡',minInvest:80000,returnMonths:18,outcomes:[
+  {id:'energy',name:'新能源项目',icon:'⚡',minInvest:80000,returnMonths:18,minRet:-80,maxRet:300,risk:0.55,outcomes:[
     {chance:0.20,multiplier:4.0,text:'🚀 新能源大爆发，4倍回报！',type:'good'},
     {chance:0.30,multiplier:1.8,text:'📈 新能源稳步增长，1.8倍回报',type:'good'},
     {chance:0.50,multiplier:0.2,text:'💀 新能源项目失败，亏损80%',type:'bad'}
   ]},
-  {id:'biotech',name:'生物科技',icon:'🧬',minInvest:60000,returnMonths:15,outcomes:[
+  {id:'biotech',name:'生物科技',icon:'🧬',minInvest:60000,returnMonths:15,minRet:-90,maxRet:400,risk:0.65,outcomes:[
     {chance:0.15,multiplier:5.0,text:'🚀 新药研发成功，5倍回报！',type:'good'},
     {chance:0.25,multiplier:2.0,text:'📈 生物科技被收购，2倍回报',type:'good'},
     {chance:0.60,multiplier:0.1,text:'💀 临床试验失败，几乎全亏',type:'bad'}
@@ -1218,7 +1236,7 @@ function confirmFF(years){var r=checkFFRisk();if(!r.length)return true;return co
 
 function defaultState(){
   const legacy=loadLegacy();
-  let cash=100000,hp=100,mood=100,iq=100,eq=100;
+  let cash=10000,hp=100,mood=100,iq=100,eq=100;
   legacy.upgrades.forEach(uid=>{
     const u=LEGACY_UPGRADES.find(x=>x.id===uid);
     if(!u)return;
@@ -5180,6 +5198,11 @@ function closeModal(id){var el=document.getElementById(id);if(el)el.remove()}
 function genNPCs(cost){var tiers={500:{n:[1,2],t:'normal'},3000:{n:[1,3],t:'high'},10000:{n:[2,5],t:'top'}};var cfg=tiers[cost]||tiers[500];var num=Math.floor(Math.random()*(cfg.n[1]-cfg.n[0]+1))+cfg.n[0];var r=[];for(var i=0;i<num;i++)r.push(createNPC(cfg.t));return r}
 function createNPC(t){var tagMap={normal:[{tag:'普通白领',benefit:'日常交流'}],high:[{tag:'行业精英',benefit:'内推机会'},{tag:'投资人',benefit:'项目对接'}],top:[{tag:'企业高管',benefit:'高管内推'},{tag:'知名投资人',benefit:'投资机会'},{tag:'政府人士',benefit:'政策资讯'}]};var pool=tagMap[t]||tagMap.normal;var item=pool[Math.floor(Math.random()*pool.length)];return {name:genNPCName(),icon:'👤',tag:item.tag,benefit:item.benefit,company:'某公司',intimacy:20,rel:'acquaintance'}}
 function genNPCName(){var s=['张','王','李','赵','陈','刘','杨','黄'];var n=['伟','芳','娜','强','敏','静','杰','磊'];return s[Math.floor(Math.random()*s.length)]+n[Math.floor(Math.random()*n.length)]+'某'}
+var SIDE_JOBS=[{type:'writing',name:'写作',attr:'iq',inc:[2000,8000],cost:3},{type:'consulting',name:'咨询',attr:'iq',inc:[5000,20000],cost:5},{type:'reselling',name:'代购',attr:'charm',inc:[1000,5000],cost:2},{type:'tutoring',name:'家教',attr:'iq',inc:[3000,10000],cost:3}];
+function doSideJob(job){if(G.age>1){showToast('兼职仅限新手首月','info');return}var av=G[job.attr]||50;var min=job.inc[0],max=job.inc[1];var inc=Math.floor(min+(max-min)*(av/100));var noise=Math.floor(inc*0.1);inc+=Math.floor(Math.random()*noise*2-noise);G.cash+=inc;G.mood-=job.cost;showToast(job.name+'兼职：+¥'+inc,'success')}
+function renderSideJobs(){var el=document.getElementById('sideJobBtns');if(!el)return;var html='';for(var i=0;i<SIDE_JOBS.length;i++){var j=SIDE_JOBS[i];html+='<button onclick="doSideJob(SIDE_JOBS['+i+'])">'+j.name+'<br>心情-'+j.cost+'</button>'}el.innerHTML=html}
+function renderInvestCard(inv){var er=inv.minRet+'-'+inv.maxRet;var rc=inv.risk<.2?'risk-low':inv.risk<.4?'risk-mid':inv.risk<.6?'risk-high':'risk-extreme';var rl=inv.risk<.2?'低':inv.risk<.4?'中':inv.risk<.6?'高':'极高';var pb=Math.ceil(inv.price/((inv.minRet+inv.maxRet)/2/100/12));return '<div class="invest-card"><h4>'+inv.name+'</h4><div class="invest-stat">预期年化：<span>'+er+'%</span></div><div class="invest-stat">风险等级：<span class="'+rc+'">● '+rl+'</span></div><div class="invest-stat">预计回本：<span>'+pb+'个月</span></div><div class="invest-stat">价格：<span>¥'+fmt(inv.price)+'</span></div><button onclick="buyInvest(\''+inv.id+'\')">购买</button></div>'}
+function buyInvest(id){var allItems=[];STOCKS.forEach(function(s){allItems.push({id:s.code,name:s.name,price:s.basePrice,minRet:s.minRet,maxRet:s.maxRet,risk:s.risk})});BUSINESSES.forEach(function(b){allItems.push({id:b.id,name:b.name,price:b.price,minRet:b.minRet,maxRet:b.maxRet,risk:b.risk})});TECH_INVESTMENTS.forEach(function(t){allItems.push({id:t.id,name:t.name,price:t.minInvest,minRet:t.minRet,maxRet:t.maxRet,risk:t.risk})});HOUSES.forEach(function(h){allItems.push({id:h.id,name:h.name,price:h.price,minRet:h.minRet,maxRet:h.maxRet,risk:h.risk})});var item=allItems.find(function(t){return t.id===id});if(!item)return;if(G.cash<item.price){showModal({title:'余额不足',content:'现金不足以购买 '+item.name+'！',showCancel:false});return;}showModal({title:'购买 '+item.name,content:'确认投资：'+item.name+'\\n投入：¥'+fmt(item.price)+'\\n预期年化：'+item.minRet+'~'+item.maxRet+'%\\n风险等级：'+(item.risk<.2?'低':item.risk<.4?'中':item.risk<.6?'高':'极高'),success:function(res){if(res.confirm){G.cash-=item.price;showFloatText('✅ 投资 '+item.name+' 成功！',true);saveGame();}}})}
 </script>
 </body>
 </html>
