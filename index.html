@@ -1089,7 +1089,7 @@ function triggerParentHelp(){
       <div class="phone-tab" onclick="switchPhoneTab('notifications')" style="position:relative;">🔔 通知<span class="notif-badge" id="notifBadge" style="display:none;">0</span></div>
     </div>
     <div id="phone-messages" class="phone-content active"></div>
-    <div id="phone-contacts" class="phone-content"></div>
+    <div id="phone-contacts" class="phone-content"><div style="padding:8px;background:linear-gradient(135deg,#ff6b35,#ff8c42);color:#fff;text-align:center;border-radius:8px;margin-bottom:12px;cursor:pointer;" onclick="recruitNewFriend()">🤝 招朋友</div></div>
     <div id="phone-schedule" class="phone-content"></div>
     <div id="phone-moments" class="phone-content"></div>
     <div id="phone-notifications" class="phone-content"></div>
@@ -1244,7 +1244,9 @@ const BUSINESSES=[
   {id:'express',name:'快递驿站',price:30000,icon:'📦',monthlyIncome:[800,2500],risk:0.1,unlockAsset:0},
   {id:'restaurant',name:'网红餐厅',price:200000,icon:'🍜',monthlyIncome:[5000,15000],risk:0.25,unlockAsset:0},
   {id:'chain_hotel',name:'连锁酒店',price:5000000,icon:'🏨',monthlyIncome:[80000,200000],risk:0.12,unlockAsset:50000000},
-  {id:'fitness',name:'健身俱乐部',price:2000000,icon:'🏋️',monthlyIncome:[40000,100000],risk:0.15,unlockAsset:20000000}
+  {id:'fitness',name:'健身俱乐部',price:2000000,icon:'🏋️',monthlyIncome:[40000,100000],risk:0.15,unlockAsset:20000000},
+  {id:'ai_cafe',name:'AI体验店',price:800000,icon:'🤖',monthlyIncome:[20000,60000],risk:0.18,unlockAsset:5000000},
+  {id:'ad_agency',name:'广告公司',price:1500000,icon:'📺',monthlyIncome:[35000,90000],risk:0.12,unlockAsset:10000000}
 ];
 const TECH_INVESTMENTS=[
   {id:'ai',name:'AI创业公司',icon:'🤖',type:'高风险高回报',riskLabel:'🔥',minInvest:50000,returnMonths:30,outcomes:[
@@ -2161,6 +2163,7 @@ function switchInvestTab(name){
 function migrateSave(){
   if(!G.houses)G.houses=[];
   if(!G.businesses)G.businesses=[];
+  G.businesses.forEach(function(b){if(b.employeeNpcId===undefined)b.employeeNpcId=null;if(!b.employeeEvents)b.employeeEvents=[];});
   if(!G.techInvestments)G.techInvestments=[];
   if(!G.achievements)G.achievements=[];
   if(!G.activeNews)G.activeNews=[];
@@ -2882,13 +2885,30 @@ async function advanceMonth(){
       b.quality=clamp(b.quality-randInt(3,8),0,100);
       G.events.push({text:info.icon+' '+info.name+' 本月亏损 '+fmt(loss),type:'bad'});
     }else{
-      const inc=randInt(Math.round(incLow),Math.round(incHigh));
+      let inc=randInt(Math.round(incLow),Math.round(incHigh));
+      // v4.4.0: NPC员工加成
+      if(b.employeeNpcId){
+        var empMult=1.15+Math.random()*0.15;
+        inc=Math.round(inc*empMult);
+      }
       bizIncome+=inc;
       b.totalIncome+=inc;
       b.lastMonthIncome=inc;
     }
   });
   income+=bizIncome;
+  // v4.4.0: NPC员工随机事件
+  G.businesses.forEach(function(b){
+    if(!b.employeeNpcId)return;
+    var rp=NPC_PERSONALITIES[b.employeeNpcId];if(!rp)return;
+    if(Math.random()<0.25){
+      var evts=[rp.name+'谈成了一个大客户',rp.name+'优化了店内流程',rp.name+'帮店里拍了宣传视频',rp.name+'请了两天假'];
+      var evt=evts[Math.floor(Math.random()*evts.length)];
+      b.employeeEvents=b.employeeEvents||[];
+      b.employeeEvents.push({month:G.totalMonths,event:evt});
+      if(b.employeeEvents.length>8)b.employeeEvents.shift();
+    }
+  });
   // Tech investments: v4.1.19 fix13 - 长周期，崩溃才停
   G.techInvestments=G.techInvestments.filter(t=>{
     const tech=TECH_INVESTMENTS.find(x=>x.id===t.id);
@@ -3691,6 +3711,12 @@ function openBusinessDetail(id){
   content+='<div class="biz-act" onclick="businessManage(\''+b.id+'\',\'expand\')">🏗️ 扩张</div>';
   content+='<div class="biz-act" onclick="businessManage(\''+b.id+'\',\'cutcorners\')">⚠️ 偷工减料</div>';
   content+='<div class="biz-act" onclick="businessManage(\''+b.id+'\',\'heist\')" style="background:#fff3f3;border-color:#e74c3c;color:#c0392b;">🕵️ 捞钱</div>';
+  if(owned.employeeNpcId){
+    content+='<div class="biz-act" onclick="getEmployeeAdvice(\''+b.id+'\',\''+owned.employeeNpcId+'\')">💡 '+NPC_PERSONALITIES[owned.employeeNpcId].name+'建议</div>';
+    content+='<div class="biz-act" onclick="fireNpcFromBusiness(\''+b.id+'\');closeModal();" style="background:#fff3f3;color:#c0392b;">👋 解雇</div>';
+  } else {
+    content+='<div class="biz-act" onclick="showHireNpcList(\''+b.id+'\')">🧑‍💼 招聘店长</div>';
+  }
   content+='<div class="biz-act" onclick="sellBusiness(\''+b.id+'\');closeModal();" style="background:#fff3f0;border-color:#e67e22;">转让 '+fmt(sellPrice)+'</div>';
   content+='</div>';
   content+='</div>';
@@ -3757,7 +3783,85 @@ function buyBusiness(id){
   const b=BUSINESSES.find(x=>x.id===id);
   if(G.businesses.find(x=>x.id===id)){showToast('已拥有！');return;}
   if(G.cash<b.price){showToast('现金不足！');return;}
-  showModal({title:'加盟 '+b.name,content:'投入：'+fmt(b.price)+'\n预期月收入：'+fmt(b.monthlyIncome[0])+'~'+fmt(b.monthlyIncome[1])+'\n风险：'+(b.risk*100)+'%',success(res){if(res.confirm){G.cash-=b.price;G.businesses.push({id:b.id});if(!G.lifeEvents)G.lifeEvents=[];G.lifeEvents.push({month:G.totalMonths,icon:'🏪',title:'投资'+b.name,detail:'投入'+fmt(b.price)+'开设'+b.name,type:'invest'});G.monthlyTasks['invest_stock']=true;saveGame();refreshBusiness();refreshLife();showFloatText('🏪 开业大吉！',true);checkAchievements();}}});
+  showModal({title:'加盟 '+b.name,content:'投入：'+fmt(b.price)+'\n预期月收入：'+fmt(b.monthlyIncome[0])+'~'+fmt(b.monthlyIncome[1])+'\n风险：'+(b.risk*100)+'%',success(res){if(res.confirm){G.cash-=b.price;G.businesses.push({id:b.id,employeeNpcId:null,employeeEvents:[]});if(!G.lifeEvents)G.lifeEvents=[];G.lifeEvents.push({month:G.totalMonths,icon:'🏪',title:'投资'+b.name,detail:'投入'+fmt(b.price)+'开设'+b.name,type:'invest'});G.monthlyTasks['invest_stock']=true;saveGame();refreshBusiness();refreshLife();showFloatText('🏪 开业大吉！',true);checkAchievements();}}});
+}
+
+// ===== v4.4.0: NPC雇佣系统 =====
+function hireNpcToBusiness(bizId, npcId){
+  const b=G.businesses.find(x=>x.id===bizId);if(!b)return;
+  const p=NPC_PERSONALITIES[npcId];if(!p){showToast('该NPC不存在');return;}
+  const existing=G.businesses.find(x=>x.employeeNpcId===npcId);
+  if(existing){showToast(p.name+'已经在其他地方工作了！');return;}
+  b.employeeNpcId=npcId;
+  b.employeeEvents=b.employeeEvents||[];
+  b.employeeEvents.push({month:G.totalMonths,event:p.name+'入职'+b.name});
+  saveGame();refreshBusiness();openBusinessDetail(bizId);
+  showToast(p.emoji+' '+p.name+'入职成功！');
+}
+function fireNpcFromBusiness(bizId){
+  const b=G.businesses.find(x=>x.id===bizId);if(!b||!b.employeeNpcId)return;
+  const p=NPC_PERSONALITIES[b.employeeNpcId];
+  b.employeeEvents=b.employeeEvents||[];
+  b.employeeEvents.push({month:G.totalMonths,event:(p?p.name:'员工')+'离职'});
+  b.employeeNpcId=null;
+  saveGame();refreshBusiness();openBusinessDetail(bizId);
+  showToast('已解除雇佣');
+}
+async function getEmployeeAdvice(bizId, npcId){
+  const b=BUSINESSES.find(x=>x.id===bizId);
+  const p=NPC_PERSONALITIES[npcId];if(!b||!p)return;
+  showToast(p.name+'正在思考建议...');
+  showTypingIndicator();
+  try{
+    const reply=await generateNPCReply(npcId,'我刚刚来'+b.name+'当店长，结合我的性格给3个具体经营建议:',[]);
+    removeTypingIndicator();
+    showModal({title:p.avatar+' '+p.name+'的建议',content:'<div style="line-height:1.6;font-size:14px;">'+reply+'</div>'});
+  }catch(e){
+    removeTypingIndicator();
+    showModal({title:p.avatar+' '+p.name+'的建议',content:'根据我的经验，这家'+b.name+'需要重点关注客户体验和成本控制！'});
+  }
+}
+function recruitNewFriend(){
+  const pool=[
+    {id:'xiao_zhang',name:'小张',avatar:'🧑‍🎓',traits:['应届生','找工作','北漂'],bio:'刚毕业正在打拼'},
+    {id:'crazy_li',name:'李疯狂',avatar:'🤪',traits:['连续创业者','失败3次','乐观'],bio:'第四次创业中'},
+    {id:'yoga_wang',name:'王瑜伽',avatar:'🧘',traits:['瑜伽教练','素食','养生'],bio:'开瑜伽馆的'},
+    {id:'money_chen',name:'陈投资',avatar:'💰',traits:['天使投资人','眼光毒辣'],bio:'做天使投资的'},
+    {id:'pet_zhao',name:'赵萌宠',avatar:'🐱',traits:['猫咪博主','网红','社恐'],bio:'20万粉丝萌宠博主'},
+    {id:'coder_liu',name:'刘代码',avatar:'👨‍💻',traits:['BAT程序员','35岁危机','副业'],bio:'大厂码农搞副业'},
+    {id:'pei_qi',name:'佩琪',avatar:'👩‍🍳',traits:['烘焙师','私房','朋友圈达人'],bio:'做了5年私房烘焙'},
+    {id:'boss_sun',name:'孙总',avatar:'🕴️',traits:['小企业主','制造业','转型'],bio:'开工厂研究转型'}
+  ];
+  const existingIds=(G.socialContacts||[]).map(function(c){return c.id;});
+  const avail=pool.filter(function(f){return !existingIds.includes(f.id);});
+  if(avail.length===0){showToast('所有人都认识了！');return;}
+  const pick=avail[Math.floor(Math.random()*avail.length)];
+  if(!G.socialContacts)G.socialContacts=[];
+  G.socialContacts.push({id:pick.id,name:pick.name,avatar:pick.avatar,friendLevel:1,metMonth:G.totalMonths,metWhere:'社交活动'});
+  if(!NPC_PERSONALITIES[pick.id]){
+    NPC_PERSONALITIES[pick.id]={name:pick.name,avatar:pick.avatar,traits:pick.traits,bio:pick.bio,
+      greetings:[{text:'嘿！最近怎么样？',tag:'日常'},{text:'好久不见！',tag:'叙旧'},{text:'有个事想聊',tag:'分享'}],
+      responses:pick.traits,
+      followups:['你觉得我现在这样行吗','最近好多事','改天约出来吃饭？','你忙什么呢','我在考虑要不要跳槽','周末出去玩？','上次你说的我还想着','改天请你吃饭']};
+    NPC_STYLE_INSTRUCTIONS[pick.id]='你是'+pick.name+'，'+pick.traits.join('、')+'。你们在社交活动上认识，说话有分寸但不拘谨，偶尔冷笑话或自黑。回复简短口语化，不超过4句话。';
+  }
+  showToast('🎉 认识新朋友：'+pick.name);
+  saveGame();renderContacts();
+}
+function showHireNpcList(bizId){
+  const b=BUSINESSES.find(x=>x.id===bizId);if(!b)return;
+  const npcPool=['liqun','qinzhao','colleague','classmate','neighbor','exColleague','mentor','gymCoach','realtor','banker','bestie'];
+  let html='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">';
+  npcPool.forEach(function(npcId){
+    const p=NPC_PERSONALITIES[npcId];if(!p)return;
+    html+='<div onclick="hireNpcToBusiness(\''+bizId+'\',\''+npcId+'\');closeModal();" style="padding:10px;border:1px solid #eee;border-radius:8px;cursor:pointer;text-align:center;">';
+    html+='<div style="font-size:24px;">'+p.avatar+'</div>';
+    html+='<div style="font-size:12px;font-weight:600;">'+p.name+'</div>';
+    html+='<div style="font-size:10px;color:#999;">'+p.traits.slice(0,2).join('、')+'</div>';
+    html+='</div>';
+  });
+  html+='</div>';
+  showModal({title:'🧑‍💼 -选择店长',content:html});
 }
 function sellBusiness(id){
   const idx=G.businesses.findIndex(x=>x.id===id);if(idx===-1)return;
