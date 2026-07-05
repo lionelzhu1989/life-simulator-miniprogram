@@ -445,6 +445,10 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
       <div class="card-title"><span class="icon">👨‍👩‍👧</span>家庭</div>
       <div id="familyInfo"></div>
     </div>
+    <div class="card">
+      <div class="card-title"><span class="icon">🌟</span>职业发展V2</div>
+      <div id="careerV2Section"></div>
+    </div>
   </div>
 
   <!-- 投资页 -->
@@ -5120,6 +5124,445 @@ function showLifeSummary(){
 function genMonthlyTasks(){var allTaskDefs=[{id:'income',title:'月收入达到¥5万',check:function(){return(G.lastMonthInc||0)>=50000},reward:{cash:5000,mood:10}},{id:'social',title:'本月结交3位新朋友',check:function(){return(G.newContacts||0)>=3},reward:{mood:15}},{id:'health',title:'保持健康≥80',check:function(){return G.health>=80},reward:{health:5}},{id:'invest',title:'投资收益超¥1万',check:function(){return(G.lastMonthInvInc||0)>=10000},reward:{cash:20000}},{id:'family',title:'陪伴家人（心情≥70）',check:function(){return G.mood>=70&&G.family&&G.family.spouse},reward:{prestige:5}},{id:'study',title:'提升任意属性到60',check:function(){return Math.max(G.iq||0,G.charm||0,G.strength||0)>=60},reward:{attrPts:1}}];G.monthlyTasks=[];var picked=[];var pool=allTaskDefs.slice();while(G.monthlyTasks.length<3&&pool.length>0){var idx=Math.floor(Math.random()*pool.length);var t=pool.splice(idx,1)[0];G.monthlyTasks.push({defId:t.id,title:t.title,progress:0,done:false,check:t.check,reward:t.reward})}G.newContacts=0;G.lastMonthInc=0;G.lastMonthInvInc=0}
 function checkMonthlyTasks(){if(!G.monthlyTasks)return;for(var i=0;i<G.monthlyTasks.length;i++){var t=G.monthlyTasks[i];if(t.done)continue;if(t.check()){t.done=true;var rw=t.reward;if(rw.cash){G.cash+=rw.cash;showToast('✓ '+t.title+' +¥'+rw.cash,'success')}if(rw.mood){G.mood=Math.min(100,G.mood+rw.mood);showToast('✓ '+t.title+' +心情'+rw.mood,'success')}if(rw.health){G.health=Math.min(100,G.health+rw.health)}if(rw.attrPts){G.attrPoints=(G.attrPoints||0)+rw.attrPts;showToast('✓ '+t.title+' +属性点'+rw.attrPts,'success')}if(rw.prestige&&G.family){G.family.prestige=(G.family.prestige||0)+rw.prestige}}}}
 function renderMonthlyTasks(){if(!G.monthlyTasks||!G.monthlyTasks.length)return '';var html='<div style="padding:12px"><h4>📋 月度任务</h4>';for(var i=0;i<G.monthlyTasks.length;i++){var t=G.monthlyTasks[i];html+='<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee;opacity:'+(t.done?.5:1)+'"><span style="flex:1;font-size:13px">'+(t.done?'✓ ':'○ ')+t.title+'</span>'+(t.done?'<span style="color:#4CAF50;font-size:12px">已完成</span>':'')+'</div>'}html+='</div>';return html}
+
+
+// ============================================================
+
+// ============================================================
+// ADDITIVE MODULE: Family System V2, Career V2, Choice Events
+// All new code only — no modifications to existing functions
+// ============================================================
+
+// ===== Family System V2 =====
+function childrenGrowth(){
+  if(!G.children||G.children<=0)return;
+  if(!G.childAges)G.childAges=[];
+  let changed=false;
+  G.childAges.forEach(function(childAge,idx){
+    if(childAge>=18){
+      if(!G._childrenGrownUp)G._childrenGrownUp=[];
+      if(G._childrenGrownUp.indexOf(idx)===-1){
+        G._childrenGrownUp.push(idx);
+        var bonusIQ=randInt(5,15);
+        var bonusEQ=randInt(5,15);
+        G.IQ=clamp(G.IQ+Math.floor(bonusIQ/2),0,200);
+        G.EQ=clamp(G.EQ+Math.floor(bonusEQ/2),0,200);
+        if(!G.lifeEvents)G.lifeEvents=[];
+        G.lifeEvents.push({month:G.totalMonths,icon:'🎓',title:'孩子'+(idx+1)+'长大成人',detail:'孩子长大成才，遗传了部分天赋（IQ+'+Math.floor(bonusIQ/2)+' EQ+'+Math.floor(bonusEQ/2)+'）',type:'family'});
+        changed=true;
+      }
+    }
+  });
+  if(changed){saveGame();refreshAll();}
+}
+
+function educateChild(){
+  if(!G.children||G.children<=0){showToast('还没有孩子可以教育');return;}
+  if(!G.childAges)G.childAges=[];
+  var costPerChild=10000;
+  var totalCost=costPerChild*G.children;
+  if(G.cash<totalCost){showModal({title:'余额不足',content:'教育投入需要'+fmt(totalCost)+'元，当前现金不足！',showCancel:false,confirmText:'知道了'});return;}
+  showModal({
+    title:'教育投入',
+    content:'为'+G.children+'个孩子投入优质教育（共'+fmt(totalCost)+'），可以提升孩子的未来为你的属性加成概率。\n\n当前孩子年龄：'+G.childAges.map(function(a){return a.toFixed(1)+'岁';}).join('、'),
+    confirmText:'投资教育',
+    success:function(res){
+      if(!res.confirm)return;
+      G.cash-=totalCost;
+      G._childEducationLevel=(G._childEducationLevel||0)+1;
+      var totalIQBonus=0;
+      var totalEQBonus=0;
+      G.childAges.forEach(function(age,idx){
+        if(age<18){
+          var bonus=randInt(1,3);
+          totalIQBonus+=bonus;
+          G.IQ=clamp(G.IQ+bonus,0,200);
+          var eqBonus=randInt(1,3);
+          totalEQBonus+=eqBonus;
+          G.EQ=clamp(G.EQ+eqBonus,0,200);
+        }
+      });
+      if(!G.lifeEvents)G.lifeEvents=[];
+      G.lifeEvents.push({month:G.totalMonths,icon:'📚',title:'教育投入',detail:'投入'+fmt(totalCost)+'培养孩子，IQ+'+totalIQBonus+' EQ+'+totalEQBonus,type:'family'});
+      G.mood=clamp(G.mood+5,0,200);
+      saveGame();refreshAll();
+      showToast('📚 教育投入成功！IQ+'+totalIQBonus+' EQ+'+totalEQBonus);
+      checkAchievements();
+    }
+  });
+}
+
+// ===== Career V2: Job Offers =====
+var JOB_OFFER_TEMPLATES=[
+  {company:'互联网大厂',salaryMult:[1.2,1.8],requireIQ:100,requireEQ:80,level:2},
+  {company:'外资咨询公司',salaryMult:[1.3,2.0],requireIQ:115,requireEQ:100,level:3},
+  {company:'创业公司',salaryMult:[0.8,1.5],requireIQ:90,requireEQ:85,level:1,equityChance:0.3},
+  {company:'金融机构',salaryMult:[1.5,2.5],requireIQ:120,requireEQ:90,level:4},
+  {company:'国企',salaryMult:[0.9,1.2],requireIQ:85,requireEQ:70,level:1,stability:true},
+  {company:'独角兽公司',salaryMult:[1.4,2.2],requireIQ:110,requireEQ:95,level:3,equityChance:0.5}
+];
+
+function genJobOffers(){
+  var age=getAge();
+  if(age<23)return [];
+  var offers=[];
+  var numOffers=randInt(1,3);
+  var currentSalary=JOBS[G.jobIndex]?JOBS[G.jobIndex].salary:72000;
+  for(var i=0;i<numOffers;i++){
+    var tpl=JOB_OFFER_TEMPLATES[randInt(0,JOB_OFFER_TEMPLATES.length-1)];
+    var salMult=tpl.salaryMult[0]+Math.random()*(tpl.salaryMult[1]-tpl.salaryMult[0]);
+    var salary=Math.round(currentSalary*salMult/10000)*10000;
+    offers.push({
+      id:'offer_'+Date.now()+'_'+i,
+      company:tpl.company,
+      name:tpl.company+'高薪职位',
+      salary:Math.max(salary,60000),
+      requirement:{IQ:Math.floor(tpl.requireIQ*0.9),EQ:Math.floor(tpl.requireEQ*0.9)},
+      equity:!!(tpl.equityChance&&Math.random()<tpl.equityChance),
+      stability:!!tpl.stability,
+      level:tpl.level
+    });
+  }
+  offers.sort(function(a,b){return b.salary-a.salary;});
+  G._currentJobOffers=offers;
+  G._jobOffersGeneratedAt=G.totalMonths;
+  return offers;
+}
+
+function applyJobOffer(offerIdx){
+  if(!G._currentJobOffers||G._currentJobOffers.length===0){showToast('没有可用的工作Offer，请刷新');return;}
+  var offer=G._currentJobOffers[offerIdx];
+  if(!offer)return;
+  if(G.IQ<offer.requirement.IQ){showToast('智商不足，无法接受此Offer');return;}
+  if(G.EQ<offer.requirement.EQ){showToast('情商不足，无法接受此Offer');return;}
+  var oldJob=JOBS[G.jobIndex]?JOBS[G.jobIndex].name:'无';
+  G._startup=null;
+  var matchingJob=null;
+  for(var i=0;i<JOBS.length;i++){
+    if(JOBS[i].level===offer.level){matchingJob=JOBS[i];G.jobIndex=i;break;}
+  }
+  G.monthsAtJob=0;
+  var refSalary=matchingJob?matchingJob.salary:offer.salary;
+  var salaryRatio=offer.salary/refSalary;
+  G.salaryBonus=(G.salaryBonus||0)+(salaryRatio>1?(salaryRatio-1)*0.5:0);
+  G.mood=clamp(G.mood+15,0,200);
+  if(!G.lifeEvents)G.lifeEvents=[];
+  G.lifeEvents.push({month:G.totalMonths,icon:'💼',title:'跳槽到'+offer.company,detail:'离开了'+oldJob+'，加入'+offer.company+'，年薪'+fmt(offer.salary),type:'career'});
+  if(offer.equity){
+    G._equityGranted=(G._equityGranted||0)+1;
+    var equityVal=randInt(50000,200000);
+    G._pendingEquity=(G._pendingEquity||0)+equityVal;
+  }
+  G._currentJobOffers=[];
+  saveGame();refreshAll();refreshWork();
+  showToast('🎉 成功加入'+offer.company+'！');
+  checkAchievements();
+}
+
+// ===== Career V2: Startup System =====
+function startStartup(){
+  if(G._startup){showToast('你已经有一个创业项目了');return;}
+  var cost=200000;
+  if(G.cash<cost){showModal({title:'启动资金不足',content:'创业需要启动资金'+fmt(cost)+'元！',showCancel:false,confirmText:'知道了'});return;}
+  showModal({
+    title:'选择创业方向',
+    content:'选择一个你想创业的方向：',
+    confirmText:'确认方向',
+    showCancel:true,
+    success:function(res){
+      if(!res.confirm)return;
+      var types=[
+        {name:'🛒 电商服务',successRate:0.3,maxReturn:4},
+        {name:'💻 软件开发',successRate:0.25,maxReturn:5},
+        {name:'📱 移动应用',successRate:0.2,maxReturn:6},
+        {name:'🎓 在线教育',successRate:0.35,maxReturn:3},
+        {name:'🤖 AI服务',successRate:0.15,maxReturn:8}
+      ];
+      var t=types[randInt(0,types.length-1)];
+      G._startup={
+        type:t.name,
+        successRate:t.successRate,
+        maxReturn:t.maxReturn,
+        monthsRunning:0,
+        monthsToResult:randInt(6,18),
+        invested:cost,
+        valuation:0,
+        talent:clamp(G.IQ+G.EQ-150,10,100),
+        market:randInt(20,80)
+      };
+      G.cash-=cost;
+      G.jobIndex=0;
+      G.monthsAtJob=0;
+      if(!G.lifeEvents)G.lifeEvents=[];
+      G.lifeEvents.push({month:G.totalMonths,icon:'🚀',title:'开始创业',detail:'投入'+fmt(cost)+'元，创办'+t.name+'公司',type:'career'});
+      saveGame();refreshAll();
+      showModal({title:'🚀 创业启动',content:'你创办了'+t.name+'公司！启动资金'+fmt(cost)+'元已投入。\n\n你需要'+G._startup.monthsToResult+'个月后看到结果。\n\n属性优势：人才指数'+G._startup.talent+' 市场指数'+G._startup.market,showCancel:false,confirmText:'加油！'});
+      checkAchievements();
+    }
+  });
+}
+
+function processStartup(){
+  if(!G._startup)return;
+  var s=G._startup;
+  s.monthsRunning++;
+  s.talent=clamp(s.talent+randInt(-2,3),0,100);
+  s.market=clamp(s.market+randInt(-3,3),0,100);
+  if(s.monthsRunning>=s.monthsToResult){
+    var score=(s.talent+s.market)/200;
+    var successChance=s.successRate+score*0.3;
+    var succeeded=Math.random()<successChance;
+    if(succeeded){
+      var multiplier=1+Math.random()*(s.maxReturn-1);
+      var payout=Math.round(s.invested*multiplier);
+      G.cash+=payout;
+      var profit=payout-s.invested;
+      if(!G.lifeEvents)G.lifeEvents=[];
+      G.lifeEvents.push({month:G.totalMonths,icon:'🎉',title:s.type+'创业成功！',detail:'获得回报'+fmt(payout)+'，净利润'+fmt(profit)+'！倍数：'+multiplier.toFixed(1)+'x',type:'career'});
+      showModal({title:'🎉 创业成功！',content:s.type+'公司大成功！\n投入：'+fmt(s.invested)+'\n回报：'+fmt(payout)+'\n净利润：'+fmt(profit)+'\n倍数：'+multiplier.toFixed(1)+'x',showCancel:false,confirmText:'太棒了！'});
+      if(multiplier>=3)G.achievements.push('startup_winner');
+    }else{
+      var lossPct=randFloat(0.3,0.9);
+      var recovered=Math.round(s.invested*(1-lossPct));
+      G.cash+=recovered;
+      if(!G.lifeEvents)G.lifeEvents=[];
+      G.lifeEvents.push({month:G.totalMonths,icon:'💔',title:s.type+'创业失败',detail:'亏损'+(lossPct*100).toFixed(0)+'%，仅收回'+fmt(recovered),type:'career'});
+      showModal({title:'💔 创业失败',content:s.type+'公司未能成功。\n投入：'+fmt(s.invested)+'\n收回：'+fmt(recovered)+'\n亏损：'+(lossPct*100).toFixed(0)+'%\n\n不要灰心，创业本身就是一场修行。',showCancel:false,confirmText:'吸取教训'});
+      G.mood=clamp(G.mood-15,0,200);
+    }
+    G._startup=null;
+    G.salaryBonus=0;
+    saveGame();refreshAll();
+    checkAchievements();
+  }
+}
+
+function refreshCareer(){
+  var age=getAge();
+  if(age>=23&&(!G._currentJobOffers||G._currentJobOffers.length===0||(G.totalMonths-(G._jobOffersGeneratedAt||0))>=6)){
+    genJobOffers();
+  }
+  var offerHtml='<div class="section-title">📨 职位推荐</div>';
+  if(G._currentJobOffers&&G._currentJobOffers.length>0){
+    G._currentJobOffers.forEach(function(offer,idx){
+      var canAccept=G.IQ>=offer.requirement.IQ&&G.EQ>=offer.requirement.EQ;
+      offerHtml+='<div class="list-item" style="flex-wrap:wrap;">'+
+        '<div class="list-info" style="width:100%;">'+
+          '<div class="name">💼 '+offer.company+' <span class="text-sm text-muted">'+fmt(offer.salary)+'/年</span></div>'+
+          '<div class="desc">要求：IQ≥'+offer.requirement.IQ+' EQ≥'+offer.requirement.EQ+(offer.equity?' 📦含股权':'')+(offer.stability?' 🛡️稳定':'')+'</div>'+
+        '</div>'+
+        '<div class="list-action"><button class="btn btn-'+(canAccept?'success':'outline')+' btn-sm" onclick="applyJobOffer('+idx+')" '+(canAccept?'':'disabled')+'>'+(canAccept?'接受':'条件不足')+'</button></div>'+
+      '</div>';
+    });
+  }else{
+    offerHtml+='<div class="text-center text-sm text-muted" style="padding:12px 0;">暂无新Offer<br><button class="btn btn-outline btn-sm mt-8" onclick="genJobOffers();refreshCareer();">🔄 刷新职位</button></div>';
+  }
+  offerHtml+='<div class="section-title">🚀 创业</div>';
+  if(G._startup){
+    var s=G._startup;
+    offerHtml+='<div class="card">'+
+      '<div class="flex-between"><span>'+s.type+'</span><span class="tag tag-orange">第'+s.monthsRunning+'月/'+s.monthsToResult+'月</span></div>'+
+      '<div class="mt-8"><div class="flex-between text-sm"><span>人才 '+s.talent+'</span><span>市场 '+s.market+'</span></div></div>'+
+      '<div class="mt-8 text-sm text-muted">已投入：'+fmt(s.invested)+'</div>'+
+    '</div>';
+  }else{
+    offerHtml+='<div class="text-center text-sm text-muted" style="padding:12px 0;"><div>💡 你还没有创业</div><button class="btn btn-warning btn-sm mt-8" onclick="startStartup()">🚀 开始创业 (启动金'+fmt(200000)+')</button></div>';
+  }
+  if(G.children>0){
+    offerHtml+='<div class="section-title">📚 子女教育</div>';
+    offerHtml+='<div class="text-center text-sm text-muted" style="padding:12px 0;">'+
+      '<div>已投入教育次数：'+(G._childEducationLevel||0)+'</div>'+
+      '<button class="btn btn-primary btn-sm mt-8" onclick="educateChild()">投资教育 ('+fmt(10000*G.children)+')</button>'+
+    '</div>';
+  }
+  var el=document.getElementById('careerV2Section');
+  if(el)el.innerHTML=offerHtml;
+}
+
+// ===== Choice Events System =====
+var CHOICE_EVENTS=[
+  {
+    id:'charity_gala',ageMin:28,ageMax:60,weight:1,
+    title:'🎉 慈善晚宴',scene:'你被邀请参加一个高端慈善晚宴。各界名流汇聚，你可以选择不同的参与方式。',
+    options:[
+      {icon:'💎',title:'大额捐款',desc:'捐出50万，获得巨大声望',tag:'慷慨',tagCls:'tag-golden',
+        reqCash:500000,effect:{cash:-500000,mood:20,EQ:10},result:'你豪捐50万！全场起立鼓掌，多位大佬主动加你微信。'},
+      {icon:'🤝',title:'正常参与',desc:'捐5万，得体地社交',tag:'得体',tagCls:'tag-safe',
+        effect:{cash:-50000,EQ:5,mood:5},result:'你得体地参与了晚宴，认识了几位有趣的人。'},
+      {icon:'📱',title:'默默旁观',desc:'不捐款，只观察',tag:'观察',tagCls:'tag-safe',
+        effect:{IQ:3},result:'你默默观察了整场晚宴。虽然没有花钱，但学到了不少社交技巧。'}
+    ]
+  },
+  {
+    id:'investment_pitch',ageMin:30,ageMax:55,weight:1,
+    title:'💡 天使投资邀约',scene:'一个大学同学找到了你，说有一个"稳赚"的项目，希望你能投100万占10%。他拍胸脯保证一年翻倍。',
+    options:[
+      {icon:'💰',title:'投资100万',desc:'相信兄弟，赌一把',tag:'高风险',tagCls:'tag-risk',
+        reqCash:1000000,effect:{cash:-1000000},
+        chance:0.3,success:{cash:3000000,mood:30},fail:{mood:-10},
+        resultWin:'项目一年后估值3000万！你的10%变成了300万，兄弟请你吃了顿好的。',resultFail:'项目遇到了监管问题，100万打了水漂。兄弟很愧疚，关系也淡了。'},
+      {icon:'📊',title:'小额投20万',desc:'表示支持但不All in',tag:'理性',tagCls:'tag-safe',
+        effect:{cash:-200000},
+        chance:0.35,success:{cash:500000,mood:10},fail:{mood:-5},
+        resultWin:'项目一般般，20万收回了50万。至少没亏。',resultFail:'项目没起来，20万亏了。不过伤不到筋骨。'},
+      {icon:'🙅',title:'婉拒',desc:'不熟不做，不懂不投',tag:'谨慎',tagCls:'tag-safe',
+        effect:{mood:3},result:'你婉拒了。后来听说那个项目确实不靠谱，你的判断是对的。'}
+    ]
+  },
+  {
+    id:'health_check',ageMin:35,ageMax:65,weight:1,
+    title:'🏥 体检报告',scene:'年度体检报告出来了，有几个指标亮了红灯。医生建议你改变生活方式。',
+    options:[
+      {icon:'🏃',title:'严格执行健康计划',desc:'健身+饮食调整，投入时间和精力',tag:'自律',tagCls:'tag-golden',
+        effect:{health:20,mood:5,cash:-20000},result:'你开始了健身计划，三个月后指标全部正常了！精神状态也好了很多。'},
+      {icon:'💊',title:'吃药控制',desc:'依靠药物维持指标',tag:'便捷',tagCls:'tag-safe',
+        effect:{health:5,cash:-5000,mood:-3},result:'吃药后指标控制住了，但副作用让你有点疲惫。'},
+      {icon:'🙈',title:'不管它',desc:'工作太忙，没时间管',tag:'忽视',tagCls:'tag-risk',
+        effect:{health:-5,mood:3},result:'你没太在意。身体也没什么不舒服。但问题可能在未来某天爆发。'}
+    ]
+  },
+  {
+    id:'real_estate_opportunity',ageMin:30,ageMax:55,weight:1,
+    title:'🏠 房产投资机会',scene:'城市发展重心转移，一个新兴区域房价涨得很快。有内部消息说地铁要通到这里。',
+    options:[
+      {icon:'🏠',title:'买一套投资',desc:'花200万买入一套',tag:'投资',tagCls:'tag-risk',
+        reqCash:2000000,effect:{cash:-2000000},
+        chance:0.5,success:{cash:500000,mood:15},fail:{mood:-10},
+        resultWin:'地铁真的通了！半年后房子涨了50万！',resultFail:'地铁规划推迟了，房子暂时没涨。不过终归有套房在手里。'},
+      {icon:'👀',title:'观望',desc:'已经涨了这么多，不追高',tag:'保守',tagCls:'tag-safe',
+        effect:{mood:3},result:'你看着房价继续涨，有点后悔。但也避免了可能的下跌风险。'}
+    ]
+  },
+  {
+    id:'overseas_study',ageMin:28,ageMax:50,weight:1,
+    title:'🎓 出国深造机会',scene:'你收到了一个去国外顶尖大学短期进修的机会。3个月，费用50万。这对职业发展很有帮助，但会暂时离开家人。',
+    options:[
+      {icon:'✈️',title:'去深造',desc:'投资自己，拓展视野',tag:'进取',tagCls:'tag-golden',
+        reqCash:500000,effect:{cash:-500000,IQ:15,EQ:8,mood:10},result:'3个月的深造让你大开眼界，回来后工作如鱼得水，很快就升职了。'},
+      {icon:'📱',title:'线上学习',desc:'通过网课和远程项目提升',tag:'务实',tagCls:'tag-safe',
+        effect:{cash:-10000,IQ:8,EQ:3},result:'虽然没有出国，但网上的课程质量也不错。关键是省了49万。'},
+      {icon:'🙅',title:'放弃',desc:'现在的岗位更重要',tag:'稳定',tagCls:'tag-safe',
+        effect:{mood:-3},result:'你放弃了这个机会。后来听说同期的同事去完后回来得到了提拔。'}
+    ]
+  },
+  {
+    id:'midlife_reinvention',ageMin:40,ageMax:55,weight:1,
+    title:'🔄 中年转型',scene:'你发现自己喜欢的工作不是现在的职业。是继续在舒适区还是勇敢转型？',
+    options:[
+      {icon:'🚀',title:'勇敢转型',desc:'做自己喜欢的事',tag:'勇敢',tagCls:'tag-golden',
+        effect:{mood:25,cash:-100000,IQ:5},result:'你勇敢地踏上了新赛道。虽然收入暂时下降了，但每天都很充实。'},
+      {icon:'💼',title:'兼职尝试',desc:'不辞职，兼职做喜欢的事',tag:'稳健',tagCls:'tag-safe',
+        effect:{mood:10,cash:20000},result:'你在业余时间发展新技能，收入还有所增加。'},
+      {icon:'😴',title:'继续现在的生活',desc:'稳定最重要',tag:'保守',tagCls:'tag-safe',
+        effect:{mood:-5},result:'你继续过着稳定的生活。虽然偶尔会想"如果当初..."，但总体还算满意。'}
+    ]
+  }
+];
+
+function triggerChoiceEvent(){
+  var age=getAge();
+  var eligible=CHOICE_EVENTS.filter(function(e){return age>=e.ageMin&&age<=e.ageMax;});
+  if(eligible.length===0)return;
+  var recent=G._recentChoices||[];
+  var fresh=eligible.filter(function(e){return recent.indexOf(e.id)===-1;});
+  if(fresh.length===0)return;
+  var totalWeight=0;
+  fresh.forEach(function(e){totalWeight+=e.weight;});
+  var r=Math.random()*totalWeight;
+  var chosen=fresh[0];
+  for(var i=0;i<fresh.length;i++){r-=fresh[i].weight;if(r<=0){chosen=fresh[i];break;}}
+  G._recentChoices=G._recentChoices||[];
+  G._recentChoices.push(chosen.id);
+  if(G._recentChoices.length>10)G._recentChoices.shift();
+  G._pendingChoice=chosen;
+  G._pendingChoiceShown=true;
+  renderChoiceEvent(chosen);
+}
+
+function renderChoiceEvent(evt){
+  var optionsHtml='';
+  evt.options.forEach(function(opt,idx){
+    var locked=false;
+    var lockReason='';
+    if(opt.reqIQ&&G.IQ<opt.reqIQ){locked=true;lockReason='IQ需'+opt.reqIQ;}
+    if(opt.reqEQ&&G.EQ<opt.reqEQ){locked=true;lockReason=lockReason?'多项不足':'EQ需'+opt.reqEQ;}
+    if(opt.reqCash&&G.cash<opt.reqCash){locked=true;lockReason=lockReason?'多项不足':'需要'+fmt(opt.reqCash);}
+    optionsHtml+='<div class="choice-option'+(locked?' locked':'')+'"';
+    if(!locked)optionsHtml+=' onclick="resolveChoiceEvent('+idx+')"';
+    optionsHtml+='>'+
+      '<div class="choice-option-icon">'+opt.icon+'</div>'+
+      '<div class="choice-option-body">'+
+        '<div class="choice-option-title">'+opt.title+'</div>'+
+        '<div class="choice-option-desc">'+opt.desc+'</div>';
+    if(opt.tag)optionsHtml+='<span class="choice-option-tag '+opt.tagCls+'">'+opt.tag+'</span>';
+    if(locked)optionsHtml+='<div class="choice-option-lock">🔒 '+lockReason+'</div>';
+    optionsHtml+='</div></div>';
+  });
+  var card=document.getElementById('choiceCard');
+  if(!card)return;
+  card.innerHTML='<div class="choice-header">'+
+    '<div class="choice-title">'+evt.title+'</div>'+
+    '<div class="choice-scene">'+evt.scene+'</div>'+
+  '</div>'+
+  '<div class="choice-options">'+optionsHtml+'</div>';
+  document.getElementById('choiceOverlay').classList.add('show');
+}
+
+function resolveChoiceEvent(optIdx){
+  var evt=G._pendingChoice;
+  if(!evt)return;
+  var opt=evt.options[optIdx];
+  if(!opt)return;
+  if(opt.reqIQ&&G.IQ<opt.reqIQ){showToast('智商不足！');return;}
+  if(opt.reqEQ&&G.EQ<opt.reqEQ){showToast('情商不足！');return;}
+  if(opt.reqCash&&G.cash<opt.reqCash){showToast('资金不足！');return;}
+  var el=document.getElementById('choiceOverlay');
+  if(el)el.classList.remove('show');
+  if(opt.chance!==undefined){
+    var succeeded=Math.random()<opt.chance;
+    var outcome=succeeded?opt.success:opt.fail;
+    if(outcome){
+      if(outcome.cash)G.cash+=outcome.cash;
+      if(outcome.mood)G.mood=clamp(G.mood+outcome.mood,0,200);
+    }
+    if(!G.lifeEvents)G.lifeEvents=[];
+    G.lifeEvents.push({month:G.totalMonths,icon:opt.icon,title:evt.title,detail:succeeded?(opt.resultWin||'成功！'):(opt.resultFail||'失败...'),type:succeeded?'good':'bad'});
+    showModal({title:succeeded?'✅ 成功':'❌ 未成功',content:succeeded?(opt.resultWin||'事情顺利解决！'):(opt.resultFail||'这次没有成功...'),showCancel:false,confirmText:'知道了'});
+  }else{
+    if(opt.effect){
+      if(opt.effect.cash)G.cash+=opt.effect.cash;
+      if(opt.effect.mood)G.mood=clamp(G.mood+opt.effect.mood,0,200);
+      if(opt.effect.IQ)G.IQ=clamp(G.IQ+opt.effect.IQ,0,200);
+      if(opt.effect.EQ)G.EQ=clamp(G.EQ+opt.effect.EQ,0,200);
+      if(opt.effect.health)G.health=clamp(G.health+opt.effect.health,0,200);
+    }
+    if(!G.lifeEvents)G.lifeEvents=[];
+    G.lifeEvents.push({month:G.totalMonths,icon:opt.icon,title:evt.title,detail:opt.result||'',type:'neutral'});
+    showModal({title:'📋 结果',content:opt.result||'你做出了选择。',showCancel:false,confirmText:'继续'});
+  }
+  G._pendingChoice=null;
+  saveGame();refreshAll();
+  checkAchievements();
+}
+
+// ===== Hook: integrate new systems into existing flow =====
+// Wrap refreshWork to also call refreshCareer (use unique names to avoid conflicts)
+var _v2WrapRefreshWork=refreshWork;
+refreshWork=function(){
+  _v2WrapRefreshWork();
+  refreshCareer();
+};
+
+// Hook childrenGrowth + processStartup + choice events into advanceMonth
+var _v2WrapAdvanceMonth=advanceMonth;
+advanceMonth=function(){
+  _v2WrapAdvanceMonth();
+  childrenGrowth();
+  processStartup();
+  if(Math.random()<0.10){
+    triggerChoiceEvent();
+  }
+};
 
 </script>
 </body>
