@@ -2089,7 +2089,11 @@ function triggerGatherEvent(type){
     if(!G.socialContacts)G.socialContacts=[];
     evt.contacts.forEach(ct=>{
       const existing=G.socialContacts.find(c=>c.name===ct.name);
-      if(!existing){G.socialContacts.push({id:'sc_'+(G.socialContacts.length+1),name:ct.name,tag:ct.tag,benefit:ct.benefit,friendLevel:1,addedMonth:G.totalMonths});}
+      if(!existing){
+        var newContact={id:'sc_'+(G.socialContacts.length+1),name:ct.name,avatar:'🤝',tag:ct.tag,benefit:ct.benefit,friendLevel:1,addedMonth:G.totalMonths,traits:['友善','健谈'],relation:ct.tag,responses:['最近还不错','谢谢有空聊','改天一起聚聚'],followups:['下次再约','保持联系'],metMonth:G.totalMonths,metWhere:'社交聚会中'};
+        G.socialContacts.push(newContact);
+        scheduleContactGreeting(newContact);
+      }
     });
   }
   showModal({title:'🤝 '+evt.title,content:evt.desc+contactHtml,confirmText:'好的',success(){}});
@@ -3923,6 +3927,45 @@ function addPhoneThread(tpl){
   pushPhoneThread(thread);
   G.phone.flags['last_'+tpl.id]=G.totalMonths;
   updatePhoneBadge();
+}
+
+// ===== 社交联系人主动打招呼 =====
+function scheduleContactGreeting(contact){
+  if(!G.phone)return;
+  if(!G.phone.activeChats)G.phone.activeChats=[];
+  // 防止重复
+  if(G.phone.activeChats.some(c=>c.npcId===contact.id&&c.status==='active'))return;
+  // 多样化打招呼模板
+  const greetMsgs=[
+    '嗨！我是'+contact.name+'，刚在聚会上认识的。有空聊聊？',
+    '你好！上次聚会聊得挺开心的，保持联系~',
+    'Hi，我是'+contact.name+'（'+contact.tag+'）。以后多交流！',
+    '你好呀，我是'+contact.name+'。听说你也在这个行业发展？',
+    contact.name+'：聚会上一见如故！方便加个好友吗？'
+  ];
+  const msg=greetMsgs[Math.floor(Math.random()*greetMsgs.length)];
+  const thread={
+    id:G.phone.nextId++,
+    npcId:contact.id,
+    npcName:contact.name,
+    npcAvatar:contact.avatar||'🤝',
+    tplId:'greeting_'+contact.id,
+    type:'wechat',
+    rounds:[{npc:msg,opts:[
+      {text:'你好！也很高兴认识你',fx:{EQ:1}},
+      {text:'最近怎么样？',fx:{mood:1}},
+      {text:'好的，有空一起聚聚',fx:{EQ:1,mood:1}}
+    ]}],
+    currentRound:0,
+    status:'unread',
+    receivedMonth:G.totalMonths,
+    readMonth:null,
+    contactInfo:{name:contact.name,tag:contact.tag,benefit:contact.benefit}
+  };
+  G.phone.threads.unshift(thread);
+  contact.hasMessaged=true;
+  updatePhoneBadge();
+  if(typeof updatePhoneHint==='function')updatePhoneHint();
 }
 
 function hasUnread(){return G.phone&&G.phone.threads.some(t=>{if(t.status==='replied')return false;const r=t.rounds[t.currentRound];return r&&!r._playerChoice;});}
