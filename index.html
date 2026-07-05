@@ -11144,7 +11144,7 @@ function renderPetDetail(pet){
   }
   h+='<div class="pet-btn train" onclick="petTrain(\''+pet.id+'\')"><span class="b-icon">🎓</span><span class="b-name">训练</span><span class="b-cost">小游戏</span></div>';
   h+='<div class="pet-btn heal" onclick="petHeal(\''+pet.id+'\')"><span class="b-icon">🏥</span><span class="b-name">治病</span><span class="b-cost">¥2000</span></div>';
-  h+='<div class="pet-btn store" onclick="switchPetTab('shop',document.getElementById('petSubTabs').querySelector('.pet-subtab'))"><span class="b-icon">🏪</span><span class="b-name">商店</span><span class="b-cost">'+(G.petFood<5?'买粮':'逛逛')+'</span></div>';
+  h+='<div class="pet-btn store" onclick="switchPetTab(\'shop\',document.getElementById(\'petSubTabs\').querySelector(\'.pet-subtab\'))"><span class="b-icon">🏪</span><span class="b-name">商店</span><span class="b-cost">'+(G.petFood<5?'买粮':'逛逛')+'</span></div>';
   h+='</div></div>';
   // Multi-pet navigation
   if(G.pets.length>1){
