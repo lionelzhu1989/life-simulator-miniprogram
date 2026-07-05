@@ -5481,6 +5481,19 @@ function accompanyChild(idx){
 }
 
 // ===== 打开主动聊天（AI驱动） =====
+
+function openChat(npcId){
+  // Find active thread for this NPC
+  var thread = G.phone.threads.find(function(t){return t.npcId===npcId && t.status!=='replied';});
+  if(thread){
+    openThread(thread.id);
+  } else {
+    // No active thread - open proactive chat
+    switchTab('phone');
+    setTimeout(function(){ openProactiveChat(npcId); }, 100);
+  }
+}
+
 async function openProactiveChat(npcId){
   initChatHistory();
   injectDynamicContacts();
@@ -6094,12 +6107,13 @@ function openThread(id){
   const thread=G.phone.threads.find(t=>t.id===id);if(!thread)return;
   if(thread.status==='unread'){thread.status='reading';thread.readMonth=G.totalMonths;}
   G._openThreadId=id;
+  G._openProactiveNpc=thread.npcId;
   renderChat();
-  // v3.12.0: 显示模板选项，隐藏AI输入框
+  // v4.3.1: 显示模板选项 AND 输入框（允许自由输入）
   const opts=document.getElementById('chatOpts');
   const area=document.getElementById('chatInputArea');
   if(opts)opts.style.display='flex';
-  if(area)area.style.display='none';
+  if(area)area.style.display='block';
   document.getElementById('chatOverlay').classList.add('show');
   updatePhoneBadge();
 }
@@ -7211,7 +7225,7 @@ async function sendPlayerMessage(){
   const input=document.getElementById('chatInputField');
   const sendBtn=document.getElementById('chatInputSend');
   const msg=input.value.trim();
-  if(!msg)return;if(!G._openProactiveNpc){showToast('💬 请使用下方选项回复');return;}
+  if(!msg)return;if(!G._openProactiveNpc&&!G._openThreadId){showToast('💬 请使用下方选项回复');return;}
   // Clear input
   input.value='';
   // Detect player money giving intent
@@ -7318,6 +7332,11 @@ async function _doSendMessage(msg,npcId){
   addChatBubble('npc',cleanReply);
   // Save to history
   saveChatHistory(npcId,msg,reply);
+  // If in template thread, mark round as answered
+  if(G._openThreadId){
+    const th=G.phone.threads.find(t=>t.id===G._openThreadId);
+    if(th){th.rounds[th.currentRound]._playerChoice=msg;}
+  }
   // Mark as read (player just replied)
   if(G.phone.chatHistory&&G.phone.chatHistory[npcId]){
     const hist=G.phone.chatHistory[npcId];
@@ -10884,7 +10903,7 @@ function advancePetMonthly(){
 
 
 function renderPetDetail(pet){
-  const el=document.getElementById('petMainView');
+  const el=document.getElementById('petDetailView');
   const stage = pet.age<3?'幼崽期':pet.age<12?'成长期':pet.age<48?pet.age<96?'壮年期':'老年期':'寿终期';
   const rarityC={common:'#666',rare:'#ff9800',epic:'#9c27b0',legend:'#f44336'};
   let h='<div class="pet-page">';
@@ -11242,42 +11261,5 @@ function buyFood(el){
   showToast('🍖 购买狗粮x5成功！');
   el.textContent='🍖 狗粮x5(¥500) 库存:'+G.petFood;
 }
-function buyPet(pid){
-  const ps=PET_STORE.find(p=>p.id===pid);if(!ps)return;
-  if(G.cash<ps.price){showToast('💸 还差'+(ps.price-G.cash)+'元...');return;}
-  // Check if already owned
-  if(G.pets.find(p=>p.id===pid)){showToast('你已经有一只'+ps.name+'了！');return;}
-  G.cash-=ps.price;
-  const pet={id:pid,name:ps.name,emoji:ps.emoji,type:ps.type,rarity:ps.rarity,
-    hunger:80,hygiene:100,mood:100,energy:100,intimacy:30,age:2,sick:false,skills:0,
-    mod:ps.mod||{},boughtMonth:G.totalMonths};
-  if(G.pets.length===0&&!confirm('确定要花'+ps.price.toLocaleString()+'元领养'+ps.name+'吗？')){G.cash+=ps.price;return;}
-  G.pets.push(pet);
-  showToast('🎉 恭喜！'+ps.emoji+' '+ps.name+'成为你的家人！');
-  saveGame();
-  // Close store and refresh
-  const m=document.querySelector('.modal-overlay');if(m)m.remove();
-  renderPetPage();
-}
 
 // ===== 月度宠物衰减 =====
-function advancePetMonthly(){
-  if(!G.pets||G.petinitialize===false)return;
-  G.pets.forEach(pet=>{
-    if(!pet.mod)pet.mod={};
-    const hg=pet.mod.hg||1,hyg=pet.mod.hyg||1,md=pet.mod.md||1;
-    pet.hunger=Math.max(0,pet.hunger-(10*hg));
-    pet.hygiene=Math.max(0,pet.hygiene-(8*hyg));
-    pet.mood=Math.max(0,pet.mood-(5*md));
-    pet.energy=Math.min(100,pet.energy+20);
-    pet.age+=1;
-    if(pet.hunger<=10||pet.hygiene<=15){pet.sick=true;}
-  });
-  // Player mood bonus from good pet state
-  G.pets.forEach(p=>{
-    if(p.mood>=80&&p.intimacy>=60){G.mood=Math.min(200,G.mood+5);}
-  });
-  updatePetBadge();
-}
-</script>
-</html>
