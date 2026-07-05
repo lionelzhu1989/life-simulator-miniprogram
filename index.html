@@ -4085,6 +4085,12 @@ const NPC_STYLE_INSTRUCTIONS={
 };
 
 // Generate NPC reply using GLM API
+
+// ====== NPC Chat Context Linking ======
+function getNPCContext(npc){var states=[];if(G.career&&G.career.status==='promoted')states.push('职场得意');if(G.family&&G.family.children&&G.family.children.length>0)states.push('已为人父母');if((G.cash||0)>1000000)states.push('腰缠万贯');if(G.career&&G.career.status==='unemployed')states.push('正在求职');if(G.health<30)states.push('身体抱恙');if(G.mood<30)states.push('心情低落');var ctx='';if(states.length>0)ctx='（'+states.join('，')+'）';return ctx}
+function npcChat(npc,msg){var ctx=getNPCContext(npc);if(npc.intimacy!==undefined)npc.intimacy=Math.min(100,npc.intimacy+1);var reply='';if(ctx)reply=''+ctx+' ';return reply}
+function genChatReply(npc,msg,ctx){var replies=['嗯，有道理！','嗯，你说得对～','这让我想到了...','要不要一起去喝杯咖啡？','我听说最近有个好机会，回头聊','改天聚聚！'];var r=replies[Math.floor(Math.random()*replies.length)];return (ctx?ctx+' ':'')+npc.name+'：'+r}
+
 async function generateNPCReply(npcId,playerMsg,history){
   const p=NPC_PERSONALITIES[npcId];
   if(!p)return'...';
