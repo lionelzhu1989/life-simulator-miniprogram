@@ -5862,7 +5862,7 @@ ${p.name}的家人/朋友是${relation}。玩家${gameState.age}岁，${gameStat
 
 ## 📅 邀约检测（AI兜底）
 如果玩家明确在邀约你（约你一起、要不要出来、找个地方坐坐、请吃饭/喝咖啡等），在回复末尾加：
-[SCHEDULE:类型]，类型可选：doffee、dinner、movie、date、gathering、trip、karaoke、sports、shopping、hotSpring
+[SCHEDULE:类型]，类型可选：coffee、dinner、movie、date、gathering、trip、karaoke、sports、shopping、hotSpring
 示例："好啊！我也正想出去。[SCHEDULE:dinner]"
 只有明确邀约才加标记，闲聊不强制。`;
 
@@ -5896,7 +5896,7 @@ ${p.name}的家人/朋友是${relation}。玩家${gameState.age}岁，${gameStat
             {role:'user',content:userContent}
           ],
           temperature:0.9,
-          max_tokens:200
+          max_tokens:300
         }),
         signal:controller.signal
       });
@@ -5905,6 +5905,10 @@ ${p.name}的家人/朋友是${relation}。玩家${gameState.age}岁，${gameStat
         const data=await resp.json();
         if(data.choices&&data.choices[0]&&data.choices[0].message){
           const _raw=(data.choices[0].message.content||'').trim();
+          if(_raw.length < 2){
+            AI_CHAT_CONFIG._fallbackCount++;
+            throw new Error('AI返回内容过短');
+          }
           // v3.17.5: 过滤AI返回的错误文本，避免显示给玩家
           if(_raw&&!/请求失败|request\s*failed|undefined|网络错误|网络异常|timeout|API error/i.test(_raw)){
             AI_CHAT_CONFIG._fallbackCount=0;
@@ -5931,27 +5935,41 @@ ${p.name}的家人/朋友是${relation}。玩家${gameState.age}岁，${gameStat
 function getTemplateReply(npcId,playerMsg){
   const p=NPC_PERSONALITIES[npcId];
   if(!p)return'...';
-  // Try to match player message to a tag
-  let matchedTag=null;
-  const msgLower=playerMsg.toLowerCase();
-  for(const tag in p.responses){
-    if(msgLower.includes(tag)||tag.split('').some(c=>msgLower.includes(c))){
-      matchedTag=tag;
-      break;
+  // Build pool: responses + followups (if available)
+  let pool = [];
+  if(p.responses){
+    // Try keyword matching first
+    const msgLower=playerMsg.toLowerCase();
+    let matchedTag=null;
+    for(const tag in p.responses){
+      if(msgLower.includes(tag)||tag.split('').some(c=>msgLower.includes(c))){
+        matchedTag=tag;
+        break;
+      }
+    }
+    if(matchedTag && p.responses[matchedTag]){
+      pool = pool.concat(p.responses[matchedTag]);
+    } else {
+      // Use all responses
+      pool = pool.concat(Object.values(p.responses).flat());
     }
   }
-  // If no match, use first tag or random
-  if(!matchedTag){
-    const tags=Object.keys(p.responses);
-    matchedTag=tags[randInt(0,tags.length-1)];
+  if(p.followups && p.followups.length > 0){
+    pool = pool.concat(p.followups);
   }
-  const respArr=p.responses[matchedTag];
-  if(respArr&&respArr.length>0){
-    return respArr[randInt(0,respArr.length-1)];
+  if(pool.length===0) return '嗯嗯';
+  // Avoid repeating last reply
+  let lastReply = '';
+  initChatHistory();
+  const hist = G.phone.chatHistory[npcId];
+  if(hist && hist.length>0) lastReply = hist[hist.length-1].npc;
+  let attempts=0;
+  while(attempts<5){
+    const r=pool[randInt(0,pool.length-1)];
+    if(r!==lastReply) return r;
+    attempts++;
   }
-  // Ultimate fallback
-  const allTraits=Object.values(p.responses).flat();
-  return allTraits[randInt(0,allTraits.length-1)]||'嗯嗯';
+  return pool[randInt(0,pool.length-1)];
 }
 
 
@@ -6677,7 +6695,7 @@ async function _doSendMessage(msg,npcId){
   }
   // v4.1.19: AI语义兜底 - 固定词表未匹配但AI在回复中确认邀约意图
   if(aiScheduleActivity&&canSchedule){
-    const schedActMap={dinner:{cost:300,title:'吃饭'},coffee:{cost:50,title:'喝咖啡'},movie:{cost:150,title:'看电影'},date:{cost:500,title:'约会'},gathering:{cost:200,title:'聚会'},trip:{cost:5000,title:'旅游',leave:3},karaoke:{cost:300,title:'唱K'},sports:{cost:100,title:'运动'},shopping:{cost:800,title:'逛街'},hotSpring:{cost:800,title:'泡温泉'}};
+    const schedActMap={coffee:{cost:50,title:'喝咖啡'},dinner:{cost:300,title:'吃饭'},movie:{cost:150,title:'看电影'},date:{cost:500,title:'约会'},gathering:{cost:200,title:'聚会'},trip:{cost:5000,title:'旅游',leave:3},karaoke:{cost:300,title:'唱K'},sports:{cost:100,title:'运动'},shopping:{cost:800,title:'逛街'},hotSpring:{cost:800,title:'泡温泉'}};
     const aiAct=schedActMap[aiScheduleActivity]||{cost:0,title:'活动'};
     const aiSchedInfo={type:aiScheduleActivity,title:aiAct.title,cost:aiAct.cost,annualLeave:aiAct.leave||0,month:G.totalMonths+1};
     setTimeout(()=>{showScheduleConfirm(npcId,aiSchedInfo);},500);
