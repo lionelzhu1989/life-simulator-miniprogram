@@ -359,6 +359,67 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 .toast.info{border-left:3px solid #2196F3}
 @keyframes toast-in{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
 @keyframes toast-out{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-10px)}}
+
+/* ====== V2: Onboarding Tutorial ====== */
+.ob-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.75);z-index:6000;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.ob-card{background:#fff;border-radius:16px;padding:28px 24px;width:100%;max-width:320px;box-shadow:0 12px 40px rgba(0,0,0,.3)}
+.ob-progress{display:flex;gap:6px;justify-content:center;margin-bottom:20px}
+.pdot{width:8px;height:8px;border-radius:50%;background:#ddd;transition:all .3s}
+.pdot.active{background:var(--primary);transform:scale(1.2)}
+.pdot.done{background:var(--success)}
+.ob-step{animation:slideUp .3s ease}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.ob-title{font-size:18px;font-weight:700;color:var(--text);margin-bottom:10px}
+.ob-body{font-size:14px;color:#666;line-height:1.7;margin-bottom:20px}
+.ob-actions{display:flex;gap:10px;justify-content:space-between}
+.ob-actions .btn-next{background:var(--primary);color:#fff;border:none;padding:10px 24px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer}
+.ob-actions .btn-prev{background:#f0f0f0;color:#666;border:none;padding:10px 20px;border-radius:8px;font-size:14px;cursor:pointer}
+.ob-actions .btn-prev:active,.ob-actions .btn-next:active{transform:scale(.95)}
+.ob-skip{display:block;margin:16px auto 0;background:none;border:none;color:#999;font-size:12px;cursor:pointer;text-decoration:underline}
+
+/* ====== V2: Asset Visualization Charts ====== */
+.chart-box{background:#f8f9fa;border-radius:12px;padding:14px;margin-bottom:12px}
+.chart-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:4px}
+.mini-chart{display:flex;align-items:flex-end;gap:3px;height:80px;padding:0 4px}
+.chart-bar{flex:1;border-radius:3px 3px 0 0;background:linear-gradient(180deg,var(--primary),#2980b9);transition:height .4s ease;min-height:2px;position:relative}
+.chart-bar:hover{opacity:.8}
+.pie-legend{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:10px}
+.pie-legend span{display:flex;align-items:center;gap:3px;font-size:11px;color:#666}
+.pie-legend i{display:inline-block;width:10px;height:10px;border-radius:2px}
+
+/* ====== V2: Achievement Tier Display ====== */
+.ach-tier{margin-bottom:16px}
+.ach-tier-title{font-size:14px;font-weight:700;padding:6px 10px;border-left:4px solid var(--primary);margin-bottom:8px;background:#f8f9fa;border-radius:0 8px 8px 0}
+.ach-item{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#fff;border-radius:8px;margin-bottom:6px;border:1px solid #f0f0f0}
+.ach-item.locked{opacity:.4;filter:grayscale(1)}
+.ach-item .ach-icon{font-size:20px;width:28px;text-align:center;flex-shrink:0}
+.ach-item .ach-name{font-size:13px;font-weight:500;flex:1}
+.ach-item .ach-cond{font-size:11px;color:var(--text-light)}
+.ach-item .ach-unlocked{color:var(--success);font-weight:700}
+.ach-summary{text-align:center;font-size:12px;color:var(--text-light);margin:8px 0}
+
+/* ====== V2: Dimension Tips ====== */
+.dim-tip{display:block;font-size:10px;color:var(--text-light);margin-top:2px;padding-left:80px}
+.dim-name{width:70px;font-size:13px;color:#666;flex-shrink:0}
+
+/* ====== V2: Investment Transparency ====== */
+.inv-detail-row{display:flex;justify-content:space-between;padding:4px 0;font-size:12px;border-bottom:1px dashed #f0f0f0}
+.inv-detail-row:last-child{border-bottom:none}
+.inv-detail-label{color:#999}
+.inv-detail-value{font-weight:600}
+.inv-up{color:var(--danger)}
+.inv-down{color:var(--success)}
+.stock-hold-detail{background:#f8f9fa;border-radius:8px;padding:8px 10px;margin-top:6px;font-size:11px}
+.stock-pnl-positive{color:var(--danger);font-weight:600}
+.stock-pnl-negative{color:var(--success);font-weight:600}
+
+/* ====== V2: NPC Chat Context ====== */
+.npc-chat-msg{display:flex;flex-direction:column;gap:4px;margin:4px 0}
+.npc-chat-msg .bubble{max-width:80%;padding:8px 12px;border-radius:12px;font-size:13px;line-height:1.5}
+.npc-chat-msg.npc .bubble{background:#f0f0f0;color:var(--text);align-self:flex-start}
+.npc-chat-msg.player .bubble{background:var(--primary);color:#fff;align-self:flex-end}
+.npc-chat-ctx{font-size:10px;color:var(--text-light);font-style:italic;margin:0 4px}
 </style>
 </head>
 <body>
@@ -5564,6 +5625,268 @@ advanceMonth=function(){
   }
 };
 
+
+// ====== V2 Batch3: 快进风险控制 ======
+function checkFFRisk(months){
+  var risks=[];
+  if(G.health<10)risks.push('💀 健康极低('+G.health+')，有猝死风险！');
+  else if(G.health<30)risks.push('⚠️ 健康较低('+G.health+')，可能重病');
+  if(G.mood<30)risks.push('😢 心情低落('+G.mood+')，可能抑郁生病');
+  if(months>12)risks.push('⏩ 快进'+months+'个月，将跳过大量事件');
+  var debt=G.debt||0;if(debt>0)risks.push('💳 当前负债：¥'+fmt(debt));
+  var stockVal=calcStockValue();if(stockVal>500000&&months>6)risks.push('📉 股票持仓较高(¥'+fmt(stockVal)+')，快进可能错过止损');
+  return risks;
+}
+function confirmFF(months,accepted){
+  if(accepted)return true;
+  var risks=checkFFRisk(months);
+  if(!risks.length)return true;
+  return confirm('⚠️ 快进风险提示：\n\n'+risks.join('\n')+'\n\n确定要继续快进'+months+'个月吗？');
+}
+
+// ====== V2 Batch3: 资产可视化 ======
+function renderAssetTrend(){
+  var h=G.assetHistory||[];
+  var recent=h.slice(-12);
+  if(recent.length<2)return '<div class="chart-box"><div class="chart-title">📈 年度资产趋势</div><div style="font-size:12px;color:#999;text-align:center;padding:16px">刚起步，暂无历史数据</div></div>';
+  var max=Math.max.apply(null,recent);if(max<=0)max=100;
+  var min=Math.min.apply(null,recent);
+  var bars='';
+  for(var i=0;i<recent.length;i++){
+    var pct=Math.max(2,((recent[i]-min)/(max-min))*70+10);
+    var hue=recent[i]>=0?'210,70%,50%':'0,70%,50%';
+    bars+='<div class="chart-bar" style="height:'+pct+'%;background:hsl('+hue+')" title="¥'+fmt(recent[i])+'"></div>';
+  }
+  return '<div class="chart-box"><div class="chart-title">📈 近期资产趋势（最近'+recent.length+'个月）</div><div class="mini-chart">'+bars+'</div><div style="font-size:11px;text-align:right;color:#999">最高: ¥'+fmt(max)+' | 最低: ¥'+fmt(min)+'</div></div>';
+}
+function renderAssetPie(){
+  var stockVal=calcStockValue();
+  var bizVal=0;if(G.businesses)G.businesses.forEach(function(b){bizVal+=b.income*10||0});
+  var houseVal=0;if(G.houses)G.houses.forEach(function(h){if(h.own)houseVal+=h.price||0});
+  var investVal=0;if(G.techInvestments)G.techInvestments.forEach(function(t){investVal+=t.amount||0});
+  var segs=[
+    {l:'现金',v:Math.max(0,G.cash||0),c:'#4472C4'},
+    {l:'股票',v:Math.max(0,stockVal),c:'#E06030'},
+    {l:'房产',v:Math.max(0,houseVal),c:'#4CAF50'},
+    {l:'商铺',v:Math.max(0,bizVal),c:'#9C27B0'},
+    {l:'科技',v:Math.max(0,investVal),c:'#FF9800'}
+  ];
+  var tot=segs.reduce(function(s,x){return s+x.v},0)||1;
+  var cum=0;var stops=[];
+  segs.forEach(function(s){
+    if(s.v<=0)return;
+    var st=cum;var deg=(s.v/tot)*360;cum+=deg;
+    stops.push(s.c+' '+st+'deg '+cum+'deg');
+  });
+  var grad=stops.length?stops.join(', '):'#eee 0deg 360deg';
+  var legendHtml='';
+  segs.forEach(function(s){
+    var pct=tot>0?(s.v/tot*100).toFixed(1):0;
+    legendHtml+='<span><i style="background:'+s.c+'"></i>'+s.l+' ¥'+fmtShort(s.v)+' ('+pct+'%)</span>';
+  });
+  return '<div class="chart-box"><div class="chart-title">🥧 资产结构</div><div style="width:120px;height:120px;border-radius:50%;margin:0 auto;background:conic-gradient('+grad+')"></div><div class="pie-legend">'+legendHtml+'</div></div>';
+}
+function renderDims(){
+  function calcWealthScore(){return Math.min(1000,Math.floor((G.cash+calcStockValue())/10000))}
+  function calcFameScore(){return Math.min(1000,Math.floor(((G.career&&G.career.level?G.career.level*100:0)+(G.family?G.family.prestige*10:0))))}
+  function calcHappyScore(){return Math.min(1000,Math.floor((G.health+G.mood*2+((G.family&&G.family.spouse)?100:0))/40*100))}
+  function calcWisdomScore(){return Math.min(1000,Math.floor(G.iq*5+(G.eduLevel||0)*50))}
+  function calcLegacyScore(){return Math.min(1000,Math.floor(((G.family&&G.family.children?G.family.children.length*50:0)+(G.rebirthCount||0)*30)))}
+  var dims=[
+    {n:'财富',s:calcWealthScore(),mx:1000,t:'总资产(现金+股票)每¥1万=1分',c:'#4472C4'},
+    {n:'声望',s:calcFameScore(),mx:1000,t:'职业职位+家族声望',c:'#E06030'},
+    {n:'幸福',s:calcHappyScore(),mx:1000,t:'心情+健康+家庭',c:'#4CAF50'},
+    {n:'智慧',s:calcWisdomScore(),mx:1000,t:'智商+学历',c:'#9C27B0'},
+    {n:'传承',s:calcLegacyScore(),mx:1000,t:'家族+轮回',c:'#FF9800'}
+  ];
+  var html='';
+  for(var i=0;i<dims.length;i++){
+    var d=dims[i];
+    var pct=(d.s/d.mx*100).toFixed(1);
+    html+='<div class="dim-row"><span class="dim-label" style="width:50px;font-weight:600">'+d.n+'</span><div class="dim-bar"><div class="dim-bar-fill" style="width:'+pct+'%;background:'+d.c+'"></div></div><span class="dim-score" style="color:'+d.c+'">'+d.s+'</span></div><div style="font-size:10px;color:#999;margin:-6px 0 6px 60px">'+d.t+'</div>';
+  }
+  return html;
+}
+
+// ====== V2 Batch3: 投资透明度 ======
+function renderStockDetail(code){
+  var shares=G.stockHoldings[code]||0;
+  if(shares<=0)return '';
+  var price=G.stockPrices[code]||0;
+  var s=STOCKS.find(function(x){return x.code===code});
+  var costBasis=s?s.basePrice:price;
+  var currentVal=shares*price;
+  var costVal=shares*costBasis;
+  var pnl=currentVal-costVal;
+  var pnlPct=costVal>0?((pnl/costVal)*100).toFixed(1):'0.0';
+  var cls=pnl>=0?'stock-pnl-positive':'stock-pnl-negative';
+  var arrow=pnl>=0?'▲':'▼';
+  return '<div class="stock-hold-detail">'+
+    '<div class="inv-detail-row"><span class="inv-detail-label">持仓</span><span class="inv-detail-value">'+shares+'股</span></div>'+
+    '<div class="inv-detail-row"><span class="inv-detail-label">成本价</span><span class="inv-detail-value">¥'+fmtShort(costBasis)+'</span></div>'+
+    '<div class="inv-detail-row"><span class="inv-detail-label">现价</span><span class="inv-detail-value">¥'+fmtShort(price)+'</span></div>'+
+    '<div class="inv-detail-row"><span class="inv-detail-label">市值</span><span class="inv-detail-value">¥'+fmtShort(currentVal)+'</span></div>'+
+    '<div class="inv-detail-row"><span class="inv-detail-label">盈亏</span><span class="'+cls+'">'+arrow+' ¥'+fmtShort(Math.abs(pnl))+' ('+pnlPct+'%)</span></div>'+
+    '</div>';
+}
+
+// ====== V2 Batch3: 成就分解 ======
+function getAchievementProgress(){
+  var all=[
+    {id:'first_job',name:'初出茅庐',icon:'🎒',cond:'获得第一份工作',tier:'bronze',check:function(){return G.career&&G.career.jobHistory&&G.career.jobHistory.length>0}},
+    {id:'million',name:'百万富翁',icon:'💰',cond:'资产超过¥100万',tier:'bronze',check:function(){return calcTotalAsset()>=1000000}},
+    {id:'marriage',name:'步入婚姻',icon:'💍',cond:'与伴侣结婚',tier:'bronze',check:function(){return G.family&&G.family.spouse}},
+    {id:'first_child',name:'为人父母',icon:'👶',cond:'拥有子女',tier:'silver',check:function(){return G.family&&G.family.children&&G.family.children.length>0}},
+    {id:'billion',name:'亿万富翁',icon:'💎',cond:'资产超过¥1亿',tier:'silver',check:function(){return calcTotalAsset()>=100000000}},
+    {id:'startup',name:'创业者',icon:'🚀',cond:'成功创业',tier:'silver',check:function(){return G.businesses&&G.businesses.length>0}},
+    {id:'grandchild',name:'四世同堂',icon:'👴',cond:'迎来孙辈',tier:'gold',check:function(){return G.family&&G.family.grandchildren&&G.family.grandchildren.length>0}},
+    {id:'legend',name:'传奇人生',icon:'👑',cond:'累计轮回10次',tier:'gold',check:function(){return(G.rebirthCount||0)>=10}}
+  ];
+  var done=0;all.forEach(function(a){if(a.check())done++});
+  return {total:all.length,done:done,list:all};
+}
+function renderAchievementBreakdown(){
+  var prog=getAchievementProgress();
+  var html='<div class="ach-summary">✅ 已完成 '+prog.done+'/'+prog.total+' ('+(prog.total>0?Math.round(prog.done/prog.total*100):0)+'%)</div>';
+  html+='<div style="background:var(--bg);border-radius:8px;height:8px;overflow:hidden;margin-bottom:12px"><div style="background:linear-gradient(90deg,var(--success),var(--primary));height:100%;width:'+(prog.total>0?prog.done/prog.total*100:0)+'%;transition:width .5s ease"></div></div>';
+  var tiers=[{id:'gold',name:'🏆 金色成就',c:'#FFD700'},{id:'silver',name:'🥈 银色成就',c:'#C0C0C0'},{id:'bronze',name:'🥉 铜色成就',c:'#CD7F32'}];
+  tiers.forEach(function(t){
+    html+='<div class="ach-tier"><div class="ach-tier-title" style="border-left-color:'+t.c+'">'+t.name+'</div>';
+    prog.list.forEach(function(a){
+      if(a.tier!==t.id)return;
+      var unlocked=a.check();
+      html+='<div class="ach-item '+(unlocked?'':'locked')+'">'+
+        '<span class="ach-icon">'+(unlocked?a.icon:'🔒')+'</span>'+
+        '<span style="flex:1"><span class="ach-name">'+a.name+'</span><br><span class="ach-cond">'+a.cond+'</span></span>'+
+        (unlocked?'<span class="ach-unlocked">✓</span>':'')+
+        '</div>';
+    });
+    html+='</div>';
+  });
+  return html;
+}
+
+// ====== V2 Batch3: 轮回增强 ======
+function calcRebirthPts(){
+  var pts=0;
+  pts+=Math.floor((G.cash||0)/10000);
+  pts+=Object.keys(G.achievements||{}).length*10;
+  pts+=(G.rebirthCount||0)*5;
+  pts+=Math.floor(((G.family&&G.family.prestige)||0)/5);
+  pts+=Math.floor((G.peakAsset||G.cash||0)/100000);
+  return Math.max(1,pts);
+}
+function confirmEnhancedRebirth(){
+  var pts=calcRebirthPts();
+  showModal({title:'轮回转世',content:'本轮获得 '+pts+' 轮回点，确认重生？',success:function(res){
+    if(res.confirm){
+      G.legacyPoints=(G.legacyPoints||0)+pts;
+      G.peakAsset=G.peakAsset||G.cash||0;
+      if(!G.lifeEvents)G.lifeEvents=[];
+      G.lifeEvents.push({month:G.totalMonths,icon:'♻️',title:'轮回重生',detail:'获得'+pts+'轮回点',type:'career'});
+      G.rebirthCount=(G.rebirthCount||0)+1;
+      saveLegacy();
+      clearGame();G=defaultState();initStockPrices();initPhoneState();saveGame();
+      refreshAll();switchTab('life');
+      showToast('♻️ 第'+G.rebirthCount+'次人生开始！','success',2500);
+      checkAchievements();
+      if(typeof startOnboarding==='function')startOnboarding();
+    }
+  }});
+}
+
+// ====== V2 Batch3: 新手引导（修复版） ======
+function startOnboarding(){
+  if(localStorage.getItem('ob_done_v2'))return;
+  showOBStep(0);
+}
+function showOBStep(idx){
+  var steps=[
+    {title:'欢迎来到人生首富 🎓',body:'在这里，你将从零开始，经历成长、工作、投资、家庭……最终成为首富或体验平凡人生。',btnText:'开始旅程'},
+    {title:'推进时间 ⏩',body:'点击底部的「推进」按钮让时间流逝。每个月都可能发生工作、社交等事件。',btnText:'下一步'},
+    {title:'关注属性 💪',body:'心情太低会生病，健康太低会猝死（<30警告，<10危险）。保持平衡才能走得更远。',btnText:'明白了'},
+    {title:'找份工作 💼',body:'工作页面可以投简历找工作。积累经验后晋升或跳槽。',btnText:'知道了'},
+    {title:'第一桶金 💰',body:'工资发到账户。留一部分应急，其余可以投资理财。',btnText:'继续'},
+    {title:'结交朋友 👥',body:'手机页面可以社交、谈恋爱。遇到心仪的人可以结婚生子。',btnText:'去看看'},
+    {title:'钱生钱 📈',body:'把钱投入股票、房产、科技，让资产被动增长。高收益=高风险！',btnText:'去投资'},
+    {title:'轮回转世 🔄',body:'人生结束后会获得轮回点，用于强化下一世。每轮回都有新体验！',btnText:'了解了'},
+    {title:'引导完成！🎉',body:'你已掌握基础玩法。去创造属于你的人生吧！\n🎁 奖励：轮回点+5',btnText:'开始游戏'}
+  ];
+  if(idx>=steps.length){
+    localStorage.setItem('ob_done_v2','true');
+    G.rebirthPoints=(G.rebirthPoints||0)+5;
+    G.legacyPoints=(G.legacyPoints||0)+5;
+    showToast('🎉 新手引导完成！轮回点+5','success',2000);
+    var ov=document.getElementById('obOverlay');
+    if(ov)ov.remove();
+    // FIX: 最后一页必须调用startGame
+    if(typeof startGame==='function')startGame();
+    return;
+  }
+  var step=steps[idx];
+  var dots='';
+  for(var i=0;i<steps.length;i++){
+    var cls=i===idx?'active':i<idx?'done':'';
+    dots+='<div class="pdot '+cls+'"></div>';
+  }
+  var html='<div class="ob-overlay" id="obOverlay">'+
+    '<div class="ob-card">'+
+      '<div class="ob-progress">'+dots+'</div>'+
+      '<div class="ob-step">'+
+        '<div class="ob-title">'+step.title+'</div>'+
+        '<div class="ob-body">'+step.body+'</div>'+
+        '<div class="ob-actions">'+
+          (idx>0?'<button class="btn-prev" onclick="showOBStep('+(idx-1)+')">← 上一步</button>':'<span></span>')+
+          '<button class="btn-next" onclick="showOBStep('+(idx+1)+')">'+step.btnText+' →</button>'+
+        '</div>'+
+      '</div>'+
+      '<button class="ob-skip" onclick="skipOnboarding()">跳过引导</button>'+
+    '</div>'+
+  '</div>';
+  var existing=document.getElementById('obOverlay');
+  if(existing)existing.remove();
+  document.body.insertAdjacentHTML('beforeend',html);
+}
+function skipOnboarding(){
+  localStorage.setItem('ob_done_v2','true');
+  var ov=document.getElementById('obOverlay');
+  if(ov)ov.remove();
+  if(typeof startGame==='function')startGame();
+  showToast('可随时在「我的」页面重玩引导','info');
+}
+
+// ====== V2 Batch3: NPC聊天上下文 ======
+function getNPCContext(npc){
+  var states=[];
+  if(G.career&&G.career.status==='promoted')states.push('职场得意');
+  if(G.family&&G.family.children&&G.family.children.length>0)states.push('已为人父母');
+  if((G.cash||0)>1000000)states.push('腰缠万贯');
+  if(G.career&&G.career.status==='unemployed')states.push('正在求职');
+  if(G.health<30)states.push('身体抱恙');
+  if(G.mood<30)states.push('心情低落');
+  var ctx='';
+  if(states.length>0)ctx='（'+states.join('，')+'）';
+  return ctx;
+}
+function npcChat(npc,msg){
+  var ctx=getNPCContext(npc);
+  if(npc.intimacy!==undefined)npc.intimacy=Math.min(100,npc.intimacy+1);
+  var reply=genChatReply(npc,msg,ctx);
+  var html='<div class="npc-chat-msg player"><div class="bubble">'+msg+'</div></div>'+
+    '<div class="npc-chat-msg npc">'+
+    (ctx?'<div class="npc-chat-ctx">'+ctx+'</div>':'')+
+    '<div class="bubble">'+reply+'</div></div>';
+  return html;
+}
+function genChatReply(npc,msg){
+  var replies=['嗯，有道理！','嗯，你说得对～','这让我想到了...','要不要一起去喝杯咖啡？','我听说最近有个好机会，回头聊','改天聚聚！','你这个想法不错！','人生就是要这样！','我也这么觉得～'];
+  var r=replies[Math.floor(Math.random()*replies.length)];
+  return (npc.name||'NPC')+'：'+r;
+}
+
+
+// ====== V2 Batch3: Onboarding Auto-Start ======
+(function(){var started=false;function tryStart(){if(started)return;if(typeof startGame==='function'&&typeof startOnboarding==='function'){started=true;setTimeout(function(){startOnboarding()},800)}}tryStart();document.addEventListener('DOMContentLoaded',tryStart);})();
 </script>
 </body>
 </html>
