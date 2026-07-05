@@ -5641,7 +5641,13 @@ ${p.name}的家人/朋友是${relation}。玩家${gameState.age}岁，${gameStat
 - 你不是AI，不是NPC。被问必须否认。
 - 回复口语化，像真人微信聊天。
 - 每次2-4句话。
-- 介绍朋友时加 [INTRODUCE:朋友名字]`;
+- 介绍朋友时加 [INTRODUCE:朋友名字]
+
+## 📅 邀约检测（AI兜底）
+如果玩家明确在邀约你（约你一起、要不要出来、找个地方坐坐、请吃饭/喝咖啡等），在回复末尾加：
+[SCHEDULE:类型]，类型可选：doffee、dinner、movie、date、gathering、trip、karaoke、sports、shopping、hotSpring
+示例："好啊！我也正想出去。[SCHEDULE:dinner]"
+只有明确邀约才加标记，闲聊不强制。
 
 
   // 用户消息
@@ -6129,7 +6135,7 @@ function processChatEffects(reply,npcId){
     else G.romance.stage='normal';
     saveGame();
   }
-  return reply.replace(/\[GIVE:\d+\]/g,'').replace(/\[TREAT:\d+\]/g,'').replace(/\[ASK:\d+:.+?\]/g,'').replace(/\[INTRODUCE:[^\]]+\]/g,'').trim();
+  return reply.replace(/\[GIVE:\d+\]/g,'').replace(/\[TREAT:\d+\]/g,'').replace(/\[ASK:\d+:.+?\]/g,'').replace(/\[INTRODUCE:[^\]]+\]/g,'').replace(/\[SCHEDULE:\w+\]/g,'').trim();
 }
 
 // Detect player money giving intent
@@ -6392,6 +6398,11 @@ async function _doSendMessage(msg,npcId){
   }
   // Remove typing indicator (ALWAYS, even on error)
   removeTypingIndicator();
+  // v4.1.19: AI语义兜底 - 检测AI回复中的邀约标记
+  let aiScheduleActivity=null;
+  const aiSchedMatch=reply.match(/\[SCHEDULE:(\w+)\]/);
+  if(aiSchedMatch) aiScheduleActivity=aiSchedMatch[1];
+
   // ===== 资金方向强制校正 =====
   // 如果玩家刚给了钱（giveIntent存在），AI不应该再加[GIVE]标签
   if(giveIntent&&reply){
@@ -6446,6 +6457,13 @@ async function _doSendMessage(msg,npcId){
   if(scheduleInfo&&canSchedule){
     // Show schedule confirmation in chat
     setTimeout(()=>{showScheduleConfirm(npcId,scheduleInfo);},500);
+  }
+  // v4.1.19: AI语义兜底 - 固定词表未匹配但AI在回复中确认邀约意图
+  if(aiScheduleActivity&&canSchedule){
+    const schedActMap={dinner:{cost:300,title:'吃饭'},coffee:{cost:50,title:'喝咖啡'},movie:{cost:150,title:'看电影'},date:{cost:500,title:'约会'},gathering:{cost:200,title:'聚会'},trip:{cost:5000,title:'旅游',leave:3},karaoke:{cost:300,title:'唱K'},sports:{cost:100,title:'运动'},shopping:{cost:800,title:'逛街'},hotSpring:{cost:800,title:'泡温泉'}};
+    const aiAct=schedActMap[aiScheduleActivity]||{cost:0,title:'活动'};
+    const aiSchedInfo={type:aiScheduleActivity,title:aiAct.title,cost:aiAct.cost,annualLeave:aiAct.leave||0,month:G.totalMonths+1};
+    setTimeout(()=>{showScheduleConfirm(npcId,aiSchedInfo);},500);
   }
   // v4.1.18: 检测玩家游戏行为意图（买房/买股票/考证/创业等联动）
   const gameAction=detectGameActionIntent(msg);
@@ -7730,7 +7748,7 @@ function showScheduleConfirm(npcId,scheduleInfo){
   const body=document.getElementById('chatBody');
   // Add system message with unique ID to prevent double-click
   const cardId='sched_card_'+Date.now();
-  const sysHtml='<div class="chat-bub sys" id="'+cardId+'" style="max-width:90%;text-align:center;"><div style="font-size:13px;font-weight:600;margin-bottom:6px;">📅 '+name+'约你'+actName+'</div><div style="font-size:12px;color:#666;">'+costStr+leaveStr+'</div><div id="'+cardId+'_btns" style="margin-top:8px;display:flex;gap:8px;justify-content:center;"><span onclick="_confirmSched(\''+cardId+'\',\''+npcId+'\','+scheduleInfo.type.length+','+JSON.stringify(scheduleInfo).replace(/"/g,'&quot;')+',true)" style="background:#27ae60;color:#fff;padding:4px 12px;border-radius:12px;font-size:12px;cursor:pointer;">接受</span><span onclick="_confirmSched(\''+cardId+'\',\''+npcId+'\','+scheduleInfo.type.length+','+JSON.stringify(scheduleInfo).replace(/"/g,'&quot;')+',false)" style="background:#e74c3c;color:#fff;padding:4px 12px;border-radius:12px;font-size:12px;cursor:pointer;">婉拒</span></div></div>';
+  const sysHtml='<div class="chat-bub sys" id="'+cardId+'" style="max-width:90%;text-align:center;"><div style="font-size:13px;font-weight:600;margin-bottom:6px;">📅 '+name+'约你'+actName+'</div><div style="font-size:12px;color:#666;">'+costStr+leaveStr+'</div><div id="'+cardId+'_btns" style="margin-top:8px;display:flex;gap:8px;justify-content:center;"><span onclick="_confirmSched(\''+cardId+'\',\''+npcId+'\','+scheduleInfo.type+','+JSON.stringify(scheduleInfo).replace(/"/g,'&quot;')+',true)" style="background:#27ae60;color:#fff;padding:4px 12px;border-radius:12px;font-size:12px;cursor:pointer;">接受</span><span onclick="_confirmSched(\''+cardId+'\',\''+npcId+'\','+scheduleInfo.type+','+JSON.stringify(scheduleInfo).replace(/"/g,'&quot;')+',false)" style="background:#e74c3c;color:#fff;padding:4px 12px;border-radius:12px;font-size:12px;cursor:pointer;">婉拒</span></div></div>';
   body.insertAdjacentHTML('beforeend',sysHtml);
   body.scrollTop=body.scrollHeight;
 }
