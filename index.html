@@ -69,7 +69,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 .modal-box{background:#fff;border-radius:16px;width:85%;max-width:360px;padding:24px 20px;text-align:center;transform:scale(0.85);transition:transform .25s;}
 .modal-overlay.show .modal-box{transform:scale(1);}
 .modal-title{font-size:17px;font-weight:600;margin-bottom:10px;}
-.modal-content{font-size:14px;color:#666;line-height:1.6;margin-bottom:20px;white-space:pre-line;text-align:left;}
+.modal-content{font-size:14px;color:#666;margin-bottom:20px;white-space:pre-line;text-align:left;line-height:1.7;max-height:50vh;overflow-y:auto;overflow-wrap:break-word;word-break:break-word;}
 .modal-btns{display:flex;gap:10px;justify-content:center;}
 .modal-btns .btn{flex:1;}
 .toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.8);background:rgba(0,0,0,.75);color:#fff;padding:14px 24px;border-radius:10px;font-size:14px;z-index:2000;opacity:0;pointer-events:none;transition:all .3s;text-align:center;max-width:260px;}
@@ -424,6 +424,64 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 /* ====== 通讯录自定义备注 ====== */
 .contact-note-edit{width:100%;border:1px solid #e0e0e0;border-radius:8px;padding:6px 10px;font-size:13px;color:#555;background:#fafafa;outline:none;box-sizing:border-box;}
 .contact-note-edit:focus{border-color:#3498db;background:#fff;}
+/* ===== Pet System ===== */
+.pet-subtabs{display:flex;background:#fff;border-radius:0;margin:0;padding:8px 12px;gap:0;border-bottom:1px solid #f0f0f0;position:sticky;top:0;z-index:10;}
+.pet-subtab{flex:1;padding:8px 4px;text-align:center;font-size:13px;font-weight:500;color:#999;cursor:pointer;border-radius:8px;transition:all .2s;}
+.pet-subtab.active{color:#ff9800;background:#fff3e0;font-weight:700;}
+.pet-subtab:active{opacity:.7;}
+#petStoreView{padding:12px;max-width:480px;margin:0 auto;}
+#petDetailView{padding:0 12px 12px;max-width:480px;margin:0 auto;}
+.pet-shop-hd{text-align:center;padding:16px 0 12px;}
+.pet-shop-hd h2{margin:0;font-size:18px;font-weight:700;color:#333;}
+.pet-shop-hd .coin{font-size:13px;color:#999;margin-top:4px;}
+.pet-cat-bar{display:flex;gap:8px;margin-bottom:12px;overflow-x:auto;padding:4px 0;}
+.pet-cat-btn{flex-shrink:0;padding:8px 16px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:2px solid #e8e8e8;background:#fff;color:#666;transition:all .2s;}
+.pet-cat-btn.active{border-color:#ff9800;background:#fff3e0;color:#ff9800;font-weight:700;}
+.pet-cat-btn:active{transform:scale(0.95);}
+.pet-shop-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+.pet-shop-item{background:#fff;border-radius:14px;padding:14px 10px;text-align:center;cursor:pointer;transition:all .15s;border:1px solid #f0f0f0;position:relative;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.04);}
+.pet-shop-item:active{transform:scale(0.96);box-shadow:0 4px 16px rgba(0,0,0,0.1);}
+.pet-shop-item.rarity-common{border-color:#e0e0e0;}
+.pet-shop-item.rarity-rare{border-color:#ff9800;background:linear-gradient(135deg,#fff,#fff8f0);}
+.pet-shop-item.rarity-epic{border-color:#9c27b0;background:linear-gradient(135deg,#fff,#faf0ff);}
+.pet-shop-item.rarity-legend{border-color:#f44336;background:linear-gradient(135deg,#fff5f5,#fff);box-shadow:0 2px 12px rgba(244,67,54,0.15);}
+.pet-shop-item .ps-rank{font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;display:inline-block;margin-bottom:8px;}
+.pet-shop-item.rarity-common .ps-rank{background:#f0f0f0;color:#666;}
+.pet-shop-item.rarity-rare .ps-rank{background:#fff3e0;color:#ff9800;}
+.pet-shop-item.rarity-epic .ps-rank{background:#f3e5f5;color:#9c27b0;}
+.pet-shop-item.rarity-legend .ps-rank{background:#ffebee;color:#f44336;animation:legendGlow 2s infinite;}
+@keyframes legendGlow{0%,100%{box-shadow:0 0 4px rgba(244,67,54,0.3);}50%{box-shadow:0 0 12px rgba(244,67,54,0.6);}}
+.pet-shop-item .ps-emoji{font-size:42px;display:block;margin:4px 0 6px;transition:transform .3s;}
+.pet-shop-item:active .ps-emoji{transform:scale(1.2);}
+.pet-shop-item .ps-name{font-size:14px;font-weight:600;color:#333;margin-bottom:2px;}
+.pet-shop-item .ps-desc{font-size:11px;color:#999;margin-bottom:8px;line-height:1.3;}
+.pet-shop-item .ps-price{font-size:15px;font-weight:700;color:#ff9800;margin-top:6px;}
+.pet-shop-item .ps-price.owned{color:#4caf50;font-size:12px;}
+.pet-card{background:linear-gradient(135deg,#fff9f0,#fff);border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 2px 16px rgba(255,152,0,0.1);border:1px solid #ffe0b2;}
+.pet-display{text-align:center;padding:12px 0;}
+.pet-emoji{font-size:64px;display:block;margin:0 auto;transition:transform .3s;cursor:pointer;user-select:none;}
+.pet-emoji:active{transform:scale(1.2) rotate(10deg);}
+.pet-emoji.pet-acting{animation:petAct .6s ease;}
+@keyframes petAct{0%,100%{transform:scale(1);}50%{transform:scale(1.3) rotate(-15deg);}}
+.pet-name{font-size:18px;font-weight:700;color:#333;margin:8px 0 2px;}
+.pet-stage{font-size:12px;color:#ff9800;background:#fff3e0;padding:2px 10px;border-radius:10px;display:inline-block;}
+.pet-bars{margin-top:12px;}
+.pet-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.bar-label{width:52px;font-size:12px;color:#666;text-align:right;flex-shrink:0;}
+.bar-track{flex:1;height:14px;background:#f5f5f5;border-radius:7px;overflow:hidden;position:relative;}
+.bar-fill{height:100%;border-radius:7px;transition:width .5s;position:relative;}
+.bar-hunger{background:linear-gradient(90deg,#ff9800,#ff5722);}
+.bar-hygiene{background:linear-gradient(90deg,#2196f3,#03a9f4);}
+.bar-mood{background:linear-gradient(90deg,#e91e63,#ff5722);}
+.bar-energy{background:linear-gradient(90deg,#4caf50,#8bc34a);}
+.bar-intimacy{background:linear-gradient(90deg,#9c27b0,#e040fb);}
+.bar-val{width:32px;font-size:11px;color:#999;text-align:right;flex-shrink:0;}
+.pet-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px;}
+.pet-btn{display:flex;align-items:center;flex-direction:column;gap:3px;padding:10px 4px;background:#fff;border:1px solid #ffe0b2;border-radius:12px;cursor:pointer;transition:all .15s;}
+.pet-btn:active{background:#fff3e0;transform:scale(0.95);}
+.pet-btn .b-icon{font-size:22px;}
+.pet-btn .b-name{font-size:11px;color:#666;font-weight:500;}
+.pet-btn .b-cost{font-size:10px;color:#999;}
 </style>
 </head>
 <body>
@@ -602,10 +660,21 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
     <div id="phone-notifications" class="phone-content"></div>
   </div>
 
+  <!-- 宠物页 -->
+  <div id="page-pet" class="page">
+    <div id="petSubTabs" class="pet-subtabs" style="display:none;">
+      <div class="pet-subtab active" onclick="switchPetTab('shop',this)">🏪 商店</div>
+      <div class="pet-subtab" onclick="switchPetTab('mypet',this)" id="petMyPetTab">🐾 我的宠物</div>
+    </div>
+    <div id="petStoreView"></div>
+    <div id="petDetailView" style="display:none;"></div>
+  </div>
+
   <div class="tab-bar">
     <div class="tab-item active" onclick="switchTab('life')"><span class="tab-icon">🏠</span><span>首页</span></div>
     <div class="tab-item" onclick="switchTab('work')"><span class="tab-icon">💼</span><span>工作</span></div>
     <div class="tab-item" onclick="switchTab('invest')"><span class="tab-icon">📈</span><span>投资</span></div>
+    <div class="tab-item" onclick="switchTab('pet')" id="petTabItem" style="position:relative;"><span class="tab-icon">🐾</span><span>宠物</span><span class="phone-badge" id="petBadge" style="display:none;">0</span></div>
     <div class="tab-item" onclick="switchTab('more')"><span class="tab-icon">📚</span><span>成长</span></div>
     <div class="tab-item" onclick="switchTab('task')"><span class="tab-icon">🎯</span><span>成就</span></div>
     <div class="tab-item" onclick="switchTab('phone')" id="phoneTabItem" style="position:relative;"><span class="tab-icon">📱</span><span>手机</span><span class="phone-badge" id="phoneBadge" style="display:none;">0</span></div>
@@ -1298,6 +1367,7 @@ function defaultState(){
     activeNews:[],decisionCount:0,
     unlockedTiers:{},luxuryItems:[],
     forbesShown:false,shortPositions:{},phone:{threads:[],moments:[],notifications:[],flags:{},lastTriggerMonth:0,nextId:1,chatHistory:{}},
+    pets:[],petFood:5,petStoreLastRefresh:0,
     lifeEvents:[],socialContacts:[]
   };
 }
@@ -1345,7 +1415,7 @@ function showFloatText(text,positive){
 function switchTab(name){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
-  const tabs=['life','work','invest','more','task','phone'];
+  const tabs=['life','work','invest','pet','more','task','phone'];
   document.querySelectorAll('.tab-item').forEach((t,i)=>t.classList.toggle('active',tabs[i]===name));
   refreshPage(name);
 }
@@ -1362,7 +1432,7 @@ function startGame(){
   if(loadGame()&&!G.gameOver){
     document.getElementById('welcomePage').style.display='none';
     document.getElementById('gameApp').style.display='flex';
-    initStockPrices();initPhoneState();refreshAll();return;
+    initStockPrices();initPhoneState();initPetState();refreshAll();return;
   }
   G=defaultState();initStockPrices();initPhoneState();saveGame();
   document.getElementById('welcomePage').style.display='none';
@@ -1506,6 +1576,7 @@ function refreshPage(name){
   if(name==='work')refreshWork();
   else if(name==='invest'){refreshInvest('stock');refreshInvest('house');refreshInvest('business');refreshInvest('tech');}
   else if(name==='task'){refreshTasks();refreshAchievements();refreshFiveDim();renderRanking();}
+  else if(name==='pet'){initPetState();renderPetPage();updatePetBadge();}
   else if(name==='more')refreshLearning();
   else if(name==='phone')refreshPhone();
 }
@@ -1974,9 +2045,24 @@ function studyCharge(){
 }
 function socialGathering(){
   if(G.cash<3000){showToast('现金不足！');return;}
-  G.cash-=3000;G.EQ=clamp(G.EQ+3,0,200);G.mood=clamp(G.mood+5,0,200);
-  showFloatText('💬 EQ+3',true);showFloatText('😊 Mood+5',true);showFloatText('💰 -¥3000',false);
+  G.cash-=3000;showFloatText('💰 -¥3000',false);
   G.monthlyTasks['social']=true;
+  // 随机社交事件
+  const gatherEvents=[
+    {title:'同学聚会',desc:'遇到了老同学小李，聊起当年的趣事。他最近创业成功，给你分享了一些经验。\n\n🧠 IQ+2  EQ+5',fx:{IQ:2,EQ:5}},
+    {title:'高端酒会',desc:'参加了一场商业酒会，认识了几位投资人。有人对你的项目感兴趣，约了下次见面。\n\n💰 投资机会解锁  EQ+3',fx:{EQ:3}},
+    {title:'社区志愿',desc:'参加了社区志愿活动，帮助了独居老人。内心感到温暖。\n\n😊 Mood+10  EQ+5',fx:{mood:10,EQ:5}},
+    {title:'相亲局',desc:'朋友安排了一场相亲，对方是个有趣的人。虽然没成朋友，但聊得很开心。\n\n😊 Mood+5  EQ+2',fx:{mood:5,EQ:2}},
+    {title:'同行聚餐',desc:'和同行吃饭，聊到行业趋势。获得了很多新信息！\n\n🧠 IQ+5  💰 可能获得行业情报',fx:{IQ:5}},
+    {title:'老同学婚礼',desc:'参加老同学的婚礼，回忆起青春岁月。随了份子钱，但收获了感动。\n\n💰 -¥2000  😊 Mood+8',fx:{cash:-2000,mood:8}},
+    {title:'创业沙龙',desc:'参加创业沙龙，听到精彩的演讲。认识了一位潜在合伙人！\n\n🧠 IQ+3  EQ+3',fx:{IQ:3,EQ:3}},
+    {title:'邻里烧烤',desc:'邻居组织烧烤派对，大家吃吃喝喝聊聊天。社区关系更融洽了。\n\n😊 Mood+6  EQ+2',fx:{mood:6,EQ:2}},
+  ];
+  const evt=gatherEvents[Math.floor(Math.random()*gatherEvents.length)];
+  if(evt.fx){for(const k in evt.fx){if(k==='cash'){G.cash+=evt.fx[k];}else if(k==='mood'){G.mood=clamp(G.mood+evt.fx[k],0,200);}else{G[k]=clamp((G[k]||0)+evt.fx[k],0,200);}}}
+  const fxStr=Object.entries(evt.fx).map(([k,v])=>{if(k==='cash')return (v>0?'+':'')+'¥'+v;if(k==='mood')return '😊 '+(v>0?'+':'')+v;return '🧠 +'+v;}).join(' ');
+  showFloatText('🤝 '+evt.title,true);showFloatText(fxStr,true);
+  showModal({title:'🤝 '+evt.title,content:evt.desc,confirmText:'好的',success(){}});
   saveGame();refreshAll();
 }
 
@@ -2676,6 +2762,11 @@ function confirmRestart(){
 function initPhoneState(){
   if(!G.phone)G.phone={threads:[],moments:[],notifications:[],flags:{},lastTriggerMonth:0,nextId:1,activeChats:[]};
   if(!G.notes)G.notes={};
+}
+function initPetState(){
+  if(!G.pets)G.pets=[];
+  if(!G.petFood||G.petFood<0)G.petFood=5;
+  if(!G.petStoreLastRefresh)G.petStoreLastRefresh=0;
 }
 
 // ===== 通讯录：主动聊天话题库 =====
@@ -4770,7 +4861,7 @@ window.addEventListener('load',()=>{
   if(loadGame()&&!G.gameOver){
     document.getElementById('welcomePage').style.display='none';
     document.getElementById('gameApp').style.display='flex';
-    initStockPrices();initPhoneState();refreshAll();
+    initStockPrices();initPhoneState();initPetState();refreshAll();
   }
 });
 const AI_ENGINE={
@@ -5802,7 +5893,7 @@ function confirmEnhancedRebirth(){
       G.lifeEvents.push({month:G.totalMonths,icon:'♻️',title:'轮回重生',detail:'获得'+pts+'轮回点',type:'career'});
       G.rebirthCount=(G.rebirthCount||0)+1;
       saveLegacy();
-      clearGame();G=defaultState();initStockPrices();initPhoneState();saveGame();
+      clearGame();G=defaultState();initStockPrices();initPhoneState();initPetState();saveGame();
       refreshAll();switchTab('life');
       showToast('♻️ 第'+G.rebirthCount+'次人生开始！','success',2500);
       checkAchievements();
