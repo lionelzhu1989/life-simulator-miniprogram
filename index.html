@@ -513,6 +513,79 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
   0%,100%{transform:scale(1);opacity:1}
   50%{transform:scale(1.3);opacity:.6}
 }
+
+/* v4.3.0: 宠物系统 */
+.pet-page{padding:12px;min-height:100%;}
+.pet-card{background:linear-gradient(135deg,#fff9f0,#fff);border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 2px 16px rgba(255,152,0,0.1);border:1px solid #ffe0b2;}
+.pet-display{text-align:center;padding:12px 0;position:relative;}
+.pet-emoji{font-size:64px;display:block;margin:0 auto;transition:transform .3s;cursor:pointer;user-select:none;}
+.pet-emoji:active{transform:scale(1.2) rotate(10deg);}
+.pet-emoji.pet-acting{animation:petAct .6s ease;}
+@keyframes petAct{0%,100%{transform:scale(1);}50%{transform:scale(1.3) rotate(-15deg);}}
+.pet-name{font-size:18px;font-weight:700;color:#333;margin:8px 0 2px;}
+.pet-stage{font-size:12px;color:#ff9800;background:#fff3e0;padding:2px 10px;border-radius:10px;display:inline-block;}
+.pet-bars{margin-top:12px;}
+.pet-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.bar-label{width:52px;font-size:12px;color:#666;text-align:right;flex-shrink:0;}
+.bar-track{flex:1;height:12px;background:#f5f5f5;border-radius:6px;overflow:hidden;position:relative;}
+.bar-fill{height:100%;border-radius:6px;transition:width .5s;position:relative;}
+.bar-hunger{background:linear-gradient(90deg,#ff9800,#ff5722);}
+.bar-hygiene{background:linear-gradient(90deg,#2196f3,#03a9f4);}
+.bar-mood{background:linear-gradient(90deg,#e91e63,#ff5722);}
+.bar-energy{background:linear-gradient(90deg,#4caf50,#8bc34a);}
+.bar-intimacy{background:linear-gradient(90deg,#9c27b0,#e040fb);}
+.bar-val{width:32px;font-size:11px;color:#999;text-align:right;flex-shrink:0;}
+.pet-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px;}
+.pet-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;background:#f8f9fa;border:1px solid #e8e8e8;border-radius:10px;cursor:pointer;transition:all .15s;}
+.pet-btn:active{background:#e3f2fd;transform:scale(0.95);}
+.pet-btn .b-icon{font-size:20px;}
+.pet-btn .b-name{font-size:10px;color:#666;}
+.pet-btn .b-cost{font-size:9px;color:#999;}
+.pet-btn.feed .b-icon::content:'🍖'}
+.pet-empty{text-align:center;padding:32px 16px;}
+.pet-empty .empty-icon{font-size:48px;display:block;margin-bottom:12px;}
+.pet-empty .empty-text{font-size:14px;color:#999;margin-bottom:16px;}
+.pet-store-tabs{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding:4px 0;}
+.pet-store-tab{padding:6px 14px;border-radius:16px;font-size:12px;cursor:pointer;border:1px solid #ddd;background:#fff;white-space:nowrap;flex-shrink:0;}
+.pet-store-tab.active{background:#ff9800;color:#fff;border-color:#ff9800;}
+.pet-store-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.pet-store-item{background:#fff;border:1px solid #e8e8e8;border-radius:12px;padding:12px;text-align:center;cursor:pointer;transition:all .15s;position:relative;overflow:hidden;}
+.pet-store-item:active{background:#fff3e0;}
+.pet-store-item.rarity-rare{border-color:#ff9800;box-shadow:0 0 8px rgba(255,152,0,0.2);}
+.pet-store-item.rarity-epic{border-color:#9c27b0;box-shadow:0 0 8px rgba(156,39,176,0.2);}
+.pet-store-item.rarity-legend{border-color:#f44336;box-shadow:0 0 12px rgba(244,67,54,0.3);animation:legendGlow 2s infinite;}
+@keyframes legendGlow{0%,100%{box-shadow:0 0 12px rgba(244,67,54,0.3);}50%{box-shadow:0 0 20px rgba(244,67,54,0.6);}}
+.pet-store-item .psi{font-size:36px;display:block;margin:4px 0;}
+.pet-store-item .psn{font-size:13px;font-weight:600;}
+.pet-store-item .psp{font-size:14px;color:#ff5722;font-weight:700;margin:4px 0;}
+.pet-store-item .psstat{font-size:10px;color:#999;position:absolute;top:4px;right:6px;padding:2px 6px;border-radius:8px;}
+.pet-store-item .psstat.rarity-common{background:#f5f5f5;color:#666;}
+.pet-store-item .psstat.rarity-rare{background:#fff3e0;color:#ff9800;}
+.pet-store-item .psstat.rarity-epic{background:#f3e5f5;color:#9c27b0;}
+.pet-store-item .psstat.rarity-legend{background:#ffebee;color:#f44336;}
+.game-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:1000;animation:fadeIn .2s;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+.mini-game{background:#fff;border-radius:16px;padding:20px;width:320px;max-width:90vw;text-align:center;}
+.mini-game h3{margin-bottom:12px;font-size:16px;}
+.mg-timer{font-size:24px;font-weight:700;color:#ff5722;margin:8px 0;}
+.mg-score{font-size:18px;color:#4caf50;font-weight:600;}
+.mg-target{width:50px;height:50px;display:flex;align-items:center;justify-content:center;font-size:28px;border-radius:50%;cursor:pointer;user-select:none;transition:transform .1s;}
+.mg-target:active{transform:scale(0.9);}
+.mg-target.caught{animation:catched .3s ease;}
+@keyframes catched{0%{transform:scale(1);}50%{transform:scale(1.4);}100%{transform:scale(0);}}
+.mg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0;max-width:240px;margin-left:auto;margin-right:auto;}
+.mg-result{font-size:24px;margin:8px 0;animation:bounceIn .3s;}
+@keyframes bounceIn{0%{transform:scale(0);}60%{transform:scale(1.2);}100%{transform:scale(1);}}
+.walk-scene{background:linear-gradient(180deg,#87ceeb 0%,#87ceeb 40%,#4caf50 40%,#2e7d32 100%);border-radius:12px;padding:16px;min-height:200px;position:relative;overflow:hidden;margin:12px 0;}
+.walk-pet{font-size:40px;position:absolute;bottom:20px;left:20%;transition:left .4s;animation:walkBounce .5s infinite alternate;}
+@keyframes walkBounce{0%{transform:translateY(0);}100%{transform:translateY(-10px);}}
+.walk-title{font-size:14px;color:#333;margin-bottom:4px;}
+.walk-bar{height:8px;background:rgba(255,255,255,.4);border-radius:4px;margin:8px 0;overflow:hidden;}
+.walk-bar-fill{height:100%;background:#ff9800;border-radius:4px;transition:width .3s;}
+.walk-event{background:rgba(255,255,255,.95);border-radius:8px;padding:10px;margin-top:12px;font-size:13px;display:none;}
+.walk-event.show{display:block;animation:slideUp .3s;}
+@keyframes slideUp{from{transform:translateY(10px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.walk-btns{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;}
 </style>
 
 <!-- v4.0.0 Upgrade CSS -->
@@ -1033,10 +1106,16 @@ function triggerParentHelp(){
 
   </div>
 
+  <!-- v4.3.0: 宠物页面 -->
+  <div id="page-pet" class="page">
+    <div id="petMainView"></div>
+  </div>
+
   <div class="tab-bar">
     <div class="tab-item active" onclick="switchTab('life')"><span class="tab-icon">🏠</span><span>首页</span></div>
     <div class="tab-item" onclick="switchTab('work')"><span class="tab-icon">💼</span><span>工作</span></div>
     <div class="tab-item" onclick="switchTab('invest')"><span class="tab-icon">📈</span><span>投资</span></div>
+    <div class="tab-item" onclick="switchTab('pet')" id="petTabItem" style="position:relative;"><span class="tab-icon">🐾</span><span>宠物</span><span class="phone-badge" id="petBadge" style="display:none;">0</span></div>
     <div class="tab-item" onclick="switchTab('more')"><span class="tab-icon">📚</span><span>成长</span></div>
     <div class="tab-item" onclick="switchTab('task')"><span class="tab-icon">🎯</span><span>成就</span></div>
     <div class="tab-item" onclick="switchTab('phone')" id="phoneTabItem" style="position:relative;"><span class="tab-icon">📱</span><span>手机</span><span class="phone-badge" id="phoneBadge" style="display:none;">0</span></div>
@@ -2012,7 +2091,9 @@ function defaultState(){
     scheduledDates:[],
      // v4.2.0: 好友分组
      friendGroups:[{id:'close',name:'亲密好友',icon:'❤️',custom:false},{id:'normal',name:'普通朋友',icon:'👥',custom:false},{id:'business',name:'商业伙伴',icon:'💼',custom:false},{id:'weak',name:'点头之交',icon:'👋',custom:false}],
-     npcGroups:{}
+     npcGroups:{},
+     // v4.3.0: 宠物系统
+     pets:[],petStoreLastRefresh:0,petFood:5
   };
 }
 
@@ -2067,7 +2148,7 @@ function showFloatText(text,positive){
 function switchTab(name){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
-  const tabs=['life','work','invest','more','task','phone'];
+  const tabs=['life','work','invest','pet','more','task','phone'];
   document.querySelectorAll('.tab-item').forEach((t,i)=>t.classList.toggle('active',tabs[i]===name));
   refreshPage(name);
   _tut_checkAutoAdvance();
@@ -2297,6 +2378,7 @@ function setAttrBar(name,val){val=clamp(Math.round(val),0,200);const pct=Math.mi
 function refreshPage(name){
   if(name==='work')refreshWork();
   else if(name==='invest'){refreshInvest('stock');refreshInvest('house');refreshInvest('business');refreshInvest('tech');}
+  else if(name==='pet')renderPetPage();
   else if(name==='task'){refreshTasks();refreshAchievements();refreshFiveDim();renderRanking();}
   else if(name==='more')refreshLearning();
   else if(name==='phone')refreshPhone();
@@ -6815,7 +6897,7 @@ function processChatEffects(reply,npcId){
     }
   });
   // 安全纠错：如果文字内容是NPC给钱，但标签方向搞反了（用了ASK），自动纠正为GIVE
-  var hasGiveText=/(给你|转你|塞给你|发红包|给你钱|给你转|孝敬你)/.test(reply);
+  var hasGiveText=/(给你|转你|借你|塞给你|发红包|给你钱|给你转|孝敬你|拿去|周转|先拿着)/.test(reply);
   var hasAskTag=/\[ASK:\d+/.test(reply);
   var hasGiveTag=/\[GIVE:\d+/.test(reply);
   if(hasGiveText && hasAskTag && !hasGiveTag){
@@ -7222,7 +7304,7 @@ async function _doSendMessage(msg,npcId){
   // 如果玩家刚收到NPC的钱（NPC回复含[GIVE]），检查是否搞反
   // 安全纠错：文字说"给你/转你"但用了[GIVE]标签（方向搞反）
   if(reply){
-    var hasGiveText=/(给你|转你|塞给你|发红包|给你钱|给你转|孝敬你)/.test(reply);
+    var hasGiveText=/(给你|转你|借你|塞给你|发红包|给你钱|给你转|孝敬你|拿去|周转|先拿着)/.test(reply);
     var hasAskTag=/\[ASK:\d+/.test(reply);
     var hasGiveTag=/\[GIVE:\d+/.test(reply);
     if(hasGiveText&&hasAskTag&&!hasGiveTag){
@@ -10043,6 +10125,7 @@ var _v4_origDoAdvance = _doAdvanceMonth;
 window['_doAdvanceMonth'] = function(){
   var before = _monthBeforeSnapshot();
   _v4_origDoAdvance();
+  advancePetMonthly();
 };
 
 var _v4_origShowGameOver = showGameOver;
@@ -10266,5 +10349,443 @@ function _debugAddTestMoments(){
   alert('已添加3条测试朋友圈（含NPC评论+点赞），请切换到朋友圈查看');
 }
 // v4.0.0: Debug log removed
+
+// ===== v4.3.0: 宠物系统 =====
+var PET_STORE = [
+  {id:'tuxie',type:'cat',name:'土猫',emoji:'🐈',price:2000,rarity:'common',desc:'街头流浪猫，独立不粘人',mod:{hyg:0.7,md:1.2}},
+  {id:'tabby',type:'cat',name:'虎斑猫',emoji:'🐱',price:5000,rarity:'rare',desc:'活泼好动，爱抓东西',mod:{hyg:0.7,md:1.0}},
+  {id:'ragdoll',type:'cat',name:'布偶猫',emoji:'😺',price:15000,rarity:'epic',desc:'优雅温顺，颜值爆表',mod:{hyg:0.8,md:0.8}},
+  {id:'garfield',type:'cat',name:'加菲猫',emoji:'🐱',price:50000,rarity:'legend',desc:'橘色传说，吃货本质',mod:{hyg:0.9,md:0.7}},
+  {id:'tugou',type:'dog',name:'中华田园犬',emoji:'🐕',price:2000,rarity:'common',desc:'忠诚看家，不挑食',mod:{hg:1.1,md:1.0}},
+  {id:'jinmao',type:'dog',name:'金毛',emoji:'🐕‍🦺',price:8000,rarity:'rare',desc:'暖男代表，超高服从',mod:{hg:1.0,md:0.8}},
+  {id:'hashiqi',type:'dog',name:'哈士奇',emoji:'🐶',price:18000,rarity:'epic',desc:'拆家专家，精力无穷',mod:{hg:1.3,md:1.2}},
+  {id:'corgi',type:'dog',name:'柯基',emoji:'🐕',price:55000,rarity:'legend',desc:'小短腿蜜桃臀，快乐源泉',mod:{hg:1.0,md:0.6}},
+  {id:'goldfish',type:'fish',name:'锦鲤',emoji:'🐟',price:1500,rarity:'common',desc:'躺着养，观赏为主',mod:{hg:0.5,md:0.0}},
+  {id:'koi',type:'fish',name:'锦鲤·红白',emoji:'🐠',price:6000,rarity:'rare',desc:'招财进宝，好运连连',mod:{hg:0.5,md:0.0}},
+  {id:'dragonfish',type:'fish',name:'龙鱼',emoji:'🐡',price:25000,rarity:'epic',desc:'霸气侧漏，身份象征',mod:{hg:0.5,md:0.0}},
+  {id:'parrot',type:'bird',name:'虎皮鹦鹉',emoji:'🦜',price:3000,rarity:'common',desc:'能学说话，叽叽喳喳',mod:{hg:1.0,md:1.3}},
+  {id:'cockatoo',type:'bird',name:'葵花鹦鹉',emoji:'🐦',price:12000,rarity:'rare',desc:'高智商，能聊天',mod:{hg:1.0,md:1.0}}
+];
+
+function initPetState(){
+  if(!G.pets)G.pets=[];
+  if(!G.petStoreLastRefresh)G.petStoreLastRefresh=0;
+  if(!G.petFood||G.petFood<0)G.petFood=5;
+}
+
+function renderPetPage(){
+  initPetState();
+  const el=document.getElementById('petMainView');if(!el)return;
+  if(G.pets.length===0){
+    // Empty state - show store
+    let h='<div class="pet-page"><div class="pet-empty">';
+    h+='<span class="empty-icon">🐾</span>';
+    h+='<div class="empty-text">你还没有宠物<br>去商店领养一只吧！</div>';
+    h+='<button class="btn btn-primary" onclick="openPetStore()">🏪 宠物商店</button>';
+    h+='</div></div>';
+    el.innerHTML=h;
+  } else {
+    // Show first pet (expand later for multiple)
+    renderPetDetail(G.pets[0]);
+  }
+  updatePetBadge();
+}
+
+function renderPetDetail(pet){
+  const el=document.getElementById('petMainView');
+  const stage = pet.age<3?'幼崽期':pet.age<12?'成长期':pet.age<48?pet.age<96?'壮年期':'老年期':'寿终期';
+  const rarityC={common:'#666',rare:'#ff9800',epic:'#9c27b0',legend:'#f44336'};
+  let h='<div class="pet-page">';
+  h+='<div class="pet-card">';
+  h+='<div class="pet-display">';
+  h+='<span class="pet-emoji" onclick="petPet(\'+pet.id+\')">'+pet.emoji+'</span>';
+  h+='<div class="pet-name">'+pet.name+'</div>';
+  h+='<span class="pet-stage">'+stage+' · '+Math.floor(pet.age)+'月</span>';
+  h+='</div>';
+  h+='<div class="pet-bars">';
+  h+=petBar('🍖','饥饿',pet.hunger,'hunger');
+  h+=petBar('🧼','清洁',pet.hygiene,'hygiene');
+  h+=petBar('😊','心情',pet.mood,'mood');
+  h+=petBar('⚡','精力',pet.energy,'energy');
+  h+=petBar('❤️','亲密',pet.intimacy,'intimacy');
+  h+='</div>';
+  h+='<div class="pet-actions">';
+  h+='<div class="pet-btn feed" onclick="petFeed(\'+pet.id+\')"><span class="b-icon">🍖</span><span class="b-name">喂食</span><span class="b-cost">'+(G.petFood>0?'库存'+G.petFood+'袋':'¥200')+'</span></div>';
+  h+='<div class="pet-btn play" onclick="petPlay(\'+pet.id+\')"><span class="b-icon">🎾</span><span class="b-name">玩耍</span><span class="b-cost">小游戏</span></div>';
+  h+='<div class="pet-btn clean" onclick="petClean(\'+pet.id+\')"><span class="b-icon">🛁</span><span class="b-name">洗澡</span><span class="b-cost">¥300</span></div>';
+  h+='<div class="pet-btn pet" onclick="petPet(\'+pet.id+\')"><span class="b-icon">🤚</span><span class="b-name">抚摸</span><span class="b-cost">免费</span></div>';
+  if(pet.type==='dog'||pet.type==='cat'){
+    h+='<div class="pet-btn walk" onclick="petWalk(\'+pet.id+\')"><span class="b-icon">🌳</span><span class="b-name">遛弯</span><span class="b-cost">随机</span></div>';
+  }
+  h+='<div class="pet-btn train" onclick="petTrain(\'+pet.id+\')"><span class="b-icon">🎓</span><span class="b-name">训练</span><span class="b-cost">小游戏</span></div>';
+  h+='<div class="pet-btn heal" onclick="petHeal(\'+pet.id+\')"><span class="b-icon">🏥</span><span class="b-name">治病</span><span class="b-cost">¥2000</span></div>';
+  h+='<div class="pet-btn store" onclick="openPetStore()"><span class="b-icon">🏪</span><span class="b-name">商店</span><span class="b-cost">'+(G.petFood<5?'买粮':'逛逛')+'</span></div>';
+  h+='</div></div>';
+  // Multi-pet navigation
+  if(G.pets.length>1){
+    h+='<div style="display:flex;gap:6px;justify-content:center;margin-top:8px;">';
+    G.pets.forEach((p,i)=>{
+      h+='<span style="padding:4px 12px;border-radius:12px;font-size:11px;cursor:pointer;background:'+(p.id===pet.id?'#ff9800':'#f5f5f5')+';color:'+(p.id===pet.id?'#fff':'#666')+'" onclick="renderPetDetail(G.pets['+i+'])">'+p.emoji+'</span>';
+    });
+    h+='</div>';
+  }
+  h+='</div>';
+  el.innerHTML=h;
+}
+function petBar(icon,label,val,cls){const pct=Math.max(0,Math.min(100,val));const c=pct<30?'font-weight:700;color:#e74c3c;':'';return '<div class="pet-bar-row"><span class="bar-label">'+icon+' '+label+'</span><div class="bar-track"><div class="bar-fill bar-'+cls+'" style="width:'+pct+'%"></div></div><span class="bar-val" style="'+c+'">'+Math.round(pct)+'</span></div>';}
+
+function updatePetBadge(){
+  if(!G.pets||G.pets.length===0)return;
+  const needs = G.pets.filter(p=>p.hunger<30||p.mood<30||p.intimacy<40).length;
+  const b=document.getElementById('petBadge');
+  if(b&&needs>0){b.textContent=needs;b.style.display='flex';}
+}
+
+function petFeed(id){
+  const pet=G.pets.find(p=>p.id===id);if(!pet)return;
+  if(G.petFood>0){G.petFood--;}
+  else if(G.cash<200){showToast('💸 没钱买狗粮了！');return;}
+  else{G.cash-=200;}
+  // Feeding mini-game: timing game
+  showMiniGame('feed',pet);
+}
+function showMiniGame(type,pet){
+  const overlay=document.createElement('div');
+  overlay.className='game-overlay';
+  overlay.id='petGameOverlay';
+  let html='';
+  if(type==='feed'){
+    html='<div class="mini-game"><h3>🍖 喂食 '+pet.name+'</h3>';
+    html+='<div style="font-size:12px;color:#666;">点击食物投入食盆，连续命中8次！</div>';
+    html+='<div class="mg-timer" id="mgTimer">8</div>';
+    html+='<div style="position:relative;width:200px;height:120px;margin:10px auto;background:linear-gradient(180deg,#fff3e0,#ffe0b2);border-radius:12px;overflow:hidden;">';
+    html+='<div id="mgFood" class="mg-target" style="position:absolute;font-size:30px;display:none;" onclick="mgHitFood()">🍖</div>';
+    html+='<div style="position:absolute;bottom:5px;left:50%;transform:translateX(-50%);font-size:20px;">🥣</div>';
+    html+='</div>';
+    html+='<div><button onclick="closePetGame()" class="btn btn-outline btn-sm">跳过</button></div></div>';
+  } else if(type==='play'){
+    html='<div class="mini-game"><h3>🎾 陪'+pet.name+'玩耍</h3>';
+    html+='<div style="font-size:12px;color:#666;">接住飞盘！点击移动的 🎾</div>';
+    html+='<div class="mg-score" id="mgScore">得分: 0</div>';
+    html+='<div id="frisbeeArena" style="position:relative;width:240px;height:160px;margin:10px auto;background:linear-gradient(180deg,#87ceeb,#4caf50);border-radius:12px;overflow:hidden;cursor:crosshair;">';
+    html+='<div id="frisbee" class="mg-target" style="position:absolute;font-size:32px;" onclick="mgCatchFrisbee()">🎾</div>';
+    html+='</div>';
+    html+='<div><button onclick="closePetGame()" class="btn btn-outline btn-sm">跳过</button></div></div>';
+  } else if(type==='train'){
+    html='<div class="mini-game"><h3>🎓 训练 '+pet.name+'</h3>';
+    html+='<div style="font-size:12px;color:#666;">记住闪亮的格子顺序！</div>';
+    html+='<div class="mg-score" id="mgTrainStatus">准备...</div>';
+    html+='<div class="mg-grid" id="mgTrainGrid">';
+    for(let i=0;i<9;i++){html+='<div class="mg-train-cell" style="width:50px;height:50px;background:#f5f5f5;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;" data-idx="'+i+'" onclick="mgTrainClick(this)"></div>';}
+    html+='</div><div><button onclick="closePetGame()" class="btn btn-outline btn-sm">跳过</button></div></div>';
+  }
+  overlay.innerHTML=html;
+  document.body.appendChild(overlay);
+
+  if(type==='feed'){startFeedGame(pet);}
+  else if(type==='play'){startPlayGame(pet);}
+  else if(type==='train'){startTrainGame(pet);}
+}
+
+var _mgState={hits:0,timer:null,frisbeeTimer:null,cells:[],playerIdx:0,round:0};
+function closePetGame(){
+  if(_mgState.timer)clearInterval(_mgState.timer);
+  if(_mgState.frisbeeTimer)clearInterval(_mgState.frisbeeTimer);
+  const o=document.getElementById('petGameOverlay');
+  if(o)o.remove();
+}
+
+function startFeedGame(pet){
+  _mgState.hits=0;
+  let target=8;
+  let elapsed=0;
+  const food=document.getElementById('mgFood');
+  const timer=document.getElementById('mgTimer');
+  function moveFood(){
+    const arena=food.parentElement;
+    const aw=arena.offsetWidth-40,ah=arena.offsetHeight-40;
+    food.style.left=Math.random()*aw+'px';
+    food.style.top=Math.random()*ah+'px';
+    food.style.display='block';
+    food.classList.remove('caught');
+  }
+  function tick(){
+    elapsed++;
+    if(elapsed>=15){clearInterval(_mgState.timer);finishFeed(pet);}
+  }
+  _mgState.timer=setInterval(tick,1000);
+  moveFood();
+}
+function mgHitFood(){
+  _mgState.hits++;
+  const food=document.getElementById('mgFood');
+  food.classList.add('caught');
+  document.getElementById('mgTimer').textContent=8-_mgState.hits;
+  if(_mgState.hits>=8){clearInterval(_mgState.timer);finishFeed(pet);}
+  else setTimeout(()=>{const f=document.getElementById('mgFood');if(f){f.classList.remove('caught');const a=f.parentElement;const w=a.offsetWidth-40,h=a.offsetHeight-40;f.style.left=Math.random()*w+'px';f.style.top=Math.random()*h+'px';}},200);
+}
+function finishFeed(pet){
+  const s=Math.min(100,_mgState.hits*12);
+  pet.hunger=Math.min(100,pet.hunger+s);
+  pet.intimacy=Math.min(100,pet.intimacy+3);
+  pet.mood=Math.min(100,pet.mood+8);
+  showToast('🍖 '+pet.name+'饱餐一顿！饥饿+'+Math.round(s)+'，亲密+3');
+  closePetGame();saveGame();renderPetDetail(pet);
+}
+
+function startPlayGame(pet){
+  _mgState.hits=0;
+  const frisbee=document.getElementById('frisbee');
+  function moveFrisbee(){
+    const arena=frisbee.parentElement;
+    const w=arena.offsetWidth-40,h=arena.offsetHeight-40;
+    frisbee.style.left=Math.random()*w+'px';
+    frisbee.style.top=Math.random()*h+'px';
+    frisbee.style.display='block';
+    frisbee.classList.remove('caught');
+  }
+  _mgState.frisbeeTimer=setInterval(moveFrisbee,800);
+  setTimeout(()=>{clearInterval(_mgState.frisbeeTimer);finishPlay(pet);},10000);
+}
+function mgCatchFrisbee(){
+  _mgState.hits++;
+  document.getElementById('mgScore').textContent='得分: '+_mgState.hits;
+  const fr=document.getElementById('frisbee');
+  fr.classList.add('caught');
+  setTimeout(()=>{const f=document.getElementById('frisbee');if(f)f.classList.remove('caught');},150);
+}
+function finishPlay(pet){
+  const moodUp=_mgState.hits*4;
+  pet.mood=Math.min(100,pet.mood+moodUp);
+  pet.intimacy=Math.min(100,pet.intimacy+5);
+  pet.energy=Math.max(0,pet.energy-_mgState.hits*3);
+  showToast('🎾 '+pet.name+'玩得很开心！心情+'+moodUp+'，亲密+5');
+  closePetGame();saveGame();renderPetDetail(pet);
+}
+
+function startTrainGame(pet){
+  const cells=[];for(let i=0;i<9;i++)cells.push(0);
+  const grid=document.getElementById('mgTrainGrid');
+  const cells2=grid.querySelectorAll('.mg-train-cell');
+  _mgState.round=0;_mgState.cells=cells2;_mgState.playerIdx=0;
+  const seq=[Math.floor(Math.random()*9),Math.floor(Math.random()*9),Math.floor(Math.random()*9)];
+  const status=document.getElementById('mgTrainStatus');
+  // Flash sequence
+  status.textContent='记住顺序...';
+  seq.forEach((idx,i)=>{
+    setTimeout(()=>{
+      if(cells2[idx])cells2[idx].style.background='#ff9800';
+      cells2[idx].textContent='⭐';
+    },i*600);
+  });
+  setTimeout(()=>{
+    seq.forEach((idx,i)=>{
+      setTimeout(()=>{
+        if(cells2[idx]){cells2[idx].style.background='#f5f5f5';cells2[idx].textContent='';}
+      },0);
+    });
+    status.textContent='你的回合！第1步';
+  },seq.length*600+500);
+  _mgState.trainSeq=seq;
+}
+function mgTrainClick(el){
+  const idx=parseInt(el.dataset.idx);
+  const seq=_mgState.trainSeq;
+  const status=document.getElementById('mgTrainStatus');
+  if(idx===seq[_mgState.playerIdx]){
+    el.style.background='#4caf50';el.textContent='✅';_mgState.playerIdx++;
+    if(_mgState.playerIdx>=seq.length){
+      const pet=G.pets[0]; // assume first pet
+      const ip=8+Math.floor(Math.random()*5);
+      pet.intimacy=Math.min(100,pet.intimacy+ip);
+      pet.skills=(pet.skills||0)+1;
+      status.textContent='🎉 成功！亲密+'+ip+' 技能+1';
+      setTimeout(()=>{closePetGame();saveGame();renderPetDetail(pet);},1500);
+      return;
+    }
+    status.textContent='对了！第'+(_mgState.playerIdx+1)+'步';
+  } else {
+    el.style.background='#e74c3c';el.textContent='❌';
+    const pet=G.pets[0];
+    pet.intimacy=Math.min(100,pet.intimacy+2);
+    status.textContent='有点难... 亲密+2';
+    setTimeout(()=>{closePetGame();saveGame();renderPetDetail(pet);},1500);
+  }
+}
+
+function petClean(id){
+  const pet=G.pets.find(p=>p.id===id);if(!pet)return;
+  if(G.cash<300){showToast('💸 没钱买沐浴露！');return;}
+  G.cash-=300;
+  pet.hygiene=100;pet.mood=Math.min(100,pet.mood+10);
+  showToast('🛁 '+pet.name+'洗得香喷喷！清洁+100，心情+10');
+  saveGame();renderPetDetail(pet);
+}
+function petPet(id){
+  const pet=G.pets.find(p=>p.id===id);if(!pet)return;
+  pet.intimacy=Math.min(100,pet.intimacy+2);pet.mood=Math.min(100,pet.mood+8);
+  const el=document.querySelector('.pet-emoji');if(el)el.classList.add('pet-acting');
+  setTimeout(()=>{const e=document.querySelector('.pet-emoji');if(e)e.classList.remove('pet-acting');},600);
+  saveGame();renderPetDetail(pet);
+}
+function petHeal(id){
+  const pet=G.pets.find(p=>p.id===id);if(!pet)return;
+  if(G.cash<2000){showToast('💸 没钱看病！');return;}
+  G.cash-=2000;
+  pet.sick=false;pet.health=100;pet.mood=Math.min(100,pet.mood+15);
+  showToast('🏥 '+pet.name+'恢复健康！');
+  saveGame();renderPetDetail(pet);
+}
+
+// ===== 遛弯子系统 =====
+function petWalk(id){
+  const pet=G.pets.find(p=>p.id===id);if(!pet)return;
+  const overlay=document.createElement('div');
+  overlay.className='game-overlay';
+  overlay.id='walkOverlay';
+  let h='<div class="mini-game" style="max-width:340px;">';
+  h+='<h3>🌳 带'+pet.name+'遛弯</h3>';
+  h+='<div class="walk-scene" id="walkScene">';
+  h+='<div class="walk-pet" id="walkPet">'+pet.emoji+'</div>';
+  h+='</div>';
+  h+='<div class="walk-bar"><div class="walk-bar-fill" id="walkBar" style="width:0%"></div></div>';
+  h+='<div class="walk-event" id="walkEvent"></div>';
+  h+='<div class="walk-btns">';
+  h+='<button onclick="walkSearch()" class="btn btn-outline btn-sm">🔍 搜索</button>';
+  h+='<button onclick="closeWalk()" class="btn btn-outline btn-sm">🏠 回家</button>';
+  h+='</div></div>';
+  overlay.innerHTML=h;
+  document.body.appendChild(overlay);
+  // Walk simulation
+  let progress=0,energy=pet.energy;
+  const events=[
+    {t:20,e:'sniff',txt:'🐕 '+pet.name+'发现了埋在地下的骨头！',fx:function(){pet.intimacy=Math.min(100,pet.intimacy+5);}},
+    {t:40,e:'meet',txt:'😄 遇到路人，宠物很乖！',fx:function(){pet.mood=Math.min(100,pet.mood+15);}},
+    {t:60,e:'item',txt:'💰 在草丛里找到了一些钱... 获得¥'+(50+Math.floor(Math.random()*100)),fx:function(){G.cash+=80+Math.floor(Math.random()*120);}},
+    {t:80,e:'social',txt:'👫 另一位宠物主人邀请一起遛弯',fx:function(){pet.intimacy=Math.min(100,pet.intimacy+8);}}
+  ];
+  let triggered=[];
+  _walkInt=setInterval(()=>{
+    progress+=(energy/10);
+    document.getElementById('walkBar').style.width=Math.min(100,progress)+'%';
+    events.forEach(ev=>{
+      if(progress>=ev.t&&!triggered.includes(ev.e)){
+        triggered.push(ev.e);
+        const we=document.getElementById('walkEvent');
+        we.textContent=ev.txt;we.classList.add('show');
+        if(ev.fx)ev.fx();
+        showToast(ev.txt);
+      }
+    });
+    if(progress>=100){clearInterval(_walkInt);finishWalk(pet);}
+  },1500);
+  pet.energy=Math.max(0,pet.energy-20);pet.hunger=Math.max(0,pet.hunger-15);
+}
+function walkSearch(){
+  const r=Math.random();
+  if(r<0.3){G.cash+=100;showToast('💰 挖到¥100！');}
+  else if(r<0.6){showToast('🦴 挖到一根骨头，宠物很开心');}
+  else{showToast('🕳️ 挖了个空...');}
+}
+function finishWalk(pet){
+  pet.mood=Math.min(100,pet.mood+20);pet.intimacy=Math.min(100,pet.intimacy+5);
+  G.mood=Math.min(200,G.mood+8);
+  showToast('🌳 遛弯结束！'+pet.name+'心情+20，你也心情+8');
+  closeWalk();saveGame();
+  setTimeout(()=>{renderPetDetail(pet);},500);
+}
+function closeWalk(){clearInterval(_walkInt);const o=document.getElementById('walkOverlay');if(o)o.remove();}
+
+// ===== 宠物商店 =====
+function openPetStore(){
+  initPetState();
+  const overlay=document.createElement('div');
+  overlay.className='modal-overlay';
+  overlay.onclick=function(e){if(e.target===this)this.remove();};
+  const card=document.createElement('div');
+  card.className='modal-card';
+  card.style.maxWidth='360px';
+  let h='<div class="modal-title">🏪 宠物商店 <span style="font-size:11px;color:#999;">(购买食物、领养宠物)</span></div>';
+  h+='<div class="pet-store-tabs">';
+  h+='<div class="pet-store-tab active" onclick="filterStore(\'all\',this)">全部</div>';
+  h+='<div class="pet-store-tab" onclick="filterStore(\'dog\',this)">🐕 狗</div>';
+  h+='<div class="pet-store-tab" onclick="filterStore(\'cat\',this)">🐈 猫</div>';
+  h+='<div class="pet-store-tab" onclick="filterStore(\'fish\',this)">🐟 鱼</div>';
+  h+='<div class="pet-store-tab" onclick="filterStore(\'bird\',this)">🐦 鸟</div>';
+  h+='<div class="pet-store-tab" onclick="buyFood(this)">🍖 狗粮x5(¥500)</div>';
+  h+='</div>';
+  h+='<div class="pet-store-grid" id="petGrid">';
+  PET_STORE.forEach(ps=>{
+    const rc={common:'rarity-common',rare:'rarity-rare',epic:'rarity-epic',legend:'rarity-legend'};
+    const rt={common:'普通',稀有:'稀有',epic:'史诗',legend:'传说'};
+    h+='<div class="pet-store-item '+rc[ps.rarity]+'" onclick="buyPet(\''+ps.id+'\')">';
+    h+='<span class="psstat '+rc[ps.rarity]+'">'+rt[ps.rarity]+'</span>';
+    h+='<span class="psi">'+ps.emoji+'</span>';
+    h+='<div class="psn">'+ps.name+'</div>';
+    h+='<div class="psp">¥'+ps.price.toLocaleString()+'</div>';
+    h+='<div style="font-size:10px;color:#999;margin-top:4px;">'+ps.desc+'</div>';
+    if(pet && pet.id===ps.id) h+='<div style="font-size:10px;color:#ff5722;margin-top:4px;">✓ 已购买</div>';
+    h+='</div>';
+  });
+  h+='</div>';
+  h+='<div class="modal-btns"><button onclick="this.closest(\'.modal-overlay\').remove()" class="btn btn-outline">关闭</button></div>';
+  card.innerHTML=h;
+  overlay.appendChild(card);
+  document.body.appendChild(overlay);
+}
+function filterStore(type,el){
+  const parent=el.parentElement;
+  parent.querySelectorAll('.pet-store-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  const grid=document.getElementById('petGrid');
+  const items=grid.querySelectorAll('.pet-store-item');
+  items.forEach(item=>{
+    if(type==='all')item.style.display='';
+    else{const pid=item.getAttribute('onclick').match(/'([^']+)'/)[1];const ps=PET_STORE.find(p=>p.id===pid);item.style.display=(ps.type===type)?'':'';}
+  });
+}
+function buyFood(el){
+  if(G.cash<500){showToast('💸 钱不够！');return;}
+  G.cash-=500;G.petFood+=5;
+  showToast('🍖 购买狗粮x5成功！');
+  el.textContent='🍖 狗粮x5(¥500) 库存:'+G.petFood;
+}
+function buyPet(pid){
+  const ps=PET_STORE.find(p=>p.id===pid);if(!ps)return;
+  if(G.cash<ps.price){showToast('💸 还差'+(ps.price-G.cash)+'元...');return;}
+  // Check if already owned
+  if(G.pets.find(p=>p.id===pid)){showToast('你已经有一只'+ps.name+'了！');return;}
+  G.cash-=ps.price;
+  const pet={id:pid,name:ps.name,emoji:ps.emoji,type:ps.type,rarity:ps.rarity,
+    hunger:80,hygiene:100,mood:100,energy:100,intimacy:30,age:2,sick:false,skills:0,
+    mod:ps.mod||{},boughtMonth:G.totalMonths};
+  if(G.pets.length===0&&!confirm('确定要花'+ps.price.toLocaleString()+'元领养'+ps.name+'吗？')){G.cash+=ps.price;return;}
+  G.pets.push(pet);
+  showToast('🎉 恭喜！'+ps.emoji+' '+ps.name+'成为你的家人！');
+  saveGame();
+  // Close store and refresh
+  const m=document.querySelector('.modal-overlay');if(m)m.remove();
+  renderPetPage();
+}
+
+// ===== 月度宠物衰减 =====
+function advancePetMonthly(){
+  if(!G.pets||G.petinitialize===false)return;
+  G.pets.forEach(pet=>{
+    if(!pet.mod)pet.mod={};
+    const hg=pet.mod.hg||1,hyg=pet.mod.hyg||1,md=pet.mod.md||1;
+    pet.hunger=Math.max(0,pet.hunger-(10*hg));
+    pet.hygiene=Math.max(0,pet.hygiene-(8*hyg));
+    pet.mood=Math.max(0,pet.mood-(5*md));
+    pet.energy=Math.min(100,pet.energy+20);
+    pet.age+=1;
+    if(pet.hunger<=10||pet.hygiene<=15){pet.sick=true;}
+  });
+  // Player mood bonus from good pet state
+  G.pets.forEach(p=>{
+    if(p.mood>=80&&p.intimacy>=60){G.mood=Math.min(200,G.mood+5);}
+  });
+  updatePetBadge();
+}
 </script>
 </html>
