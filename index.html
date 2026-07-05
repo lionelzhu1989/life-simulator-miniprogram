@@ -1683,6 +1683,7 @@ function advanceMonth(){
   checkStudyProgress();triggerProjectEvents();
   // Guide
   advanceGuide();
+  autoSave();
   // Game over check
   if(G.health<=0){G.gameOver=true;G.gameOverReason='健康归零，人生结束';}
   else if(getAge()>=80&&Math.random()<0.3){G.gameOver=true;G.gameOverReason='安享晚年，人生圆满结束';}
@@ -5056,6 +5057,15 @@ if(_origTriggerStockNews){
 }
 
 function showToast(msg,type,dur){type=type||'info';dur=dur||1500;var c=document.getElementById('toastContainer');if(!c)return;var t=document.createElement('div');t.className='toast '+type;t.textContent=msg;c.appendChild(t);setTimeout(function(){if(t.parentNode)t.parentNode.removeChild(t)},dur)}
+
+// ====== LOCAL SAVE SYSTEM ======
+var SAVE_KEY='lifeSimulator_v2_saves',AUTO_SAVE_KEY='lifeSimulator_v2_autosave';
+function getSaves(){try{var d=localStorage.getItem(SAVE_KEY);return d?JSON.parse(d):[null,null,null]}catch(e){return[null,null,null]}}
+function saveGame(slot){var s=getSaves();s[slot]={gameState:JSON.parse(JSON.stringify(gameState)),ts:Date.now(),age:gameState.age,asset:calcTotalAsset()};try{localStorage.setItem(SAVE_KEY,JSON.stringify(s));showToast('📁 存档已保存 插槽'+(slot+1),'success');return true}catch(e){showToast('❌ 存档失败','danger');return false}}
+function loadGame(slot){var s=getSaves();if(!s[slot]){showToast('⚠️ 插槽'+(slot+1)+'无存档','warning');return false}gameState=s[slot].gameState;renderAll();showToast('📂 读档成功','success');return true}
+function autoSave(){try{localStorage.setItem(AUTO_SAVE_KEY,JSON.stringify({gameState:gameState,ts:Date.now()}))}catch(e){}}
+function hasAutoSave(){return !!localStorage.getItem(AUTO_SAVE_KEY)}
+function loadAutoSave(){try{var d=JSON.parse(localStorage.getItem(AUTO_SAVE_KEY));gameState=d.gameState;renderAll();showToast('♻️ 已恢复自动存档','success');return true}catch(e){return false}}
 </script>
 </body>
 </html>
