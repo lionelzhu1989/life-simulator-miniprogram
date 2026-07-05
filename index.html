@@ -5997,6 +5997,193 @@ function genChatReply(npc,msg){
 
 // ====== V2 Batch3: Onboarding Auto-Start ======
 (function(){var started=false;function tryStart(){if(started)return;if(typeof startGame==='function'&&typeof startOnboarding==='function'){started=true;setTimeout(function(){startOnboarding()},800)}}tryStart();document.addEventListener('DOMContentLoaded',tryStart);})();
+
+// ===== Pet System (ES5) =====
+var PET_SHOP=[
+  {id:'cat',emoji:'🐱',name:'橘猫',desc:'温顺粘人，招桃花',price:5000,rarity:'common',effect:'EQ+5/月'},
+  {id:'dog',emoji:'🐶',name:'金毛',desc:'忠诚护主，旺财运',price:8000,rarity:'common',effect:'Mood+5/月'},
+  {id:'rabbit',emoji:'🐰',name:'垂耳兔',desc:'软萌可爱，涨人脉',price:12000,rarity:'rare',effect:'IQ+3 EQ+3/月'},
+  {id:'fox',emoji:'🦊',name:'赤狐',desc:'神秘聪慧，助事业',price:25000,rarity:'epic',effect:'IQ+5 EQ+5/月'},
+  {id:'dragon',emoji:'🐉',name:'青龙',desc:'传说级灵宠！全能加成',price:88888,rarity:'legend',effect:'全属性+8/月'},
+  {id:'phoenix',emoji:'🦅',name:'凤凰',desc:'涅槃重生，运势亨通',price:66666,rarity:'legend',effect:'全属性+6 Mood+10/月'}
+];
+var _petShopCat='adopt';
+function switchPetTab(tab,el){
+  var tabs=document.querySelectorAll('.pet-subtab');
+  for(var i=0;i<tabs.length;i++)tabs[i].classList.remove('active');
+  if(el)el.classList.add('active');
+  document.getElementById('petStoreView').style.display=tab==='shop'?'block':'none';
+  document.getElementById('petDetailView').style.display=tab==='mypet'?'block':'none';
+  if(tab==='shop')renderPetShop();
+  else if(tab==='mypet'&&G.pets.length>0)renderPetDetail(G.pets[0]);
+}
+function renderPetPage(){
+  var subTabs=document.getElementById('petSubTabs');
+  if(subTabs)subTabs.style.display='flex';
+  switchPetTab('shop',document.querySelector('.pet-subtab'));
+}
+function setShopCat(cat,el){
+  _petShopCat=cat;
+  var btns=document.querySelectorAll('.pet-cat-btn');
+  for(var i=0;i<btns.length;i++)btns[i].classList.remove('active');
+  if(el)el.classList.add('active');
+  renderPetShop();
+}
+function renderPetShop(){
+  initPetState();
+  var el=document.getElementById('petStoreView');if(!el)return;
+  var h='';
+  h+='<div class="pet-shop-hd"><h2>宠物商店</h2>';
+  h+='<div class="coin">¥'+(G.cash?G.cash.toLocaleString():'0')+' &nbsp;|&nbsp; 狗粮 '+(G.petFood||0)+' 袋</div></div>';
+  h+='<div class="pet-cat-bar">';
+  h+='<div class="pet-cat-btn '+(_petShopCat==='adopt'?'active':'')+'" onclick="setShopCat(\'adopt\',this)">宠物领养</div>';
+  h+='<div class="pet-cat-btn '+(_petShopCat==='food'?'active':'')+'" onclick="setShopCat(\'food\',this)">宠物食品</div>';
+  h+='</div>';
+  h+='<div class="pet-shop-grid">';
+  if(_petShopCat==='adopt'){
+    PET_SHOP.forEach(function(p){
+      var owned=G.pets.some(function(pt){return pt.id===p.id;});
+      h+='<div class="pet-shop-item rarity-'+p.rarity+'" onclick="buyPet(\''+p.id+'\')">';
+      h+='<span class="ps-rank">'+p.rarity.toUpperCase()+'</span>';
+      h+='<span class="ps-emoji">'+p.emoji+'</span>';
+      h+='<div class="ps-name">'+p.name+'</div>';
+      h+='<div class="ps-desc">'+p.desc+'</div>';
+      h+='<div class="ps-effect">'+p.effect+'</div>';
+      if(owned){
+        h+='<div class="ps-price owned">已领养 ✅</div>';
+      }else{
+        h+='<div class="ps-price">¥'+p.price.toLocaleString()+'</div>';
+      }
+      h+='</div>';
+    });
+  }else{
+    h+='<div class="pet-shop-item" onclick="buyPetFood(1)">';
+    h+='<span class="ps-emoji">🍖</span><div class="ps-name">狗粮 x1</div>';
+    h+='<div class="ps-desc">宠物日常消耗品</div>';
+    h+='<div class="ps-price">¥200</div></div>';
+    h+='<div class="pet-shop-item" onclick="buyPetFood(5)">';
+    h+='<span class="ps-emoji">📦</span><div class="ps-name">狗粮 x5</div>';
+    h+='<div class="ps-desc">批发更划算</div>';
+    h+='<div class="ps-price">¥900</div></div>';
+    h+='<div class="pet-shop-item" onclick="buyPetFood(20)">';
+    h+='<span class="ps-emoji">🏭</span><div class="ps-name">狗粮 x20</div>';
+    h+='<div class="ps-desc">一年的口粮</div>';
+    h+='<div class="ps-price">¥3,500</div></div>';
+  }
+  h+='</div>';
+  el.innerHTML=h;
+}
+function buyPet(pid){
+  if(G.pets.length>=3){showToast('宠物栏已满（最多3只）');return;}
+  var p=PET_SHOP.find(function(x){return x.id===pid;});if(!p)return;
+  if(G.pets.some(function(pt){return pt.id===pid;})){showToast('你已经领养过这只宠物了！');return;}
+  if(G.cash<p.price){showToast('余额不足！');return;}
+  G.cash-=p.price;
+  var pet={id:p.id,name:p.name,emoji:p.emoji,rarity:p.rarity,
+    hunger:80,hygiene:80,mood:80,energy:80,intimacy:20,
+    adoptedMonth:G.totalMonths};
+  G.pets.push(pet);
+  G.mood=clamp(G.mood+10,0,200);
+  saveGame();renderPetShop();renderPetDetail(pet);
+  showToast('领养成功！欢迎 '+p.emoji+' '+p.name+' 回家！');
+}
+function buyPetFood(qty){
+  var cost=qty===1?200:qty===5?900:qty===20?3500:200*qty;
+  if(G.cash<cost){showToast('余额不足！');return;}
+  G.cash-=cost;
+  G.petFood=(G.petFood||0)+qty;
+  saveGame();renderPetShop();updatePetBadge();
+  showToast('购买狗粮 x'+qty+'，花费¥'+cost);
+}
+function petBar(label,val,cls){
+  return '<div class="pet-bar-row"><span class="bar-label">'+label+'</span>'+
+    '<span class="bar-track"><span class="bar-fill '+cls+'" style="width:'+val+'%"></span></span>'+
+    '<span class="bar-val">'+val+'%</span></div>';
+}
+function renderPetDetail(pet){
+  if(!pet)return;
+  document.getElementById('petStoreView').style.display='none';
+  document.getElementById('petDetailView').style.display='block';
+  document.getElementById('petSubTabs').style.display='flex';
+  document.querySelectorAll('.pet-subtab')[1].classList.add('active');
+  document.querySelectorAll('.pet-subtab')[0].classList.remove('active');
+  var el=document.getElementById('petDetailView');if(!el)return;
+  var ranks={common:'普通',rare:'稀有',epic:'史诗',legend:'传说'};
+  var h='';
+  h+='<div class="pet-card"><div class="pet-display">';
+  h+='<span class="pet-emoji" onclick="petPet(\''+pet.id+'\')">'+pet.emoji+'</span>';
+  h+='<div class="pet-name">'+pet.name+'</div>';
+  h+='<div class="pet-stage">'+ranks[pet.rarity]+' · 已养'+(G.totalMonths-pet.adoptedMonth)+'个月</div>';
+  h+='</div>';
+  h+='<div class="pet-bars">';
+  h+=petBar('饱食',pet.hunger,'bar-hunger');
+  h+=petBar('清洁',pet.hygiene,'bar-hygiene');
+  h+=petBar('心情',pet.mood,'bar-mood');
+  h+=petBar('体力',pet.energy,'bar-energy');
+  h+=petBar('亲密度',pet.intimacy,'bar-intimacy');
+  h+='</div>';
+  h+='<div class="pet-actions">';
+  h+='<div class="pet-btn feed" onclick="petFeed(\''+pet.id+'\')"><span class="b-icon">🍖</span><span class="b-name">喂食</span><span class="b-cost">'+(G.petFood>0?'库存'+G.petFood:'¥200')+'</span></div>';
+  h+='<div class="pet-btn" onclick="petPlay(\''+pet.id+'\')"><span class="b-icon">🎾</span><span class="b-name">玩耍</span><span class="b-cost">消耗体力</span></div>';
+  h+='<div class="pet-btn" onclick="petWash(\''+pet.id+'\')"><span class="b-icon">🛁</span><span class="b-name">洗澡</span><span class="b-cost">¥50</span></div>';
+  h+='<div class="pet-btn store" onclick="switchPetTab(\'shop\',document.getElementById(\'petSubTabs\').querySelector(\'.pet-subtab\'))"><span class="b-icon">🏪</span><span class="b-name">商店</span><span class="b-cost">逛逛</span></div>';
+  h+='</div></div>';
+  if(G.pets.length>1){
+    h+='<div style="text-align:center;padding:8px 0 12px;"><small style="color:#999;">切换宠物：</small>';
+    G.pets.forEach(function(p,i){
+      h+='<span style="padding:4px 12px;border-radius:12px;font-size:11px;cursor:pointer;background:'+(p.id===pet.id?'#ff9800':'#f5f5f5')+';color:'+(p.id===pet.id?'#fff':'#666')+';margin:0 4px;" onclick="renderPetDetail(G.pets['+i+'])">'+p.emoji+' '+p.name+'</span>';
+    });
+    h+='</div>';
+  }
+  el.innerHTML=h;
+}
+function petFeed(id){
+  var pet=G.pets.find(function(p){return p.id===id;});if(!pet)return;
+  if(G.petFood>0){G.petFood--;}
+  else{
+    if(G.cash<200){showToast('余额不足，无法自动购买狗粮！');return;}
+    G.cash-=200;showToast('自动购买狗粮 -¥200');
+  }
+  pet.hunger=clamp(pet.hunger+25,0,100);
+  pet.mood=clamp(pet.mood+5,0,100);
+  pet.intimacy=clamp(pet.intimacy+3,0,100);
+  G.EQ=clamp(G.EQ+1,0,200);
+  saveGame();renderPetDetail(pet);updatePetBadge();
+}
+function petPlay(id){
+  var pet=G.pets.find(function(p){return p.id===id;});if(!pet)return;
+  if(pet.energy<15){showToast(pet.name+'太累了，让它休息一下吧');return;}
+  pet.energy=clamp(pet.energy-15,0,100);
+  pet.mood=clamp(pet.mood+20,0,100);
+  pet.hunger=clamp(pet.hunger-10,0,100);
+  pet.intimacy=clamp(pet.intimacy+5,0,100);
+  G.mood=clamp(G.mood+5,0,200);
+  G.EQ=clamp(G.EQ+1,0,200);
+  saveGame();renderPetDetail(pet);
+}
+function petWash(id){
+  var pet=G.pets.find(function(p){return p.id===id;});if(!pet)return;
+  if(G.cash<50){showToast('余额不足¥50！');return;}
+  G.cash-=50;
+  pet.hygiene=100;
+  pet.mood=clamp(pet.mood+5,0,100);
+  saveGame();renderPetDetail(pet);
+  showToast(pet.emoji+' '+pet.name+'洗完澡啦！清爽~');
+}
+function petPet(id){
+  var pet=G.pets.find(function(p){return p.id===id;});if(!pet)return;
+  var el=document.querySelector('.pet-emoji');if(el)el.classList.add('pet-acting');
+  setTimeout(function(){var e=document.querySelector('.pet-emoji');if(e)e.classList.remove('pet-acting');},600);
+  pet.intimacy=clamp(pet.intimacy+2,0,100);
+  pet.mood=clamp(pet.mood+3,0,100);
+  saveGame();renderPetDetail(pet);
+}
+function updatePetBadge(){
+  var b=document.getElementById('petBadge');if(!b)return;
+  var hungry=G.pets.some(function(p){return p.hunger<30;});
+  if(hungry){b.style.display='';b.textContent='!';}
+  else{b.style.display='none';}
+}
 </script>
 </body>
 </html>
