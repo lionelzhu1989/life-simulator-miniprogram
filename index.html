@@ -1358,7 +1358,8 @@ function defaultState(){
     activeNews:[],decisionCount:0,
     unlockedTiers:{},luxuryItems:[],
     forbesShown:false,shortPositions:{},phone:{threads:[],moments:[],notifications:[],flags:{},lastTriggerMonth:0,nextId:1,chatHistory:{}},
-    lifeEvents:[],socialContacts:[]
+    lifeEvents:[],socialContacts:[],
+    career:{cooldown:0,previous:[],level:0,salary:36000,company:'某初创公司',title:'实习生',startup:null}
   };
 }
 
@@ -1669,7 +1670,7 @@ function nextMonth(){
   if(G.gameOver)setTimeout(()=>showGameOver(),500);
 }
 function advanceMonth(){
-  G.totalMonths++;G.monthsAtJob++;G.events=[];
+  G.totalMonths++;G.monthsAtJob++;G.events=[];if(G.career&&G.career.cooldown>0)G.career.cooldown--;
   G._encounterActive=false; // 重置月度场景标记
   const job=JOBS[G.jobIndex];
   let income=job.salary/12;
@@ -1813,7 +1814,7 @@ function advanceMonth(){
   if(!G.gameOver && !G._encounter && !G._pendingDecision){
     tryTriggerEncounter();
   }
-  checkStudyProgress();triggerProjectEvents();
+  checkStudyProgress();triggerProjectEvents();processStartup();
   // Guide
   advanceGuide();
   childrenGrowth();
@@ -5281,7 +5282,15 @@ function genNPCs(cost){var tiers={500:{n:[1,2],t:'normal'},3000:{n:[1,3],t:'high
 function createNPC(t){var tagMap={normal:[{tag:'普通白领',benefit:'日常交流'}],high:[{tag:'行业精英',benefit:'内推机会'},{tag:'投资人',benefit:'项目对接'}],top:[{tag:'企业高管',benefit:'高管内推'},{tag:'知名投资人',benefit:'投资机会'},{tag:'政府人士',benefit:'政策资讯'}]};var pool=tagMap[t]||tagMap.normal;var item=pool[Math.floor(Math.random()*pool.length)];return {name:genNPCName(),icon:'👤',tag:item.tag,benefit:item.benefit,company:'某公司',intimacy:20,rel:'acquaintance'}}
 function genNPCName(){var s=['张','王','李','赵','陈','刘','杨','黄'];var n=['伟','芳','娜','强','敏','静','杰','磊'];return s[Math.floor(Math.random()*s.length)]+n[Math.floor(Math.random()*n.length)]+'某'}
 var SIDE_JOBS=[{type:'writing',name:'写作',attr:'iq',inc:[2000,8000],cost:3},{type:'consulting',name:'咨询',attr:'iq',inc:[5000,20000],cost:5},{type:'reselling',name:'代购',attr:'charm',inc:[1000,5000],cost:2},{type:'tutoring',name:'家教',attr:'iq',inc:[3000,10000],cost:3}];
-function doSideJob(job){if(G.age>1){showToast('兼职仅限新手首月','info');return}var av=G[job.attr]||50;var min=job.inc[0],max=job.inc[1];var inc=Math.floor(min+(max-min)*(av/100));var noise=Math.floor(inc*0.1);inc+=Math.floor(Math.random()*noise*2-noise);G.cash+=inc;G.mood-=job.cost;showToast(job.name+'兼职：+¥'+inc,'success')}
+function doSideJob(job){if(G.age>1){showToast('兼职仅限新手首月','info');return}var av=G[job.attr]||50;var min=job.inc[0],max=job.inc[1];var inc=Math.floor(min+(max-min)*(av/100));var noise=Math.floor(inc*0.1);inc+=Math.floor(Math.random()*noise*2-noise);G.cash+=inc;G.mood-=job.cost;showToast(job.name+'兼职：+¥'+inc,'success')}// ===== 职业系统V2：跳槽、创业、副业 =====
+function genJobOffers(){var offers=[];var contacts=G.socialContacts||[];for(var i=0;i<contacts.length;i++){var n=contacts[i];if(n.benefit&&(n.benefit.indexOf('内推')>=0||n.benefit.indexOf('高管')>=0)&&n.intimacy>=60){offers.push({company:n.company||'某公司',title:'高级职位',salary:Math.round((G.career&&G.career.salary?G.career.salary*1.5:50000)),referrer:n.name})}}return offers}
+function applyJobOffer(offer){if(!G.career){G.career={cooldown:0,previous:[],level:0,salary:0,company:'',title:'',startup:null}}if(G.career.cooldown>0){showToast('跳槽冷却期剩余'+G.career.cooldown+'个月','warning');return}if(G.career.previous)G.career.previous.push({company:G.career.company,title:G.career.title,salary:G.career.salary});G.career.company=offer.company;G.career.title=offer.title;G.career.salary=offer.salary;G.career.cooldown=6;G.mood=Math.min(100,G.mood+5);showToast('🎉 成功跳槽到 '+offer.company+'！','success',2000)}
+function sectorLabel(s){return s==='tech'?'科技':s==='food'?'餐饮':s==='ecommerce'?'电商':'教育'}
+function startStartup(sector){var costs={tech:500000,food:200000,ecommerce:300000,education:150000};var cost=costs[sector]||200000;if(G.cash<cost){showToast('启动资金不足（需¥'+fmt(cost)+'）','warning');return}G.cash-=cost;G.career=G.career||{};G.career.startup={sector:sector,investment:cost,status:'running',months:0};showToast('🚀 '+sectorLabel(sector)+'创业启动！','success',2000)}
+function processStartup(){if(!G.career||!G.career.startup||G.career.startup.status!=='running')return;var s=G.career.startup;s.months++;var successRate=0.15+(G.iq/200)+((G.socialContacts||[]).length/50);if(s.months%3===0){if(Math.random()<successRate){var payoff=s.investment*(2+Math.random()*3);G.cash+=payoff;s.status='success';G.achievements=G.achievements||{};G.achievements.startup=true;showToast('🎉 创业成功！获得¥'+fmt(payoff),'success',3000)}else if(s.months>=24&&Math.random()<0.3){s.status='failed';showToast('💔 创业失败，损失投资','danger',2000)}}}
+function refreshCareer(){var el=document.getElementById('careerPanel');if(!el)return;var job=JOBS[G.jobIndex]||JOBS[0];var c=G.career||{};var html='<div class="card"><div class="card-title"><span class="icon">💼</span>职业发展</div>';html+='<div class="attr-row"><span class="attr-label">当前职位</span><span class="attr-value">'+(c.title||job.name)+'</span></div>';html+='<div class="attr-row"><span class="attr-label">当前公司</span><span class="attr-value">'+(c.company||'无')+'</span></div>';html+='<div class="attr-row"><span class="attr-label">年薪</span><span class="attr-value">¥'+fmt(c.salary||job.salary)+'</span></div>';if(c.cooldown>0)html+='<div class="attr-row"><span class="attr-label">跳槽冷却</span><span class="attr-value" style="color:#e74c3c">'+c.cooldown+'个月</span></div>';if(c.startup&&c.startup.status==='running')html+='<div class="attr-row"><span class="attr-label">创业中</span><span class="attr-value">'+sectorLabel(c.startup.sector)+' ('+c.startup.months+'月)</span></div>';if(c.previous&&c.previous.length>0)html+='<div class="attr-row"><span class="attr-label">前任雇主</span><span class="attr-value">'+c.previous.length+'家</span></div>';html+='</div>';el.innerHTML=html}
+
+
 function renderSideJobs(){var el=document.getElementById('sideJobBtns');if(!el)return;var html='';for(var i=0;i<SIDE_JOBS.length;i++){var j=SIDE_JOBS[i];html+='<button onclick="doSideJob(SIDE_JOBS['+i+'])">'+j.name+'<br>心情-'+j.cost+'</button>'}el.innerHTML=html}
 function renderInvestCard(inv){var er=inv.minRet+'-'+inv.maxRet;var rc=inv.risk<.2?'risk-low':inv.risk<.4?'risk-mid':inv.risk<.6?'risk-high':'risk-extreme';var rl=inv.risk<.2?'低':inv.risk<.4?'中':inv.risk<.6?'高':'极高';var pb=Math.ceil(inv.price/((inv.minRet+inv.maxRet)/2/100/12));return '<div class="invest-card"><h4>'+inv.name+'</h4><div class="invest-stat">预期年化：<span>'+er+'%</span></div><div class="invest-stat">风险等级：<span class="'+rc+'">● '+rl+'</span></div><div class="invest-stat">预计回本：<span>'+pb+'个月</span></div><div class="invest-stat">价格：<span>¥'+fmt(inv.price)+'</span></div><button onclick="buyInvest(\''+inv.id+'\')">购买</button></div>'}
 function buyInvest(id){var allItems=[];STOCKS.forEach(function(s){allItems.push({id:s.code,name:s.name,price:s.basePrice,minRet:s.minRet,maxRet:s.maxRet,risk:s.risk})});BUSINESSES.forEach(function(b){allItems.push({id:b.id,name:b.name,price:b.price,minRet:b.minRet,maxRet:b.maxRet,risk:b.risk})});TECH_INVESTMENTS.forEach(function(t){allItems.push({id:t.id,name:t.name,price:t.minInvest,minRet:t.minRet,maxRet:t.maxRet,risk:t.risk})});HOUSES.forEach(function(h){allItems.push({id:h.id,name:h.name,price:h.price,minRet:h.minRet,maxRet:h.maxRet,risk:h.risk})});var item=allItems.find(function(t){return t.id===id});if(!item)return;if(G.cash<item.price){showModal({title:'余额不足',content:'现金不足以购买 '+item.name+'！',showCancel:false});return;}showModal({title:'购买 '+item.name,content:'确认投资：'+item.name+'\\n投入：¥'+fmt(item.price)+'\\n预期年化：'+item.minRet+'~'+item.maxRet+'%\\n风险等级：'+(item.risk<.2?'低':item.risk<.4?'中':item.risk<.6?'高':'极高'),success:function(res){if(res.confirm){G.cash-=item.price;showFloatText('✅ 投资 '+item.name+' 成功！',true);saveGame();}}})}
