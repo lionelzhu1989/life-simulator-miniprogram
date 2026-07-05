@@ -3861,7 +3861,8 @@ function renderRanking(){
   npcs.forEach((n,i)=>{
     const rankCls=i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-other';
     const highlight=n.isPlayer?'style="background:#eaf6ff;border-radius:8px;padding:4px 8px;margin:-4px -8px;"':'';
-    html+='<div class="rank-item" '+highlight+'><div class="rank-num '+rankCls+'">'+(i+1)+'</div><div class="rank-info"><div class="rank-name">'+n.name+'</div><div class="rank-detail">总资产 · 存款 '+fmt(n.cash)+'</div></div><div class="rank-money">'+fmt(n.asset)+'</div></div>';
+    const cashShow=n.isPlayer?'<span style="color:#aaa;">存款 保密</span>':'存款 '+fmt(n.cash);
+    html+='<div class="rank-item" '+highlight+'><div class="rank-num '+rankCls+'">'+(i+1)+'</div><div class="rank-info"><div class="rank-name">'+n.name+'</div><div class="rank-detail">总资产 · '+cashShow+'</div></div><div class="rank-money">'+fmt(n.asset)+'</div></div>';
   });
   document.getElementById('rankList').innerHTML=html;
 }
