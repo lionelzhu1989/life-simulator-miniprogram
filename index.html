@@ -7670,6 +7670,23 @@ function detectScheduleIntent(text){
       return{type:p.type,cost:p.cost||0,annualLeave:p.annualLeave||0,month:month};
     }
   }
+  // v4.1.18: 新增灵活邀约模式（约X喝咖啡/周末一起/有没有空/和XXX吃饭等）
+  const flexPatterns=[
+    {regex:/(?:约|邀请|请)(?:我|你|他|她|他们|.{0,3})?(?:出来|去|来)?(?:喝(?:咖啡|茶|酒|东西)|吃(?:饭|东西|火锅|烧烤)|看(?:展|剧|电影)|打球|跑步|爬山|唱歌|逛街|泡温泉)/,type:'dinner',cost:250},
+    {regex:/(?:和|跟)(?:他|她|他们|我|你|.{0,3})(?:一起)?(?:来|去|约|喝(?:咖啡|茶|酒)|吃(?:饭|东西|火锅)|看(?:展|剧|电影)|打球|跑步|爬山|唱歌|逛街)/,type:'dinner',cost:250},
+    {regex:/(?:周末|明天|下周|今天|这周)?(?:你|您)?(?:有没有?空|能?出来|能见面|有空吗|什么时候见面)/,type:'dinner',cost:250},
+    {regex:/(?:我们|咱们|一起)(?:去|来|约)?(?:喝(?:咖啡|茶|酒)|吃(?:饭|东西|火锅)|看(?:展|剧|电影)|打球|跑步|爬山|唱歌|逛街)/,type:'dinner',cost:250}
+  ];
+  for(const p of flexPatterns){
+    if(p.regex.test(text)){
+      let month=G.totalMonths+1;
+      if(/明天|后天/.test(text))month=G.totalMonths;
+      else if(/下周/.test(text))month=G.totalMonths+1;
+      else if(/下个月|下月/.test(text))month=G.totalMonths+1;
+      else if(/这个月|本月/.test(text))month=G.totalMonths;
+      return{type:p.type,cost:p.cost||0,annualLeave:p.annualLeave||0,month:month};
+    }
+  }
   // v3.17.0: Catch-all 只匹配明确邀约句式（必须有邀约词+语气词）
   const catchAll=text.match(/(?:我们|咱们|一起)(?:去|约|玩|做)(.{2,8}?)(?:吧|啊|吗|好不好|怎么样|[。！!])/);
   if(catchAll&&catchAll[1].length>=2){
