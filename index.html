@@ -469,7 +469,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 .pet-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
 .bar-label{width:52px;font-size:12px;color:#666;text-align:right;flex-shrink:0;}
 .bar-track{flex:1;height:14px;background:#f5f5f5;border-radius:7px;overflow:hidden;position:relative;}
-.bar-fill{height:100%;border-radius:7px;transition:width .5s;position:relative;}
+.bar-fill{height:100%;border-radius:7px;transition:width .5s;position:relative;background:#ccc;}
 .bar-hunger{background:linear-gradient(90deg,#ff9800,#ff5722);}
 .bar-hygiene{background:linear-gradient(90deg,#2196f3,#03a9f4);}
 .bar-mood{background:linear-gradient(90deg,#e91e63,#ff5722);}
@@ -482,6 +482,39 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 .pet-btn .b-icon{font-size:22px;}
 .pet-btn .b-name{font-size:11px;color:#666;font-weight:500;}
 .pet-btn .b-cost{font-size:10px;color:#999;}
+/* Enhancement: Tricks & Status */
+.pet-status-bar{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:6px;font-size:11px;color:#999;}
+.pet-status-emoji{font-size:16px;}
+.pet-trick-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;margin:0 2px;}
+.pet-trick-locked{background:#f0f0f0;color:#999;}
+.pet-trick-known{background:#e8f5e9;color:#2e7d32;}
+.pet-title-badge{background:linear-gradient(135deg,#f39c12,#e67e22);color:#fff;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;margin-left:6px;animation:legendGlow 2s infinite;}
+.pet-age-display{font-size:11px;color:#999;margin-top:2px;}
+.pet-last-interact{font-size:10px;color:#bbb;margin-top:2px;}
+/* Minigame Modal */
+.pet-mini-game{padding:8px 0;}
+.pet-fly-disk{display:inline-block;font-size:48px;cursor:pointer;transition:transform .15s;user-select:none;padding:12px;border-radius:12px;}
+.pet-fly-disk:active{transform:scale(0.85);}
+.pet-fly-disk.missed{opacity:0.3;}
+.pet-math-q{font-size:24px;font-weight:700;text-align:center;padding:16px 0;color:#333;}
+.pet-math-opts{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+.pet-math-opt{padding:12px 20px;background:#f5f5f5;border-radius:10px;font-size:18px;font-weight:600;cursor:pointer;border:2px solid transparent;transition:all .15s;}
+.pet-math-opt:active{background:#e3f2fd;border-color:#2196f3;}
+.pet-math-opt.correct{background:#e8f5e9;border-color:#4caf50;color:#2e7d32;}
+.pet-math-opt.wrong{background:#ffebee;border-color:#f44336;color:#c62828;}
+.pet-treasure-result{text-align:center;padding:16px 0;font-size:16px;line-height:1.8;}
+.pet-treasure-emoji{font-size:48px;display:block;margin-bottom:12px;}
+.pet-discovery-item{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#f8f9fa;border-radius:8px;margin:4px 0;}
+.pet-discovery-icon{font-size:20px;}
+.pet-discovery-text{font-size:13px;color:#555;}
+/* Mini-action buttons row */
+.pet-mini-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px;}
+.pet-mini-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 4px;background:#fff8e1;border:1px solid #ffe082;border-radius:12px;cursor:pointer;transition:all .15s;}
+.pet-mini-btn:active{background:#ffecb3;transform:scale(0.95);}
+.pet-mini-btn .m-icon{font-size:22px;}
+.pet-mini-btn .m-name{font-size:11px;color:#666;font-weight:500;}
+.pet-mini-btn .m-cost{font-size:9px;color:#999;}
+.pet-mini-btn.disabled{opacity:0.5;cursor:not-allowed;}
 </style>
 </head>
 <body>
@@ -2422,7 +2455,7 @@ function refreshTech(){
     else action='<button class="btn btn-primary btn-sm" onclick="investTech(\''+t.id+'\')">投资 '+fmt(t.minInvest)+'</button>';
     const maxMult=t.outcomes.reduce((m,o)=>Math.max(m,o.multiplier),0);
     const minMult=t.outcomes.reduce((m,o)=>Math.min(m,o.multiplier),999);
-    const expMult=t.outcomes.reduce((sum,o)=>sum+o.multiplier*o.prob,0);
+    const expMult=t.outcomes.reduce((sum,o)=>sum+o.multiplier*o.chance,0);
     const labels={'ai':'高风险高回报','energy':'绿色能源-政策利好','biotech':'生物医药-周期长'};
     const tags={'ai':'高风险,高回报','energy':'政策扶持,稳健','biotech':'科研型,周期长'};
     html+='<div class="list-item"><div class="list-info"><div class="name">'+t.icon+' '+t.name+'</div><div class="desc">最低投入：'+fmt(t.minInvest)+' | 周期：'+t.returnMonths+'月 | 回报：'+minMult+'x~'+maxMult+'x</div><div class="desc" style="font-size:11px;color:#666;">预期年化：<b style="color:#3498db;">'+Math.round((Math.pow(expMult,12/t.returnMonths)-1)*100)+'%+</b> | 风险：<b style="color:#e74c3c;">高</b> | 标签：'+tags[t.id]+'</div></div><div class="list-action">'+action+'</div></div>';
@@ -2826,6 +2859,11 @@ function initPetState(){
   if(!G.pets)G.pets=[];
   if(!G.petFood||G.petFood<0)G.petFood=5;
   if(!G.petStoreLastRefresh)G.petStoreLastRefresh=0;
+  G.pets.forEach(function(p){
+    if(!p.tricks)p.tricks=[false,false,false];
+    if(!p.lastInteract)p.lastInteract=G.totalMonths||0;
+    if(p.adoptedMonth===undefined)p.adoptedMonth=G.totalMonths||0;
+  });
 }
 
 // ===== 通讯录：主动聊天话题库 =====
@@ -3435,7 +3473,7 @@ function renderContacts(){
   const el=document.getElementById('phone-contacts');if(!el)return;
   if(!G.phone)G.phone={threads:[],moments:[],notifications:[],flags:{},lastTriggerMonth:0,nextId:1,activeChats:[]};
   if(!G.phone.activeChats)G.phone.activeChats=[];
-  initSocialContacts();
+  injectDynamicContacts();
   let html='<div style="padding:12px 16px 8px;font-size:12px;color:#999;">点击头像开始对话</div>';
   Object.keys(NPC_PERSONALITIES).forEach(npcId=>{
     const p=NPC_PERSONALITIES[npcId];
@@ -3953,7 +3991,7 @@ function scheduleContactGreeting(contact){
     npcAvatar:contact.avatar||'🤝',
     tplId:'greeting_'+contact.id,
     type:'wechat',
-    rounds:[{npc:msg,opts:[
+    rounds:[{npcMsgs:[msg],opts:[
       {text:'你好！也很高兴认识你',fx:{EQ:1}},
       {text:'最近怎么样？',fx:{mood:1}},
       {text:'好的，有空一起聚聚',fx:{EQ:1,mood:1}}
@@ -3982,7 +4020,7 @@ function renderPhoneList(){
   G.phone.threads.forEach(t=>{
     const round=t.rounds[t.currentRound];
     let preview='[对话进行中]';
-    if(round&&round.npcMsgs&&round.npcMsgs.length>0)preview=round.npcMsgs[round.npcMsgs.length-1].substring(0,32);
+    if(round&&round.npcMsgs&&round.npcMsgs.length>0)preview=round.npcMsgs[round.npcMsgs.length-1].substring(0,32);if(round&&round.npc&&!round.npcMsgs)preview=round.npc.substring(0,32);
     if(round&&round.npc&&round.npc.length>0)preview=round.npc[round.npc.length-1].substring(0,32);
     if(t.status==='replied')preview='[已回复]';
     // Count unread rounds
@@ -4022,7 +4060,7 @@ function renderChat(){
   // Show all messages up to current round
   for(let r=0;r<=thread.currentRound;r++){
     const round=thread.rounds[r];if(!round)continue;
-    if(round.npcMsgs){round.npcMsgs.forEach(msg=>{
+    var npcMsgArr=round.npcMsgs||(round.npc?[round.npc]:[]);if(npcMsgArr.length){npcMsgArr.forEach(msg=>{
       html+='<div class="chat-bub npc">'+msg+'</div>';
     });}
     if(round._playerChoice!==undefined){
@@ -5837,6 +5875,13 @@ advanceMonth=function(){
   _v2WrapAdvanceMonth();
   childrenGrowth();
   processStartup();
+  if(G.pets&&G.pets.length>0){
+    petMonthlyDecay();
+    petMonthlyBuff();
+    if(Math.random()<0.15){
+      petRandomEvent();
+    }
+  }
   if(Math.random()<0.10){
     triggerChoiceEvent();
   }
@@ -6191,7 +6236,7 @@ function buyPet(pid){
   G.cash-=p.price;
   var pet={id:p.id,name:p.name,emoji:p.emoji,rarity:p.rarity,
     hunger:80,hygiene:80,mood:80,energy:80,intimacy:20,
-    adoptedMonth:G.totalMonths};
+    adoptedMonth:G.totalMonths,lastInteract:G.totalMonths,tricks:[false,false,false]};
   G.pets.push(pet);
   G.mood=clamp(G.mood+10,0,200);
   saveGame();renderPetShop();renderPetDetail(pet);
@@ -6206,12 +6251,46 @@ function buyPetFood(qty){
   showToast('购买狗粮 x'+qty+'，花费¥'+cost);
 }
 function petBar(label,val,cls){
+  var v=Math.max(0,Math.min(100,val));
   return '<div class="pet-bar-row"><span class="bar-label">'+label+'</span>'+
-    '<span class="bar-track"><span class="bar-fill '+cls+'" style="width:'+val+'%"></span></span>'+
-    '<span class="bar-val">'+val+'%</span></div>';
+    '<span class="bar-track"><span class="bar-fill '+cls+'" style="width:'+v+'%"></span></span>'+
+    '<span class="bar-val">'+v+'</span></div>';
+}
+function petGetStatusEmoji(pet){
+  if(pet.health!==undefined&&pet.health<30) return '🤒';
+  if(pet.hunger<20&&pet.mood<20) return '😢';
+  if(pet.mood>=70&&pet.hunger>=60) return '😄';
+  if(pet.hunger<30) return '🍽️';
+  if(pet.hygiene<30) return '💩';
+  if(pet.mood<30) return '😟';
+  if(pet.energy<30) return '😴';
+  return pet.emoji;
+}
+function petGetStatusText(pet){
+  if(pet.health!==undefined&&pet.health<30) return '生病中';
+  if(pet.hunger<20&&pet.mood<20) return '心情抑郁';
+  if(pet.mood>=70&&pet.hunger>=60) return '非常开心';
+  if(pet.hunger<30) return '饥饿中';
+  if(pet.hygiene<30) return '脏兮兮';
+  if(pet.mood<30) return '不开心';
+  if(pet.energy<30) return '很疲惫';
+  return '状态良好';
+}
+function petGetAgeMonths(pet){
+  return Math.max(0,(G.totalMonths||0)-(pet.adoptedMonth||0));
+}
+function petTrickTitle(pet){
+  var t=pet.tricks||[false,false,false];
+  var known=t.filter(function(x){return x;}).length;
+  if(known===3) return '🎓全能之星';
+  if(known===2) return '⭐小明星';
+  if(known===1) return '🔰初出茅庐';
+  return '';
 }
 function renderPetDetail(pet){
   if(!pet)return;
+  if(!pet.lastInteract)pet.lastInteract=G.totalMonths||0;
+  if(!pet.tricks)pet.tricks=[false,false,false];
   document.getElementById('petStoreView').style.display='none';
   document.getElementById('petDetailView').style.display='block';
   document.getElementById('petSubTabs').style.display='flex';
@@ -6219,11 +6298,23 @@ function renderPetDetail(pet){
   document.querySelectorAll('.pet-subtab')[0].classList.remove('active');
   var el=document.getElementById('petDetailView');if(!el)return;
   var ranks={common:'普通',rare:'稀有',epic:'史诗',legend:'传说'};
+  var trickNames=['握手','打滚','装死'];
+  var ageMonths=petGetAgeMonths(pet);
+  var statusEmoji=petGetStatusEmoji(pet);
+  var statusText=petGetStatusText(pet);
+  var titleBadge=petTrickTitle(pet);
+  var lastInt=pet.lastInteract||0;
+  var sinceInt=G.totalMonths-lastInt;
   var h='';
   h+='<div class="pet-card"><div class="pet-display">';
   h+='<span class="pet-emoji" onclick="petPet(\''+pet.id+'\')">'+pet.emoji+'</span>';
-  h+='<div class="pet-name">'+pet.name+'</div>';
-  h+='<div class="pet-stage">'+ranks[pet.rarity]+' · 已养'+(G.totalMonths-pet.adoptedMonth)+'个月</div>';
+  h+='<div class="pet-name">'+pet.name+(titleBadge?'<span class="pet-title-badge">'+titleBadge+'</span>':'')+'</div>';
+  h+='<div class="pet-stage">'+ranks[pet.rarity]+' · 已养'+ageMonths+'个月</div>';
+  h+='<div class="pet-age-display">🎂 宠物年龄：'+(Math.floor(ageMonths/12)>0?Math.floor(ageMonths/12)+'岁':'')+(ageMonths%12>0?(ageMonths%12)+'个月':''||'刚出生')+'</div>';
+  if(sinceInt>=0)h+='<div class="pet-last-interact">⏰ 上次互动：'+sinceInt+'个月前</div>';
+  h+='<div class="pet-status-bar"><span class="pet-status-emoji">'+statusEmoji+'</span><span>'+statusText+'</span>';
+  if(pet.tricks.some(function(x){return x;})){h+='<span style="margin-left:6px">';for(var ti=0;ti<3;ti++){if(pet.tricks[ti])h+='<span class="pet-trick-badge pet-trick-known">'+trickNames[ti]+'</span>';}h+='</span>';}
+  h+='</div>';
   h+='</div>';
   h+='<div class="pet-bars">';
   h+=petBar('饱食',pet.hunger,'bar-hunger');
@@ -6237,7 +6328,24 @@ function renderPetDetail(pet){
   h+='<div class="pet-btn" onclick="petPlay(\''+pet.id+'\')"><span class="b-icon">🎾</span><span class="b-name">玩耍</span><span class="b-cost">消耗体力</span></div>';
   h+='<div class="pet-btn" onclick="petWash(\''+pet.id+'\')"><span class="b-icon">🛁</span><span class="b-name">洗澡</span><span class="b-cost">¥50</span></div>';
   h+='<div class="pet-btn store" onclick="switchPetTab(\'shop\',document.getElementById(\'petSubTabs\').querySelector(\'.pet-subtab\'))"><span class="b-icon">🏪</span><span class="b-name">商店</span><span class="b-cost">逛逛</span></div>';
-  h+='</div></div>';
+  h+='</div>';
+  h+='<div class="pet-mini-actions">';
+  h+='<div class="pet-mini-btn" onclick="petPlayCatch(\''+pet.id+'\')"><span class="m-icon">🥏</span><span class="m-name">接飞盘</span><span class="m-cost">体力-10</span></div>';
+  h+='<div class="pet-mini-btn" onclick="petPlayMath(\''+pet.id+'\')"><span class="m-icon">🧮</span><span class="m-name">智商训练</span><span class="m-cost">智力+EQ</span></div>';
+  h+='<div class="pet-mini-btn'+(pet.energy>=30?'':' disabled')+'" onclick="'+((pet.energy>=30)?'petPlayTreasure(\''+pet.id+'\')':'')+'"><span class="m-icon">🗺️</span><span class="m-name">寻宝之旅</span><span class="m-cost">体力-30</span></div>';
+  h+='</div>';
+  h+='<div class="pet-mini-actions" style="margin-top:8px">';
+  for(var ti2=0;ti2<3;ti2++){
+    h+='<div class="pet-mini-btn'+(pet.tricks[ti2]||pet.energy<10?' disabled':'')+'" onclick="'+((!pet.tricks[ti2]&&pet.energy>=10)?'petTrainTrick(\''+pet.id+'\','+ti2+')':'')+'"><span class="m-icon">'+(pet.tricks[ti2]?'✅':'📚')+'</span><span class="m-name">'+(pet.tricks[ti2]?trickNames[ti2]:'学'+trickNames[ti2])+'</span><span class="m-cost">'+(pet.tricks[ti2]?'已学会':'体力-10')+'</span></div>';
+  }
+  h+='</div>';
+  if(G.mood<30&&G.pets.length>0){
+    h+='<div style="text-align:center;margin-top:10px;padding:8px;background:#fff3e0;border-radius:10px;font-size:12px;color:#666;">💔 你心情低落，'+pet.emoji+' '+pet.name+'似乎很担心你<button class="btn btn-sm btn-primary" style="margin-left:8px;padding:4px 12px;" onclick="petMoodToPlayer()">接受安慰</button></div>';
+  }
+  if(pet.mood<25){
+    h+='<div style="text-align:center;margin-top:8px;padding:8px;background:#fce4ec;border-radius:10px;font-size:12px;color:#666;">😢 '+pet.name+'心情很差...<button class="btn btn-sm btn-primary" style="margin-left:8px;padding:4px 12px;" onclick="playerComfortPet(\''+pet.id+'\')">陪陪它</button></div>';
+  }
+  h+='</div>';
   if(G.pets.length>1){
     h+='<div style="text-align:center;padding:8px 0 12px;"><small style="color:#999;">切换宠物：</small>';
     G.pets.forEach(function(p,i){
@@ -6247,6 +6355,196 @@ function renderPetDetail(pet){
   }
   el.innerHTML=h;
 }
+function _petShowModal(title,html,buttons){
+  var overlay=document.createElement('div');
+  overlay.className='modal-overlay';
+  overlay.innerHTML='<div class="modal-box" style="text-align:center;"><div class="modal-title">'+title+'</div><div class="modal-content">'+html+'</div><div class="modal-btns">'+buttons+'</div></div>';
+  document.body.appendChild(overlay);
+  setTimeout(function(){overlay.classList.add('show');},10);
+  return overlay;
+}
+function _petCloseModal(overlay){
+  if(!overlay)return;
+  overlay.classList.remove('show');
+  setTimeout(function(){if(overlay.parentNode)overlay.parentNode.removeChild(overlay);},300);
+}
+function petPlayCatch(id){
+  var pet=G.pets.find(function(p){return p.id===id;});if(!pet)return;
+  if(pet.energy<10){showToast(pet.name+'太累了！');return;}
+  pet.energy=Math.max(0,pet.energy-10);
+  var score=0,total=5,current=0;
+  var overlay=_petShowModal('🥏 接飞盘','<div class="pet-mini-game"><div id="catchArea" style="padding:12px;min-height:120px;text-align:left;">点击飞盘接住它们！还剩 <span id="catchCount">5</span> 个</div><div id="catchFeedback" style="min-height:24px;font-size:14px;"></div></div>','<button class="btn btn-outline" id="catchCancelBtn">取消</button>');
+  var closeBtn=document.getElementById('catchCancelBtn');
+  var area=document.getElementById('catchArea');
+  var feedbackEl=document.getElementById('catchFeedback');
+  var countEl=document.getElementById('catchCount');
+  if(closeBtn)closeBtn.onclick=function(){_petCloseModal(overlay);};
+  function showFrisbee(){
+    if(current>=total)return;
+    area.innerHTML='';
+    var disk=document.createElement('span');
+    disk.className='pet-fly-disk';
+    disk.textContent='🥏';
+    disk.style.position='relative';
+    disk.style.left=Math.random()*120+'px';
+    disk.style.top=Math.random()*40+'px';
+    var caught=false;
+    disk.onclick=function(){
+      if(caught)return;
+      caught=true;
+      score++;
+      feedbackEl.textContent='✅ 接住了！('+score+'/'+total+')';
+      disk.style.opacity='0';
+      current++;
+      countEl.textContent=total-current;
+      if(current>=total){endGame();return;}
+      setTimeout(function(){if(area.parentNode)showFrisbee();},500);
+    };
+    area.appendChild(disk);
+    setTimeout(function(){
+      if(!caught&&area.parentNode){
+        disk.classList.add('missed');
+        feedbackEl.textContent='😅 没接住...';
+        current++;
+        countEl.textContent=total-current;
+        if(current>=total){endGame();return;}
+        setTimeout(function(){if(area.parentNode)showFrisbee();},500);
+      }
+    },2500);
+  }
+  function endGame(){
+    if(!area.parentNode)return;
+    pet.intimacy=Math.min(100,pet.intimacy+score);
+    var moodGain=score>=4?15:score>=2?10:5;
+    pet.mood=Math.min(100,pet.mood+moodGain);
+    G.mood=clamp(G.mood+score*2,0,200);
+    pet.lastInteract=G.totalMonths;
+    _petCloseModal(overlay);
+    setTimeout(function(){
+      _petShowModal('🥏 接飞盘结果','接住了 <b>'+score+'/'+total+'</b> 个飞盘<br>亲密度+'+score+'，心情+'+moodGain+'<br>玩家心情+'+(score*2),'<button class="btn btn-primary" id="catchOkBtn">太棒了！</button>');
+      var okBtn=document.getElementById('catchOkBtn');
+      if(okBtn)okBtn.onclick=function(){var mo=this.closest('.modal-overlay');if(mo)_petCloseModal(mo);renderPetDetail(pet);updatePetBadge();};
+    },350);
+    saveGame();
+  }
+  showFrisbee();
+}
+function petPlayMath(id){
+  var pet=G.pets.find(function(p){return p.id===id;});if(!pet)return;
+  var a=Math.floor(Math.random()*40)+10;
+  var b=Math.floor(Math.random()*30)+5;
+  var ops=['+','-'];
+  var op=ops[Math.floor(Math.random()*ops.length)];
+  var correct=op==='+'?(a+b):(a-b);
+  var options=[correct];
+  while(options.length<4){
+    var wrong=correct+Math.floor(Math.random()*20)-10;
+    if(wrong!==correct&&options.indexOf(wrong)<0)options.push(wrong);
+  }
+  for(var si=options.length-1;si>0;si--){var sj=Math.floor(Math.random()*(si+1));var st=options[si];options[si]=options[sj];options[sj]=st;}
+  var overlay=_petShowModal('🧮 智商训练','<div>为 '+pet.emoji+' '+pet.name+' 出道题吧！<br>答对+IQ，答错也+1亲密度</div><div class="pet-math-q" id="mathQ">'+a+' '+op+' '+b+' = ?</div><div class="pet-math-opts" id="mathOpts"></div>','');
+  var optsEl=document.getElementById('mathOpts');
+  var qEl=document.getElementById('mathQ');
+  for(var oi=0;oi<options.length;oi++){
+    (function(ov){
+      var span=document.createElement('span');
+      span.className='pet-math-opt';
+      span.textContent=ov;
+      span.onclick=function(){
+        var isCorrect=(ov===correct);
+        if(isCorrect){
+          span.classList.add('correct');
+          pet.intimacy=Math.min(100,pet.intimacy+3);
+          G.IQ=clamp(G.IQ+1,0,200);
+          G.EQ=clamp(G.EQ+1,0,200);
+          qEl.textContent='🧮 答对了！';
+        }else{
+          span.classList.add('wrong');
+          pet.intimacy=Math.min(100,pet.intimacy+1);
+          qEl.textContent='🧮 答错了... 正确答案是 '+correct;
+        }
+        var allOpts=optsEl.querySelectorAll('.pet-math-opt');
+        for(var q=0;q<allOpts.length;q++){allOpts[q].style.pointerEvents='none';if(parseInt(allOpts[q].textContent)===correct)allOpts[q].classList.add('correct');}
+        pet.lastInteract=G.totalMonths;
+        saveGame();
+        setTimeout(function(){_petCloseModal(overlay);renderPetDetail(pet);updatePetBadge();},1500);
+      };
+      optsEl.appendChild(span);
+    })(options[oi]);
+  }
+}
+function petPlayTreasure(id){
+  var pet=G.pets.find(function(p){return p.id===id;});if(!pet)return;
+  if(pet.energy<30){showToast(pet.name+'太累了，需要至少30体力！');return;}
+  pet.energy=pet.energy-30;
+  pet.lastInteract=G.totalMonths;
+  // Random reward
+  var r=Math.random();
+  var result={icon:'',text:''};
+  if(r<0.25){
+    var money=Math.floor(Math.random()*1500)+500;
+    G.cash+=money;result.icon='💰';result.text='发现了 ¥'+money+' 现金！';
+  }else if(r<0.45){
+    var food=Math.floor(Math.random()*5)+2;
+    G.petFood=(G.petFood||0)+food;result.icon='🍖';result.text='找到 '+food+' 袋狗粮！';
+  }else if(r<0.60){
+    var itm=Math.random()<0.5?'神秘宝石':'古老硬币';
+    if(!G.petItems)G.petItems=[];
+    G.petItems.push(itm);result.icon='💎';result.text='发现了「'+itm+'」！';
+  }else if(r<0.72){
+    var moodUp=Math.floor(Math.random()*20)+15;
+    pet.mood=Math.min(100,pet.mood+moodUp);
+    G.mood=clamp(G.mood+10,0,200);result.icon='🌈';result.text='宠物心情大提升！+'+moodUp;
+  }else if(r<0.83){
+    pet.intimacy=Math.min(100,pet.intimacy+10);result.icon='💕';result.text='冒险中感情更亲密了！亲密度+10';
+  }else if(r<0.92){
+    var iqGain=Math.floor(Math.random()*3)+2;
+    G.IQ=clamp(G.IQ+iqGain,0,200);result.icon='📚';result.text='旅途中获得了新知识！IQ+'+iqGain;
+  }else{
+    var eqGain=Math.floor(Math.random()*3)+2;
+    G.EQ=clamp(G.EQ+eqGain,0,200);result.icon='🤝';result.text='宠物带回了好朋友的祝福！EQ+'+eqGain;
+  }
+  _petShowModal('🗺️ 寻宝之旅','<div class="pet-treasure-result"><span class="pet-treasure-emoji">'+result.icon+'</span>'+pet.emoji+' '+pet.name+' 去寻宝了！<br><br>'+result.text+'</div>','<button class="btn btn-primary" onclick="this.closest(\'.modal-overlay\').classList.remove(\'show\');setTimeout(function(){var o=this.parentElement.parentElement.parentElement;if(o)o.remove();}.bind(this),300)">太棒了！</button>');
+  saveGame();renderPetDetail(pet);updatePetBadge();
+}
+function petTrainTrick(id,trickIdx){
+  var pet=G.pets.find(function(p){return p.id===id;});if(!pet)return;
+  if(!pet.tricks)pet.tricks=[false,false,false];
+  if(pet.tricks[trickIdx]){showToast('已经学会了！');return;}
+  if(pet.energy<10){showToast(pet.name+'太累了，需要10体力！');return;}
+  var trickNames=['握手','打滚','装死'];
+  pet.energy=Math.max(0,pet.energy-10);
+  pet.lastInteract=G.totalMonths;
+  // 30% learn rate
+  if(Math.random()<0.30){
+    pet.tricks[trickIdx]=true;
+    var allLearned=pet.tricks.every(function(x){return x;});
+    showToast('🎉 '+pet.name+'学会了「'+trickNames[trickIdx]+'」！'+(allLearned?' 全部习得！':''));
+  }else{
+    pet.intimacy=Math.min(100,pet.intimacy+1);
+    showToast(pet.name+'还没学会「'+trickNames[trickIdx]+'」，但亲密度+1');
+  }
+  saveGame();renderPetDetail(pet);updatePetBadge();
+}
+function petMoodToPlayer(){
+  var pet=G.pets[0];if(!pet)return;
+  G.mood=clamp(G.mood+15,0,200);
+  pet.mood=Math.min(100,pet.mood+5);
+  showToast(pet.emoji+' '+pet.name+'蹭了蹭你，心情+15');
+  saveGame();refreshAll();
+}
+function playerComfortPet(id){
+  var pet=G.pets.find(function(p){return p.id===id;});if(!pet)return;
+  if(G.health>15){
+    G.health=Math.max(0,G.health-3);
+    pet.mood=Math.min(100,pet.mood+20);
+    pet.intimacy=Math.min(100,pet.intimacy+5);
+    showToast('你陪'+pet.name+'玩了一会儿，它开心了~');
+  }else{
+    showToast('你自己也需要休息...');
+  }
+  saveGame();renderPetDetail(pet);updatePetBadge();
+}
 function petFeed(id){
   var pet=G.pets.find(function(p){return p.id===id;});if(!pet)return;
   if(G.petFood>0){G.petFood--;}
@@ -6254,46 +6552,156 @@ function petFeed(id){
     if(G.cash<200){showToast('余额不足，无法自动购买狗粮！');return;}
     G.cash-=200;showToast('自动购买狗粮 -¥200');
   }
-  pet.hunger=clamp(pet.hunger+25,0,100);
-  pet.mood=clamp(pet.mood+5,0,100);
-  pet.intimacy=clamp(pet.intimacy+3,0,100);
+  pet.hunger=Math.min(100,pet.hunger+25);
+  pet.mood=Math.min(100,pet.mood+5);
+  pet.intimacy=Math.min(100,pet.intimacy+3);
+  pet.lastInteract=G.totalMonths;
   G.EQ=clamp(G.EQ+1,0,200);
   saveGame();renderPetDetail(pet);updatePetBadge();
 }
 function petPlay(id){
   var pet=G.pets.find(function(p){return p.id===id;});if(!pet)return;
   if(pet.energy<15){showToast(pet.name+'太累了，让它休息一下吧');return;}
-  pet.energy=clamp(pet.energy-15,0,100);
-  pet.mood=clamp(pet.mood+20,0,100);
-  pet.hunger=clamp(pet.hunger-10,0,100);
-  pet.intimacy=clamp(pet.intimacy+5,0,100);
+  pet.energy=Math.max(0,pet.energy-15);
+  pet.mood=Math.min(100,pet.mood+20);
+  pet.hunger=Math.max(0,pet.hunger-10);
+  pet.intimacy=Math.min(100,pet.intimacy+5);
+  pet.lastInteract=G.totalMonths;
   G.mood=clamp(G.mood+5,0,200);
   G.EQ=clamp(G.EQ+1,0,200);
-  saveGame();renderPetDetail(pet);
+  saveGame();renderPetDetail(pet);updatePetBadge();
 }
 function petWash(id){
   var pet=G.pets.find(function(p){return p.id===id;});if(!pet)return;
   if(G.cash<50){showToast('余额不足¥50！');return;}
   G.cash-=50;
   pet.hygiene=100;
-  pet.mood=clamp(pet.mood+5,0,100);
-  saveGame();renderPetDetail(pet);
+  pet.mood=Math.min(100,pet.mood+5);
+  pet.lastInteract=G.totalMonths;
+  saveGame();renderPetDetail(pet);updatePetBadge();
   showToast(pet.emoji+' '+pet.name+'洗完澡啦！清爽~');
 }
 function petPet(id){
   var pet=G.pets.find(function(p){return p.id===id;});if(!pet)return;
   var el=document.querySelector('.pet-emoji');if(el)el.classList.add('pet-acting');
   setTimeout(function(){var e=document.querySelector('.pet-emoji');if(e)e.classList.remove('pet-acting');},600);
-  pet.intimacy=clamp(pet.intimacy+2,0,100);
-  pet.mood=clamp(pet.mood+3,0,100);
-  saveGame();renderPetDetail(pet);
+  pet.intimacy=Math.min(100,pet.intimacy+2);
+  pet.mood=Math.min(100,pet.mood+3);
+  pet.lastInteract=G.totalMonths;
+  saveGame();renderPetDetail(pet);updatePetBadge();
+}
+function petMonthlyDecay(){
+  G.pets.forEach(function(pet){
+    var dec=Math.floor(Math.random()*3)+3;
+    pet.hunger=Math.max(0,pet.hunger-dec);
+    pet.hygiene=Math.max(0,pet.hygiene-(dec-1));
+    pet.mood=Math.max(0,pet.mood-(dec-1));
+    pet.energy=Math.max(0,pet.energy-Math.max(1,dec-2));
+    if(pet.intimacy>5)pet.intimacy=Math.max(0,pet.intimacy-1);
+    // State consequences
+    if(pet.hunger<20){
+      pet.mood=Math.max(0,pet.mood-5);
+    }
+    if(pet.hygiene<20&&Math.random()<0.15){
+      G.events.push({text:'🤒 '+pet.name+'太脏了，可能生病了！建议洗澡',type:'bad',source:'pet'});
+    }
+    if(pet.mood<20&&Math.random()<0.08){
+      G.events.push({text:'😢 '+pet.name+'心情极差，有离家出走的风险...',type:'bad',source:'pet'});
+    }
+    if(pet.energy<15){
+      pet.mood=Math.max(0,pet.mood-2);
+    }
+  });
+}
+function petMonthlyBuff(){
+  if(!G.pets||G.pets.length===0)return;
+  var totalBuff={mood:0,EQ:0,IQ:0};
+  G.pets.forEach(function(pet){
+    var r=pet.rarity||'common';
+    var mult=r==='legend'?2.0:r==='epic'?1.5:r==='rare'?1.2:1.0;
+    if(pet.intimacy>=50){
+      var mBuff=Math.floor(2*mult);
+      G.mood=clamp(G.mood+mBuff,0,200);
+      totalBuff.mood+=mBuff;
+    }
+    if(pet.intimacy>=80){
+      var eBuff=Math.floor(1*mult);
+      G.EQ=clamp(G.EQ+eBuff,0,200);
+      totalBuff.EQ+=eBuff;
+    }
+    // Passive recovery from high intimacy
+    if(pet.intimacy>=60){
+      pet.mood=Math.min(100,pet.mood+3);
+      pet.energy=Math.min(100,pet.energy+2);
+    }
+  });
+  // Shop effect from PET_SHOP definitions (original passive)
+  G.pets.forEach(function(pet){
+    var shop=PET_SHOP.find(function(s){return s.id===pet.id;});
+    if(!shop)return;
+    var r2=pet.rarity||'common';
+    var m2=r2==='legend'?8:r2==='epic'?5:r2==='rare'?3:0;
+    if(m2>0&&pet.intimacy>=30){
+      G.mood=clamp(G.mood+Math.floor(m2/2),0,200);
+    }
+  });
+  // Push summary event if any buff applied
+  var buffTotal=totalBuff.mood+totalBuff.EQ;
+  if(buffTotal>0){
+    G.events.push({text:'🐾 宠物羁绊：心情+'+totalBuff.mood+(totalBuff.EQ>0?' EQ+'+totalBuff.EQ:''),type:'good',source:'pet'});
+  }
+}
+function petRandomEvent(){
+  if(!G.pets||G.pets.length===0)return;
+  var pet=G.pets[Math.floor(Math.random()*G.pets.length)];
+  var r=Math.random();
+  if(r<0.03){
+    _petShowModal('😱 '+pet.name+'走丢了！','<div style="line-height:1.8">你的'+pet.emoji+' '+pet.name+'不见了！<br>是花¥500张贴寻宠启事，<br>还是放弃寻找？<br><br><small style="color:#999">（放弃后将永久失去这只宠物）</small></div>','<button class="btn btn-danger" id="petLoseGiveupBtn">放弃</button><button class="btn btn-primary" id="petLoseFindBtn">花¥500找回</button>');
+    var giveupBtn=document.getElementById('petLoseGiveupBtn');
+    var findBtn=document.getElementById('petLoseFindBtn');
+    if(giveupBtn)giveupBtn.onclick=function(){G.pets=G.pets.filter(function(p){return p.id!==pet.id;});saveGame();var mo=this.closest('.modal-overlay');if(mo)_petCloseModal(mo);showToast(pet.name+'离开了你...');updatePetBadge();renderPetDetail(G.pets[0]||null);};
+    if(findBtn)findBtn.onclick=function(){if(G.cash<500){showToast('余额不足¥500');return;}G.cash-=500;pet.intimacy=Math.min(100,pet.intimacy+5);pet.lastInteract=G.totalMonths;var mo=this.closest('.modal-overlay');if(mo)_petCloseModal(mo);showToast(pet.name+'回来了！亲密度+5');saveGame();renderPetDetail(pet);updatePetBadge();};
+  }else if(r<0.07){
+    var gold=Math.floor(Math.random()*2000)+300;
+    G.cash+=gold;
+    G.events.push({text:'✨ '+pet.name+'发现了宝藏！+¥'+gold,type:'good',source:'pet'});
+  }else if(r<0.10){
+    _petShowModal('🤒 '+pet.name+'生病了！','<div style="line-height:1.8">你的'+pet.emoji+' '+pet.name+'看上去很不舒服...<br>需要花费¥300带它去看医生<br><br><small style="color:#999">（不治疗会损失亲密度）</small></div>','<button class="btn btn-outline" id="petSickIgnoreBtn">不管它</button><button class="btn btn-success" id="petSickHealBtn">治疗 ¥300</button>');
+    var ignoreBtn=document.getElementById('petSickIgnoreBtn');
+    var healBtn=document.getElementById('petSickHealBtn');
+    if(ignoreBtn)ignoreBtn.onclick=function(){pet.intimacy=Math.max(0,pet.intimacy-10);saveGame();var mo=this.closest('.modal-overlay');if(mo)_petCloseModal(mo);showToast(pet.name+'很难过...');renderPetDetail(pet);updatePetBadge();};
+    if(healBtn)healBtn.onclick=function(){if(G.cash<300){showToast('余额不足¥300');return;}G.cash-=300;pet.intimacy=Math.min(100,pet.intimacy+5);pet.mood=Math.min(100,pet.mood+10);saveGame();var mo=this.closest('.modal-overlay');if(mo)_petCloseModal(mo);showToast(''+pet.name+'康复了！');renderPetDetail(pet);updatePetBadge();};
+  }else if(r<0.13){
+    var foodReward=Math.floor(Math.random()*4)+2;
+    G.petFood=(G.petFood||0)+foodReward;
+    pet.mood=Math.min(100,pet.mood+10);
+    G.events.push({text:'🐕 '+pet.name+'带来了朋友！狗粮+'+foodReward,type:'good',source:'pet'});
+  }else if(r<0.15&&G.pets.length>=2){
+    var sameRarity=G.pets.filter(function(p){return p.id!==pet.id&&p.rarity===pet.rarity;});
+    if(sameRarity.length>0){
+      var otherPet=sameRarity[0];
+      var eggItem='🥚'+pet.rarity+'蛋';
+      if(!G.petItems)G.petItems=[];
+      G.petItems.push(eggItem);
+      G.events.push({text:'🥚 '+pet.name+'和'+otherPet.name+'孕育了一颗'+eggItem+'！',type:'good',source:'pet'});
+    }
+  }
 }
 function updatePetBadge(){
   var b=document.getElementById('petBadge');if(!b)return;
-  var hungry=G.pets.some(function(p){return p.hunger<30;});
-  if(hungry){b.style.display='';b.textContent='!';}
+  var alert=false;var msg='';
+  G.pets.forEach(function(p){
+    if(p.hunger<30){alert=true;msg='!';return;}
+    if(p.mood<25){alert=true;msg='!';return;}
+    if(p.hygiene<25){alert=true;msg='!';return;}
+    if(p.energy<15){alert=true;msg='!';return;}
+  });
+  if(alert&&G.pets.length>0){b.style.display='';b.textContent=msg;}
+  else if(G.pets.length===0){b.style.display='none';}
   else{b.style.display='none';}
 }
+
+
 </script>
 </body>
 </html>
