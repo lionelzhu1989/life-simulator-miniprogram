@@ -6170,18 +6170,18 @@ function renderPhoneList(){
     let preview=friendLabels[c.friendLevel]||'';
     let sortTime=c.metMonth||0;
     let unread=false;
-    if(history.length>1){
-      // Has actual conversation - show last NPC message
-      const lastNpc=history.filter(h=>h.npc).pop();
-      if(lastNpc){
-        preview=lastNpc.npc.replace(/^[^:]+[：:]/,'').substring(0,32);
-        // Check if last message is NPC-initiated (unread)
-        const lastIdx=history.indexOf(lastNpc);
-        const afterLast=history.slice(lastIdx+1);
-        if(afterLast.length===0||!afterLast[afterLast.length-1].player){
-          unread=true;
-        }
+    if(history.length>0){
+      // Show last exchange: if the entry has both player and NPC msgs, show both sides
+      const last=history[history.length-1];
+      if(last.npc&&last.player){
+        preview='我: '+last.player.substring(0,12)+' → '+last.npc.replace(/^[^:]+[：:]/,'').substring(0,18);
+      }else if(last.npc){
+        preview=last.npc.replace(/^[^:]+[：:]/,'').substring(0,32);
+      }else if(last.player){
+        preview='我: '+last.player.substring(0,32);
       }
+      // Unread: last exchange is complete and player hasn't seen NPC reply
+      unread=!!last.npc;
       if(c.lastChatMonth)sortTime=c.lastChatMonth;
     }else{
       preview=friendIcons[c.friendLevel]+' '+preview+(c.metWhere?' · '+c.metWhere:'');
@@ -6206,7 +6206,7 @@ function renderPhoneList(){
     // Get relationship
     const rel=getRelationship(npcId);
     const friendLabels=['','认识','熟悉','好友'];
-    let preview=lastMsg.npc?lastMsg.npc.substring(0,32):(lastMsg.player?lastMsg.player.substring(0,32):'');
+    let preview=lastMsg.npc?lastMsg.npc.substring(0,32):(lastMsg.player?'我: '+lastMsg.player.substring(0,29):'');
     // Sort time: use last message timestamp or recency
     const sortTime=lastMsg.timestamp||0;
     allItems.push({
