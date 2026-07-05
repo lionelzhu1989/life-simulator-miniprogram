@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>offer含金量 v3.12.8</title>
+<title>offer含金量 v3.15.1</title>
 <style>
 
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -272,7 +272,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 .msg-pv.msg-pv-unread{color:#333;font-weight:500;}
 .msg-mt{text-align:right;flex-shrink:0;margin-left:8px;}
 .msg-tm{font-size:11px;color:var(--text-light);}
-.msg-bg{background:#e74c3c;color:#fff;font-size:10px;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-top:6px;margin-left:auto;padding:0 5px;}
+.msg-bg{background:#e74c3c;color:#fff;font-size:10px;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-top:6px;margin-left:auto;padding:0 5px;animation:badgePulse 2s infinite;}
 .phone-badge{position:absolute;top:-4px;right:-6px;background:#e74c3c;color:#fff;font-size:10px;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 4px;z-index:10;font-weight:700;box-shadow:0 2px 6px rgba(231,76,60,0.5);animation:badgePulse 2s infinite;}
 @keyframes badgePulse{0%,100%{transform:scale(1);}50%{transform:scale(1.1);}}
 /* Trade input number spinner hide */
@@ -433,7 +433,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 
 
 /* ===== 玩法指南 ===== */
-.guide-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:3000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s;}
+.guide-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:3000;display:none;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s;}
 .guide-overlay.show{opacity:1;pointer-events:auto;}
 .guide-box{background:#fff;border-radius:16px;width:90%;max-width:400px;max-height:80vh;overflow:hidden;display:flex;flex-direction:column;transform:scale(0.9);transition:transform .3s;}
 .guide-overlay.show .guide-box{transform:scale(1);}
@@ -617,11 +617,16 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
     <div class="phone-hint" id="phoneHint" style="display:none;">⚠️ <span id="phoneHintText">有未读消息需要处理</span></div>
     <div class="phone-tabs">
       <div class="phone-tab active" onclick="switchPhoneTab('messages')">💬 消息</div>
+      <div class="phone-tab" onclick="switchPhoneTab('contacts')">📇 通讯录</div>
+      <div class="phone-tab" onclick="switchPhoneTab('schedule')">📅 日程</div>
       <div class="phone-tab" onclick="switchPhoneTab('moments')">📷 朋友圈</div>
+      <div class="phone-tab" onclick="switchPhoneTab('notifications')" style="position:relative;">🔔 通知<span class="notif-badge" id="notifBadge" style="display:none;">0</span></div>
     </div>
     <div id="phone-messages" class="phone-content active"></div>
-    <div id="phone-contacts" class="phone-content" style="display:none;"></div>
+    <div id="phone-contacts" class="phone-content"></div>
+    <div id="phone-schedule" class="phone-content"></div>
     <div id="phone-moments" class="phone-content"></div>
+    <div id="phone-notifications" class="phone-content"></div>
 
   </div>
 
@@ -1388,7 +1393,7 @@ requires:{minAsset:10000000},rounds:[
 {npcMsgs:['好吧...','我跟老师说你出差了'],opts:[{text:'对不起宝贝',fx:{mood:-8},next:-1}]}]},
 
 {id:'spouse_romance',npc:'spouse',type:'wechat',ageMin:25,ageMax:60,chance:0.12,cooldown:6,requires:{married:true},rounds:[
-{npcMsgs:['亲爱的','今天是我们认识第'+(G.totalMonths||0)+'个月','你有什么想说的？'],opts:[
+{npcMsgs:['亲爱的','今天是我们认识第'+(typeof G!=='undefined'&&G?G.totalMonths:0)+'个月','你有什么想说的？'],opts:[
 {text:'爱你，宝贝',fx:{mood:10,EQ:5},next:1},
 {text:'哇，时间过得真快',fx:{mood:5},next:2}]},
 {npcMsgs:['我也爱你 ❤️','今晚我做饭吧','你早点回来'],opts:[{text:'好！',fx:{mood:8},next:-1}]},
@@ -1513,8 +1518,10 @@ function defaultState(){
     activeNews:[],decisionCount:0,
     unlockedTiers:{},luxuryItems:[],
     forbesShown:false,shortPositions:{},phone:{threads:[],moments:[],aiMoments:[],notifications:[],flags:{},lastTriggerMonth:0,nextId:1,chatHistory:{}},
-    lifeEvents:[],socialContacts:[],
-    romance:{npcId:null,stage:'none',affection:0,metMonth:0,lastInteraction:0}
+    lifeEvents:[],socialContacts:[],relationships:{},
+    savings:0,
+    romance:{npcId:null,stage:'none',affection:0,metMonth:0,lastInteraction:0},
+    scheduledDates:[]
   };
 }
 
@@ -1613,9 +1620,7 @@ function migrateSave(){
 function startGame(){
   console.log('[v3.12.11] startGame called, G type:', typeof G, 'G value:', G);
   if(loadGame()&&!G.gameOver){
-    // Migration: ensure romance state exists for old saves
-    if(!G.romance)G.romance={npcId:null,stage:'none',affection:0,metMonth:0,lastInteraction:0};
-    if(!G.phone.aiMoments)G.phone.aiMoments=[];
+    migrateSave();
     document.getElementById('welcomePage').style.display='none';
     document.getElementById('gameApp').style.display='flex';
     initStockPrices();initPhoneState();refreshAll();return;
@@ -1681,7 +1686,14 @@ function refreshLearning(){
 function refreshHeader(){
   const job=JOBS[G.jobIndex];
   const careerLabel=G.selfEmployed?'🚀 创业者':job.name;
-  document.getElementById('headerSub').textContent='年龄 '+getAge()+'岁 · '+careerLabel+' · '+getMonth()+'月';
+  const yr=Math.floor(G.totalMonths/12);
+  const mo=(G.totalMonths%12)+1;
+  const el=document.getElementById('headerSub');
+  el.textContent='第'+yr+'年 '+mo+'月 · '+getAge()+'岁 · '+careerLabel;
+  // 月份变化时闪一下
+  el.classList.remove('month-flash');
+  void el.offsetWidth;
+  el.classList.add('month-flash');
   document.getElementById('lpDisplay').textContent=G.legacyPoints||0;
 }
 function refreshLife(){
@@ -1873,16 +1885,43 @@ function closeForbes(){
 async function nextMonth(){
   if(G.gameOver)return;
   if(hasUnread()){
-    const unreadCount=G.phone?G.phone.threads.filter(t=>t.status!=='replied'&&t.rounds[t.currentRound]&&!t.rounds[t.currentRound]._playerChoice).length:0;
-    showToast('📱 还有 '+unreadCount+' 条消息需要回复');
-    switchTab('phone');
+    // 找到未读线程并自动打开
+    const unread=G.phone?G.phone.threads.find(t=>t.status!=='replied'&&t.rounds[t.currentRound]&&!t.rounds[t.currentRound]._playerChoice):null;
+    if(unread){
+      showToast('📱 先回复 '+unread.npcName+' 的消息');
+      G._openThreadId=unread.id;
+      switchTab('phone');
+      setTimeout(()=>{renderChat();document.getElementById('chatOverlay').classList.add('show');},300);
+    }else{
+      showToast('📱 还有消息需要回复');
+      switchTab('phone');
+    }
     return;
   }
-  if(G._pendingDecision){showToast('⚡ 请先完成当前事件！');return;}
-  advanceMonth();
-  saveGame();refreshAll();
-  checkAchievements();
-  if(G.gameOver)setTimeout(()=>showGameOver(),500);
+  if(G._pendingDecision){
+    // v3.15.8: 自动弹出待处理事件，而不是只显示toast
+    if(window._currentDecision){
+      showDecisionEvent(window._currentDecision);
+    }else{
+      showToast('⚡ 请先完成当前事件！');
+    }
+    return;
+  }
+  // 即时更新月份显示，消除卡顿感
+  const btn=document.getElementById('nextMonthBtn');
+  btn.disabled=true;btn.textContent='⏳ 进行中...';
+  requestAnimationFrame(async()=>{
+    await advanceMonth();
+    refreshHeader(); // 先刷头部让月份立即可见
+    const total=calcTotalAsset();
+    document.getElementById('totalAsset').textContent=fmt(total);
+    document.getElementById('cashDisplay').textContent=fmt(G.cash);
+    setTimeout(()=>{
+      saveGame();refreshAll();checkAchievements();
+      btn.disabled=false;btn.textContent='🚀 度过一月';
+      if(G.gameOver)setTimeout(()=>showGameOver(),500);
+    },30);
+  });
 }
 const TEMPLATE_SMALL_EVENTS=[
   {text:'💰 朋友还钱，收到3000元',type:'good',effect:{money:3000}},
@@ -1906,7 +1945,7 @@ const TEMPLATE_SMALL_EVENTS=[
   {text:'📚 看了一本好书，智商+2情商+1',type:'good',effect:{IQ:2,EQ:1}},
   {text:'😤 被领导无故批评，心情-8',type:'bad',effect:{mood:-8}}
 ];
-function advanceMonth(){
+async function advanceMonth(){
   G.totalMonths++;G.monthsAtJob++;G.events=[];
   G._encounterActive=false; // 重置月度场景标记
   if(!G._recentEvents)G._recentEvents=[]; // 连锁反应记忆（最近事件记录）
@@ -2071,7 +2110,7 @@ function advanceMonth(){
     if(G._recentEvents)G._recentEvents.push('🥚彩蛋：'+egg.text.replace(/[\u{1F300}-\u{1FFFF}]/gu,'').substring(0,20));
   }
   // Phone triggers
-  if(!G.gameOver){initPhoneState();triggerFollowUps();triggerPhoneMessages();if(Math.random()<0.50)triggerAIMoments().catch(()=>{});if(Math.random()<0.40)triggerMoments();generateNotifications();generateGossipEvent();triggerGathering();}
+  if(!G.gameOver){initPhoneState();triggerFollowUps();triggerPhoneMessages();await processScheduledDates();triggerParentHelp();if(Math.random()<0.50)triggerAIMoments().catch(()=>{});if(Math.random()<0.40)triggerMoments();generateNotifications();generateGossipEvent();triggerGathering();}
   // 社交拓展：每月有概率触发偶遇场景
   if(!G.gameOver && !G._encounter && !G._pendingDecision){
     tryTriggerEncounter();
@@ -2656,44 +2695,6 @@ function openBusinessDetail(id){
   content+='</div>';
   showModal({title:b.icon+' '+b.name+' · 经营详情',content:content});
 }
-
-// ===== Tech Investment Detail =====
-function openProjectDetail(id){
-  const active=G.techInvestments.find(x=>x.id===id);
-  const tech=TECH_INVESTMENTS.find(x=>x.id===id);
-  if(!active||!tech)return;
-  const pct=Math.round(((tech.returnMonths-active.monthsRemaining)/tech.returnMonths)*100);
-  let content='<div style="text-align:center;margin-bottom:16px;">';
-  content+='<div style="font-size:48px;margin-bottom:8px;">'+tech.icon+'</div>';
-  content+='<div style="font-size:18px;font-weight:600;">'+tech.name+'</div>';
-  content+='</div>';
-  content+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">';
-  content+='<div style="background:#f8f9fa;padding:12px;border-radius:8px;text-align:center;"><div style="font-size:11px;color:#999;">投入金额</div><div style="font-weight:600;">'+fmt(active.investAmount)+'</div></div>';
-  content+='<div style="background:#f8f9fa;padding:12px;border-radius:8px;text-align:center;"><div style="font-size:11px;color:#999;">投资周期</div><div style="font-weight:600;">'+tech.returnMonths+'个月</div></div>';
-  content+='</div>';
-  content+='<div style="background:#eaf6ff;padding:16px;border-radius:8px;margin-bottom:16px;">';
-  content+='<div style="font-size:12px;color:#666;">投资进度</div>';
-  content+='<div style="background:#ddd;border-radius:4px;height:8px;margin:8px 0;"><div style="background:#3498db;height:100%;border-radius:4px;width:'+pct+'%;"></div></div>';
-  content+='<div style="font-size:12px;color:#999;text-align:center;">'+pct+'% 完成 | 剩余 '+active.monthsRemaining+' 个月</div>';
-  content+='</div>';
-  content+='<div style="font-size:12px;color:#666;margin-bottom:8px;">📊 预期回报</div>';
-  tech.outcomes.forEach(o=>{
-    const cls=o.type==='good'?'#27ae60':'#e74c3c';
-    content+='<div style="display:flex;justify-content:space-between;padding:8px 12px;background:#f8f9fa;border-radius:6px;margin-bottom:4px;">';
-    content+='<span>'+o.text+'</span>';
-    content+='<span style="color:'+cls+';font-weight:600;">'+Math.round(o.chance*100)+'% · '+o.multiplier+'x</span>';
-    content+='</div>';
-  });
-  if(active.events&&active.events.length>0){
-    content+='<div style="margin-top:16px;font-size:12px;color:#666;margin-bottom:8px;">📋 事件记录</div>';
-    active.events.forEach(e=>{
-      content+='<div style="padding:8px 12px;background:#f8f9fa;border-radius:6px;margin-bottom:4px;font-size:13px;">'+e.text+'</div>';
-    });
-  }
-  content+='<div style="margin-top:16px;"><button class="btn btn-block" style="background:#f0f0f0;" onclick="closeModal()">关闭</button></div>';
-  showModal({title:tech.icon+' '+tech.name+' · 投资详情',content:content});
-}
-
 function refreshBusiness(){
   let html='';
   // Investment summary
@@ -3869,8 +3870,6 @@ function renderContacts(){
   });
   // 动态联系人
   injectDynamicContacts();
-  // v3.12.0: Show system notifications at bottom of messages list (read-only)
-  _renderNotificationsInMessages(html);
   (G.socialContacts||[]).forEach(function(c){
     var p=NPC_PERSONALITIES[c.id];
     if(!p) return;
@@ -3889,8 +3888,6 @@ function renderContacts(){
 function openProactiveChat(npcId){
   initChatHistory();
   injectDynamicContacts();
-  // v3.12.0: Show system notifications at bottom of messages list (read-only)
-  _renderNotificationsInMessages(html);
   const p=NPC_PERSONALITIES[npcId];if(!p)return;
   G._openProactiveNpc=npcId;
   // Set header
@@ -4381,9 +4378,12 @@ function _getNotificationsHTML(){
 
 function renderPhoneList(){
   const el=document.getElementById('phone-messages');if(!el)return;
+  injectDynamicContacts();
   let html='';
-  // v3.12.0: Show message threads
-  if(G.phone&&G.phone.threads.length>0){
+  // Collect all items: template threads + social contacts (WeChat unified chat list)
+  const allItems=[];
+  // 1. Template threads (NPC calls/SMS/gatherings/gossip)
+  if(G.phone&&G.phone.threads){
     G.phone.threads.forEach(t=>{
       const round=t.rounds[t.currentRound];
       let preview='[对话进行中]';
@@ -4394,45 +4394,66 @@ function renderPhoneList(){
       for(let i=t.currentRound;i<t.rounds.length;i++){
         if(!t.rounds[i]._playerChoice)unreadCount++;
       }
-      const timeStr=getTimeStr(t.receivedMonth);
       const unread=t.status==='unread'||(t.status==='reading'&&unreadCount>0);
-      html+='<div class="msg-item" onclick="openThread('+t.id+')" style="'+(unread?'font-weight:600;':'')+'">';
-      html+='<div class="msg-av">'+t.npcAvatar+'</div>';
-      html+='<div class="msg-bd"><div class="msg-nm">'+t.npcName+(t.type==='call'?' 📞':t.type==='sms'?' 💬':t.type==='gathering'?' 🎉':'')+'</div>';
-      html+='<div class="msg-pv">'+preview+'</div></div>';
-      html+='<div class="msg-mt"><div class="msg-tm">'+timeStr+'</div>';
-      if(unread)html+='<div class="msg-bg">'+(unreadCount>1?unreadCount+'条':'新')+'</div>';
-      html+='</div></div>';
+      allItems.push({
+        _type:'thread',_id:t.id,_sortTime:t.receivedMonth*100+99,
+        avatar:t.npcAvatar,name:t.npcName+(t.type==='call'?' 📞':t.type==='sms'?' 💬':t.type==='gathering'?' 🎉':t.type==='wechat'?' 💬':''),
+        preview:preview,time:getTimeStr(t.receivedMonth),
+        unread:unread,unreadCount:unreadCount,onclick:'openThread('+t.id+')'
+      });
     });
   }
-  // v3.12.0: Show contacts at bottom (clickable, open AI chat)
-  injectDynamicContacts();
-  // v3.12.0: Show system notifications at bottom of messages list (read-only)
-  _renderNotificationsInMessages(html);
-  const contacts=Object.keys(NPC_PERSONALITIES);
-  if(contacts.length>0){
-    html+='<div style="padding:8px 16px;font-size:11px;color:#999;border-top:1px solid #f0f0f0;margin-top:8px;">💬 联系人（点击开始聊天）</div>';
-    contacts.forEach(npcId=>{
-      const p=NPC_PERSONALITIES[npcId];
-      if(!p)return;
-      if(npcId==='spouse'&&!G.spouse)return;
-      if(npcId==='exColleague'&&G.totalMonths<12)return;
-      if(npcId==='mentor'&&G.totalMonths<18)return;
-      if(npcId==='gymCoach'&&G.totalMonths<6)return;
-      // Check if there's an active chat with this NPC
-      const hasActive=G.phone&&G.phone.activeChats&&G.phone.activeChats.some(ch=>ch.npcId===npcId&&ch.status==='active');
-      html+='\u003cdiv class="msg-item" onclick="openProactiveChat(\''+npcId+'\')" style="cursor:pointer;"\u003e';
-      html+='<div class="msg-av">'+p.avatar+'</div>';
-      html+='<div class="msg-bd"><div class="msg-nm">'+p.name+'</div>';
-      html+='<div class="msg-pv">'+p.traits.slice(0,2).join('·')+'</div></div>';
-      html+='<div class="msg-mt">';
-      if(hasActive)html+='<div class="msg-bg">新</div>';
-      html+='</div></div>';
+  // 2. Social contacts (WeChat-style: show as chat items)
+  (G.socialContacts||[]).forEach(function(c){
+    const p=NPC_PERSONALITIES[c.id];
+    const name=p?p.name:c.name;
+    const avatar=p?p.avatar:c.avatar;
+    const friendLabels=['','认识','熟悉','好友'];
+    const friendIcons=['','👋','🤝','❤️'];
+    // Determine preview and time
+    const history=(G.phone&&G.phone.chatHistory)?(G.phone.chatHistory[c.id]||[]):[];
+    let preview=friendLabels[c.friendLevel]||'';
+    let sortTime=c.metMonth||0;
+    let unread=false;
+    if(history.length>1){
+      // Has actual conversation - show last NPC message
+      const lastNpc=history.filter(h=>h.npc).pop();
+      if(lastNpc){
+        preview=lastNpc.npc.replace(/^[^:]+[：:]/,'').substring(0,32);
+        // Check if last message is NPC-initiated (unread)
+        const lastIdx=history.indexOf(lastNpc);
+        const afterLast=history.slice(lastIdx+1);
+        if(afterLast.length===0||!afterLast[afterLast.length-1].player){
+          unread=true;
+        }
+      }
+      if(c.lastChatMonth)sortTime=c.lastChatMonth;
+    }else{
+      preview=friendIcons[c.friendLevel]+' '+preview+(c.metWhere?' · '+c.metWhere:'');
+    }
+    allItems.push({
+      _type:'contact',_id:c.id,_sortTime:sortTime,
+      avatar:avatar,name:name,preview:preview,
+      time:getTimeStr(c.metMonth||0),unread:unread,unreadCount:0,
+      onclick:'openProactiveChat(\''+c.id.replace(/'/g,"\\'")+'\')'
     });
-  }
-  // Append notifications at bottom of messages
-  const notifHtml=_getNotificationsHTML();
-  if(notifHtml)html+=notifHtml;
+  });
+  // 3. Sort by recency (most recent first)
+  allItems.sort((a,b)=>b._sortTime-a._sortTime);
+  // 4. Render unified chat list
+  allItems.forEach(item=>{
+    const cls=item.unread?'msg-item msg-unread':'msg-item msg-read';
+    const pvCls=item.unread?'msg-pv msg-pv-unread':'msg-pv';
+    html+='<div class="'+cls+'" onclick="'+item.onclick+'">';
+    html+='<div class="msg-av">'+item.avatar;
+    if(item.unread)html+='<div class="unread-dot"></div>';
+    html+='</div>';
+    html+='<div class="msg-bd"><div class="msg-nm">'+item.name+'</div>';
+    html+='<div class="'+pvCls+'">'+item.preview+'</div></div>';
+    html+='<div class="msg-mt"><div class="'+pvCls.replace('msg-pv','msg-tm')+'">'+item.time+'</div>';
+    if(item.unread)html+='<div class="msg-bg">'+(item.unreadCount>1?item.unreadCount+'条':'新')+'</div>';
+    html+='</div></div>';
+  });
   if(!html||html===''){
     html='<div class="text-center text-sm text-muted" style="padding:40px 0;"><div style="font-size:48px;margin-bottom:12px;">📱</div>消息会在人生旅途中陆续到来<br>点击"度过一月"推进人生</div>';
   }
@@ -4554,6 +4575,19 @@ async function selectPhoneOption(optIdx){
   // Check if next round exists
   if(opt.next<thread.rounds.length){
     thread.currentRound=opt.next;
+    // v3.15.0: 用AI生成NPC的下一条消息，替代预设模板
+    const nextRound=thread.rounds[thread.currentRound];
+    if(nextRound){
+      try{
+        showTypingIndicator();
+        const aiReply=await generateThreadAIReply(thread.npc,'继续对话',opt.text,thread);
+        removeTypingIndicator();
+        if(aiReply){nextRound.npcMsgs=[aiReply];}
+      }catch(e){
+        removeTypingIndicator();
+        console.error('Thread AI reply failed, using template:',e);
+      }
+    }
     showToast('💬 还有后续消息需要回复');
   }else{
     thread.status='replied';
@@ -5196,7 +5230,7 @@ function processChatEffects(reply,npcId){
     else G.romance.stage='normal';
     saveGame();
   }
-  return reply.replace(/\[GIVE:\d+\]/g,'').replace(/\[TREAT:\d+\]/g,'').replace(/\[ASK:\d+:.+?\]/g,'').trim();
+  return reply.replace(/\[GIVE:\d+\]/g,'').replace(/\[TREAT:\d+\]/g,'').replace(/\[ASK:\d+:.+?\]/g,'').replace(/\[INTRODUCE:[^\]]+\]/g,'').trim();
 }
 
 // Detect player money giving intent
@@ -5385,8 +5419,6 @@ function recordMoneyHistory(npcId,playerMsg,npcMsg,amount,moneyType){
 // Send player message
 async function sendPlayerMessage(){
   injectDynamicContacts();
-  // v3.12.0: Show system notifications at bottom of messages list (read-only)
-  _renderNotificationsInMessages(html);
   const input=document.getElementById('chatInputField');
   const sendBtn=document.getElementById('chatInputSend');
   const msg=input.value.trim();
@@ -5438,6 +5470,25 @@ async function _doSendMessage(msg,npcId){
   }
   // Remove typing indicator (ALWAYS, even on error)
   removeTypingIndicator();
+  // ===== 资金方向强制校正 =====
+  // 如果玩家刚给了钱（giveIntent存在），AI不应该再加[GIVE]标签
+  if(giveIntent&&reply){
+    const wrongGive=/\[GIVE:\d+\]/.test(reply);
+    if(wrongGive){
+      reply=reply.replace(/\[GIVE:\d+\]/g,'');
+      console.log('🔄 已剥离AI错误的[GIVE]标签（玩家已给钱）');
+    }
+  }
+  // 如果玩家刚收到NPC的钱（NPC回复含[GIVE]），检查是否搞反
+  // 安全纠错：文字说"给你/转你"但用了[GIVE]标签（方向搞反）
+  if(reply){
+    var hasGiveText=/(给你|转你|塞给你|发红包|给你钱|给你转|孝敬你)/.test(reply);
+    var hasAskTag=/\[ASK:\d+/.test(reply);
+    var hasGiveTag=/\[GIVE:\d+/.test(reply);
+    if(hasGiveText&&hasAskTag&&!hasGiveTag){
+      reply=reply.replace(/\[ASK:(\d+):[^\]]*\]/g,function(m,p1){return'[GIVE:'+p1+']';});
+    }
+  }
   // Process chat effects FIRST (strips [GIVE]/[ASK] tags from reply)
   let cleanReply;
   try{
@@ -5461,6 +5512,13 @@ async function _doSendMessage(msg,npcId){
   // Apply mood effect from reply sentiment
   const moodEffect=judgeNPCMood(reply);
   G.mood=clamp(G.mood+moodEffect,0,200);
+  // Detect schedule intent from AI reply OR player message
+  const scheduleInfo=detectScheduleIntent(cleanReply)||detectScheduleIntent(msg);
+  const canSchedule=!!npcId;
+  if(scheduleInfo&&canSchedule){
+    // Show schedule confirmation in chat
+    setTimeout(()=>{showScheduleConfirm(npcId,scheduleInfo);},500);
+  }
   // Save game
   saveGame();
   // Re-enable send button
@@ -5906,30 +5964,62 @@ function generateNotifications(){
   });
 }
 function renderNotifications(){
-  // v3.12.0: Notifications now render in messages list via _getNotificationsHTML
+  const el=document.getElementById('phone-notifications');if(!el)return;
+  if(!G.phone||!G.phone.notifications||G.phone.notifications.length===0){
+    el.innerHTML='<div class="notif-empty"><div style="font-size:48px;margin-bottom:12px;">🔔</div>暂无系统通知<br>成就、股票、事件通知会出现在这里</div>';return;
+  }
+  let html='';
+  G.phone.notifications.forEach(n=>{
+    const bgCls=n.type==='achievement'?'#fef9e7':n.type==='stock'?'#d5f5e3':n.type==='warning'?'#fadbd8':'#d6eaf8';
+    const cls=n.read?'notif-item read':'notif-item unread';
+    html+='<div class="'+cls+'" onclick="markNotifRead('+n.id+')">';
+    html+='<div class="notif-icon" style="background:'+bgCls+';">'+n.icon+'</div>';
+    html+='<div class="notif-body"><div class="notif-text">'+n.text+'</div>';
+    html+='<div class="notif-meta">'+getTimeStr(n.month)+'</div></div>';
+    if(!n.read)html+='<div class="notif-dot"></div>';
+    html+='</div>';
+  });
+  el.innerHTML=html;
+  updateNotifBadge();
+}
+function markNotifRead(id){
+  if(!G.phone||!G.phone.notifications)return;
+  const n=G.phone.notifications.find(x=>x.id===id);
+  if(n){n.read=true;saveGame();}
+  renderNotifications();
+  updatePhoneBadge();
+}
+function updateNotifBadge(){
+  const badge=document.getElementById('notifBadge');if(!badge)return;
+  const count=G.phone?G.phone.notifications.filter(n=>!n.read).length:0;
+  if(count>0){badge.textContent=count>99?'99+':count;badge.style.display='flex';}
+  else badge.style.display='none';
 }
 
 function switchPhoneTab(tab){
   document.querySelectorAll('.phone-tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.phone-content').forEach(c=>c.classList.remove('active'));
-  const tabNames=['messages','moments'];
+  const tabNames=['messages','contacts','schedule','moments','notifications'];
   const idx=tabNames.indexOf(tab);
   if(idx>=0){const allTabs=document.querySelectorAll('.phone-tab');if(allTabs[idx])allTabs[idx].classList.add('active');}
   const el=document.getElementById('phone-'+tab);
   if(el)el.classList.add('active');
   if(tab==='messages')renderPhoneList();
+  else if(tab==='contacts')renderContacts();
+  else if(tab==='schedule')renderSchedule();
   else if(tab==='moments')renderMoments();
+  else if(tab==='notifications')renderNotifications();
 }
-function refreshPhone(){renderPhoneList();renderMoments();updatePhoneBadge();updatePhoneHint();}
+function refreshPhone(){renderPhoneList();renderContacts();renderSchedule();renderMoments();renderNotifications();updatePhoneBadge();updateNotifBadge();updatePhoneHint();}
 function updatePhoneBadge(){
   const badge=document.getElementById('phoneBadge');if(!badge)return;
-  const count=G.phone?G.phone.threads.filter(t=>t.status!=='replied'&&t.rounds[t.currentRound]&&!t.rounds[t.currentRound]._playerChoice).length:0;
-  if(count>0){
-    badge.textContent=count>99?'99+':count;
+  // 只计算模板消息线程（NPC发来的消息），不包括通知/朋友圈
+  const msgCount=G.phone?G.phone.threads.filter(t=>t.status!=='replied'&&t.rounds[t.currentRound]&&!t.rounds[t.currentRound]._playerChoice).length:0;
+  if(msgCount>0){
+    badge.textContent=msgCount>99?'99+':msgCount;
     badge.style.display='flex';
-    // Add subtle animation on update
     badge.style.animation='none';
-    badge.offsetHeight; // trigger reflow
+    badge.offsetHeight;
     badge.style.animation='badgePulse 2s infinite';
   }else{
     badge.style.display='none';
@@ -6677,6 +6767,27 @@ function buildMomentsPrompt(ctx){
   return [{
     role:'system',
     content:`你是"offer含金量"的朋友圈引擎。模拟NPC发微信朋友圈+其他NPC评论。风格要像真实朋友圈，不是游戏。
+
+【人物关系】所有人都是"玩家"的微信好友。家人之间互相认识，但不认识玩家的同事和朋友：
+- 妈妈和爸爸：夫妻，退休在家，互相认识，但不认识玩家的同事和朋友
+- 老王：玩家的发小/铁哥们，只认识玩家
+- 小李：玩家的同事，只认识玩家
+- 张总：玩家的老板，只认识玩家
+- 小张：玩家的大学同学，只认识玩家
+- 刘经理：玩家的银行客户经理，只认识玩家
+- 小陈：玩家的房产中介，只认识玩家
+- 邻居老赵：玩家的邻居，只认识玩家
+- 前同事小周：玩家的前同事，只认识玩家
+- 李教授：玩家的导师，只认识玩家
+- 健身教练：玩家的健身房教练，只认识玩家
+- 小雨：玩家的女朋友/校园恋人，只认识玩家
+⚠️ 评论规则：
+- 妈妈可以在爸爸的朋友圈下评论（他们是夫妻），可以以家人身份关心
+- 爸爸可以在妈妈的朋友圈下评论（他们是夫妻）
+- 但爸爸不应该在小李的朋友圈下以父亲口吻说话（他不认识小李）
+- 每个NPC只认识玩家，不认识其他玩家的社交圈
+- 评论要符合你和发帖人的关系
+
 可选NPC（随机选1个发朋友圈，2-3个评论）：
 ${chosen.map(n=>`·${n.id}(${n.name}): ${n.traits.join('、')}，常发${n.topics.join('、')}`).join('\n')}
 
@@ -7428,6 +7539,11 @@ async function generateEncounterAIResponse(sceneKey, npcName, choiceText, choice
 // ===== Helper: 将事件转为NPC消息（让玩家在消息栏看到） =====
 function notifyAsMessage(npcId,text){
   if(!G.phone)return;
+  // System messages go to notifications tab, not messages tab
+  if(npcId==='system'){
+    addNotification('system',text);
+    return;
+  }
   const npc=NPCS[npcId]||{name:'系统',avatar:'📱'};
   const thread={
     id:G.phone.nextId++,npcId:npcId,npcName:npc.name,npcAvatar:npc.avatar,
@@ -7440,7 +7556,15 @@ function notifyAsMessage(npcId,text){
 }
 
 // v3.12.0: Stub for compatibility - notifications are rendered via _getNotificationsHTML in renderPhoneList
-function _renderNotificationsInMessages(html){}
+function _renderNotificationsInMessages(html){
+  // 将系统通知追加到消息列表
+  const el=document.getElementById('phone-messages');
+  if(!el)return;
+  const notifHTML=_getNotificationsHTML();
+  if(notifHTML){
+    el.innerHTML+=notifHTML;
+  }
+}
 // v3.12.2: Debug helper - force-add test moments
 function _debugAddTestMoments(){
   if(!G||!G.phone){alert('G.phone不存在');return;}
@@ -7465,3 +7589,218 @@ function _debugAddTestMoments(){
   alert('已添加3条测试朋友圈（含NPC评论+点赞），请切换到朋友圈查看');
 }
 console.log('[v3.12.3] 调试函数已加载：运行 _debugAddTestMoments() 可强制添加测试朋友圈');
+.notif-badge{position:absolute;top:2px;right:2px;min-width:16px;height:16px;line-height:16px;font-size:10px;font-weight:700;color:#fff;background:#e74c3c;border-radius:8px;text-align:center;padding:0 4px;pointer-events:none;}
+.notif-item{display:flex;align-items:flex-start;gap:10px;padding:12px 16px;background:#fff;border-bottom:1px solid #f5f5f5;cursor:pointer;transition:background .15s;}
+.notif-item:active{background:#f8f8f8;}
+.notif-item.unread{background:#fff5f5;border-left:3px solid #e74c3c;}
+.notif-item.read{opacity:.65;}
+.notif-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.notif-body{flex:1;min-width:0;}
+.notif-text{font-size:14px;color:#333;line-height:1.4;word-break:break-word;}
+.notif-meta{font-size:11px;color:#999;margin-top:4px;}
+.notif-dot{width:8px;height:8px;background:#e74c3c;border-radius:50%;flex-shrink:0;margin-top:6px;}
+.notif-empty{text-align:center;padding:60px 20px;color:#999;font-size:14px;}/* Relationship display in chat header */
+.chat-hd{flex-direction:column;align-items:flex-start;gap:4px;padding:10px 16px;}
+.chat-hd-row{display:flex;align-items:center;width:100%;gap:12px;}
+.chat-rel-bar{display:flex;align-items:center;gap:6px;font-size:11px;color:rgba(255,255,255,.85);margin-top:2px;}
+.chat-rel-fill{height:4px;border-radius:2px;background:rgba(255,255,255,.25);flex:1;max-width:60px;overflow:hidden;}
+.chat-rel-fill-inner{height:100%;border-radius:2px;transition:width .5s ease;}
+.chat-rel-label{font-size:10px;opacity:.8;white-space:nowrap;}
+/* Date button */
+.chat-date-btn{position:fixed;bottom:68px;right:16px;width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#ff6b9d,#c44dff);border:none;color:#fff;font-size:22px;cursor:pointer;box-shadow:0 4px 15px rgba(196,77,255,.4);z-index:1001;display:flex;align-items:center;justify-content:center;transition:all .2s;animation:pulseGlow 2s infinite;}
+.chat-date-btn:active{transform:scale(.9);}
+.chat-date-btn.locked{background:linear-gradient(135deg,#999,#bbb);box-shadow:0 2px 8px rgba(0,0,0,.15);animation:none;}
+.chat-date-panel{position:fixed;bottom:120px;right:16px;background:#fff;border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,.18);z-index:1002;padding:12px;display:none;width:200px;}
+.chat-date-panel.show{display:block;animation:bubIn .2s ease;}
+.chat-date-item{padding:10px 12px;border-radius:10px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:background .15s;}
+.chat-date-item:hover{background:#f0f0f0;}
+.chat-date-item.locked{opacity:.45;cursor:not-allowed;}
+.chat-date-item .cost{font-size:11px;color:#999;margin-left:auto;}
+@keyframes pulseGlow{0%,100%{box-shadow:0 4px 15px rgba(196,77,255,.4)}50%{box-shadow:0 4px 25px rgba(196,77,255,.6)}}
+
+// ===== 聊天顶栏关系状态显示 =====
+function updateChatRelBar(npcId){
+  const bar=document.getElementById('chatRelBar');
+  if(!bar)return;
+  const rel=getRelationship(npcId);
+  const def=RELATION_TYPES[rel.type]||RELATION_TYPES.stranger;
+  const colors={stranger:'#999',acquaintance:'#3498db',friend:'#27ae60',close_friend:'#e74c3c',crush:'#e91e63',dating:'#9c27b0',engaged:'#ff9800',married:'#f44336',affair:'#c62828',ex:'#999'};
+  const c=colors[rel.type]||'#999';
+  bar.innerHTML=
+    '<span class="chat-rel-label">'+def.icon+' '+def.label+'</span>'+
+    '<div class="chat-rel-fill"><div class="chat-rel-fill-inner" style="width:'+rel.intimacy+'%;background:'+c+';"></div></div>'+
+    '<span class="chat-rel-label">❤'+rel.intimacy+'</span>'+
+    '<div class="chat-rel-fill"><div class="chat-rel-fill-inner" style="width:'+rel.trust+'%;background:#3498db;"></div></div>'+
+    '<span class="chat-rel-label">🤝'+rel.trust+'</span>'+
+    '<div class="chat-rel-fill"><div class="chat-rel-fill-inner" style="width:'+rel.affection+'%;background:#e91e63;"></div></div>'+
+    '<span class="chat-rel-label">💕'+rel.affection+'</span>';
+}
+
+// ===== 约TA面板 =====
+const DATE_ACTIVITIES=[
+  {id:'dinner',icon:'🍽️',name:'请吃饭',cost:200,minIntimacy:10,minTrust:5,annualLeave:0},
+  {id:'movie',icon:'🎬',name:'看电影',cost:150,minIntimacy:15,minTrust:10,annualLeave:0},
+  {id:'coffee',icon:'☕',name:'喝咖啡',cost:80,minIntimacy:5,minTrust:0,annualLeave:0},
+  {id:'shopping',icon:'🛍️',name:'逛街',cost:500,minIntimacy:20,minTrust:15,annualLeave:0},
+  {id:'sports',icon:'🏃',name:'一起运动',cost:100,minIntimacy:15,minTrust:10,annualLeave:0},
+  {id:'date',icon:'💕',name:'约会',cost:400,minIntimacy:40,minTrust:30,annualLeave:0},
+  {id:'trip',icon:'✈️',name:'旅游',cost:3000,minIntimacy:60,minTrust:50,annualLeave:3},
+  {id:'hotel',icon:'🏨',name:'开房',cost:600,minIntimacy:70,minTrust:60,annualLeave:0}
+];
+
+function toggleDatePanel(){
+  const panel=document.getElementById('chatDatePanel');
+  if(!panel)return;
+  if(panel.classList.contains('show')){
+    panel.classList.remove('show');
+    return;
+  }
+  const npcId=G._openProactiveNpc;
+  if(!npcId)return;
+  const rel=getRelationship(npcId);
+  const p=NPC_PERSONALITIES[npcId];
+  let html='<div style="font-size:13px;font-weight:600;padding:4px 8px 8px;color:#333;">💌 约'+(p?p.name:'TA')+'</div>';
+  DATE_ACTIVITIES.forEach(function(act){
+    const locked=rel.intimacy<act.minIntimacy||rel.trust<act.minTrust;
+    const costStr=act.cost>0?'¥'+fmt(act.cost):'免费';
+    const leaveStr=act.annualLeave>0?'+'+act.annualLeave+'天假':'';
+    const reqStr=locked?'需亲密'+act.minIntimacy+'/信任'+act.minTrust:'';
+    html+='<div class="chat-date-item'+(locked?' locked':'')+'" onclick="'+(locked?'':'startPlayerDate(\''+act.id+'\')')+'">';
+    html+='<span>'+act.icon+'</span><span>'+act.name+'</span>';
+    if(locked)html+='<span class="cost" style="color:#e74c3c;">🔒'+reqStr+'</span>';
+    else html+='<span class="cost">'+costStr+(leaveStr?' +'+leaveStr:'')+'</span>';
+    html+='</div>';
+  });
+  panel.innerHTML=html;
+  panel.classList.add('show');
+}
+
+function startPlayerDate(activityId){
+  const npcId=G._openProactiveNpc;
+  if(!npcId)return;
+  const act=DATE_ACTIVITIES.find(function(a){return a.id===activityId;});
+  if(!act)return;
+  const rel=getRelationship(npcId);
+  const p=NPC_PERSONALITIES[npcId];
+  if(rel.intimacy<act.minIntimacy||rel.trust<act.minTrust){
+    showToast('🔒 关系还不够亲密，多聊聊吧');
+    return;
+  }
+  // Check money
+  if(G.cash<act.cost){
+    showToast('💸 钱不够了！需要'+fmt(act.cost));
+    return;
+  }
+  // Check annual leave
+  if(act.annualLeave>0&&(G.annualLeave||0)<act.annualLeave){
+    showToast('📅 年假不够！需要'+act.annualLeave+'天');
+    return;
+  }
+  // Deduct money
+  G.cash=clamp(G.cash-act.cost,-999999,999999999);
+  if(act.annualLeave>0)G.annualLeave=(G.annualLeave||0)-act.annualLeave;
+  // Update relationship
+  const intimacyGain=activityId==='hotel'?15:(activityId==='trip'?12:(activityId==='date'?10:5));
+  const affectionGain=activityId==='hotel'?20:(activityId==='trip'?15:(activityId==='date'?12:3));
+  const trustGain=activityId==='hotel'?5:(activityId==='trip'?10:3);
+  updateRelationship(npcId,{intimacy:intimacyGain,affection:affectionGain,trust:trustGain,dateCount:1,lastActivity:G.totalMonths,lastActivityType:activityId});
+  // Show in chat
+  const typeNames={dinner:'请'+p.name+'吃了顿饭',movie:'和'+p.name+'看了场电影',coffee:'和'+p.name+'喝了杯咖啡',shopping:'和'+p.name+'去逛街',sports:'和'+p.name+'一起运动',date:'和'+p.name+'约会',trip:'和'+p.name+'去旅游',hotel:'和'+p.name+'去了酒店'};
+  addChatBubble('sys','💕 '+typeNames[activityId]+'，花费¥'+fmt(act.cost)+(act.annualLeave>0?'，消耗'+act.annualLeave+'天年假':''));
+  // NPC responds based on activity
+  const responses={
+    dinner:['好吃！下次还来这家','这家店不错诶','你请客我就不客气了'],
+    movie:['好看好看！','这片子不错','你选的电影都好看'],
+    coffee:['这家咖啡不错','坐坐聊聊天挺好的','你请我喝咖啡啊？开心'],
+    shopping:['买买买！','这件好看吗？','你眼光不错嘛'],
+    sports:['今天运动量够了！','你体力不错啊','下次还来'],
+    date:['今天好开心~','和你在一起时间过得好快','下次还约我哦'],
+    trip:['旅行真开心！','这个地方好美','和你一起看世界~'],
+    hotel:['……','你…你别乱来啊','今天…嗯…']
+  };
+  const respArr=responses[activityId]||['嗯嗯'];
+  const resp=respArr[Math.floor(Math.random()*respArr.length)];
+  setTimeout(function(){addChatBubble('npc',resp);},800);
+  // Check relationship progression
+  checkRelationshipProgression(npcId);
+  // Refresh UI
+  refreshLife();
+  saveGame();
+  // Close panel
+  document.getElementById('chatDatePanel').classList.remove('show');
+  // Update rel bar
+  updateChatRelBar(npcId);
+}
+
+
+// v3.15.3: 缺钱时父母主动发消息借钱/给钱
+function triggerParentHelp(){
+  if(!G.phone||!G.phone.threads)return;
+  const cash=G.cash;
+  const age=getAge();
+  // 条件：现金不足500，且年龄<40（父母还在操心的年纪）
+  if(cash>500||age>40)return;
+  // 每6个月最多触发一次
+  const lastMom=G.phone.flags['_parent_help_mom']||0;
+  const lastDad=G.phone.flags['_parent_help_dad']||0;
+  const cooldown=6;
+  // 判断谁先发
+  const momRel=getRelationship('mom');
+  const dadRel=getRelationship('dad');
+  const canMom=(G.totalMonths-lastMom>=cooldown)&&momRel.intimacy>=20;
+  const canDad=(G.totalMonths-lastDad>=cooldown)&&dadRel.intimacy>=20;
+  if(!canMom&&!canDad)return;
+  // 30%概率触发（不是每月都发）
+  if(Math.random()>0.30)return;
+  // 已有未读消息时不发
+  if(G.phone.threads.some(t=>t.status!=='replied'))return;
+  const npcId=canMom?(canDad&&Math.random()>0.5?'dad':'mom'):(canDad?'dad':'mom');
+  const npc=NPCS[npcId];
+  const isMom=(npcId==='mom');
+  const rel=getRelationship(npcId);
+  // 根据亲密程度决定给多少
+  let giveAmount=0;
+  if(rel.intimacy>=80)giveAmount=3000;
+  else if(rel.intimacy>=60)giveAmount=2000;
+  else if(rel.intimacy>=40)giveAmount=1000;
+  else giveAmount=500;
+  // 爸妈说话风格不同
+  const momLines=[
+    '儿子啊，妈看你最近手头紧，给你转了'+fmt(giveAmount)+'块钱，别省着，该花就花。妈这儿有。',
+    '听你爸说你最近不太好？妈给你打了'+fmt(giveAmount)+'，别跟妈客气。养你这么大，妈就盼着你好。',
+    '天冷了多穿点。妈给你转了'+fmt(giveAmount)+'，买点好吃的，别老吃泡面。',
+    '你小时候妈就说过，再难妈都养得起你。转了'+fmt(giveAmount)+'过去，不够跟妈说。'
+  ];
+  const dadLines=[
+    '给你转了'+fmt(giveAmount)+'。不够再说。注意身体。',
+    '你妈让我给你打钱。'+fmt(giveAmount)+'，收到了说一声。少熬夜。',
+    '爸知道你不容易。这'+fmt(giveAmount)+'先拿着用，有困难别硬扛。',
+    '工作再忙也要吃饭。钱转过去了，照顾好自己。'
+  ];
+  const msg=isMom?momLines[Math.floor(Math.random()*momLines.length)]:dadLines[Math.floor(Math.random()*dadLines.length)];
+  const thread={
+    id:G.phone.nextId++,
+    npcId:npcId,
+    npcName:npc.name,
+    npcAvatar:npc.avatar,
+    tplId:'parent_help_'+npcId+'_'+G.totalMonths,
+    type:'wechat',
+    rounds:[{
+      npcMsgs:[msg],
+      opts:[
+        {text:'❤️ 谢谢'+(isMom?'妈':'爸')+'，我会好好用的',fx:{cash:giveAmount,mood:10},next:-1},
+        {text:'😔 不用了，我能撑住',fx:{mood:-3},next:-1},
+        {text:'😭 '+('感动得不行，'+(isMom?'妈':'爸')+'最好了'),fx:{cash:giveAmount,mood:15},next:-1}
+      ]
+    }],
+    currentRound:0,
+    status:'unread',
+    receivedMonth:G.totalMonths,
+    readMonth:null,
+    followUp:null,
+    flagClear:null
+  };
+  pushPhoneThread(thread);
+  G.phone.flags['_parent_help_'+npcId]=G.totalMonths;
+  saveGame();
+}
