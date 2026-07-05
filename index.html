@@ -579,6 +579,24 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 .pet-btn .b-icon{font-size:22px;}
 .pet-btn .b-name{font-size:11px;color:#666;font-weight:500;}
 .pet-btn .b-cost{font-size:10px;color:#999;}
+/* ===== 宠物迷你游戏CSS ===== */
+.game-overlay{position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);animation:fadeIn .2s;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+.mini-game{background:#fff;border-radius:20px;padding:24px 20px;min-width:280px;max-width:90vw;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:slideUp .3s;}
+@keyframes slideUp{from{transform:translateY(40px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.mini-game h3{margin:0 0 8px;font-size:18px;}
+.mg-timer{font-size:36px;font-weight:700;color:#ff5722;text-align:center;margin:8px 0;}
+.mg-score{font-size:16px;font-weight:600;color:#333;text-align:center;margin:6px 0;}
+.mg-target{cursor:pointer;user-select:none;transition:transform .1s;}
+.mg-target:active{transform:scale(0.85);}
+.mg-target.caught{animation:caughtAnim .4s ease-out;}
+@keyframes caughtAnim{0%{transform:scale(1.3);opacity:1;}100%{transform:scale(0);opacity:0;}}
+.mg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:180px;margin:12px auto;}
+.mg-train-cell{transition:all .15s;border:2px solid #e0e0e0;}
+.mg-train-cell.active{background:#ff9800 !important;border-color:#ff5722;transform:scale(1.05);}
+.mg-train-cell.correct{background:#4caf50 !important;border-color:#2e7d32;}
+.mg-train-cell.wrong{background:#e74c3c !important;border-color:#c0392b;}
+
 
 /* v4.0.0 爆款升级方案 CSS */
 /* Phase 1.2: 结算动画 */
