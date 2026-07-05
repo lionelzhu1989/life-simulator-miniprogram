@@ -5427,6 +5427,13 @@ function resetGame(rbCount){
 
 function updateAgeDisplay(){var age=G.age||18;var lifeExpect=80;var pct=Math.min(100,(age/lifeExpect)*100);var el=document.getElementById('ageBar');if(!el)return;el.innerHTML='<span class="cur-age">'+Math.floor(age)+'岁</span><div class="life-prog"><div class="life-prog-fill" style="width:'+pct+'%"></div></div><span class="life-pct">'+Math.floor(pct)+'%</span>'}
 
+// ====== Interactive Onboarding Tutorial ======
+function startOnboarding(){if(localStorage.getItem('ob_done_v2'))return;showOBStep(0)}
+function showOBStep(idx){var steps=[{title:'欢迎来到人生首富',body:'在这里，你将从零开始，经历成长、工作、投资、家庭……最终成为首富或体验平凡人生。',btnText:'开始旅程',hl:null},{title:'推进时间 ⏩',body:'点击底部的「推进」按钮让时间流逝。每个月都可能发生工作、社交等事件。',btnText:'下一步',hl:'#btnAdvanceMonth'},{title:'关注属性 💪',body:'心情太低会生病，健康太低会猝死（<30警告，<10危险）。保持平衡才能走得更远。',btnText:'明白了',hl:'#attrPanel'},{title:'找份工作 💼',body:'工作页面可以投简历找工作。积累经验后晋升或跳槽。',btnText:'知道了',hl:'[data-tab="work"]'},{title:'第一桶金 💰',body:'工资发到账户。留一部分应急，其余可以投资理财。',btnText:'继续',hl:'#cashDisplay'},{title:'广结善缘 👥',body:'社交聚会可以结识NPC，他们可能成为伴侣、贵人、合作伙伴。',btnText:'去看看',hl:'[data-tab="social"]'},{title:'钱生钱 📈',body:'把钱投入股票、商铺、科技，让资产被动增长。高收益=高风险！',btnText:'去投资',hl:'[data-tab="invest"]'},{title:'成家立业 🏠',body:'遇到心仪的人可以结婚生子，子女长大后也能帮你。',btnText:'去家庭',hl:'#familyPanel'},{title:'引导完成！🎉',body:'你已掌握基础玩法。去创造属于你的人生吧！奖励：轮回点+5。',btnText:'开始游戏',hl:null}];if(idx>=steps.length){localStorage.setItem('ob_done_v2','true');G.rebirthPoints=(G.rebirthPoints||0)+5;showToast('🎉 新手引导完成！轮回点+5','success',2000);var ov=document.getElementById('obOverlay');if(ov)ov.remove();return}var step=steps[idx];var dots='';for(var i=0;i<steps.length;i++){var cls=i===idx?'active':i<idx?'done':'';dots+='<div class="pdot '+cls+'"></div>'}var html='<div class="ob-overlay" id="obOverlay"><div class="ob-card"><div class="ob-progress">'+dots+'</div><div class="ob-step active"><div class="ob-title">'+step.title+'</div><div class="ob-body">'+step.body+'</div><div class="ob-actions">'+(idx>0?'<button class="btn-prev" onclick="showOBStep('+(idx-1)+')">上一步</button>':'<span></span>')+'<button class="btn-next" onclick="showOBStep('+(idx+1)+')">'+step.btnText+'</button></div><button class="ob-skip" onclick="skipOnboarding()">跳过引导</button></div></div></div>';var existing=document.getElementById('obOverlay');if(existing)existing.remove();document.body.insertAdjacentHTML('beforeend',html)}
+function skipOnboarding(){localStorage.setItem('ob_done_v2','true');var ov=document.getElementById('obOverlay');if(ov)ov.remove();showToast('可随时在「我的」页面重玩引导','info')}
+
+// Auto-start onboarding on page load
+setTimeout(function(){startOnboarding()},1000);
 </script>
 
 <!-- ===== Bottom Tab Navigation ===== -->
