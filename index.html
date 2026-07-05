@@ -363,6 +363,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 </head>
 <body>
 <div class="toast-container" id="toastContainer"></div>
+<div class="age-bar" id="ageBar"></div>
 <div id="welcomePage" class="welcome-page">
   <div style="font-size:64px;margin-bottom:16px;">🎓</div>
   <h1>offer含金量</h1>
@@ -5056,6 +5057,70 @@ if(_origTriggerStockNews){
 }
 
 function showToast(msg,type,dur){type=type||'info';dur=dur||1500;var c=document.getElementById('toastContainer');if(!c)return;var t=document.createElement('div');t.className='toast '+type;t.textContent=msg;c.appendChild(t);setTimeout(function(){if(t.parentNode)t.parentNode.removeChild(t)},dur)}
+
+// ====== AGE DISPLAY ======
+function updateAgeDisplay(){var age=G.age||18;var lifeExpect=80;var pct=Math.min(100,(age/lifeExpect)*100);var el=document.getElementById('ageBar');if(!el)return;el.innerHTML='<span class="cur-age">'+Math.floor(age)+'岁</span><div class="life-prog"><div class="life-prog-fill" style="width:'+pct+'%"></div></div><span class="life-pct">'+Math.floor(pct)+'%</span>'}
+
+// ====== LIFE ENDING SUMMARY ======
+function calcLifeRating(score){
+  if(score>=500)return{emoji:'👑',title:'传奇人生',stars:5};
+  if(score>=300)return{emoji:'⭐',title:'精彩人生',stars:4};
+  if(score>=150)return{emoji:'😊',title:'平凡人生',stars:3};
+  return{emoji:'😅',title:'普通一生',stars:2}
+}
+function calcLifeScore(){
+  var s=0;
+  s+=Math.floor((G.peakAsset||G.cash||0)/10000);
+  s+=Object.keys(G.achievements||{}).length*10;
+  s+=(G.rebirthCount||0)*5;
+  s+=(((G.family&&G.family.children)||[]).length+((G.family&&G.family.grandchildren)||[]).length)*5;
+  s+=Math.floor(((G.family&&G.family.prestige)||0)/5);
+  return s
+}
+function generateLifeSummary(){
+  var score=calcLifeScore();
+  var rating=calcLifeRating(score);
+  var pts=calcRebirthPts();
+  var stats=[
+    {label:'峰值资产',value:'¥'+(fmt(G.peakAsset||G.cash||0))},
+    {label:'职业巅峰',value:(G.career&&G.career.peakTitle)||'无'},
+    {label:'成就数量',value:Object.keys(G.achievements||{}).length+'个'},
+    {label:'家族人数',value:(((G.family&&G.family.children.length)||0)+((G.family&&G.family.grandchildren.length)||0)+(G.family&&G.family.spouse?1:0))+'人'},
+    {label:'轮回次数',value:(G.rebirthCount||0)+'次'},
+    {label:'游戏时长',value:(G.totalMonths||0)+'个月'}
+  ];
+  var timeline=G.memory||[];
+  return{rating:rating,stats:stats,timeline:timeline,pts:pts,score:score}
+}
+function renderLifeSummary(s){
+  var html='<div class="ls-screen"><div class="ls-header">'+s.rating.emoji+' '+s.rating.title+'</div><div class="ls-sub">人生结束，以下是你的成绩单</div><div class="ls-star" style="font-size:28px;margin-bottom:16px">';
+  for(var i=0;i<5;i++){html+='<span style="opacity:'+(i<s.rating.stars?1:.2)+'">⭐</span>'}
+  html+='</div><div class="ls-stats">';
+  for(var j=0;j<s.stats.length;j++){html+='<div class="ls-stat"><div class="val">'+s.stats[j].value+'</div><div class="lbl">'+s.stats[j].label+'</div></div>'}
+  html+='</div>';
+  if(s.timeline.length>0){
+    html+='<div class="ls-timeline"><h4>📜 人生大事件</h4>';
+    for(var k=0;k<Math.min(s.timeline.length,15);k++){html+='<div class="tl-item"><span class="tl-year">'+s.timeline[k].year+'岁</span><span>'+s.timeline[k].text+'</span></div>'}
+    html+='</div>'
+  }
+  html+='<div style="margin-top:20px;font-size:14px">轮回点 <b style="color:#4472C4">+'+s.pts+'</b></div><button class="ls-btn" onclick="showRebirthPanel()">🔄 开始新人生</button><button class="ls-btn ls-btn-secondary" onclick="window.location.reload()" style="margin-top:8px">重新开始</button></div>';
+  return html
+}
+function showLifeSummary(){
+  var s=generateLifeSummary();
+  saveRebirthRecord();
+  var el=document.getElementById('tab-mine');
+  if(el){el.innerHTML=renderLifeSummary(s)}
+  var nav=document.getElementById('bottomTab');
+  if(nav)nav.style.display='none';
+  showToast('人生结算完成！','success',3000)
+}
+
+// ====== MONTHLY TASK SYSTEM ======
+function genMonthlyTasks(){var allTaskDefs=[{id:'income',title:'月收入达到¥5万',check:function(){return(G.lastMonthInc||0)>=50000},reward:{cash:5000,mood:10}},{id:'social',title:'本月结交3位新朋友',check:function(){return(G.newContacts||0)>=3},reward:{mood:15}},{id:'health',title:'保持健康≥80',check:function(){return G.health>=80},reward:{health:5}},{id:'invest',title:'投资收益超¥1万',check:function(){return(G.lastMonthInvInc||0)>=10000},reward:{cash:20000}},{id:'family',title:'陪伴家人（心情≥70）',check:function(){return G.mood>=70&&G.family&&G.family.spouse},reward:{prestige:5}},{id:'study',title:'提升任意属性到60',check:function(){return Math.max(G.iq||0,G.charm||0,G.strength||0)>=60},reward:{attrPts:1}}];G.monthlyTasks=[];var picked=[];var pool=allTaskDefs.slice();while(G.monthlyTasks.length<3&&pool.length>0){var idx=Math.floor(Math.random()*pool.length);var t=pool.splice(idx,1)[0];G.monthlyTasks.push({defId:t.id,title:t.title,progress:0,done:false,check:t.check,reward:t.reward})}G.newContacts=0;G.lastMonthInc=0;G.lastMonthInvInc=0}
+function checkMonthlyTasks(){if(!G.monthlyTasks)return;for(var i=0;i<G.monthlyTasks.length;i++){var t=G.monthlyTasks[i];if(t.done)continue;if(t.check()){t.done=true;var rw=t.reward;if(rw.cash){G.cash+=rw.cash;showToast('✓ '+t.title+' +¥'+rw.cash,'success')}if(rw.mood){G.mood=Math.min(100,G.mood+rw.mood);showToast('✓ '+t.title+' +心情'+rw.mood,'success')}if(rw.health){G.health=Math.min(100,G.health+rw.health)}if(rw.attrPts){G.attrPoints=(G.attrPoints||0)+rw.attrPts;showToast('✓ '+t.title+' +属性点'+rw.attrPts,'success')}if(rw.prestige&&G.family){G.family.prestige=(G.family.prestige||0)+rw.prestige}}}}
+function renderMonthlyTasks(){if(!G.monthlyTasks||!G.monthlyTasks.length)return '';var html='<div style="padding:12px"><h4>📋 月度任务</h4>';for(var i=0;i<G.monthlyTasks.length;i++){var t=G.monthlyTasks[i];html+='<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee;opacity:'+(t.done?.5:1)+'"><span style="flex:1;font-size:13px">'+(t.done?'✓ ':'○ ')+t.title+'</span>'+(t.done?'<span style="color:#4CAF50;font-size:12px">已完成</span>':'')+'</div>'}html+='</div>';return html}
+
 </script>
 </body>
 </html>
