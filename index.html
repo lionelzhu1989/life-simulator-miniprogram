@@ -5814,6 +5814,9 @@ function showOBStep(idx){
   ];
   if(idx>=steps.length){
     localStorage.setItem('ob_done_v2','true');
+    // FIX: 确保G已初始化再赋值
+    if(!G && typeof defaultState==='function') G=defaultState();
+    if(!G) G={};
     G.rebirthPoints=(G.rebirthPoints||0)+5;
     G.legacyPoints=(G.legacyPoints||0)+5;
     showToast('🎉 新手引导完成！轮回点+5','success',2000);
