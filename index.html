@@ -1298,7 +1298,7 @@ function defaultState(){
     jobIndex:0,monthsAtJob:0,
     stockHoldings:{},stockPrices:{},
     houses:[],businesses:[],techInvestments:[],
-    spouse:null,children:0,childAges:[],
+    family:{spouse:null,children:[],grandchildren:[],inheritance:null,prestige:0},
     events:[],gameOver:false,gameOverReason:'',
     achievements:[],monthlyTasks:{},
     guideStep:0,salaryBonus:0,
@@ -1762,12 +1762,20 @@ function advanceMonth(){
   checkStudyProgress();triggerProjectEvents();
   // Guide
   advanceGuide();
+  childrenGrowth();
   autoSave();
   checkAttrThresholds();
   // Game over check
   if(G.health<=0){G.gameOver=true;G.gameOverReason='健康归零，人生结束';}
   else if(getAge()>=80&&Math.random()<0.3){G.gameOver=true;G.gameOverReason='安享晚年，人生圆满结束';}
 }
+
+// ========== 家庭系统 ==========
+function marry(npc){if(G.family.spouse){showToast('您已结婚','info');return}if(G.cash<(npc.dowry||50000)){showToast('资金不足（需¥'+(npc.dowry||50000)+'）','warning');return}G.cash-=(npc.dowry||50000);G.family.spouse={name:npc.name,age:G.age,type:npc.spouseType||'neutral',intimacy:80,icon:npc.icon||'❤️'};G.mood=Math.min(100,G.mood+15);showToast('🎉 与'+npc.name+'结婚！','success',2000)}
+function haveChild(){if(!G.family.spouse){showToast('需要先结婚','warning');return}if(G.family.children.length>=5){showToast('最多5个子女','warning');return}var talents=['文科','理科','艺术','体育','社交'];G.family.children.push({name:genName(),age:0,gender:Math.random()>.5?'男':'女',iq:Math.floor((G.iq+50)/2+rand(-15,15)),charm:Math.floor((G.charm+50)/2+rand(-15,15)),talent:talents[Math.floor(Math.random()*5)],stage:'baby',edu:{type:null,inv:0}});G.mood=Math.min(100,G.mood+10);showToast('👶 子女出生！','success',2000)}
+function genName(){var s=['张','王','李','赵','陈','刘','杨','黄','周','吴'];var n=['伟','芳','娜','强','敏','静','杰','磊','洋','艳','明','丽','超','秀','玲'];var g=s[Math.floor(Math.random()*s.length)]+n[Math.floor(Math.random()*n.length)];return G.gender==='男'?g:g+'（女）'}
+function educateChild(idx,type){var child=G.family.children[idx];if(!child){return}var cost={cram:5000,interest:3000,studyAbroad:200000};var c=cost[type];if(G.cash<c){showToast('资金不足（需¥'+c+'）','warning');return}G.cash-=c;child.edu.type=type;child.edu.inv+=c;showToast(child.name+'开始'+(type==='cram'?'上补习班':type==='interest'?'上兴趣班':'留学'),'success')}
+function childrenGrowth(){var ch=G.family.children;for(var i=0;i<ch.length;i++){ch[i].age+=1/12;if(ch[i].age>=18&&ch[i].stage!=='adult'){ch[i].stage='adult';var bonus=ch[i].edu.inv>100000?20:10;G.family.prestige+=bonus;showToast(ch[i].name+'已成年，家族声望+'+bonus,'success')}else if(ch[i].age>=6&&ch[i].stage==='baby'){ch[i].stage='youth'}else if(ch[i].age>=12&&ch[i].stage==='youth'){ch[i].stage='adult'}}}
 
 function fastForward(years){if(ffConfig.pauseOnCritical&&!confirmFF(years))return;var paused=false;for(var i=0;i<years*12;i++){if(ffConfig.pauseOnCritical&&checkFFRisk().length>0){paused=true;showToast('快进暂停：'+checkFFRisk()[0],'warning',2000);break}advanceMonth(false)}if(!paused)showToast('快进完成'+(i/12)+'年','info')}
 
