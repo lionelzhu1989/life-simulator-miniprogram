@@ -446,6 +446,21 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 .life-prog{flex:1;height:6px;background:#ddd;border-radius:3px;overflow:hidden}
 .life-prog-fill{height:100%;background:linear-gradient(90deg,#4472C4,#E06030);border-radius:3px;transition:width .3s}
 .life-pct{font-size:12px;color:#999;min-width:36px;text-align:right}
+
+/* ====== Life Summary Panel ====== */
+.ls-screen{padding:20px;text-align:center;animation:fadeIn .5s}
+.ls-header{font-size:24px;font-weight:700;margin-bottom:8px;letter-spacing:1px}
+.ls-sub{font-size:14px;color:#999;margin-bottom:24px}
+.ls-stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0}
+.ls-stat{background:#f8f9fa;border-radius:12px;padding:16px;text-align:center}
+.ls-stat .val{font-size:22px;font-weight:700;color:#4472C4}
+.ls-stat .lbl{font-size:12px;color:#999;margin-top:4px}
+.ls-timeline{text-align:left;margin:20px 0;padding:0 8px}
+.tl-item{display:flex;gap:12px;padding:8px 0;border-bottom:1px solid #f0f0f0;font-size:13px}
+.tl-year{color:#999;min-width:60px}
+.ls-btn{display:block;width:100%;padding:12px;margin-top:16px;background:#4472C4;color:#fff;border:none;border-radius:8px;font-size:15px;cursor:pointer}
+.ls-btn-secondary{background:#f0f0f0;color:#333}
+
 </style>
 </head>
 <body>
@@ -5292,6 +5307,60 @@ function setTabContent(tab, html){
     el.appendChild(back);
   }
 }
+function calcLifeRating(score){
+  if(score>=500)return{emoji:'👑',title:'传奇人生',stars:5};
+  if(score>=300)return{emoji:'⭐',title:'精彩人生',stars:4};
+  if(score>=150)return{emoji:'😊',title:'平凡人生',stars:3};
+  return{emoji:'😅',title:'普通一生',stars:2}
+}
+function calcLifeScore(){
+  var s=0;
+  s+=Math.floor((G.peakAsset||G.cash||0)/10000);
+  s+=Object.keys(G.achievements||{}).length*10;
+  s+=(G.rebirthCount||0)*5;
+  s+=(((G.family&&G.family.children)||[]).length+((G.family&&G.family.grandchildren)||[]).length)*5;
+  s+=Math.floor(((G.family&&G.family.prestige)||0)/5);
+  return s
+}
+function generateLifeSummary(){
+  var score=calcLifeScore();
+  var rating=calcLifeRating(score);
+  var pts=calcRebirthPts();
+  var stats=[
+    {label:'峰值资产',value:'¥'+(fmt(G.peakAsset||G.cash||0))},
+    {label:'职业巅峰',value:(G.career&&G.career.peakTitle)||'无'},
+    {label:'成就数量',value:Object.keys(G.achievements||{}).length+'个'},
+    {label:'家族人数',value:(((G.family&&G.family.children.length)||0)+((G.family&&G.family.grandchildren.length)||0)+(G.family&&G.family.spouse?1:0))+'人'},
+    {label:'轮回次数',value:(G.rebirthCount||0)+'次'},
+    {label:'游戏时长',value:(G.totalMonths||0)+'个月'}
+  ];
+  var timeline=G.memory||[];
+  return{rating:rating,stats:stats,timeline:timeline,pts:pts,score:score}
+}
+function renderLifeSummary(s){
+  var html='<div class="ls-screen"><div class="ls-header">'+s.rating.emoji+' '+s.rating.title+'</div><div class="ls-sub">人生结束，以下是你的成绩单</div><div class="ls-star" style="font-size:28px;margin-bottom:16px">';
+  for(var i=0;i<5;i++){html+='<span style="opacity:'+(i<s.rating.stars?1:.2)+'">⭐</span>'}
+  html+='</div><div class="ls-stats">';
+  for(var j=0;j<s.stats.length;j++){html+='<div class="ls-stat"><div class="val">'+s.stats[j].value+'</div><div class="lbl">'+s.stats[j].label+'</div></div>'}
+  html+='</div>';
+  if(s.timeline.length>0){
+    html+='<div class="ls-timeline"><h4>📜 人生大事件</h4>';
+    for(var k=0;k<Math.min(s.timeline.length,15);k++){html+='<div class="tl-item"><span class="tl-year">'+s.timeline[k].year+'岁</span><span>'+s.timeline[k].text+'</span></div>'}
+    html+='</div>'
+  }
+  html+='<div style="margin-top:20px;font-size:14px">轮回点 <b style="color:#4472C4">+'+s.pts+'</b></div><button class="ls-btn" onclick="showRebirthPanel()">🔄 开始新人生</button><button class="ls-btn ls-btn-secondary" onclick="window.location.reload()" style="margin-top:8px">重新开始</button></div>';
+  return html
+}
+function showLifeSummary(){
+  var s=generateLifeSummary();
+  saveRebirthRecord();
+  var el=document.getElementById('tab-mine');
+  if(el){el.innerHTML=renderLifeSummary(s)}
+  var nav=document.getElementById('bottomTab');
+  if(nav)nav.style.display='none';
+  showToast('人生结算完成！','success',3000)
+}
+
 function calcRebirthPts(){
   var pts=0;
   pts+=Math.floor((G.cash||0)/10000);
