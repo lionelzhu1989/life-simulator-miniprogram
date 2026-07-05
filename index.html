@@ -3854,14 +3854,14 @@ function claimTaskReward(){
 function refreshMore(){refreshLearning();}
 function renderRanking(){
   const playerAsset=calcTotalAsset();
-  const npcs=NPC_NAMES.map((name,i)=>({name,asset:Math.round(randFloat(50000,50000000)*Math.pow(0.85,i)),isPlayer:false}));
-  npcs.push({name:'🧑 我',asset:playerAsset,isPlayer:true});
+  const npcs=NPC_NAMES.map((name,i)=>{const asset=Math.round(randFloat(50000,50000000)*Math.pow(0.85,i));return{name,asset,cash:Math.round(asset*randFloat(0.2,0.5)),isPlayer:false};});
+  npcs.push({name:'🧑 我',asset:playerAsset,cash:G.cash,isPlayer:true});
   npcs.sort((a,b)=>b.asset-a.asset);
   let html='';
   npcs.forEach((n,i)=>{
     const rankCls=i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-other';
     const highlight=n.isPlayer?'style="background:#eaf6ff;border-radius:8px;padding:4px 8px;margin:-4px -8px;"':'';
-    html+='<div class="rank-item" '+highlight+'><div class="rank-num '+rankCls+'">'+(i+1)+'</div><div class="rank-info"><div class="rank-name">'+n.name+'</div><div class="rank-detail">总资产</div></div><div class="rank-money">'+fmt(n.asset)+'</div></div>';
+    html+='<div class="rank-item" '+highlight+'><div class="rank-num '+rankCls+'">'+(i+1)+'</div><div class="rank-info"><div class="rank-name">'+n.name+'</div><div class="rank-detail">总资产 · 存款 '+fmt(n.cash)+'</div></div><div class="rank-money">'+fmt(n.asset)+'</div></div>';
   });
   document.getElementById('rankList').innerHTML=html;
 }
