@@ -7743,13 +7743,35 @@ function showScheduleConfirm(npcId,scheduleInfo){
   const name=p?p.name:'朋友';
   const typeNames={dinner:'吃饭',movie:'看电影',date:'约会',gathering:'聚会',trip:'旅游',karaoke:'唱K',hotSpring:'泡温泉',shopping:'逛街',sports:'运动'};
   const actName=scheduleInfo.title||typeNames[scheduleInfo.type]||'活动';
-  const costStr=scheduleInfo.cost>0?'预计花费 ¥'+fmt(scheduleInfo.cost):'免费';
+  const costStr=scheduleInfo.cost>0?'预计花费 ￥'+fmt(scheduleInfo.cost):'免费';
   const leaveStr=scheduleInfo.annualLeave>0?'，需'+scheduleInfo.annualLeave+'天年假':'';
   const body=document.getElementById('chatBody');
-  // Add system message with unique ID to prevent double-click
+  if(!body)return;
   const cardId='sched_card_'+Date.now();
-  const sysHtml='<div class="chat-bub sys" id="'+cardId+'" style="max-width:90%;text-align:center;"><div style="font-size:13px;font-weight:600;margin-bottom:6px;">📅 '+name+'约你'+actName+'</div><div style="font-size:12px;color:#666;">'+costStr+leaveStr+'</div><div id="'+cardId+'_btns" style="margin-top:8px;display:flex;gap:8px;justify-content:center;"><span onclick="_confirmSched(\''+cardId+'\',\''+npcId+'\','\''+scheduleInfo.type+'\'','+JSON.stringify(scheduleInfo).replace(/"/g,'&quot;')+',true)" style="background:#27ae60;color:#fff;padding:4px 12px;border-radius:12px;font-size:12px;cursor:pointer;">接受</span><span onclick="_confirmSched(\''+cardId+'\',\''+npcId+'\','\''+scheduleInfo.type+'\'','+JSON.stringify(scheduleInfo).replace(/"/g,'&quot;')+',false)" style="background:#e74c3c;color:#fff;padding:4px 12px;border-radius:12px;font-size:12px;cursor:pointer;">婉拒</span></div></div>';
-  body.insertAdjacentHTML('beforeend',sysHtml);
+  const card=document.createElement('div');
+  card.className='chat-bub sys';
+  card.id=cardId;
+  card.style.cssText='max-width:90%;text-align:center;';
+  const t=document.createElement('div');
+  t.style.cssText='font-size:13px;font-weight:600;margin-bottom:6px;';
+  t.textContent='\u2714 '+name+'约你'+actName;
+  const inf=document.createElement('div');
+  inf.style.cssText='font-size:12px;color:#666;';
+  inf.textContent=costStr+leaveStr;
+  const btns=document.createElement('div');
+  btns.id=cardId+'_btns';
+  btns.style.cssText='margin-top:8px;display:flex;gap:8px;justify-content:center;';
+  const ok=document.createElement('span');
+  ok.textContent='接受';
+  ok.style.cssText='background:#27ae60;color:#fff;padding:4px 12px;border-radius:12px;font-size:12px;cursor:pointer;';
+  ok.addEventListener('click',()=>_confirmSched(cardId,npcId,scheduleInfo.type,scheduleInfo,true));
+  const no=document.createElement('span');
+  no.textContent='婉拒';
+  no.style.cssText='background:#e74c3c;color:#fff;padding:4px 12px;border-radius:12px;font-size:12px;cursor:pointer;';
+  no.addEventListener('click',()=>_confirmSched(cardId,npcId,scheduleInfo.type,scheduleInfo,false));
+  btns.append(ok,no);
+  card.append(t,inf,btns);
+  body.appendChild(card);
   body.scrollTop=body.scrollHeight;
 }
 // Wrapper to disable buttons after click
