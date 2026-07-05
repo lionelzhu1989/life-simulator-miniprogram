@@ -9471,12 +9471,14 @@ window['refreshFiveDim'] = function(){
 };
 
 // 庆祝检测 - 监听晋升/结婚等关键事件
-var _v4_origSelectJob = selectJob;
 window['selectJob'] = function(idx){
   var oldJob = G.jobIndex;
-  _v4_origSelectJob(idx);
-  if(G.jobIndex > oldJob){
-    showCelebration('promotion','升职成功!',JOBS[G.jobIndex].name+' - 薪资'+(JOBS[G.jobIndex].salary/10000)+'万','🎉');
+  G.jobIndex = idx;
+  G.monthsAtJob = 0;
+  if(typeof refreshWork === 'function') refreshWork();
+  if(typeof refreshHeader === 'function') refreshHeader();
+  if(idx > oldJob){
+    showCelebration('promotion','升职成功!',JOBS[idx].name+' - 薪资'+(JOBS[idx].salary/10000)+'万','🎉');
   }
 };
 
