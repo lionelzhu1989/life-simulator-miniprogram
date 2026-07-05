@@ -3444,23 +3444,26 @@ function injectDynamicContacts(){
   initSocialContacts();
   G.socialContacts.forEach(function(c){
     if(!NPC_PERSONALITIES[c.id]){
+      var safeTraits = Array.isArray(c.traits) ? c.traits : ['友善','健谈'];
+      var safeResponses = Array.isArray(c.responses) ? c.responses : ['最近还不错','谢谢有空聊','改天一起聚聚'];
+      var safeFollowups = Array.isArray(c.followups) ? c.followups : ['下次再约','保持联系'];
       NPC_PERSONALITIES[c.id] = {
         name: c.name,
-        avatar: c.avatar,
-        traits: c.traits,
+        avatar: c.avatar || '🤝',
+        traits: safeTraits,
         greetings: [{text:'嘿，最近怎么样？',tag:'日常'},{text:'有空聊聊？',tag:'叙旧'},{text:'最近忙什么？',tag:'近况'}],
         responses: {
-          '日常': c.responses.slice(),
-          '叙旧': c.followups.slice(),
-          '近况': c.followups.slice()
+          '日常': safeResponses.slice(),
+          '叙旧': safeFollowups.slice(),
+          '近况': safeFollowups.slice()
         },
-        followups: c.followups
+        followups: safeFollowups
       };
       NPC_STYLE_INSTRUCTIONS[c.id] = 
         '你是玩家的'+(c.relation||'朋友')+'，'+c.name+'。'+
-        '你们在第'+c.metMonth+'个月'+c.metWhere+'。'+
-        '你的性格是'+c.traits.join('、')+'。'+
-        '关系等级：'+['陌生人','认识','熟悉','好友'][c.friendLevel]+'。'+
+        '你们在第'+(c.metMonth||G.totalMonths||1)+'个月'+(c.metWhere||'认识的')+'。'+
+        '你的性格是'+safeTraits.join('、')+'。'+
+        '关系等级：'+(['陌生人','认识','熟悉','好友'][c.friendLevel]||'认识')+'。'+
         '像真人一样自然回复，不超过3-4句话。';
       NPC_RELATIONS[c.id] = c.relation || '朋友';
     }
