@@ -377,6 +377,16 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 .social-tier h4{font-size:14px;color:#4472C4;margin-bottom:8px}
 .social-tier .btn-row{display:flex;gap:6px}
 .social-tier button{flex:1;font-size:12px;padding:8px 4px}
+
+/* ====== Bottom Tab Navigation ====== */
+.bottom-tab{display:flex;justify-content:space-around;padding:6px 0;background:#fff;border-top:1px solid #eee;position:fixed;bottom:0;left:0;right:0;z-index:1000;box-shadow:0 -2px 10px rgba(0,0,0,.05)}
+.tab-item{display:flex;flex-direction:column;align-items:center;font-size:10px;color:#999;cursor:pointer;padding:4px 8px;transition:color .2s}
+.tab-item.active{color:#4472C4}
+.tab-item .icon{font-size:20px;margin-bottom:2px}
+.tab-page{display:none;padding-bottom:60px;animation:fadeIn .2s ease}
+.tab-page.active{display:block}
+@keyframes fadeIn{from{opacity:.5}to{opacity:1}}
+@media(max-width:375px){.tab-item{font-size:9px;padding:4px 6px}}
 </style>
 </head>
 <body>
@@ -5203,6 +5213,19 @@ function doSideJob(job){if(G.age>1){showToast('兼职仅限新手首月','info')
 function renderSideJobs(){var el=document.getElementById('sideJobBtns');if(!el)return;var html='';for(var i=0;i<SIDE_JOBS.length;i++){var j=SIDE_JOBS[i];html+='<button onclick="doSideJob(SIDE_JOBS['+i+'])">'+j.name+'<br>心情-'+j.cost+'</button>'}el.innerHTML=html}
 function renderInvestCard(inv){var er=inv.minRet+'-'+inv.maxRet;var rc=inv.risk<.2?'risk-low':inv.risk<.4?'risk-mid':inv.risk<.6?'risk-high':'risk-extreme';var rl=inv.risk<.2?'低':inv.risk<.4?'中':inv.risk<.6?'高':'极高';var pb=Math.ceil(inv.price/((inv.minRet+inv.maxRet)/2/100/12));return '<div class="invest-card"><h4>'+inv.name+'</h4><div class="invest-stat">预期年化：<span>'+er+'%</span></div><div class="invest-stat">风险等级：<span class="'+rc+'">● '+rl+'</span></div><div class="invest-stat">预计回本：<span>'+pb+'个月</span></div><div class="invest-stat">价格：<span>¥'+fmt(inv.price)+'</span></div><button onclick="buyInvest(\''+inv.id+'\')">购买</button></div>'}
 function buyInvest(id){var allItems=[];STOCKS.forEach(function(s){allItems.push({id:s.code,name:s.name,price:s.basePrice,minRet:s.minRet,maxRet:s.maxRet,risk:s.risk})});BUSINESSES.forEach(function(b){allItems.push({id:b.id,name:b.name,price:b.price,minRet:b.minRet,maxRet:b.maxRet,risk:b.risk})});TECH_INVESTMENTS.forEach(function(t){allItems.push({id:t.id,name:t.name,price:t.minInvest,minRet:t.minRet,maxRet:t.maxRet,risk:t.risk})});HOUSES.forEach(function(h){allItems.push({id:h.id,name:h.name,price:h.price,minRet:h.minRet,maxRet:h.maxRet,risk:h.risk})});var item=allItems.find(function(t){return t.id===id});if(!item)return;if(G.cash<item.price){showModal({title:'余额不足',content:'现金不足以购买 '+item.name+'！',showCancel:false});return;}showModal({title:'购买 '+item.name,content:'确认投资：'+item.name+'\\n投入：¥'+fmt(item.price)+'\\n预期年化：'+item.minRet+'~'+item.maxRet+'%\\n风险等级：'+(item.risk<.2?'低':item.risk<.4?'中':item.risk<.6?'高':'极高'),success:function(res){if(res.confirm){G.cash-=item.price;showFloatText('✅ 投资 '+item.name+' 成功！',true);saveGame();}}})}
+
+// ====== Bottom Tab Navigation ======
+function switchTab(tab){var items=document.querySelectorAll('.tab-item');for(var i=0;i<items.length;i++)items[i].classList.toggle('active',items[i].dataset.tab===tab);var pages=document.querySelectorAll('.tab-page');for(var j=0;j<pages.length;j++){var isActive=pages[j].dataset.tab===tab;pages[j].classList.toggle('active',isActive);pages[j].style.display=isActive?'block':'none'}}
 </script>
+
+<!-- ===== Bottom Tab Navigation ===== -->
+<nav class="bottom-tab" id="bottomTab">
+  <div class="tab-item active" data-tab="home" onclick="switchTab('home')"><span class="icon">🏠</span><span>首页</span></div>
+  <div class="tab-item" data-tab="growth" onclick="switchTab('growth')"><span class="icon">📈</span><span>成长</span></div>
+  <div class="tab-item" data-tab="work" onclick="switchTab('work')"><span class="icon">💼</span><span>工作</span></div>
+  <div class="tab-item" data-tab="invest" onclick="switchTab('invest')"><span class="icon">💰</span><span>投资</span></div>
+  <div class="tab-item" data-tab="social" onclick="switchTab('social')"><span class="icon">👥</span><span>社交</span></div>
+  <div class="tab-item" data-tab="mine" onclick="switchTab('mine')"><span class="icon">👤</span><span>我的</span></div>
+</nav>
 </body>
 </html>
