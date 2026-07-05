@@ -1200,6 +1200,14 @@ function triggerParentHelp(){
 </div>
 
 
+
+  <div class="cdetail-overlay" id="cdetail-overlay">
+    <div class="cdetail-header">
+      <span class="cdetail-back" onclick="closeContactDetail()">&#8592;</span>
+      <span id="cdetail-name"></span>
+    </div>
+    <div class="cdetail-body" id="cdetail-body"></div>
+  </div>
 <div class="forbes-overlay" id="forbesOverlay" onclick="closeForbes()">
   <div class="forbes-text" id="forbesText"></div>
   <div class="forbes-sub" id="forbesSub"></div>
@@ -5462,7 +5470,7 @@ function showContactDetail(npcId){
   }
   var rel=getRelationship(npcId);
   var relDef=RELATION_TYPES[rel.type]||RELATION_TYPES.stranger;
-  document.getElementById('contactDetailName').textContent=p.avatar+' '+p.name;
+  document.getElementById('cdetail-name').textContent=p.avatar+' '+p.name;
   var html='';
   // 头像+名字+关系
   html+='<div class="cdetail-profile">';
@@ -5520,11 +5528,11 @@ function showContactDetail(npcId){
     html+='<span class="act-cost">免费</span><span class="act-arrow">›</span></div>';
   }
   html+='</div></div>';
-  document.getElementById('contactDetailBody').innerHTML=html;
-  document.getElementById('contactDetailOverlay').classList.add('show');
+  document.getElementById('cdetail-body').innerHTML=html;
+  document.getElementById('cdetail-overlay').classList.add('show');
 }
 function closeContactDetail(){
-  document.getElementById('contactDetailOverlay').classList.remove('show');
+  document.getElementById('cdetail-overlay').classList.remove('show');
 }
 function contactDetailChat(npcId){
   closeContactDetail();
@@ -10551,7 +10559,7 @@ function renderPetShop(){
   var el=document.getElementById('petStoreView');if(!el)return;
   var h='<div class="pet-shop-hd">';
   h+='<h2>🐾 宠物商店</h2>';
-  h+='<div class="coin">💰 ¥'+G.cash.toLocaleString()+' &nbsp;|&nbsp; 📦 狗粮 '+G.petFood+' 袋</div>';
+  h+='<div class="coin">💰 ¥'+(G.cash?G.cash.toLocaleString():'0')+' &nbsp;|&nbsp; 📦 狗粮 '+(G.petFood||0)+' 袋</div>';
   h+='</div>';
   // Category bar
   h+='<div class="pet-cat-bar">';
@@ -10722,6 +10730,16 @@ function petFeed(id){
   else if(G.cash<200){showToast('💸 没钱买狗粮了！');return;}
   else{G.cash-=200;}
   showMiniGame('feed',pet);
+}
+
+function petPlay(id){
+  var pet=G.pets.find(function(p){return p.id===id;});if(!pet)return;
+  showMiniGame('play',pet);
+}
+
+function petTrain(id){
+  var pet=G.pets.find(function(p){return p.id===id;});if(!pet)return;
+  showMiniGame('train',pet);
 }
 
 function showMiniGame(type,pet){
@@ -11025,7 +11043,7 @@ function renderPetDetail(pet){
   h+=petBar('❤️','亲密',pet.intimacy,'intimacy');
   h+='</div>';
   h+='<div class="pet-actions">';
-  h+='<div class="pet-btn feed" onclick="petFeed(\'+pet.id+\')"><span class="b-icon">🍖</span><span class="b-name">喂食</span><span class="b-cost">'+(G.petFood>0?'库存'+G.petFood+'袋':'¥200')+'</span></div>';
+  h+='<div class="pet-btn feed" onclick="petFeed(\'+pet.id+\')"><span class="b-icon">🍖</span><span class="b-name">喂食</span><span class="b-cost">'+(G.petFood>0?'库存'+(G.petFood||0)+'袋':'¥200')+'</span></div>';
   h+='<div class="pet-btn play" onclick="petPlay(\'+pet.id+\')"><span class="b-icon">🎾</span><span class="b-name">玩耍</span><span class="b-cost">小游戏</span></div>';
   h+='<div class="pet-btn clean" onclick="petClean(\'+pet.id+\')"><span class="b-icon">🛁</span><span class="b-name">洗澡</span><span class="b-cost">¥300</span></div>';
   h+='<div class="pet-btn pet" onclick="petPet(\'+pet.id+\')"><span class="b-icon">🤚</span><span class="b-name">抚摸</span><span class="b-cost">免费</span></div>';
