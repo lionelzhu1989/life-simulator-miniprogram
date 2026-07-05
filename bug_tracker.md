@@ -121,4 +121,16 @@
 
 ---
 
-*最后更新: 2026-07-05 22:25*
+## Bug #010: 宠物商店按钮点击无反应（v4.4.8修复）
+- **发现时间**: 2026-07-05 v4.4.7
+- **症状**: 点击"商店"按钮无任何反应
+- **根因**: 存在两个`renderPetDetail`函数，第二个覆盖第一个。v4.4.7只修复了第一个函数的按钮`onclick`拼接，第二个函数仍有同样问题：`onclick=\"petFeed(\'+pet.id+\')\"`生成`onclick="petFeed('{pet.id}')"`，函数收到字面字符串导致`G.pets.find()`失败
+- **修正**: 修复第二个`renderPetDetail`中全部8个按钮的`onclick`拼接（petFeed/petPlay/petClean/petPet/petWalk/petTrain/petHeal），将`\'\)\"\'`改为`\'\')\"`确保生成正确的`onclick="petFeed('pet_zhao')"`。同时修复商店按钮：将`openPetStore()`改为`switchPetTab('shop',...)`使用已有的标签页切换机制
+- **预防措施**: 
+  1. 修改代码时使用`grep -c 'function xxx'`检查重复定义
+  2. 测试时必须确认修改的是实际生效的函数（最后定义的）
+  3. 新增测试项：对比所有renderPetDetail函数中按钮onClick拼接是否一致
+
+---
+
+*最后更新: 2026-07-05 22:36*
