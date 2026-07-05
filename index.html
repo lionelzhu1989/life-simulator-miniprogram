@@ -548,7 +548,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
         <button class="btn btn-outline btn-sm" onclick="fastForward(10)">⏩ 快进10年</button>
       </div>
       <div style="display:flex;gap:8px;margin-top:8px;justify-content:center;">
-        <button class="btn btn-outline btn-sm" style="font-size:11px;" onclick="socialGathering()">🤝 社交聚会 ¥3000</button>
+        <button class="btn btn-outline btn-sm" style="font-size:11px;" onclick="socialGatheringMenu()">🤝 社交</button>
       </div>
       <div class="text-sm text-muted mt-8" id="yearHint">点击按钮推进人生</div>
     </div>
@@ -762,7 +762,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 
 
 <div id="chatOverlay" class="chat-overlay">
-  <div class="chat-hd"><span class="chat-back" onclick="closeChat()">←</span><span class="chat-nm" id="chatName"></span></div>
+  <div class="chat-hd"><span class="chat-back" onclick="closeChat()">←</span><span class="chat-nm" id="chatName"></span><span class="chat-profile-btn" onclick="showChatProfile()" style="margin-left:auto;font-size:12px;color:#3498db;cursor:pointer;padding:4px 8px;border:1px solid #3498db;border-radius:12px;">查看资料</span></div>
   <div class="chat-body" id="chatBody"></div>
   <div class="chat-opts" id="chatOpts" style="display:none;"></div>
   <div class="chat-input-area" id="chatInputArea">
@@ -1343,7 +1343,7 @@ let G=null;
 
 function defaultState(){
   const legacy=loadLegacy();
-  let cash=100000,hp=100,mood=100,iq=100,eq=100;
+  let cash=5000,hp=100,mood=100,iq=100,eq=100;
   legacy.upgrades.forEach(uid=>{
     const u=LEGACY_UPGRADES.find(x=>x.id===uid);
     if(!u)return;
@@ -1356,7 +1356,7 @@ function defaultState(){
   return{
     totalMonths:0,cash,health:hp,mood,IQ:iq,EQ:eq,
     jobIndex:0,monthsAtJob:0,
-    stockHoldings:{},stockPrices:{},
+    stockHoldings:{},stockPrices:{},stockCostBasis:{},
     houses:[],businesses:[],techInvestments:[],
     spouse:null,children:0,childAges:[],
     events:[],gameOver:false,gameOverReason:'',
@@ -1571,7 +1571,7 @@ function renderRecentMsgs(){
   list.innerHTML=html;
   card.style.display=recent.length>0?'block':'none';
 }
-function setAttrBar(name,val){val=clamp(Math.round(val),0,200);document.getElementById('bar'+name).style.width=Math.min(val,100)+'%';document.getElementById('val'+name).textContent=val;}
+function setAttrBar(name,val){val=clamp(Math.round(val),0,200);const barEl=document.getElementById('bar'+name);const valEl=document.getElementById('val'+name);if(!barEl)return;let barBg='#27ae60',textColor='#333';if(name==='Health'){if(val<10){barBg='#c0392b';textColor='#c0392b';}else if(val<30){barBg='#e74c3c';textColor='#e74c3c';}}if(name==='Mood'){if(val<20){textColor='#e67e22';}}barEl.style.width=Math.min(val,100)+'%';barEl.style.background=barBg;if(valEl){valEl.textContent=val;valEl.style.color=textColor;if(name==='Health'&&val<10){valEl.innerHTML=val+' ⚠️';valEl.style.fontWeight='bold';}}}
 function refreshPage(name){
   if(name==='work')refreshWork();
   else if(name==='invest'){refreshInvest('stock');refreshInvest('house');refreshInvest('business');refreshInvest('tech');}
@@ -2043,27 +2043,56 @@ function studyCharge(){
   G.monthlyTasks['study']=true;
   saveGame();refreshAll();
 }
-function socialGathering(){
-  if(G.cash<3000){showToast('现金不足！');return;}
-  G.cash-=3000;showFloatText('💰 -¥3000',false);
+function socialGatheringMenu(){
+  showModal({title:'🤝 选择社交类型',content:'普通聚会 ¥500\n结识邻居、普通朋友\nEQ+1 Mood+1\n\n高端聚会 ¥3000\n结识投资人、行业精英\nEQ+5 Mood+3',confirmText:'普通 ¥500',cancelText:'高端 ¥3000',success(res){
+    if(res.confirm){doSocialGathering('normal');}
+    else if(res.cancel){doSocialGathering('premium');}
+  }});
+}
+function doSocialGathering(type){
+  const cfg={normal:{cost:500,eq:1,mood:1},premium:{cost:3000,eq:5,mood:3}};
+  const c=cfg[type];
+  if(G.cash<c.cost){showToast('现金不足！');return;}
+  G.cash-=c.cost;G.EQ=clamp(G.EQ+c.eq,0,200);G.mood=clamp(G.mood+c.mood,0,200);
+  showFloatText('💬 EQ+'+c.eq,true);showFloatText('😊 Mood+'+c.mood,true);showFloatText('💰 -¥'+c.cost,false);
   G.monthlyTasks['social']=true;
-  // 随机社交事件
-  const gatherEvents=[
-    {title:'同学聚会',desc:'遇到了老同学小李，聊起当年的趣事。他最近创业成功，给你分享了一些经验。\n\n🧠 IQ+2  EQ+5',fx:{IQ:2,EQ:5}},
-    {title:'高端酒会',desc:'参加了一场商业酒会，认识了几位投资人。有人对你的项目感兴趣，约了下次见面。\n\n💰 投资机会解锁  EQ+3',fx:{EQ:3}},
-    {title:'社区志愿',desc:'参加了社区志愿活动，帮助了独居老人。内心感到温暖。\n\n😊 Mood+10  EQ+5',fx:{mood:10,EQ:5}},
-    {title:'相亲局',desc:'朋友安排了一场相亲，对方是个有趣的人。虽然没成朋友，但聊得很开心。\n\n😊 Mood+5  EQ+2',fx:{mood:5,EQ:2}},
-    {title:'同行聚餐',desc:'和同行吃饭，聊到行业趋势。获得了很多新信息！\n\n🧠 IQ+5  💰 可能获得行业情报',fx:{IQ:5}},
-    {title:'老同学婚礼',desc:'参加老同学的婚礼，回忆起青春岁月。随了份子钱，但收获了感动。\n\n💰 -¥2000  😊 Mood+8',fx:{cash:-2000,mood:8}},
-    {title:'创业沙龙',desc:'参加创业沙龙，听到精彩的演讲。认识了一位潜在合伙人！\n\n🧠 IQ+3  EQ+3',fx:{IQ:3,EQ:3}},
-    {title:'邻里烧烤',desc:'邻居组织烧烤派对，大家吃吃喝喝聊聊天。社区关系更融洽了。\n\n😊 Mood+6  EQ+2',fx:{mood:6,EQ:2}},
-  ];
-  const evt=gatherEvents[Math.floor(Math.random()*gatherEvents.length)];
-  if(evt.fx){for(const k in evt.fx){if(k==='cash'){G.cash+=evt.fx[k];}else if(k==='mood'){G.mood=clamp(G.mood+evt.fx[k],0,200);}else{G[k]=clamp((G[k]||0)+evt.fx[k],0,200);}}}
-  const fxStr=Object.entries(evt.fx).map(([k,v])=>{if(k==='cash')return (v>0?'+':'')+'¥'+v;if(k==='mood')return '😊 '+(v>0?'+':'')+v;return '🧠 +'+v;}).join(' ');
-  showFloatText('🤝 '+evt.title,true);showFloatText(fxStr,true);
-  showModal({title:'🤝 '+evt.title,content:evt.desc,confirmText:'好的',success(){}});
+  triggerGatherEvent(type);
   saveGame();refreshAll();
+}
+function triggerGatherEvent(type){
+  const normalEvents=[
+    {title:'同学聚会',desc:'遇到了老同学小李，聊起当年的趣事。他最近创业成功，给你分享了一些经验。',fx:{IQ:2,EQ:5},contacts:[{name:'小李',tag:'互联网行业',benefit:'可内推'}]},
+    {title:'社区志愿',desc:'参加了社区志愿活动，帮助了独居老人。内心感到温暖。',fx:{mood:10,EQ:5},contacts:[{name:'王阿姨',tag:'社区志愿者',benefit:'邻里互助'}]},
+    {title:'相亲局',desc:'朋友安排了一场相亲，对方是个有趣的人。虽然没成朋友，但聊得很开心。',fx:{mood:5,EQ:2},contacts:[{name:'小美',tag:'自由职业',benefit:'有趣的人'}]},
+    {title:'同行聚餐',desc:'和同行吃饭，聊到行业趋势。获得了很多新信息！',fx:{IQ:5},contacts:[{name:'老张',tag:'同行前辈',benefit:'行业情报'}]},
+    {title:'老同学婚礼',desc:'参加老同学的婚礼，回忆起青春岁月。随了份子钱，但收获了感动。',fx:{cash:-2000,mood:8},contacts:[{name:'老同学',tag:'大学同窗',benefit:'老朋友'}]},
+    {title:'邻里烧烤',desc:'邻居组织烧烤派对，大家吃吃喝喝聊聊天。社区关系更融洽了。',fx:{mood:6,EQ:2},contacts:[{name:'老刘',tag:'邻居',benefit:'社区人脉'}]},
+  ];
+  const premiumEvents=[
+    {title:'高端酒会',desc:'参加了一场商业酒会，认识了几位投资人。有人对你的项目感兴趣，约了下次见面。',fx:{EQ:3,cash:5000},contacts:[{name:'张总',tag:'天使投资人',benefit:'解锁项目'}]},
+    {title:'创业沙龙',desc:'参加创业沙龙，听到精彩的演讲。认识了一位潜在合伙人！',fx:{IQ:3,EQ:3},contacts:[{name:'陈工',tag:'技术合伙人',benefit:'可合作创业'}]},
+    {title:'行业峰会',desc:'出席了行业峰会，见到了几位上市公司高管。交换了名片，留下了好印象。',fx:{IQ:5,EQ:5},contacts:[{name:'李总',tag:'互联网高管',benefit:'可内推'},{name:'赵总',tag:'行业专家',benefit:'可咨询'}]},
+    {title:'慈善晚宴',desc:'参加慈善晚宴，结识了很多社会名流。竞拍了一件艺术品，捐给了公益组织。',fx:{cash:-10000,mood:10,EQ:8},contacts:[{name:'孙女士',tag:'基金会理事',benefit:'社会资源'}]},
+    {title:'高尔夫社交',desc:'和朋友去打高尔夫，球场上谈成了一笔小合作。还认识了一位律师朋友。',fx:{EQ:5,mood:5,cash:15000},contacts:[{name:'周律师',tag:'律所合伙人',benefit:'法律咨询'}]},
+  ];
+  const pool=type==='premium'?premiumEvents:normalEvents;
+  const evt=pool[Math.floor(Math.random()*pool.length)];
+  if(evt.fx){for(const k in evt.fx){if(k==='cash'){G.cash+=evt.fx[k];}else if(k==='mood'){G.mood=clamp(G.mood+evt.fx[k],0,200);}else{G[k]=clamp((G[k]||0)+evt.fx[k],0,200);}}}
+  const fxStr=Object.entries(evt.fx).map(([k,v])=>{if(k==='cash')return '💰 '+(v>0?'+':'')+'¥'+Math.abs(v);if(k==='mood')return '😊 '+(v>0?'+':'')+v;return '🧠 +'+v;}).join(' ');
+  showFloatText('🤝 '+evt.title,true);showFloatText(fxStr,true);
+  // Build contacts display
+  let contactHtml='';
+  if(evt.contacts&&evt.contacts.length>0){
+    contactHtml='\n\n📌 本次结识：\n';
+    evt.contacts.forEach(ct=>{contactHtml+='• '+ct.name+' | '+ct.tag+' | '+ct.benefit+'\n';});
+    // Add social contacts
+    if(!G.socialContacts)G.socialContacts=[];
+    evt.contacts.forEach(ct=>{
+      const existing=G.socialContacts.find(c=>c.name===ct.name);
+      if(!existing){G.socialContacts.push({id:'sc_'+(G.socialContacts.length+1),name:ct.name,tag:ct.tag,benefit:ct.benefit,friendLevel:1,addedMonth:G.totalMonths});}
+    });
+  }
+  showModal({title:'🤝 '+evt.title,content:evt.desc+contactHtml,confirmText:'好的',success(){}});
 }
 
 // ========== 工作页面 ==========
@@ -2169,14 +2198,19 @@ function refreshStock(){
     html+='<div class="list-item" style="flex-wrap:wrap;"><div class="list-info" style="width:100%;"><div class="flex-between"><span class="name">'+s.name+newsTag+'</span><span class="stock-price '+cls+'">¥'+price.toFixed(2)+'</span></div><div class="flex-between mt-8"><span class="stock-hold">涨跌：<span class="'+cls+'">'+(change>0?'+':'')+change+'%</span></span><span class="stock-hold">持有：'+hold+'股</span></div></div><div class="list-action" style="width:100%;display:flex;gap:8px;margin-top:8px;"><button class="btn btn-danger btn-sm" style="flex:1;" onclick="stockSell(\''+s.code+'\')" '+(hold<=0?'disabled':'')+'>卖出</button><button class="btn btn-success btn-sm" style="flex:1;" onclick="stockBuy(\''+s.code+'\')" '+(maxBuy<=0?'disabled':'')+'>买入</button></div></div>';
   });
   document.getElementById('stockList').innerHTML=html;
-  let holdHtml='';let totalVal=0;
+  let holdHtml='';let totalVal=0;let totalCost=0;
   for(const code in G.stockHoldings){
     const shares=G.stockHoldings[code];if(shares<=0)continue;
-    const s=STOCKS.find(x=>x.code===code);const val=shares*G.stockPrices[code];totalVal+=val;
-    holdHtml+='<div class="list-item"><div class="list-info"><div class="name">'+s.name+'</div><div class="desc">'+shares+'股 × ¥'+G.stockPrices[code].toFixed(2)+'</div></div><span style="font-weight:600;color:var(--warning);">'+fmt(val)+'</span></div>';
+    const s=STOCKS.find(x=>x.code===code);const price=G.stockPrices[code];const val=shares*price;totalVal+=val;
+    const basis=G.stockCostBasis&&G.stockCostBasis[code]?G.stockCostBasis[code]:s.basePrice;
+    const cost=basis*shares;totalCost+=cost;
+    const pl=val-cost;const plPct=cost>0?((price-basis)/basis*100):0;
+    const plColor=pl>=0?'#27ae60':'#e74c3c';
+    const plSign=pl>=0?'+':'';
+    holdHtml+='<div class="list-item"><div class="list-info"><div class="name">'+s.name+'</div><div class="desc">'+shares+'股 × ¥'+price.toFixed(2)+' | 成本¥'+basis.toFixed(2)+'</div><div class="desc" style="color:'+plColor+';font-weight:600;">盈亏：'+plSign+fmt(pl)+'（'+plSign+plPct.toFixed(1)+'%）</div></div><span style="font-weight:600;color:var(--warning);">'+fmt(val)+'</span></div>';
   }
   if(!holdHtml)holdHtml='<div class="text-center text-sm text-muted" style="padding:16px 0;">暂无持仓</div>';
-  else holdHtml+='<div class="divider"></div><div class="flex-between"><span class="text-sm">持仓总市值</span><span style="font-weight:700;color:var(--warning);">'+fmt(totalVal)+'</span></div>';
+  else{const totalPl=totalVal-totalCost;const totalPlSign=totalPl>=0?'+':'';holdHtml+='<div class="divider"></div><div class="flex-between"><span class="text-sm">持仓总市值</span><span style="font-weight:700;color:var(--warning);">'+fmt(totalVal)+'</span></div>';holdHtml+='<div class="flex-between" style="color:'+(totalPl>=0?'#27ae60':'#e74c3c')+';"><span class="text-sm">总盈亏</span><span style="font-weight:700;">'+totalPlSign+fmt(totalPl)+'（'+totalPlSign+(totalCost>0?(totalPl/totalCost*100).toFixed(1):'0')+'%）</span></div>';}
   document.getElementById('myStocks').innerHTML=holdHtml;
 }
 // ========== Stock Trade Modal ==========
@@ -2251,7 +2285,13 @@ function confirmTrade(){
     if(!G.lifeEvents)G.lifeEvents=[];
     G.lifeEvents.push({month:G.totalMonths,icon:'📈',title:'买入'+s.name,detail:'花了'+fmt(cost)+'买入'+s.name+' '+shares+'股',type:'invest'});
     G.monthlyTasks['invest_stock']=true;
+    // Track cost basis for P/L
+    if(!G.stockCostBasis)G.stockCostBasis={};
+    const oldShares=G.stockHoldings[code]-shares;
+    const oldCost=(G.stockCostBasis[code]||0)*oldShares;
+    G.stockCostBasis[code]=oldShares>0?((oldCost+cost)/G.stockHoldings[code]):price;
     saveGame();refreshStock();refreshLife();
+    showToast('📈 买入成功！'+s.name+' ×'+shares+'股','success');
     showFloatText('📈 买入'+shares+'股 '+s.name,true);
   }else{
     const revenue=shares*price;
@@ -2260,7 +2300,12 @@ function confirmTrade(){
     if(G.stockHoldings[code]<=0)delete G.stockHoldings[code];
     if(!G.lifeEvents)G.lifeEvents=[];
     G.lifeEvents.push({month:G.totalMonths,icon:'💰',title:'卖出'+s.name,detail:'卖出'+shares+'股，获得'+fmt(revenue),type:'invest'});
+    // Calculate P/L
+    const basis=G.stockCostBasis&&G.stockCostBasis[code]?G.stockCostBasis[code]:price;
+    const pl=revenue-shares*basis;
     saveGame();refreshStock();refreshLife();
+    const plStr=pl>=0?'+'+fmt(pl):'-'+fmt(Math.abs(pl));
+    showToast((pl>=0?'💰 盈利 ':'📉 亏损 ')+plStr+' ('+s.name+')',pl>=0?'success':'error');
     showFloatText('💰 卖出'+shares+'股 '+s.name,true);
   }
   closeTradeModal();
@@ -2334,13 +2379,16 @@ function refreshBusiness(){
     if(owned)action='<span class="tag tag-green">已拥有</span>';
     else if(locked)action='<span class="text-sm text-muted">🔒 资产'+fmtShort(b.unlockAsset)+'</span>';
     else action='<button class="btn btn-primary btn-sm" onclick="buyBusiness(\''+b.id+'\')">加盟 '+fmt(b.price)+'</button>';
-    html+='<div class="list-item"><div class="list-info"><div class="name">'+b.icon+' '+b.name+'</div><div class="desc">投入：'+fmt(b.price)+' | 月收入：'+fmt(b.monthlyIncome[0])+'~'+fmt(b.monthlyIncome[1])+'</div></div><div class="list-action">'+action+'</div></div>';
+    const avgIncome=(b.monthlyIncome[0]+b.monthlyIncome[1])/2;const roi=avgIncome*12/b.price*100;const payback=Math.round(b.price/avgIncome);
+    const riskLabels=['低','中','高','极高'];const riskVal=Math.min(3,Math.floor((b.risk||0.1)*10));const riskColors=['#27ae60','#f39c12','#e67e22','#e74c3c'];
+    html+='<div class="list-item"><div class="list-info"><div class="name">'+b.icon+' '+b.name+'</div><div class="desc">投入：'+fmt(b.price)+' | 月收入：'+fmt(b.monthlyIncome[0])+'~'+fmt(b.monthlyIncome[1])+'</div><div class="desc" style="font-size:11px;color:#666;">预期年化：<b style="color:#27ae60;">'+roi.toFixed(0)+'%</b> | 风险：<b style="color:'+riskColors[riskVal]+';">'+riskLabels[riskVal]+'</b> | 回本：约'+payback+'月</div></div><div class="list-action">'+action+'</div></div>';
   });
   document.getElementById('businessList').innerHTML=html;
   let myHtml='';
   G.businesses.forEach(b=>{
     const info=BUSINESSES.find(x=>x.id===b.id);if(!info)return;
-    myHtml+='<div class="list-item"><div class="list-info"><div class="name">'+info.icon+' '+info.name+'</div><div class="desc">投入：'+fmt(info.price)+' | 月均收入：'+fmt((info.monthlyIncome[0]+info.monthlyIncome[1])/2)+'</div></div><div class="list-action"><button class="btn btn-danger btn-sm" onclick="sellBusiness(\''+b.id+'\')">转让</button></div></div>';
+    const avgInc=(info.monthlyIncome[0]+info.monthlyIncome[1])/2;
+    myHtml+='<div class="list-item"><div class="list-info"><div class="name">'+info.icon+' '+info.name+'</div><div class="desc">投入：'+fmt(info.price)+' | 月均收入：'+fmt(avgInc)+' | 年化约'+(avgInc*12/info.price*100).toFixed(0)+'%</div></div><div class="list-action"><button class="btn btn-danger btn-sm" onclick="sellBusiness(\''+b.id+'\')">转让</button></div></div>';
   });
   if(!myHtml)myHtml='<div class="text-center text-sm text-muted" style="padding:16px 0;">暂无商铺</div>';
   document.getElementById('myBusinesses').innerHTML=myHtml;
@@ -2349,7 +2397,8 @@ function buyBusiness(id){
   const b=BUSINESSES.find(x=>x.id===id);
   if(G.businesses.find(x=>x.id===id)){showToast('已拥有！');return;}
   if(G.cash<b.price){showToast('现金不足！');return;}
-  showModal({title:'加盟 '+b.name,content:'投入：'+fmt(b.price)+'\n预期月收入：'+fmt(b.monthlyIncome[0])+'~'+fmt(b.monthlyIncome[1])+'\n风险：'+(b.risk*100)+'%',success(res){if(res.confirm){G.cash-=b.price;G.businesses.push({id:b.id});if(!G.lifeEvents)G.lifeEvents=[];G.lifeEvents.push({month:G.totalMonths,icon:'🏪',title:'投资'+b.name,detail:'投入'+fmt(b.price)+'开设'+b.name,type:'invest'});G.monthlyTasks['invest_stock']=true;saveGame();refreshBusiness();refreshLife();showFloatText('🏪 开业大吉！',true);checkAchievements();}}});
+  const avgInc=(b.monthlyIncome[0]+b.monthlyIncome[1])/2;const roi=avgInc*12/b.price*100;
+  showModal({title:'加盟 '+b.name,content:'投入：'+fmt(b.price)+'\n预期月收入：'+fmt(b.monthlyIncome[0])+'~'+fmt(b.monthlyIncome[1])+'\n风险：'+(b.risk*100)+'%\n预期年化：'+roi.toFixed(0)+'%\n回本周期：约'+Math.round(b.price/avgInc)+'个月',success(res){if(res.confirm){G.cash-=b.price;G.businesses.push({id:b.id});if(!G.lifeEvents)G.lifeEvents=[];G.lifeEvents.push({month:G.totalMonths,icon:'🏪',title:'投资'+b.name,detail:'投入'+fmt(b.price)+'开设'+b.name,type:'invest'});G.monthlyTasks['invest_stock']=true;saveGame();refreshBusiness();refreshLife();showToast('🏪 开业大吉！'+b.name+'已开业','success');showFloatText('🏪 开业大吉！',true);checkAchievements();}}});
 }
 function sellBusiness(id){
   const idx=G.businesses.findIndex(x=>x.id===id);if(idx===-1)return;
@@ -2366,7 +2415,11 @@ function refreshTech(){
     if(active)action='<span class="tag tag-blue">投资中 ('+active.monthsRemaining+'月)</span>';
     else action='<button class="btn btn-primary btn-sm" onclick="investTech(\''+t.id+'\')">投资 '+fmt(t.minInvest)+'</button>';
     const maxMult=t.outcomes.reduce((m,o)=>Math.max(m,o.multiplier),0);
-    html+='<div class="list-item"><div class="list-info"><div class="name">'+t.name+'</div><div class="desc">最低投入：'+fmt(t.minInvest)+' | 周期：'+t.returnMonths+'月 | 最高回报：'+maxMult+'x</div></div><div class="list-action">'+action+'</div></div>';
+    const minMult=t.outcomes.reduce((m,o)=>Math.min(m,o.multiplier),999);
+    const expMult=t.outcomes.reduce((sum,o)=>sum+o.multiplier*o.prob,0);
+    const labels={'ai':'高风险高回报','energy':'绿色能源-政策利好','biotech':'生物医药-周期长'};
+    const tags={'ai':'高风险,高回报','energy':'政策扶持,稳健','biotech':'科研型,周期长'};
+    html+='<div class="list-item"><div class="list-info"><div class="name">'+t.icon+' '+t.name+'</div><div class="desc">最低投入：'+fmt(t.minInvest)+' | 周期：'+t.returnMonths+'月 | 回报：'+minMult+'x~'+maxMult+'x</div><div class="desc" style="font-size:11px;color:#666;">预期年化：<b style="color:#3498db;">'+Math.round((Math.pow(expMult,12/t.returnMonths)-1)*100)+'%+</b> | 风险：<b style="color:#e74c3c;">高</b> | 标签：'+tags[t.id]+'</div></div><div class="list-action">'+action+'</div></div>';
   });
   document.getElementById('techList').innerHTML=html;
   let myHtml='';
@@ -2393,7 +2446,7 @@ function investTech(id){
       morale:80,techProgress:20,funding:50,market:50,
       events:[],eventLog:[],resolved:[]});
     if(!G.lifeEvents)G.lifeEvents=[];G.lifeEvents.push({month:G.totalMonths,icon:'🚀',title:'科技投资'+t.name,detail:'投入'+fmt(t.minInvest)+'开始'+t.name,type:'invest'});
-    G.monthlyTasks['invest_stock']=true;saveGame();refreshTech();refreshLife();showFloatText('🚀 投资成功！',true);
+    G.monthlyTasks['invest_stock']=true;saveGame();refreshTech();refreshLife();showToast('🚀 投资成功！'+t.name+'项目启动','success');showFloatText('🚀 投资成功！',true);
   }}});
 }
 
@@ -4011,6 +4064,18 @@ function closeChat(){
   document.getElementById('chatOverlay').classList.remove('show');
   G._openThreadId=null;G._openProactiveNpc=null;
   renderPhoneList();renderContacts();updatePhoneBadge();
+}
+function showChatProfile(){
+  const thread=G.phone.threads.find(t=>t.id===G._openThreadId);
+  let npcName='',npcId='';
+  if(thread){npcName=thread.npcName;npcId=thread.npcId||'';}
+  else if(G._openProactiveNpc){npcName=G._openProactiveNpc;initSocialContacts();const p=NPC_PERSONALITIES[G._openProactiveNpc];if(p)npcName=p.name;}
+  initSocialContacts();
+  let isContact=false;var friendLevel=0;var note='';
+  if(npcId){const existing=(G.socialContacts||[]).find(c=>c.id===npcId);if(existing){isContact=true;friendLevel=existing.friendLevel||0;}if(G.notes&&G.notes[npcId])note=G.notes[npcId];}
+  const labels=['陌生人','认识','熟悉','好友'];
+  const relation=isContact?labels[friendLevel]||'认识':'未加入通讯录';
+  showModal({title:'📒 联系人资料',content:'姓名：'+npcName+'\n关系：'+relation+(note?('\n备注：'+note):'')+'\n\n'+(isContact?'✅ 已加入通讯录（关系：'+labels[friendLevel]+'）':'尚未加入通讯录，多聊天可提升关系！'),confirmText:'好的',showCancel:false});
 }
 
 // ===== AI Chat System =====
