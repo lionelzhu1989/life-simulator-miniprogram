@@ -11123,7 +11123,7 @@ function renderPetDetail(pet){
   let h='<div class="pet-page">';
   h+='<div class="pet-card">';
   h+='<div class="pet-display">';
-  h+='<span class="pet-emoji" onclick="petPet(\'+pet.id+\')">'+pet.emoji+'</span>';
+  h+='<span class="pet-emoji" onclick="petPet(\''+pet.id+'\)">'+pet.emoji+'</span>';
   h+='<div class="pet-name">'+pet.name+'</div>';
   h+='<span class="pet-stage">'+stage+' · '+Math.floor(pet.age)+'月</span>';
   h+='</div>';
@@ -11135,15 +11135,15 @@ function renderPetDetail(pet){
   h+=petBar('❤️','亲密',pet.intimacy,'intimacy');
   h+='</div>';
   h+='<div class="pet-actions">';
-  h+='<div class="pet-btn feed" onclick="petFeed(\'+pet.id+\')"><span class="b-icon">🍖</span><span class="b-name">喂食</span><span class="b-cost">'+(G.petFood>0?'库存'+(G.petFood||0)+'袋':'¥200')+'</span></div>';
-  h+='<div class="pet-btn play" onclick="petPlay(\'+pet.id+\')"><span class="b-icon">🎾</span><span class="b-name">玩耍</span><span class="b-cost">小游戏</span></div>';
-  h+='<div class="pet-btn clean" onclick="petClean(\'+pet.id+\')"><span class="b-icon">🛁</span><span class="b-name">洗澡</span><span class="b-cost">¥300</span></div>';
-  h+='<div class="pet-btn pet" onclick="petPet(\'+pet.id+\')"><span class="b-icon">🤚</span><span class="b-name">抚摸</span><span class="b-cost">免费</span></div>';
+  h+='<div class="pet-btn feed" onclick="petFeed(\''+pet.id+'\)"><span class="b-icon">🍖</span><span class="b-name">喂食</span><span class="b-cost">'+(G.petFood>0?'库存'+(G.petFood||0)+'袋':'¥200')+'</span></div>';
+  h+='<div class="pet-btn play" onclick="petPlay(\''+pet.id+'\)"><span class="b-icon">🎾</span><span class="b-name">玩耍</span><span class="b-cost">小游戏</span></div>';
+  h+='<div class="pet-btn clean" onclick="petClean(\''+pet.id+'\)"><span class="b-icon">🛁</span><span class="b-name">洗澡</span><span class="b-cost">¥300</span></div>';
+  h+='<div class="pet-btn pet" onclick="petPet(\''+pet.id+'\)"><span class="b-icon">🤚</span><span class="b-name">抚摸</span><span class="b-cost">免费</span></div>';
   if(pet.type==='dog'||pet.type==='cat'){
-    h+='<div class="pet-btn walk" onclick="petWalk(\'+pet.id+\')"><span class="b-icon">🌳</span><span class="b-name">遛弯</span><span class="b-cost">随机</span></div>';
+    h+='<div class="pet-btn walk" onclick="petWalk(\''+pet.id+'\)"><span class="b-icon">🌳</span><span class="b-name">遛弯</span><span class="b-cost">随机</span></div>';
   }
-  h+='<div class="pet-btn train" onclick="petTrain(\'+pet.id+\')"><span class="b-icon">🎓</span><span class="b-name">训练</span><span class="b-cost">小游戏</span></div>';
-  h+='<div class="pet-btn heal" onclick="petHeal(\'+pet.id+\')"><span class="b-icon">🏥</span><span class="b-name">治病</span><span class="b-cost">¥2000</span></div>';
+  h+='<div class="pet-btn train" onclick="petTrain(\''+pet.id+'\)"><span class="b-icon">🎓</span><span class="b-name">训练</span><span class="b-cost">小游戏</span></div>';
+  h+='<div class="pet-btn heal" onclick="petHeal(\''+pet.id+'\)"><span class="b-icon">🏥</span><span class="b-name">治病</span><span class="b-cost">¥2000</span></div>';
   h+='<div class="pet-btn store" onclick="openPetStore()"><span class="b-icon">🏪</span><span class="b-name">商店</span><span class="b-cost">'+(G.petFood<5?'买粮':'逛逛')+'</span></div>';
   h+='</div></div>';
   // Multi-pet navigation
