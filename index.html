@@ -264,6 +264,22 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 .contact-name{font-size:15px;font-weight:500;color:#333;}
 .contact-status{font-size:12px;color:#999;margin-top:2px;}
 .contact-arrow{color:#ccc;font-size:14px;}
+
+/* v4.2.0: 好友分组样式 */
+.fg-bar{display:flex;align-items:center;justify-content:space-between;padding:6px 16px;background:#f8f9fa;border-bottom:1px solid #e8e8e8;font-size:12px;}
+.fg-bar .fg-btn{color:#3498db;cursor:pointer;padding:4px 8px;border-radius:4px;}
+.fg-bar .fg-btn:active{background:#e8f4fd;}
+.fg-header{display:flex;align-items:center;gap:6px;padding:10px 16px;background:#fff;border-bottom:1px solid #f0f0f0;cursor:pointer;user-select:none;}
+.fg-header:active{background:#f8f9fa;}
+.fg-header .fg-arrow{font-size:10px;color:#999;transition:transform .2s;flex-shrink:0;}
+.fg-header .fg-arrow.fg-folded{transform:rotate(-90deg);}
+.fg-header .fg-icon{font-size:16px;flex-shrink:0;}
+.fg-header .fg-name{font-size:13px;font-weight:600;color:#333;flex:1;}
+.fg-header .fg-count{font-size:11px;color:#999;background:#f0f0f0;padding:2px 8px;border-radius:10px;}
+.fg-body.fg-collapsed{display:none;}
+.fg-badge{display:inline-flex;align-items:center;gap:2px;font-size:10px;padding:2px 6px;border-radius:10px;color:#fff;cursor:pointer;flex-shrink:0;}
+.fg-badge:active{opacity:.7;}
+.fg-empty{padding:16px;text-align:center;font-size:12px;color:#ccc;}
 .msg-item{display:flex;align-items:center;padding:13px 12px;border-bottom:1px solid #f0f0f0;cursor:pointer;transition:all .15s;border-radius:8px;margin:0 4px 2px;}
 .msg-item:active{background:#f0f0f0;}
 .msg-item.msg-unread{background:linear-gradient(135deg,#fff5f5,#fff0f0);border-left:3px solid #e74c3c;}
@@ -620,6 +636,40 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 /* v4.1.19: 商铺管理按钮 */
 .biz-act{padding:8px 6px;border-radius:8px;text-align:center;font-size:12px;font-weight:600;cursor:pointer;background:#f8f9fa;border:1px solid #e9ecef;transition:all .15s;user-select:none;}
 .biz-act:active{transform:scale(.95);background:#e9ecef;}
+/* ===== 通讯录详情页 ===== */
+.cdetail-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:#f0f2f5;z-index:1600;display:none;flex-direction:column;max-width:480px;margin:0 auto;}
+.cdetail-overlay.show{display:flex;}
+.cdetail-header{background:var(--header-bg);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0;}
+.cdetail-back{font-size:24px;cursor:pointer;padding:4px;line-height:1;}
+.cdetail-body{flex:1;overflow-y:auto;padding:16px;padding-bottom:40px;-webkit-overflow-scrolling:touch;}
+.cdetail-profile{text-align:center;padding:24px 16px;background:#fff;border-radius:var(--radius);margin-bottom:12px;}
+.cdetail-avatar{width:64px;height:64px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 12px;}
+.cdetail-name{font-size:20px;font-weight:700;margin-bottom:4px;}
+.cdetail-relation{font-size:13px;color:var(--text-light);}
+.cdetail-stats{display:flex;justify-content:center;gap:24px;margin-top:16px;padding-top:16px;border-top:1px solid #f0f0f0;}
+.cdetail-stat{text-align:center;}
+.cdetail-stat .num{font-size:18px;font-weight:700;color:var(--primary);}
+.cdetail-stat .lbl{font-size:11px;color:var(--text-light);margin-top:2px;}
+.cdetail-section{background:#fff;border-radius:var(--radius);padding:16px;margin-bottom:12px;}
+.cdetail-section-title{font-size:14px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.cdetail-status-card{background:linear-gradient(135deg,#f8f9fa,#e8f4fd);border-radius:10px;padding:14px;margin-bottom:8px;font-size:13px;line-height:1.8;}
+.cdetail-status-item{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #eee;}
+.cdetail-status-item:last-child{border-bottom:none;}
+.cdetail-status-lbl{color:#666;font-size:13px;}
+.cdetail-status-val{font-weight:600;color:var(--text);font-size:13px;}
+.cdetail-actions{display:flex;flex-direction:column;gap:8px;}
+.cdetail-action-btn{display:flex;align-items:center;gap:10px;padding:14px 16px;background:#f8f9fa;border-radius:10px;cursor:pointer;transition:all .15s;border:1px solid #eee;font-size:14px;font-weight:500;}
+.cdetail-action-btn:active{background:#e8ecef;transform:scale(0.98);}
+.cdetail-action-btn .act-icon{font-size:24px;flex-shrink:0;}
+.cdetail-action-btn .act-info{flex:1;min-width:0;}
+.cdetail-action-btn .act-name{font-size:14px;font-weight:500;}
+.cdetail-action-btn .act-desc{font-size:11px;color:var(--text-light);margin-top:2px;}
+.cdetail-action-btn .act-arrow{color:#ccc;font-size:16px;flex-shrink:0;}
+.cdetail-action-btn .act-cost{font-size:11px;color:var(--warning);font-weight:600;flex-shrink:0;}
+.child-age-badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;margin-top:6px;}
+.child-gender-boy{background:#e3f2fd;color:#1565c0;}
+.child-gender-girl{background:#fce4ec;color:#c62828;}
+.cdetail-empty{text-align:center;padding:40px 20px;color:var(--text-light);font-size:14px;}
 </style>
 <script>
 // ===== 聊天顶栏关系状态显示 =====
@@ -1959,7 +2009,10 @@ function defaultState(){
     ],relationships:{},
     savings:0,careerBranches:[],
     romance:{npcId:null,stage:'none',affection:0,metMonth:0,lastInteraction:0},
-    scheduledDates:[]
+    scheduledDates:[],
+     // v4.2.0: 好友分组
+     friendGroups:[{id:'close',name:'亲密好友',icon:'❤️',custom:false},{id:'normal',name:'普通朋友',icon:'👥',custom:false},{id:'business',name:'商业伙伴',icon:'💼',custom:false},{id:'weak',name:'点头之交',icon:'👋',custom:false}],
+     npcGroups:{}
   };
 }
 
@@ -3297,6 +3350,7 @@ function haveChild(){
   if(G.cash<50000){showModal({title:'余额不足',content:'生子需要5万费用，当前现金不足！',showCancel:false});return;}
   G.cash-=50000;G.children++;G.childAges.push(0);G.mood=clamp(G.mood+20,0,200);
   if(!G.lifeEvents)G.lifeEvents=[];G.lifeEvents.push({month:G.totalMonths,icon:'👶',title:'孩子出生',detail:'家里添了一个宝宝！家庭更完整了',type:'family'});
+  initChildRelationships();
   saveGame();refreshLife();refreshWork();showToast('👶 恭喜！家里添了一个宝宝！');
   checkAchievements();
 }
@@ -4952,45 +5006,423 @@ function renderContacts(){
   if(!G.phone)G.phone={threads:[],moments:[],notifications:[],flags:{},lastTriggerMonth:0,nextId:1,activeChats:[]};
   if(!G.phone.activeChats)G.phone.activeChats=[];
   initSocialContacts();
-  let html='<div style="padding:12px 16px 8px;font-size:12px;color:#999;">点击头像开始对话</div>';
-  Object.keys(NPC_PERSONALITIES).forEach(npcId=>{
-    const p=NPC_PERSONALITIES[npcId];
-    if(npcId==='spouse'&&!G.spouse)return;
-    if(npcId==='exColleague'&&G.totalMonths<12)return;
-    if(npcId==='mentor'&&G.totalMonths<18)return;
-    if(npcId==='gymCoach'&&G.totalMonths<6)return;
-    const hasNew=G.phone.activeChats&&G.phone.activeChats.some(ch=>ch.npcId===npcId&&ch.status==='active');
-    // Get relationship info for display
-    const rel=getRelationship(npcId);
-    const relDef=RELATION_TYPES[rel.type]||RELATION_TYPES.stranger;
-    html+='<div class="contact-item" onclick="openProactiveChat(\''+npcId+'\')">';
+  let html='<div style="padding:12px 16px 8px;font-size:12px;color:#999;">点击头像查看详情</div>';
+  // 家人分组标题（有家人时显示）
+  var hasFamily=false;
+  ['mom','dad'].forEach(function(fid){
+    if(NPC_PERSONALITIES[fid]){hasFamily=true;}
+  });
+  if(G.spouse||G.children>0)hasFamily=true;
+  if(hasFamily){
+    html+='<div style="padding:8px 16px 4px;font-size:11px;color:#ff5722;font-weight:600;">👨‍👩‍👧‍👦 家人</div>';
+  }
+  // 父母+配偶
+  ['mom','dad'].forEach(function(fid){
+    if(!NPC_PERSONALITIES[fid])return;
+    var rel=getRelationship(fid);
+    var relDef=RELATION_TYPES[rel.type]||RELATION_TYPES.family;
+    var p=NPC_PERSONALITIES[fid];
+    html+='<div class="contact-item" onclick="showContactDetail(\''+fid+'\')">';
     html+='<div class="contact-avatar" style="background:'+relDef.color+';">'+p.avatar+'</div>';
     html+='<div class="contact-info"><div class="contact-name">'+p.name+' <span style="font-size:11px;color:'+relDef.color+';">'+relDef.icon+' '+relDef.label+'</span></div>';
     html+='<div class="contact-status">❤'+rel.intimacy+' 🤝'+rel.trust+' 💕'+rel.affection+'</div></div>';
-    if(hasNew)html+='<div style="width:8px;height:8px;border-radius:50%;background:#27ae60;flex-shrink:0;"></div>';
     html+='<div class="contact-arrow">›</div></div>';
   });
-  // 动态联系人
+  // 配偶
+  if(G.spouse&&NPC_PERSONALITIES.spouse){
+    var sp=SPOUSES.find(function(s){return s.id===G.spouse;});
+    var spName=sp?sp.name:'配偶';
+    var p=NPC_PERSONALITIES.spouse;
+    p.name=spName;
+    var rel=getRelationship('spouse');
+    var relDef=RELATION_TYPES[rel.type]||RELATION_TYPES.married;
+    html+='<div class="contact-item" onclick="showContactDetail(\'spouse\')">';
+    html+='<div class="contact-avatar" style="background:'+relDef.color+';">'+p.avatar+'</div>';
+    html+='<div class="contact-info"><div class="contact-name">'+spName+' <span style="font-size:11px;color:'+relDef.color+';">'+relDef.icon+' '+relDef.label+'</span></div>';
+    html+='<div class="contact-status">❤'+rel.intimacy+' 🤝'+rel.trust+' 💕'+rel.affection+'</div></div>';
+    html+='<div class="contact-arrow">›</div></div>';
+  }
+  // 子女
+  initChildRelationships();
+  for(var ci=0;ci<G.children;ci++){
+    var cid='child_'+ci;
+    var age=Math.floor(G.childAges[ci]||0);
+    var gender=G.childGenders[ci]||'boy';
+    var cName=G.childNames[ci]||'孩子'+(ci+1);
+    var cAvatar=getChildAvatar(gender,age);
+    var crel=getRelationship(cid);
+    var crelDef=RELATION_TYPES.family;
+    html+='<div class="contact-item" onclick="showContactDetail(\''+cid+'\')">';
+    html+='<div class="contact-avatar" style="background:'+crelDef.color+';">'+cAvatar+'</div>';
+    html+='<div class="contact-info"><div class="contact-name">'+cName+' <span style="font-size:11px;color:#999;">'+age+'岁</span> <span style="font-size:11px;color:'+crelDef.color+';">'+crelDef.icon+' 子女</span></div>';
+    html+='<div class="contact-status">❤'+crel.intimacy+' 🤝'+crel.trust+' 💕'+crel.affection+'</div></div>';
+    html+='<div class="contact-arrow">›</div></div>';
+  }
+  // 其他NPC分组 - v4.2.0 grouped
+  var fgFoldState = {};
+  try { fgFoldState = JSON.parse(localStorage.getItem('fg_fold') || '{}'); } catch(e){}
+  if(!G.friendGroups) G.friendGroups = [{id:'close',name:'亲密好友',icon:'❤️',custom:false},{id:'normal',name:'普通朋友',icon:'👥',custom:false},{id:'business',name:'商业伙伴',icon:'💼',custom:false},{id:'weak',name:'点头之交',icon:'👋',custom:false}];
+  if(!G.npcGroups) G.npcGroups = {};
+  var fgNPCs = Object.keys(NPC_PERSONALITIES).filter(function(nid){
+    if(nid==='mom'||nid==='dad'||nid==='spouse')return false;
+    if(nid==='exColleague'&&G.totalMonths<12)return false;
+    if(nid==='mentor'&&G.totalMonths<18)return false;
+    if(nid==='gymCoach'&&G.totalMonths<6)return false;
+    return true;
+  });
+  var fgDyn = (G.socialContacts||[]).filter(function(c){ return !NPC_PERSONALITIES[c.id]; });
+  var fgKnownDyn = (G.socialContacts||[]).filter(function(c){ return NPC_PERSONALITIES[c.id] && c.id!=='mom'&&c.id!=='dad'&&c.id!=='spouse'; });
+  html += '<div class="fg-bar"><span style="color:#999;">好友分组</span><span class="fg-btn" onclick="showManageGroups()">⚙️ 管理分组</span></div>';
+  G.friendGroups.forEach(function(grp){
+    var npcsInGrp = fgNPCs.filter(function(nid){return (G.npcGroups[nid]||'weak')===grp.id;});
+    var dynInGrp = fgKnownDyn.filter(function(c){return (G.npcGroups[c.id]||'weak')===grp.id;});
+    var total = npcsInGrp.length + dynInGrp.length;
+    var collapsed = fgFoldState[grp.id]||false;
+    html += '<div class="fg-header" onclick="toggleFG(\''+grp.id+'\')"><span class="fg-arrow'+(collapsed?' fg-folded':'')+'">▼</span><span class="fg-icon">'+grp.icon+'</span><span class="fg-name">'+grp.name+'</span><span class="fg-count">'+total+'</span></div>';
+    html += '<div class="fg-body'+(collapsed?' fg-collapsed':'')+'">';
+    if(total===0){ html += '<div class="fg-empty">暂无好友</div>'; }
+    else {
+      npcsInGrp.forEach(function(nid){ html += fgRC(nid); });
+      dynInGrp.forEach(function(c){ html += fgRC(c.id); });
+    }
+    html += '</div>';
+  });
+  if(fgDyn.length>0){
+    html += '<div class="fg-bar" style="border-top:1px solid #eee;"><span style="color:#999;">其他</span></div>';
+    fgDyn.forEach(function(c){ html += fgRC(c.id); });
+  }
+  function fgRC(nid){
+    var p=NPC_PERSONALITIES[nid];if(!p)return '';
+    var hasNew=G.phone.activeChats&&G.phone.activeChats.some(function(ch){return ch.npcId===nid&&ch.status==='active';});
+    var rel=getRelationship(nid);var relDef=RELATION_TYPES[rel.type]||RELATION_TYPES.stranger;
+    var gid=G.npcGroups[nid]||'weak';var gd=G.friendGroups.find(function(g){return g.id===gid;})||G.friendGroups[3];
+    var cc={close:'#e74c3c',normal:'#3498db',business:'#f39c12',weak:'#95a5a6'};var color=cc[gid]||'#95a5a6';
+    var h='<div class="contact-item" onclick="showContactDetail(\''+nid+'\')">';
+    h+='<div class="contact-avatar" style="background:'+relDef.color+';">'+p.avatar+'</div>';
+    h+='<div class="contact-info"><div class="contact-name">'+p.name+' <span style="font-size:11px;color:'+relDef.color+';">'+relDef.icon+' '+relDef.label+'</span></div>';
+    h+='<div class="contact-status">❤'+rel.intimacy+' 🤝'+rel.trust+' 💕'+rel.affection+'</div></div>';
+    h+='<span class="fg-badge" style="background:'+color+';" onclick="event.stopPropagation();showFGSelector(\''+nid+'\')">'+gd.icon+'</span>';
+    if(hasNew)h+='<div style="width:8px;height:8px;border-radius:50%;background:#27ae60;flex-shrink:0;"></div>';
+    h+='<div class="contact-arrow">›</div></div>';
+    return h;
+  }
+  // 纯动态联系人（不在NPC_PERSONALITIES中的）- 由上方fgDyn分组渲染
   injectDynamicContacts();
-  (G.socialContacts||[]).forEach(function(c){
-    var p=NPC_PERSONALITIES[c.id];
-    if(!p) return;
-    var rel=getRelationship(c.id);
-    var relDef=RELATION_TYPES[rel.type]||RELATION_TYPES.stranger;
-    html+='<div class="contact-item" onclick="openProactiveChat(\''+c.id+'\')">';
-    html+='<div class="contact-avatar" style="background:'+relDef.color+';">'+p.avatar+'</div>';
-    html+='<div class="contact-info"><div class="contact-name">'+p.name+' <span style="font-size:11px;color:'+relDef.color+';">'+relDef.icon+' '+relDef.label+'</span></div>';
-    html+='<div class="contact-status">❤'+rel.intimacy+' 🤝'+rel.trust+' 💕'+rel.affection+'</div></div>';
-    html+='<div class="contact-arrow">›</div></div>';
-  });
   el.innerHTML=html;
+}
+
+// v4.2.0: 好友分组函数
+function initFriendGroups(){
+  if(!G.friendGroups || G.friendGroups.length===0){
+    G.friendGroups = [
+      {id:'close',name:'亲密好友',icon:'❤️',custom:false},
+      {id:'normal',name:'普通朋友',icon:'👥',custom:false},
+      {id:'business',name:'商业伙伴',icon:'💼',custom:false},
+      {id:'weak',name:'点头之交',icon:'👋',custom:false}
+    ];
+  }
+  if(!G.npcGroups) G.npcGroups = {};
+}
+function toggleFG(gid){
+  var s={};try{s=JSON.parse(localStorage.getItem('fg_fold')||'{}');}catch(e){}
+  s[gid]=!s[gid];localStorage.setItem('fg_fold',JSON.stringify(s));
+  renderContacts();
+}
+function showFGSelector(nid){
+  initFriendGroups();
+  var cur = G.npcGroups[nid] || 'weak';
+  var h = '<div class="modal-overlay" onclick="if(event.target===this)this.remove()"><div class="modal-card" style="max-width:320px;"><div class="modal-title">选择分组</div>';
+  G.friendGroups.forEach(function(g){
+    h += '<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;cursor:pointer;border-bottom:1px solid #f5f5f5;" onclick="setNpcGroup(\''+nid+'\',\''+g.id+'\');this.closest(\'.modal-overlay\').remove()">';
+    h += '<span style="font-size:18px;">'+g.icon+'</span><span style="font-size:14px;'+(cur===g.id?'font-weight:700;color:#3498db;':'')+'">'+g.name+'</span>';
+    if(cur===g.id) h += '<span style="margin-left:auto;font-size:12px;color:#3498db;">✓</span>';
+    h += '</div>';
+  });
+  h += '<div style="padding:10px 12px;color:#999;font-size:12px;cursor:pointer;" onclick="this.closest(\'.modal-overlay\').remove()">取消</div></div></div>';
+  var d=document.createElement('div');d.innerHTML=h;document.body.appendChild(d.firstChild);
+}
+
+function setNpcGroup(nid, gid){
+  initFriendGroups();
+  G.npcGroups[nid] = gid;
+  saveGame();renderContacts();
+}
+function showManageGroups(){
+  initFriendGroups();
+  var self=this;
+  var overlay = document.createElement('div');
+  overlay.className='modal-overlay';
+  overlay.onclick=function(e){if(e.target===this)this.remove();};
+  var card = document.createElement('div');
+  card.className='modal-card';
+  card.style.maxWidth='340px';
+  var h = '<div class="modal-title">管理分组 <span style="font-size:11px;color:#999;font-weight:400;">（长按删除空分组）</span></div>';
+  h += '<div id="fgMgrList" style="max-height:300px;overflow-y:auto;margin-bottom:8px;">';
+  G.friendGroups.forEach(function(g){
+    var cnt=0;
+    Object.keys(G.npcGroups).forEach(function(nid){if(G.npcGroups[nid]===g.id)cnt++;});
+    var canDel=g.custom&&cnt===0;
+    h += '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f5f5f5;" class="fg-mgr-row" data-gid="'+g.id+'">';
+    h += '<span style="font-size:16px;">'+g.icon+'</span>';
+    h += '<input class="fg-rename-input" style="flex:1;border:none;border-bottom:1px solid #eee;font-size:13px;padding:4px;outline:none;" value="'+g.name+'" '+(g.custom?'':'readonly')+'>';
+    h += '<span style="font-size:11px;color:#999;">'+cnt+'人</span>';
+    if(canDel) h += '<span style="color:#e74c3c;font-size:12px;cursor:pointer;padding:2px 6px;" onclick="deleteGroup(\''+g.id+'\')">删除</span>';
+    h += '</div>';
+  });
+  h += '</div>';
+  // 新建分组
+  h += '<div style="display:flex;gap:6px;margin-bottom:8px;">';
+  h += '<input id="fgNewName" placeholder="新分组名称" style="flex:1;border:1px solid #ddd;border-radius:6px;padding:6px 10px;font-size:13px;">';
+  h += '<button onclick="createGroup()" class="btn btn-primary btn-sm" style="padding:6px 16px;">+ 新建</button>';
+  h += '</div>';
+  h += '<div class="modal-btns"><button onclick="this.closest(\'.modal-overlay\').remove()" class="btn btn-outline">关闭</button></div>';
+  card.innerHTML=h;
+  overlay.appendChild(card);
+  document.body.appendChild(overlay);
+  // Bind rename events
+  var inputs = card.querySelectorAll('.fg-rename-input');
+  inputs.forEach(function(inp){
+    inp.addEventListener('change', function(){
+      var gid = this.closest('.fg-mgr-row').dataset.gid;
+      var grp = G.friendGroups.find(function(g){return g.id===gid;});
+      if(grp && this.value.trim()){ grp.name = this.value.trim(); saveGame(); renderContacts(); }
+    });
+  });
+}
+function createGroup(){
+  var inp=document.getElementById('fgNewName');if(!inp)return;
+  var name=inp.value.trim();if(!name)return;
+  var icons=['🎯','🌟','🔥','🎮','🎵','🍻','⚡','💡','🎨','🏆'];
+  var gid='g_'+(Date.now()%100000);
+  G.friendGroups.push({id:gid,name:name,icon:icons[Math.floor(Math.random()*icons.length)],custom:true});
+  saveGame();renderContacts();
+  // Refresh manage modal
+  var modal=document.querySelector('.modal-overlay');if(modal)modal.remove();
+  showManageGroups();
+}
+function deleteGroup(gid){
+  var grp=G.friendGroups.find(function(g){return g.id===gid;});
+  if(!grp||!grp.custom)return;
+  // Move contacts to 'weak'
+  Object.keys(G.npcGroups).forEach(function(nid){if(G.npcGroups[nid]===gid)G.npcGroups[nid]='weak';});
+  G.friendGroups=G.friendGroups.filter(function(g){return g.id!==gid;});
+  saveGame();renderContacts();
+  var modal=document.querySelector('.modal-overlay');if(modal)modal.remove();
+  showManageGroups();
+}
+
+// ===== 家庭系统：初始化子女关系 =====
+function initChildRelationships(){
+  if(!G.childNames)G.childNames=[];
+  if(!G.childGenders)G.childGenders=[];
+  var boyNames=['小宝','豆豆','乐乐','小宇','小杰','小豪','天天','小瑞','小晨','小昱'];
+  var girlNames=['小美','甜甜','朵朵','小雨','小萱','小瑶','小琳','小彤','小悦','小萌'];
+  for(var i=0;i<G.children;i++){
+    var cid='child_'+i;
+    if(!G.childNames[i]){
+      var isBoy=Math.random()>0.5;
+      G.childNames[i]=isBoy?boyNames[Math.floor(Math.random()*boyNames.length)]:girlNames[Math.floor(Math.random()*girlNames.length)];
+      G.childGenders[i]=isBoy?'boy':'girl';
+    }
+    if(!G.relationships)G.relationships={};
+    if(!G.relationships[cid]){
+      G.relationships[cid]={type:'family',intimacy:60,trust:70,affection:80,metMonth:G.totalMonths,lastInteraction:0,chatCount:0,giftCount:0,dateCount:0,flags:{}};
+    }
+  }
+}
+
+// ===== 获取子女性格/对话（按年龄动态生成） =====
+function getChildTraits(age){
+  if(age<3)return['咿呀学语','懵懂','黏人','爱哭'];
+  if(age<6)return['好奇','活泼','爱问为什么','天真'];
+  if(age<12)return['调皮','爱玩','开始有自己想法','喜欢动画'];
+  if(age<16)return['叛逆期','爱面子','开始独立','喜欢游戏'];
+  if(age<20)return['青春期','迷茫','开始思考未来','偶尔顶嘴'];
+  return['成年','独立','开始工作','懂事'];
+}
+function getChildResponses(age){
+  if(age<3)return['妈妈~爸爸~','抱抱~','嘻嘻~','要抱抱！'];
+  if(age<6)return['为什么呀？','我也要去！','妈妈你看！','我乖不乖？'];
+  if(age<12)return['作业好多...','我想玩游戏','同学都有这个！','妈妈我能吃冰淇淋吗？'];
+  if(age<16)return['知道了别烦我','你们不懂','给我点自由吧','我同学都这样'];
+  if(age<20)return['我有自己的想法','别老管我','知道了我会注意的','我在考虑考研/工作'];
+  return['爸妈你们放心','我会照顾好自己的','工作还行','我准备结婚了'];
+}
+function getChildFollowups(age){
+  if(age<3)return['咿咿呀呀...','妈妈~要~','爸爸抱~','哇~'];
+  if(age<6)return['我还要听故事！','幼儿园今天...','我能养小狗吗？','为什么天是蓝的？'];
+  if(age<12)return['老师今天表扬我了','小明又欺负我','我想学钢琴','考试考了90分'];
+  if(age<16)return['我同学在用iPhone','这次考试没考好','我想学画画','你们别翻我日记'];
+  if(age<20)return['我交了个朋友','考研好难啊','实习工资不高','我想去大城市'];
+  return['过年带对象回来','我涨工资了','你们注意身体','我准备买房了'];
+}
+function getChildAvatar(gender,age){
+  if(age<3)return'👶';
+  if(gender==='boy')return age<12?'👦':'🧒';
+  return age<12?'👧':'👧';
+}
+
+// ===== 通讯录详情页 =====
+function showContactDetail(npcId){
+  initChildRelationships();
+  var p,isChild=false,childIdx=-1;
+  var isFamilyMember=false;
+  if(npcId.startsWith('child_')){
+    isChild=true;
+    childIdx=parseInt(npcId.split('_')[1]);
+    var age=Math.floor(G.childAges[childIdx]);
+    var gender=G.childGenders[childIdx];
+    p={name:G.childNames[childIdx],avatar:getChildAvatar(gender,age),traits:getChildTraits(age)};
+    isFamilyMember=true;
+  }else{
+    p=NPC_PERSONALITIES[npcId];
+    if(!p)return;
+    isFamilyMember=(npcId==='mom'||npcId==='dad'||npcId==='spouse');
+  }
+  var rel=getRelationship(npcId);
+  var relDef=RELATION_TYPES[rel.type]||RELATION_TYPES.stranger;
+  document.getElementById('contactDetailName').textContent=p.avatar+' '+p.name;
+  var html='';
+  // 头像+名字+关系
+  html+='<div class="cdetail-profile">';
+  html+='<div class="cdetail-avatar" style="background:'+relDef.color+';">'+p.avatar+'</div>';
+  html+='<div class="cdetail-name">'+p.name+'</div>';
+  html+='<div class="cdetail-relation">'+relDef.icon+' '+relDef.label+'</div>';
+  if(isChild){
+    var ageY=Math.floor(G.childAges[childIdx]);
+    var ageM=Math.round((G.childAges[childIdx]-ageY)*12);
+    var genderTxt=G.childGenders[childIdx]==='boy'?'男孩':'女孩';
+    var genderCls=G.childGenders[childIdx]==='boy'?'child-gender-boy':'child-gender-girl';
+    html+='<span class="child-age-badge '+genderCls+'">'+genderTxt+' · '+ageY+'岁'+(ageM>0?ageM+'个月':'')+'</span>';
+  }
+  html+='<div class="cdetail-stats">';
+  html+='<div class="cdetail-stat"><div class="num">'+rel.intimacy+'</div><div class="lbl">亲密</div></div>';
+  html+='<div class="cdetail-stat"><div class="num">'+rel.trust+'</div><div class="lbl">信任</div></div>';
+  html+='<div class="cdetail-stat"><div class="num">'+rel.affection+'</div><div class="lbl">好感</div></div>';
+  html+='</div></div>';
+  // 家人可见玩家状态
+  if(isFamilyMember){
+    html+='<div class="cdetail-section">';
+    html+='<div class="cdetail-section-title">👁️ 家人眼中的你</div>';
+    html+='<div class="cdetail-status-card">';
+    html+='<div class="cdetail-status-item"><span class="cdetail-status-lbl">💰 存款</span><span class="cdetail-status-val">'+fmt(G.cash)+'</span></div>';
+    html+='<div class="cdetail-status-item"><span class="cdetail-status-lbl">💍 婚姻</span><span class="cdetail-status-val">'+(G.spouse?'已婚':'未婚')+'</span></div>';
+    html+='<div class="cdetail-status-item"><span class="cdetail-status-lbl">👶 子女</span><span class="cdetail-status-val">'+(G.children>0?G.children+'个小孩':'暂无')+'</span></div>';
+    html+='<div class="cdetail-status-item"><span class="cdetail-status-lbl">💼 职业</span><span class="cdetail-status-val">'+(G.selfEmployed?'创业者':JOBS[G.jobIndex].name)+'</span></div>';
+    html+='<div class="cdetail-status-item"><span class="cdetail-status-lbl">😊 心情</span><span class="cdetail-status-val">'+Math.round(G.mood)+'/200</span></div>';
+    html+='</div>';
+    if(isChild){
+      html+='<div style="font-size:12px;color:#666;margin-top:8px;line-height:1.6;">'+getChildParentComment(childIdx)+'</div>';
+    }
+    html+='</div>';
+  }
+  // 互动选项
+  html+='<div class="cdetail-section">';
+  html+='<div class="cdetail-section-title">💬 互动</div>';
+  html+='<div class="cdetail-actions">';
+  html+='<div class="cdetail-action-btn" onclick="contactDetailChat(\''+npcId+'\')">';
+  html+='<span class="act-icon">💬</span>';
+  html+='<span class="act-info"><span class="act-name">聊天</span><span class="act-desc">和'+(isChild?p.name:p.name)+'说说话</span></span>';
+  html+='<span class="act-arrow">›</span></div>';
+  if(isChild){
+    html+='<div class="cdetail-action-btn" onclick="tutorChild('+childIdx+')">';
+    html+='<span class="act-icon">📚</span>';
+    html+='<span class="act-info"><span class="act-name">辅导作业</span><span class="act-desc">提高学习成绩，消耗精力</span></span>';
+    html+='<span class="act-cost">健康-5</span><span class="act-arrow">›</span></div>';
+    html+='<div class="cdetail-action-btn" onclick="giftChild('+childIdx+')">';
+    html+='<span class="act-icon">🎁</span>';
+    html+='<span class="act-info"><span class="act-name">买礼物</span><span class="act-desc">增加亲密度和好感度</span></span>';
+    html+='<span class="act-cost">¥2000</span><span class="act-arrow">›</span></div>';
+    html+='<div class="cdetail-action-btn" onclick="accompanyChild('+childIdx+')">';
+    html+='<span class="act-icon">🎮</span>';
+    html+='<span class="act-info"><span class="act-name">陪伴玩耍</span><span class="act-desc">一起玩游戏，增加感情</span></span>';
+    html+='<span class="act-cost">免费</span><span class="act-arrow">›</span></div>';
+  }
+  html+='</div></div>';
+  document.getElementById('contactDetailBody').innerHTML=html;
+  document.getElementById('contactDetailOverlay').classList.add('show');
+}
+function closeContactDetail(){
+  document.getElementById('contactDetailOverlay').classList.remove('show');
+}
+function contactDetailChat(npcId){
+  closeContactDetail();
+  setTimeout(function(){openProactiveChat(npcId);},200);
+}
+function getChildParentComment(idx){
+  var age=Math.floor(G.childAges[idx]);
+  var rel=getRelationship('child_'+idx);
+  if(age<6)return'看着'+(G.childNames[idx])+'一天天长大，你感到无比幸福。亲密值'+rel.intimacy+'，每天回家听到"爸爸妈妈"的叫声，再累也值得。';
+  if(age<12)return(G.childNames[idx])+'正在上小学，正是调皮的年纪。亲密值'+rel.intimacy+'，有时候被老师叫家长，但看到孩子的笑脸又气不起来了。';
+  if(age<16)return'青春期的'+(G.childNames[idx])+'开始有点叛逆了。亲密值'+rel.intimacy+'，你试着理解这个年纪的孩子，但沟通越来越需要技巧。';
+  if(age<20)return(G.childNames[idx])+'正在经历人生重要的成长阶段。亲密值'+rel.intimacy+'，你给'+(G.childGenders[idx]==='boy'?'他':'她')+'一些空间，但心里始终牵挂。';
+  return(G.childNames[idx])+'已经长大成人了。亲密值'+rel.intimacy+'，你为'+(G.childGenders[idx]==='boy'?'他':'她')+'感到骄傲，也希望'+(G.childGenders[idx]==='boy'?'他':'她')+'幸福。';
+}
+
+// ===== 子女互动功能 =====
+function tutorChild(idx){
+  if(G.health<10){showToast('😵 你太累了，先休息一下吧');return;}
+  G.health=clamp(G.health-5,0,200);
+  var rel=getRelationship('child_'+idx);
+  rel.intimacy=clamp(rel.intimacy+3,0,100);
+  rel.trust=clamp(rel.trust+2,0,100);
+  G.IQ=clamp(G.IQ+1,0,200);
+  G.mood=clamp(G.mood-3,0,200);
+  var age=Math.floor(G.childAges[idx]);
+  var msg=age<12?'📚 你耐心辅导了'+(G.childNames[idx])+'的作业，孩子似懂非懂地点头。亲密+3，信任+2，你的IQ+1':
+  '📚 你和'+(G.childNames[idx])+'一起学习讨论，孩子开始理解你的用心。亲密+3，信任+2，你的IQ+1';
+  showToast(msg);
+  saveGame();refreshAll();
+  // Refresh detail view
+  showContactDetail('child_'+idx);
+}
+function giftChild(idx){
+  if(G.cash<2000){showToast('💸 钱不够了！需要¥2000');return;}
+  G.cash-=2000;
+  var rel=getRelationship('child_'+idx);
+  rel.intimacy=clamp(rel.intimacy+5,0,100);
+  rel.affection=clamp(rel.affection+8,0,100);
+  G.mood=clamp(G.mood+5,0,200);
+  var age=Math.floor(G.childAges[idx]);
+  var gift=age<6?'玩具':age<12?'想要的书':age<16?'心仪的球鞋':'精美的礼物';
+  showToast('🎁 你给'+(G.childNames[idx])+'买了'+gift+'，孩子开心得跳起来！亲密+5，好感+8');
+  saveGame();refreshAll();
+  showContactDetail('child_'+idx);
+}
+function accompanyChild(idx){
+  var rel=getRelationship('child_'+idx);
+  rel.intimacy=clamp(rel.intimacy+4,0,100);
+  rel.affection=clamp(rel.affection+3,0,100);
+  rel.trust=clamp(rel.trust+2,0,100);
+  G.mood=clamp(G.mood+8,0,200);
+  G.health=clamp(G.health+2,0,200);
+  var age=Math.floor(G.childAges[idx]);
+  var act=age<6?'一起玩积木':age<12?'下棋':age<16?'打篮球':'散步聊天';
+  showToast('🎮 你和'+(G.childNames[idx])+'一起'+act+'，度过了愉快的时光。亲密+4，好感+3，信任+2');
+  saveGame();refreshAll();
+  showContactDetail('child_'+idx);
 }
 
 // ===== 打开主动聊天（AI驱动） =====
 async function openProactiveChat(npcId){
   initChatHistory();
   injectDynamicContacts();
-  const p=NPC_PERSONALITIES[npcId];if(!p)return;
+  initChildRelationships();
+  var isChild=npcId.startsWith('child_');
+  var p=NPC_PERSONALITIES[npcId];
+  if(isChild){
+    var cIdx=parseInt(npcId.split('_')[1]);
+    var cAge=Math.floor(G.childAges[cIdx]||0);
+    var cGender=G.childGenders[cIdx]||'boy';
+    p={name:G.childNames[cIdx]||('孩子'+(cIdx+1)),avatar:getChildAvatar(cGender,cAge),traits:getChildTraits(cAge),greetings:[{text:'爸爸妈妈~',tag:'日常'},{text:'今天学校里发生了好多事！',tag:'分享'},{text:'我有个事情想跟你们说',tag:'谈心'}],responses:{日常:getChildResponses(cAge),分享:getChildResponses(cAge),谈心:getChildResponses(cAge)},followups:getChildFollowups(cAge)};
+    NPC_PERSONALITIES[npcId]=p;
+    // Dynamic style instruction based on age
+    var ageStage=cAge<3?'婴幼儿':cAge<6?'学龄前':cAge<12?'小学生':cAge<16?'初中生':cAge<20?'青少年':'成年人';
+    var genderTxt=cGender==='boy'?'儿子':'女儿';
+    NPC_STYLE_INSTRUCTIONS[npcId]='你是玩家的'+genderTxt+'，今年'+cAge+'岁，正处于'+ageStage+'阶段。你们是父子/母子关系，亲密无间但也需要正确引导。你的性格是'+p.traits.join('、')+'。和孩子聊天要用适合'+ageStage+'的语气，婴幼儿用叠词和简单句，学龄前好奇多问，小学开始有自己想法，青春期需要尊重和理解。回复简短自然，像真实亲子对话，不超过3句话。';
+    NPC_RELATIONS[npcId]='子女';
+  }
+  if(!p)return;
   G._openProactiveNpc=npcId;
   // Mark chat history as read
   if(G.phone.chatHistory&&G.phone.chatHistory[npcId]){
@@ -5038,7 +5470,7 @@ async function openProactiveChat(npcId){
   // Show relationship bar
   updateChatRelBar(npcId);
   // Show/hide date button (family members don't need date button)
-  const isFamily=['dad','mom','spouse'].indexOf(npcId)>=0;
+  const isFamily=['dad','mom','spouse'].indexOf(npcId)>=0||npcId.startsWith('child_');
   const dateBtn=document.getElementById('chatDateBtn');
   if(dateBtn)dateBtn.style.display=isFamily?'none':'block';
   // Focus input
@@ -7862,6 +8294,7 @@ function updateRelationship(npcId,changes){
   // 家人保护：父母的感情永远只增不减，底值高
   var isFamily=(npcId==='dad'||npcId==='mom');
   var isSpouse=(npcId==='spouse');
+  var isChild=npcId.startsWith('child_');
   if(isFamily){
     // 父母：亲密值≥70，信任≥80，好感≥60，且永远不会下降
     rel.intimacy=clamp(Math.max(rel.intimacy,70)+(changes.intimacy>0?changes.intimacy:0),70,100);
@@ -7873,6 +8306,12 @@ function updateRelationship(npcId,changes){
     rel.intimacy=clamp(Math.max(rel.intimacy,40)+(changes.intimacy||0),20,100);
     rel.trust=clamp(Math.max(rel.trust,50)+(changes.trust||0),20,100);
     rel.affection=clamp(Math.max(rel.affection,30)+(changes.affection||0),15,100);
+  }else if(isChild){
+    // 子女：关系自然增长，不会大幅下降
+    rel.intimacy=clamp(rel.intimacy+(changes.intimacy||0),30,100);
+    rel.trust=clamp(rel.trust+(changes.trust||0),30,100);
+    rel.affection=clamp(rel.affection+(changes.affection||0),40,100);
+    rel.type='family';
   }else{
     if(changes.intimacy)rel.intimacy=clamp(rel.intimacy+changes.intimacy,0,100);
     if(changes.trust)rel.trust=clamp(rel.trust+changes.trust,0,100);
@@ -9581,7 +10020,7 @@ function _drawRelationNetwork(canvasId){
 var _v4_origStartGame = startGame;
 function startGame(){
   if(loadGame()&&!G.gameOver){migrateSave();document.getElementById('welcomePage').style.display='none';document.getElementById('gameApp').style.display='flex';initStockPrices();initPhoneState();refreshAll();_v4_postLoadHook();return;}
-  G=defaultState();initStockPrices();initPhoneState();
+  G=defaultState();initStockPrices();initPhoneState();initChildRelationships();
   _v4_boostInitialState();
   saveGame();
   document.getElementById('welcomePage').style.display='none';
@@ -9589,7 +10028,7 @@ function startGame(){
   refreshAll();
   setTimeout(function(){showTutorial('welcome');},500);
 }
-function _v4_postLoadHook(){if(!G.tutorialCompleted)G.tutorialCompleted=[];if(!G._assetHistory)G._assetHistory=[];}
+function _v4_postLoadHook(){if(!G.tutorialCompleted)G.tutorialCompleted=[];if(!G._assetHistory)G._assetHistory=[];initChildRelationships();}
 
 var _v4_origAdvanceMonth = advanceMonth;
 window['advanceMonth'] = function(){
@@ -9665,6 +10104,7 @@ function showV4QuickMenu(){
 </script>
 
 </body>
+</html>
 
 <script>
 
