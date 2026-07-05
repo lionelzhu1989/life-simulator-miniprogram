@@ -165,6 +165,9 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 .dim-score{width:36px;font-size:14px;font-weight:700;text-align:right;flex-shrink:0;}
 .task-item{display:flex;align-items:center;padding:12px 0;border-bottom:1px solid #f0f0f0;}
 .task-item:last-child{border-bottom:none;}
+.invest-card{background:#fff;border-radius:12px;padding:16px;margin:10px 0;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.invest-stat{display:flex;justify-content:space-between;padding:6px 0;font-size:13px}
+.risk-low{color:#4CAF50}.risk-mid{color:#FF9800}.risk-high{color:#f44336}.risk-extreme{color:#9C27B0}
 .task-icon{font-size:24px;margin-right:12px;flex-shrink:0;}
 .task-info{flex:1;}
 .task-name{font-size:14px;font-weight:500;}
@@ -459,297 +462,129 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 .chat-bub.money-notice{background:linear-gradient(135deg,#fff3cd,#ffeeba);align-self:center;font-size:12px;color:#856404;padding:6px 14px;border-radius:8px;max-width:90%;text-align:center;}
 .chat-bub.money-transfer{background:linear-gradient(135deg,#d4efdf,#a9dfbf);align-self:center;font-size:12px;color:#1e8449;padding:6px 14px;border-radius:8px;max-width:90%;text-align:center;}
 
+.toast-container{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:10000;display:flex;flex-direction:column-reverse;gap:8px;pointer-events:none;width:90%;max-width:360px}
+.toast{background:rgba(50,50,50,.92);color:#fff;padding:10px 16px;border-radius:8px;font-size:14px;text-align:center;box-shadow:0 4px 16px rgba(0,0,0,.3);animation:toast-in .3s ease,toast-out .3s ease 1.2s forwards;backdrop-filter:blur(4px)}
+.toast.success{border-left:3px solid #4CAF50}
+.toast.warning{border-left:3px solid #FF9800}
+.toast.danger{border-left:3px solid #f44336}
+.toast.info{border-left:3px solid #2196F3}
+@keyframes toast-in{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes toast-out{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-10px)}}
 
-/* ===== 玩法指南 ===== */
-.guide-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:3000;display:none;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s;}
-.guide-overlay.show{opacity:1;pointer-events:auto;}
-.guide-box{background:#fff;border-radius:16px;width:90%;max-width:400px;max-height:80vh;overflow:hidden;display:flex;flex-direction:column;transform:scale(0.9);transition:transform .3s;}
-.guide-overlay.show .guide-box{transform:scale(1);}
-.guide-header{background:linear-gradient(135deg,#3498db,#2980b9);color:#fff;padding:20px;text-align:center;flex-shrink:0;}
-.guide-header h2{font-size:20px;margin-bottom:6px;}
-.guide-header p{font-size:13px;opacity:0.8;}
-.guide-body{flex:1;overflow-y:auto;padding:16px 20px;}
-.guide-step{display:flex;gap:12px;margin-bottom:20px;align-items:flex-start;}
-.guide-num{width:28px;height:28px;background:var(--primary);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;}
-.guide-text h4{font-size:15px;margin-bottom:4px;color:#333;}
-.guide-text p{font-size:13px;color:#666;line-height:1.5;}
-.guide-tip{background:#f0f8ff;border-left:3px solid var(--primary);padding:10px 12px;border-radius:0 8px 8px 0;margin:12px 0;font-size:12px;color:#555;line-height:1.5;}
-.guide-footer{padding:12px 20px;border-top:1px solid #eee;flex-shrink:0;display:flex;gap:10px;}
-.guide-footer .btn{flex:1;}
-.guide-page{display:none;}
-.guide-page.active{display:block;}
-.guide-dots{display:flex;justify-content:center;gap:6px;padding:10px 0;}
-.guide-dot{width:8px;height:8px;background:#ddd;border-radius:50%;transition:background .2s;}
-.guide-dot.active{background:var(--primary);}
-.help-fab{position:fixed;bottom:150px;right:16px;width:50px !important;height:50px !important;background:var(--primary);color:#fff;border-radius:50% !important;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 4px 12px rgba(52,152,219,0.4);cursor:pointer;z-index:500;transition:transform .2s;padding:0 !important;box-sizing:border-box !important;border:none !important;}
-.help-fab:active{transform:scale(0.9);}
+.npc-result{display:flex;align-items:center;gap:8px;padding:8px;border-bottom:1px solid #eee}
+.npc-icon{font-size:24px}.npc-name{font-weight:700;flex:1}
+.npc-tag{font-size:12px;color:#fff;background:#4472C4;padding:2px 6px;border-radius:4px}
+.npc-benefit{font-size:12px;color:#666}
 
+.attr-warn{color:#FF9800;animation:pw 1.5s ease-in-out infinite}
+.attr-danger{color:#f44336;animation:pd .8s ease-in-out infinite}
+@keyframes pw{0%,100%{opacity:1}50%{opacity:.6}}
+@keyframes pd{0%,100%{opacity:1}50%{opacity:.4}}
+.attr-threshold{font-size:11px;color:#999;display:block}
+.social-tier{margin:8px 0;background:#f8f9fa;border-radius:8px;padding:12px}
+.social-tier h4{font-size:14px;color:#4472C4;margin-bottom:8px}
+.social-tier .btn-row{display:flex;gap:6px}
+.social-tier button{flex:1;font-size:12px;padding:8px 4px}
 
-/* v4.0.0: Button shake + phone tab highlight for unread messages */
-@keyframes btnShake{
-  0%,100%{transform:translateX(0)}
-  10%,30%,50%,70%,90%{transform:translateX(-4px)}
-  20%,40%,60%,80%{transform:translateX(4px)}
-}
-.btn-shake{animation:btnShake .5s ease-in-out}
-#nextMonthBtn.btn-shake{border-color:#e74c3c!important;background:linear-gradient(135deg,#fff5f5,#ffe8e8)!important}
-.tab-phone-highlight{
-  position:relative;
-  color:#e74c3c!important;
-  animation:btnShake .5s ease-in-out;
-}
-.tab-phone-highlight::after{
-  content:'';
-  position:absolute;
-  top:4px;right:18px;
-  width:10px;height:10px;
-  background:#e74c3c;
-  border-radius:50%;
-  box-shadow:0 0 6px rgba(231,76,60,.6);
-  animation:tabPulse 1.5s infinite;
-}
-@keyframes tabPulse{
-  0%,100%{transform:scale(1);opacity:1}
-  50%{transform:scale(1.3);opacity:.6}
-}
+/* ====== Bottom Tab Navigation ====== */
+.bottom-tab{display:flex;justify-content:space-around;padding:6px 0;background:#fff;border-top:1px solid #eee;position:fixed;bottom:0;left:0;right:0;z-index:1000;box-shadow:0 -2px 10px rgba(0,0,0,.05)}
+.tab-item{display:flex;flex-direction:column;align-items:center;font-size:10px;color:#999;cursor:pointer;padding:4px 8px;transition:color .2s}
+.tab-item.active{color:#4472C4}
+.tab-item .icon{font-size:20px;margin-bottom:2px}
+.tab-page{display:none;padding-bottom:60px;animation:fadeIn .2s ease}
+.tab-page.active{display:block}
+@keyframes fadeIn{from{opacity:.5}to{opacity:1}}
+@media(max-width:375px){.tab-item{font-size:9px;padding:4px 6px}}
 
-/* v4.3.0: 宠物商店+宠物系统 */
-.pet-subtabs{display:flex;background:#fff;border-radius:0;margin:0;padding:8px 12px;gap:0;border-bottom:1px solid #f0f0f0;position:sticky;top:0;z-index:10;}
-.pet-subtab{flex:1;padding:8px 4px;text-align:center;font-size:13px;font-weight:500;color:#999;cursor:pointer;border-radius:8px;transition:all .2s;}
-.pet-subtab.active{color:#ff9800;background:#fff3e0;font-weight:700;}
-.pet-subtab:active{opacity:.7;}
-#petStoreView{padding:12px;max-width:480px;margin:0 auto;}
-#petDetailView{padding:0 12px 12px;max-width:480px;margin:0 auto;}
-.pet-shop-hd{text-align:center;padding:16px 0 12px;}
-.pet-shop-hd h2{margin:0;font-size:18px;font-weight:700;color:#333;}
-.pet-shop-hd .coin{font-size:13px;color:#999;margin-top:4px;}
-.pet-cat-bar{display:flex;gap:8px;margin-bottom:12px;overflow-x:auto;padding:4px 0;}
-.pet-cat-btn{flex-shrink:0;padding:8px 16px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:2px solid #e8e8e8;background:#fff;color:#666;transition:all .2s;}
-.pet-cat-btn.active{border-color:#ff9800;background:#fff3e0;color:#ff9800;font-weight:700;}
-.pet-cat-btn:active{transform:scale(0.95);}
-.pet-shop-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
-.pet-shop-item{background:#fff;border-radius:14px;padding:14px 10px;text-align:center;cursor:pointer;transition:all .15s;border:1px solid #f0f0f0;position:relative;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.04);}
-.pet-shop-item:active{transform:scale(0.96);box-shadow:0 4px 16px rgba(0,0,0,0.1);}
-.pet-shop-item.rarity-common{border-color:#e0e0e0;}
-.pet-shop-item.rarity-rare{border-color:#ff9800;background:linear-gradient(135deg,#fff,#fff8f0);}
-.pet-shop-item.rarity-epic{border-color:#9c27b0;background:linear-gradient(135deg,#fff,#faf0ff);}
-.pet-shop-item.rarity-legend{border-color:#f44336;background:linear-gradient(135deg,#fff5f5,#fff);box-shadow:0 2px 12px rgba(244,67,54,0.15);}
-.pet-shop-item .ps-rank{font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;display:inline-block;margin-bottom:8px;}
-.pet-shop-item.rarity-common .ps-rank{background:#f0f0f0;color:#666;}
-.pet-shop-item.rarity-rare .ps-rank{background:#fff3e0;color:#ff9800;}
-.pet-shop-item.rarity-epic .ps-rank{background:#f3e5f5;color:#9c27b0;}
-.pet-shop-item.rarity-legend .ps-rank{background:#ffebee;color:#f44336;animation:legendGlow 2s infinite;}
-@keyframes legendGlow{0%,100%{box-shadow:0 0 4px rgba(244,67,54,0.3);}50%{box-shadow:0 0 12px rgba(244,67,54,0.6);}}
-.pet-shop-item .ps-emoji{font-size:42px;display:block;margin:4px 0 6px;transition:transform .3s;}
-.pet-shop-item:active .ps-emoji{transform:scale(1.2);}
-.pet-shop-item .ps-name{font-size:14px;font-weight:600;color:#333;margin-bottom:2px;}
-.pet-shop-item .ps-desc{font-size:11px;color:#999;margin-bottom:8px;line-height:1.3;}
-.pet-shop-item .ps-price{font-size:15px;font-weight:700;color:#ff9800;margin-top:6px;}
-.pet-shop-item .ps-price.owned{color:#4caf50;font-size:12px;}
-.pet-shop-item .ps-icon{font-size:36px;display:block;margin:6px 0 8px;}
-.pet-shop-item .ps-effect{font-size:10px;color:#666;background:#f8f9fa;padding:3px 8px;border-radius:6px;margin-top:4px;display:inline-block;}
-.pet-shop-empty{padding:40px 20px;text-align:center;}
-.pet-shop-empty .empty-icon{font-size:64px;display:block;margin-bottom:12px;}
-.pet-shop-empty .empty-text{font-size:14px;color:#999;margin-bottom:16px;}
+.dim-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f5f5f5}
+.dim-name{width:50px;font-weight:600;font-size:13px;color:#333}
+.dim-bar{flex:1;height:8px;background:#eee;border-radius:4px;overflow:hidden}
+.dim-fill{height:100%;background:linear-gradient(90deg,#4472C4,#6a9fd8);border-radius:4px;transition:width .3s}
+.dim-score{width:80px;text-align:right;font-size:12px;color:#666}
+.dim-tip{display:block;font-size:11px;color:#999;padding-left:58px;padding-bottom:6px}
+.ach-tier{margin:12px 0}
+.ach-tier-title{font-size:14px;font-weight:600;margin-bottom:8px;padding-left:8px;border-left:3px solid #FFD700}
+.ach-item{display:flex;align-items:center;gap:10px;padding:10px 8px;border-bottom:1px solid #f5f5f5}
+.ach-item.locked{opacity:.4;filter:grayscale(.5)}
+.ach-icon{font-size:20px;width:32px;text-align:center}
+.ach-name{flex:1;font-size:14px}
+.ach-cond{font-size:11px;color:#999}
+.ach-unlocked{color:#4CAF50;font-size:12px}
+.chart-box{background:#fff;border-radius:12px;padding:16px;margin:12px 0;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.chart-title{font-size:14px;font-weight:600;margin-bottom:8px;color:#333}
+.mini-chart{height:80px;display:flex;align-items:flex-end;gap:2px;padding:0 4px}
+.chart-bar{flex:1;background:linear-gradient(180deg,#4472C4,#6a9fd8);border-radius:2px 2px 0 0;min-width:8px;transition:height .3s}
+.chart-bar:hover{opacity:.8}
+.pie-legend{display:flex;justify-content:center;gap:12px;margin-top:8px;flex-wrap:wrap}
+.pie-legend span{display:flex;align-items:center;font-size:12px;color:#666}
+.pie-legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px}
+.dim-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f5f5f5}
+.dim-name{width:50px;font-weight:600;font-size:13px;color:#333}
+.dim-bar{flex:1;height:8px;background:#eee;border-radius:4px;overflow:hidden}
+.dim-fill{height:100%;background:linear-gradient(90deg,#4472C4,#6a9fd8);border-radius:4px;transition:width .3s}
+.dim-score{width:80px;text-align:right;font-size:12px;color:#666}
+.dim-tip{display:block;font-size:11px;color:#999;padding-left:58px;padding-bottom:6px}
+.ach-tier{margin:12px 0}
+.ach-tier-title{font-size:14px;font-weight:600;margin-bottom:8px;padding-left:8px;border-left:3px solid #FFD700}
+.ach-item{display:flex;align-items:center;gap:10px;padding:10px 8px;border-bottom:1px solid #f5f5f5}
+.ach-item.locked{opacity:.4;filter:grayscale(.5)}
+.ach-icon{font-size:20px;width:32px;text-align:center}
+.ach-name{flex:1;font-size:14px}
+.ach-cond{font-size:11px;color:#999}
+.ach-unlocked{color:#4CAF50;font-size:12px}
 
-/* 宠物详情页（保留增强） */
-.pet-card{background:linear-gradient(135deg,#fff9f0,#fff);border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 2px 16px rgba(255,152,0,0.1);border:1px solid #ffe0b2;}
-.pet-display{text-align:center;padding:12px 0;}
-.pet-emoji{font-size:64px;display:block;margin:0 auto;transition:transform .3s;cursor:pointer;user-select:none;}
-.pet-emoji:active{transform:scale(1.2) rotate(10deg);}
-.pet-emoji.pet-acting{animation:petAct .6s ease;}
-@keyframes petAct{0%,100%{transform:scale(1);}50%{transform:scale(1.3) rotate(-15deg);}}
-.pet-name{font-size:18px;font-weight:700;color:#333;margin:8px 0 2px;}
-.pet-stage{font-size:12px;color:#ff9800;background:#fff3e0;padding:2px 10px;border-radius:10px;display:inline-block;}
-.pet-bars{margin-top:12px;}
-.pet-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
-.bar-label{width:52px;font-size:12px;color:#666;text-align:right;flex-shrink:0;}
-.bar-track{flex:1;height:14px;background:#f5f5f5;border-radius:7px;overflow:hidden;position:relative;}
-.bar-fill{height:100%;border-radius:7px;transition:width .5s;position:relative;}
-.bar-hunger{background:linear-gradient(90deg,#ff9800,#ff5722);}
-.bar-hygiene{background:linear-gradient(90deg,#2196f3,#03a9f4);}
-.bar-mood{background:linear-gradient(90deg,#e91e63,#ff5722);}
-.bar-energy{background:linear-gradient(90deg,#4caf50,#8bc34a);}
-.bar-intimacy{background:linear-gradient(90deg,#9c27b0,#e040fb);}
-.bar-val{width:32px;font-size:11px;color:#999;text-align:right;flex-shrink:0;}
-.pet-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px;}
-.pet-btn{display:flex;flex-direction:center;align-items:center;flex-direction:column;gap:3px;padding:10px 4px;background:#fff;border:1px solid #ffe0b2;border-radius:12px;cursor:pointer;transition:all .15s;}
-.pet-btn:active{background:#fff3e0;transform:scale(0.95);}
-.pet-btn .b-icon{font-size:22px;}
-.pet-btn .b-name{font-size:11px;color:#666;font-weight:500;}
-.pet-btn .b-cost{font-size:10px;color:#999;}
-/* ===== 宠物迷你游戏CSS ===== */
-.game-overlay{position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);animation:fadeIn .2s;}
-@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
-.mini-game{background:#fff;border-radius:20px;padding:24px 20px;min-width:280px;max-width:90vw;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:slideUp .3s;}
-@keyframes slideUp{from{transform:translateY(40px);opacity:0;}to{transform:translateY(0);opacity:1;}}
-.mini-game h3{margin:0 0 8px;font-size:18px;}
-.mg-timer{font-size:36px;font-weight:700;color:#ff5722;text-align:center;margin:8px 0;}
-.mg-score{font-size:16px;font-weight:600;color:#333;text-align:center;margin:6px 0;}
-.mg-target{cursor:pointer;user-select:none;transition:transform .1s;}
-.mg-target:active{transform:scale(0.85);}
-.mg-target.caught{animation:caughtAnim .4s ease-out;}
-@keyframes caughtAnim{0%{transform:scale(1.3);opacity:1;}100%{transform:scale(0);opacity:0;}}
-.mg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:180px;margin:12px auto;}
-.mg-train-cell{transition:all .15s;border:2px solid #e0e0e0;}
-.mg-train-cell.active{background:#ff9800 !important;border-color:#ff5722;transform:scale(1.05);}
-.mg-train-cell.correct{background:#4caf50 !important;border-color:#2e7d32;}
-.mg-train-cell.wrong{background:#e74c3c !important;border-color:#c0392b;}
+/* ====== Onboarding Tutorial ====== */
+.ob-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;animation:fadeIn .3s}
+.ob-card{background:#fff;border-radius:16px;padding:24px 20px;width:85%;max-width:340px;box-shadow:0 8px 40px rgba(0,0,0,.3)}
+.ob-step{display:none}.ob-step.active{display:block}
+.ob-title{font-size:18px;font-weight:700;margin-bottom:12px}
+.ob-body{font-size:14px;line-height:1.7;color:#555;margin-bottom:20px;min-height:80px}
+.ob-actions{display:flex;justify-content:space-between;gap:8px}
+.ob-actions button{flex:1;padding:10px;border:none;border-radius:8px;font-size:14px;cursor:pointer}
+.ob-actions .btn-prev{background:#f0f0f0;color:#333}
+.ob-actions .btn-next{background:#4472C4;color:#fff}
+.ob-progress{display:flex;gap:6px;margin-bottom:16px;justify-content:center}
+.pdot{width:8px;height:8px;border-radius:50%;background:#ddd;transition:all .3s}
+.pdot.active{background:#4472C4;transform:scale(1.2)}
+.pdot.done{background:#4CAF50}
+.ob-skip{font-size:12px;color:#999;background:none;border:none;cursor:pointer;margin-top:12px;width:100%;text-align:center}
+
+.age-bar{display:flex;align-items:center;gap:8px;padding:10px 16px;background:#f8f9fa;border-bottom:1px solid #eee}
+.cur-age{font-size:18px;font-weight:700;color:#4472C4;min-width:60px}
+.life-prog{flex:1;height:6px;background:#ddd;border-radius:3px;overflow:hidden}
+.life-prog-fill{height:100%;background:linear-gradient(90deg,#4472C4,#E06030);border-radius:3px;transition:width .3s}
+.life-pct{font-size:12px;color:#999;min-width:36px;text-align:right}
+
+/* ====== Life Summary Panel ====== */
+.ls-screen{padding:20px;text-align:center;animation:fadeIn .5s}
+.ls-header{font-size:24px;font-weight:700;margin-bottom:8px;letter-spacing:1px}
+.ls-sub{font-size:14px;color:#999;margin-bottom:24px}
+.ls-stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0}
+.ls-stat{background:#f8f9fa;border-radius:12px;padding:16px;text-align:center}
+.ls-stat .val{font-size:22px;font-weight:700;color:#4472C4}
+.ls-stat .lbl{font-size:12px;color:#999;margin-top:4px}
+.ls-timeline{text-align:left;margin:20px 0;padding:0 8px}
+.tl-item{display:flex;gap:12px;padding:8px 0;border-bottom:1px solid #f0f0f0;font-size:13px}
+.tl-year{color:#999;min-width:60px}
+.ls-btn{display:block;width:100%;padding:12px;margin-top:16px;background:#4472C4;color:#fff;border:none;border-radius:8px;font-size:15px;cursor:pointer}
+.ls-btn-secondary{background:#f0f0f0;color:#333}
 
 
-/* v4.0.0 爆款升级方案 CSS */
-/* Phase 1.2: 结算动画 */
-.settlement-overlay{position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0;transition:opacity .25s;}
-.settlement-overlay.show{opacity:1;}
-.settlement-card{background:#fff;border-radius:16px;padding:24px 32px;min-width:260px;box-shadow:0 8px 40px rgba(0,0,0,.2);animation:bubIn .3s ease;text-align:center;}
-.settlement-header{font-size:16px;font-weight:700;margin-bottom:16px;color:#333;}
-.settlement-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f5f5f5;font-size:14px;}
-.settlement-label{color:#666;}
-.settlement-val{font-weight:700;}
-.settlement-val.pos{color:#27ae60;}
-.settlement-val.neg{color:#e74c3c;}
-.settlement-bar{height:4px;background:linear-gradient(90deg,#3498db,#2ecc71);border-radius:2px;margin-top:12px;animation:barSlide 1s ease;}
-@keyframes barSlide{0%{width:0;}100%{width:100%;}}
-
-/* Phase 1.2: 全屏庆祝 */
-.celeb-overlay{position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .3s;backdrop-filter:blur(4px);}
-.celeb-overlay.show{opacity:1;}
-.celeb-card{background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:20px;padding:32px 40px;text-align:center;max-width:340px;width:90%;box-shadow:0 12px 50px rgba(0,0,0,.5);position:relative;overflow:hidden;}
-.celeb-icon{font-size:56px;margin-bottom:12px;animation:celebBounce .6s ease;}
-.celeb-title{font-size:22px;font-weight:800;color:#fff;margin-bottom:8px;}
-.celeb-desc{font-size:14px;color:rgba(255,255,255,.7);margin-bottom:20px;line-height:1.5;}
-.confetti{position:absolute;top:-10px;width:8px;height:8px;border-radius:2px;animation:confettiFall 2s ease-in forwards;}
-@keyframes confettiFall{0%{transform:translateY(0) rotate(0deg);opacity:1;}100%{transform:translateY(100vh) rotate(720deg);opacity:0;}}
-@keyframes celebBounce{0%{transform:scale(0);}50%{transform:scale(1.2);}100%{transform:scale(1);}}
-@keyframes bubIn{0%{transform:scale(.8);opacity:0;}100%{transform:scale(1);opacity:1;}}
-
-/* Phase 1.1: 新手引导 */
-.tut-overlay{position:fixed;top:0;left:0;width:100%;height:100%;z-index:9998;display:flex;align-items:center;justify-content:center;pointer-events:none;}
-.tut-card{background:#fff;border-radius:16px;padding:24px;max-width:340px;width:88%;box-shadow:0 8px 40px rgba(0,0,0,.25);animation:bubIn .3s ease;position:relative;pointer-events:auto;}
-.tut-step-num{position:absolute;top:12px;right:16px;font-size:11px;color:#999;background:#f0f0f5;padding:2px 8px;border-radius:10px;}
-.tut-title{font-size:18px;font-weight:700;margin-bottom:12px;color:#333;padding-right:50px;line-height:1.3;}
-.tut-desc{font-size:14px;color:#555;line-height:1.7;margin-bottom:20px;}
-.tut-actions{display:flex;gap:10px;justify-content:center;}
-.tut-skip{position:absolute;top:12px;left:16px;font-size:11px;color:#999;cursor:pointer;}
-.tut-skip:hover{color:#333;}
-.tut-highlight{box-shadow:0 0 0 4px #3498db,0 0 20px rgba(52,152,213,.4);border-radius:8px;z-index:100;position:relative;animation:tutPulse 1.5s infinite;}
-@keyframes tutPulse{0%,100%{box-shadow:0 0 0 4px #3498db,0 0 20px rgba(52,152,213,.4);}50%{box-shadow:0 0 0 6px #3498db,0 0 30px rgba(52,152,213,.6);}}
-
-/* Phase 1.3: 报告样式 */
-.report-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0;}
-.report-stat{background:#f8f9fa;border-radius:8px;padding:10px;text-align:center;}
-.report-label{display:block;font-size:11px;color:#888;margin-bottom:4px;}
-.report-val{display:block;font-size:16px;font-weight:700;color:#333;}
-.report-compare{background:#f0f4ff;border-radius:8px;padding:12px;margin-top:12px;}
-.report-section-title{font-size:13px;font-weight:700;color:#3498db;margin-bottom:8px;}
-.compare-item{display:flex;justify-content:space-between;padding:4px 0;font-size:13px;}
-.compare-label{color:#555;}
-.compare-val{font-weight:600;color:#333;}
-
-/* Phase 1.1: 玩法手册 */
-.playbook-nav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
-.playbook-content{font-size:14px;line-height:1.7;color:#444;}
-.playbook-content b{color:#333;display:inline-block;margin-top:6px;}
-
-/* Phase 2.2: DLC */
-.dlc-list{display:flex;flex-direction:column;gap:12px;}
-.dlc-card{border:2px solid #e8e8e8;border-radius:12px;padding:16px;transition:all .2s;}
-.dlc-card.unlocked{border-color:#3498db;background:#f0f8ff;}
-.dlc-header{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
-.dlc-icon{font-size:28px;}
-.dlc-name{font-size:16px;font-weight:700;}
-.dlc-desc{font-size:13px;color:#666;line-height:1.5;margin-bottom:8px;}
-.dlc-progress{font-size:12px;color:#3498db;font-weight:600;}
-.dlc-bar{height:4px;background:#e8e8e8;border-radius:2px;margin-top:4px;overflow:hidden;}
-.dlc-bar-fill{height:100%;background:#3498db;border-radius:2px;transition:width .3s;}
-.dlc-locked{font-size:12px;color:#999;}
-
-/* v4.0.0: 首页雷达图按钮 */
-#radarBtn{display:block;margin:12px auto 0;}
-
-/* v4.0.0: 快速结算动画 */
-.settlement-overlay-fast{position:fixed;top:0;left:0;width:100%;height:100%;z-index:9990;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.85);opacity:0;transition:opacity .2s;}
-.settlement-overlay-fast.show{opacity:1;}
-.fast-settlement{text-align:center;}
-.fast-spinner{width:40px;height:40px;border:4px solid #e8e8e8;border-top-color:#3498db;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px;}
-.fast-text{font-size:14px;color:#666;}
-@keyframes spin{to{transform:rotate(360deg);}}
-
-/* v4.0.0: FAB button */
-.v4-fab{position:fixed;bottom:80px;right:16px;width:50px !important;height:50px !important;border-radius:50% !important;background:linear-gradient(135deg,#3498db,#2ecc71);border:none !important;color:#fff;font-size:20px;cursor:pointer;box-shadow:0 4px 16px rgba(52,152,213,.4);z-index:90;display:flex;align-items:center;justify-content:center;transition:all .2s;padding:0 !important;box-sizing:border-box !important;}
-.v4-fab:active{transform:scale(.9);}
-
-/* v4.0.0: 首页快捷按钮区 */
-.v4-home-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid #eee;}
-.v4-home-btn{flex:1;min-width:70px;padding:8px 6px;border-radius:10px;border:1px solid #e0e0e0;background:#fafafa;font-size:12px;text-align:center;cursor:pointer;transition:all .15s;}
-.v4-home-btn:active{background:#e8e8e8;}
-
-
-.notif-badge{position:absolute;top:2px;right:2px;min-width:16px;height:16px;line-height:16px;font-size:10px;font-weight:700;color:#fff;background:#e74c3c;border-radius:8px;text-align:center;padding:0 4px;pointer-events:none;}
-.notif-item{display:flex;align-items:flex-start;gap:10px;padding:12px 16px;background:#fff;border-bottom:1px solid #f5f5f5;cursor:pointer;transition:background .15s;}
-.notif-item:active{background:#f8f8f8;}
-.notif-item.unread{background:#fff5f5;border-left:3px solid #e74c3c;}
-.notif-item.read{opacity:.65;}
-.notif-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
-.notif-body{flex:1;min-width:0;}
-.notif-text{font-size:14px;color:#333;line-height:1.4;word-break:break-word;}
-.notif-meta{font-size:11px;color:#999;margin-top:4px;}
-.notif-dot{width:8px;height:8px;background:#e74c3c;border-radius:50%;flex-shrink:0;margin-top:6px;}
-.notif-empty{text-align:center;padding:60px 20px;color:#999;font-size:14px;}/* Relationship display in chat header */
-.chat-hd{flex-direction:column;align-items:flex-start;gap:4px;padding:10px 16px;}
-.chat-hd-row{display:flex;align-items:center;width:100%;gap:12px;}
-.chat-rel-bar{display:flex;align-items:center;gap:6px;font-size:11px;color:rgba(255,255,255,.85);margin-top:2px;}
-.chat-rel-fill{height:4px;border-radius:2px;background:rgba(255,255,255,.25);flex:1;max-width:60px;overflow:hidden;}
-.chat-rel-fill-inner{height:100%;border-radius:2px;transition:width .5s ease;}
-.chat-rel-label{font-size:10px;opacity:.8;white-space:nowrap;}
-/* Date button */
-.chat-date-btn{position:fixed;bottom:68px;right:16px;width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#ff6b9d,#c44dff);border:none;color:#fff;font-size:22px;cursor:pointer;box-shadow:0 4px 15px rgba(196,77,255,.4);z-index:1001;display:flex;align-items:center;justify-content:center;transition:all .2s;animation:pulseGlow 2s infinite;}
-.chat-date-btn:active{transform:scale(.9);}
-.chat-date-btn.locked{background:linear-gradient(135deg,#999,#bbb);box-shadow:0 2px 8px rgba(0,0,0,.15);animation:none;}
-.chat-date-panel{position:fixed;bottom:120px;right:16px;background:#fff;border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,.18);z-index:1002;padding:12px;display:none;width:200px;}
-.chat-date-panel.show{display:block;animation:bubIn .2s ease;}
-.chat-date-item{padding:10px 12px;border-radius:10px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:background .15s;}
-.chat-date-item:hover{background:#f0f0f0;}
-.chat-date-item.locked{opacity:.45;cursor:not-allowed;}
-.chat-date-item .cost{font-size:11px;color:#999;margin-left:auto;}
-@keyframes pulseGlow{0%,100%{box-shadow:0 4px 15px rgba(196,77,255,.4)}50%{box-shadow:0 4px 25px rgba(196,77,255,.6)}}
-/* v4.1.19: 商铺管理按钮 */
-.biz-act{padding:8px 6px;border-radius:8px;text-align:center;font-size:12px;font-weight:600;cursor:pointer;background:#f8f9fa;border:1px solid #e9ecef;transition:all .15s;user-select:none;}
-.biz-act:active{transform:scale(.95);background:#e9ecef;}
-/* ===== 通讯录详情页 ===== */
-.cdetail-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:#f0f2f5;z-index:1600;display:none;flex-direction:column;max-width:480px;margin:0 auto;}
-.cdetail-overlay.show{display:flex;}
-.cdetail-header{background:var(--header-bg);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0;}
-.cdetail-back{font-size:24px;cursor:pointer;padding:4px;line-height:1;}
-.cdetail-body{flex:1;overflow-y:auto;padding:16px;padding-bottom:40px;-webkit-overflow-scrolling:touch;}
-.cdetail-profile{text-align:center;padding:24px 16px;background:#fff;border-radius:var(--radius);margin-bottom:12px;}
-.cdetail-avatar{width:64px;height:64px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 12px;}
-.cdetail-name{font-size:20px;font-weight:700;margin-bottom:4px;}
-.cdetail-relation{font-size:13px;color:var(--text-light);}
-.cdetail-stats{display:flex;justify-content:center;gap:24px;margin-top:16px;padding-top:16px;border-top:1px solid #f0f0f0;}
-.cdetail-stat{text-align:center;}
-.cdetail-stat .num{font-size:18px;font-weight:700;color:var(--primary);}
-.cdetail-stat .lbl{font-size:11px;color:var(--text-light);margin-top:2px;}
-.cdetail-section{background:#fff;border-radius:var(--radius);padding:16px;margin-bottom:12px;}
-.cdetail-section-title{font-size:14px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
-.cdetail-status-card{background:linear-gradient(135deg,#f8f9fa,#e8f4fd);border-radius:10px;padding:14px;margin-bottom:8px;font-size:13px;line-height:1.8;}
-.cdetail-status-item{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #eee;}
-.cdetail-status-item:last-child{border-bottom:none;}
-.cdetail-status-lbl{color:#666;font-size:13px;}
-.cdetail-status-val{font-weight:600;color:var(--text);font-size:13px;}
-.cdetail-actions{display:flex;flex-direction:column;gap:8px;}
-.cdetail-action-btn{display:flex;align-items:center;gap:10px;padding:14px 16px;background:#f8f9fa;border-radius:10px;cursor:pointer;transition:all .15s;border:1px solid #eee;font-size:14px;font-weight:500;}
-.cdetail-action-btn:active{background:#e8ecef;transform:scale(0.98);}
-.cdetail-action-btn .act-icon{font-size:24px;flex-shrink:0;}
-.cdetail-action-btn .act-info{flex:1;min-width:0;}
-.cdetail-action-btn .act-name{font-size:14px;font-weight:500;}
-.cdetail-action-btn .act-desc{font-size:11px;color:var(--text-light);margin-top:2px;}
-.cdetail-action-btn .act-arrow{color:#ccc;font-size:16px;flex-shrink:0;}
-.cdetail-action-btn .act-cost{font-size:11px;color:var(--warning);font-weight:600;flex-shrink:0;}
-.child-age-badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;margin-top:6px;}
-.child-gender-boy{background:#e3f2fd;color:#1565c0;}
-.child-gender-girl{background:#fce4ec;color:#c62828;}
-.cdetail-empty{text-align:center;padding:40px 20px;color:var(--text-light);font-size:14px;}
+/* ====== Onboarding Tutorial ====== */
+.ob-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;animation:fadeIn .3s}
+.ob-card{background:#fff;border-radius:16px;padding:24px 20px;width:85%;max-width:340px;box-shadow:0 8px 40px rgba(0,0,0,.3)}
+.ob-step{display:none}.ob-step.active{display:block}
+.ob-title{font-size:18px;font-weight:700;margin-bottom:12px}
+.ob-body{font-size:14px;line-height:1.7;color:#555;margin-bottom:20px;min-height:80px}
+.ob-actions{display:flex;justify-content:space-between;gap:8px}
+.ob-actions button{flex:1;padding:10px;border:none;border-radius:8px;font-size:14px;cursor:pointer}
+.ob-actions .btn-prev{background:#f0f0f0;color:#333}
+.ob-actions .btn-next{background:#4472C4;color:#fff}
+.ob-progress{display:flex;gap:6px;margin-bottom:16px;justify-content:center}
+.pdot{width:8px;height:8px;border-radius:50%;background:#ddd;transition:all .3s}
+.pdot.active{background:#4472C4;transform:scale(1.2)}
+.pdot.done{background:#4CAF50}
+.ob-skip{font-size:12px;color:#999;background:none;border:none;cursor:pointer;margin-top:12px;width:100%;text-align:center}
 </style>
 <script>
 // ===== 聊天顶栏关系状态显示 =====
@@ -942,6 +777,8 @@ function triggerParentHelp(){
 </script>
 </head>
 <body>
+<div class="toast-container" id="toastContainer"></div>
+<div class="age-bar" id="ageBar"></div>
 <div id="welcomePage" class="welcome-page">
   <div style="font-size:64px;margin-bottom:16px;">🎓</div>
   <h1>offer含金量</h1>
@@ -1003,6 +840,21 @@ function triggerParentHelp(){
         <button class="btn btn-outline btn-sm" onclick="socialGathering()" style="font-size:11px;">🤝 社交聚会 ¥1500</button>
         <button class="btn btn-outline btn-sm" onclick="coffeeSocial()" style="font-size:11px;">☕ 咖啡社交 ¥500</button>
         <button class="btn btn-outline btn-sm" onclick="fastForward(5)">⏩ 快进5年</button>
+        <button class="btn btn-outline btn-sm" onclick="fastForward(10)">⏩ 快进10年</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px;justify-content:center;">
+        <div class="social-tier">
+          <h4>🤝 社交聚会</h4>
+          <div class="btn-row">
+            <button onclick="socialParty(500)">普通聚会<br>¥500</button>
+            <button onclick="socialParty(3000)">高端聚会<br>¥3000</button>
+            <button onclick="socialParty(10000)">顶级聚会<br>¥10000</button>
+          </div>
+        </div>
+        <div class="social-tier">
+          <h4>💼 新手兼职</h4>
+          <div class="btn-row" id="sideJobBtns"></div>
+        </div>
       </div>
       <div class="text-sm text-muted mt-8" id="yearHint">点击按钮推进人生</div>
     </div>
@@ -1187,20 +1039,7 @@ function triggerParentHelp(){
   <div class="promo-salary" id="promoSalary"></div>
 </div>
 
-<div class="rebirth-panel" id="rebirthPanel">
-  <div class="rebirth-card">
-    <div class="rebirth-title">♻️ 重生轮回</div>
-    <div class="lp-display">
-      <div style="font-size:14px;opacity:.8;">轮回点 (LP)</div>
-      <div class="lp-num" id="rebirthLP">0</div>
-    </div>
-    <div id="upgradeList"></div>
-    <div style="margin-top:16px;display:flex;gap:10px;">
-      <button class="btn btn-outline" style="flex:1;" onclick="closeRebirthPanel()">返回</button>
-      <button class="btn btn-warning" style="flex:1;" onclick="doRebirth()">♻️ 重生开始</button>
-    </div>
-  </div>
-</div>
+
 
 
 <div id="chatOverlay" class="chat-overlay">
@@ -1240,20 +1079,20 @@ const JOBS=[
   {id:'director',name:'总监',salary:500000,requireIQ:120,requireEQ:120,level:5,requireMonths:60}
 ];
 const STOCKS=[
-  {code:'TECH001',name:'互联网科技',basePrice:100,volatility:0.3,sector:'tech'},
-  {code:'HOUSE001',name:'地产龙头',basePrice:50,volatility:0.2,sector:'house'},
-  {code:'BANK001',name:'国有银行',basePrice:30,volatility:0.08,sector:'finance'},
-  {code:'MED001',name:'医药生物',basePrice:80,volatility:0.25,sector:'medical'},
-  {code:'AI001',name:'人工智能',basePrice:150,volatility:0.4,sector:'ai'},
-  {code:'ENERGY001',name:'新能源',basePrice:120,volatility:0.35,sector:'energy'}
+  {code:'TECH001',name:'互联网科技',basePrice:100,volatility:0.3,sector:'tech',minRet:-10,maxRet:30,risk:0.45},
+  {code:'HOUSE001',name:'地产龙头',basePrice:50,volatility:0.2,sector:'house',minRet:-5,maxRet:15,risk:0.3},
+  {code:'BANK001',name:'国有银行',basePrice:30,volatility:0.08,sector:'finance',minRet:3,maxRet:8,risk:0.1},
+  {code:'MED001',name:'医药生物',basePrice:80,volatility:0.25,sector:'medical',minRet:-8,maxRet:25,risk:0.35},
+  {code:'AI001',name:'人工智能',basePrice:150,volatility:0.4,sector:'ai',minRet:-15,maxRet:50,risk:0.55},
+  {code:'ENERGY001',name:'新能源',basePrice:120,volatility:0.35,sector:'energy',minRet:-12,maxRet:40,risk:0.5}
 ];
 const HOUSES=[
-  {id:'old',name:'老破小',price:500000,rent:1500,area:50,unlockAsset:0},
-  {id:'normal',name:'刚需住宅',price:1500000,rent:3500,area:90,unlockAsset:0},
-  {id:'school',name:'学区房',price:3000000,rent:5000,area:80,unlockAsset:5000000},
-  {id:'villa',name:'别墅',price:8000000,rent:12000,area:200,unlockAsset:10000000},
-  {id:'luxury_villa',name:'湖景豪宅',price:30000000,rent:35000,area:350,unlockAsset:50000000},
-  {id:'penthouse',name:'顶层公寓',price:80000000,rent:80000,area:500,unlockAsset:200000000}
+  {id:'old',name:'老破小',price:500000,rent:1500,area:50,unlockAsset:0,minRet:2,maxRet:8,risk:0.15},
+  {id:'normal',name:'刚需住宅',price:1500000,rent:3500,area:90,unlockAsset:0,minRet:3,maxRet:12,risk:0.2},
+  {id:'school',name:'学区房',price:3000000,rent:5000,area:80,unlockAsset:5000000,minRet:4,maxRet:15,risk:0.25},
+  {id:'villa',name:'别墅',price:8000000,rent:12000,area:200,unlockAsset:10000000,minRet:3,maxRet:18,risk:0.3},
+  {id:'luxury_villa',name:'湖景豪宅',price:30000000,rent:35000,area:350,unlockAsset:50000000,minRet:2,maxRet:20,risk:0.35},
+  {id:'penthouse',name:'顶层公寓',price:80000000,rent:80000,area:500,unlockAsset:200000000,minRet:1,maxRet:25,risk:0.4}
 ];
 const LOAN_CONFIG={annualRate:0.045,maxTerm:30,downPaymentOptions:[0.3,0.5,0.7]};
 const SPOUSES=[
@@ -1263,27 +1102,25 @@ const SPOUSES=[
   {id:'civil',name:'公务员',salary:100000,stability:true}
 ];
 const BUSINESSES=[
-  {id:'milktea',name:'奶茶店加盟',price:50000,icon:'🧋',monthlyIncome:[1500,4000],risk:0.2,unlockAsset:0},
-  {id:'convenience',name:'便利店',price:100000,icon:'🏪',monthlyIncome:[3000,8000],risk:0.15,unlockAsset:0},
-  {id:'express',name:'快递驿站',price:30000,icon:'📦',monthlyIncome:[800,2500],risk:0.1,unlockAsset:0},
-  {id:'restaurant',name:'网红餐厅',price:200000,icon:'🍜',monthlyIncome:[5000,15000],risk:0.25,unlockAsset:0},
-  {id:'chain_hotel',name:'连锁酒店',price:5000000,icon:'🏨',monthlyIncome:[80000,200000],risk:0.12,unlockAsset:50000000},
-  {id:'fitness',name:'健身俱乐部',price:2000000,icon:'🏋️',monthlyIncome:[40000,100000],risk:0.15,unlockAsset:20000000},
-  {id:'ai_cafe',name:'AI体验店',price:800000,icon:'🤖',monthlyIncome:[20000,60000],risk:0.18,unlockAsset:5000000},
-  {id:'ad_agency',name:'广告公司',price:1500000,icon:'📺',monthlyIncome:[35000,90000],risk:0.12,unlockAsset:10000000}
+  {id:'milktea',name:'奶茶店加盟',price:50000,icon:'🧋',monthlyIncome:[1500,4000],risk:0.2,unlockAsset:0,minRet:10,maxRet:25},
+  {id:'convenience',name:'便利店',price:100000,icon:'🏪',monthlyIncome:[3000,8000],risk:0.15,unlockAsset:0,minRet:8,maxRet:18},
+  {id:'express',name:'快递驿站',price:30000,icon:'📦',monthlyIncome:[800,2500],risk:0.1,unlockAsset:0,minRet:5,maxRet:12},
+  {id:'restaurant',name:'网红餐厅',price:200000,icon:'🍜',monthlyIncome:[5000,15000],risk:0.25,unlockAsset:0,minRet:5,maxRet:30},
+  {id:'chain_hotel',name:'连锁酒店',price:5000000,icon:'🏨',monthlyIncome:[80000,200000],risk:0.12,unlockAsset:50000000,minRet:6,maxRet:15},
+  {id:'fitness',name:'健身俱乐部',price:2000000,icon:'🏋️',monthlyIncome:[40000,100000],risk:0.15,unlockAsset:20000000,minRet:7,maxRet:18}
 ];
 const TECH_INVESTMENTS=[
-  {id:'ai',name:'AI创业公司',icon:'🤖',type:'高风险高回报',riskLabel:'🔥',minInvest:50000,returnMonths:30,outcomes:[
+  {id:'ai',name:'AI创业公司',icon:'🤖',minInvest:50000,returnMonths:12,minRet:-70,maxRet:200,risk:0.6,outcomes:[
     {chance:0.25,multiplier:3.0,text:'🚀 AI公司上市，3倍回报！',type:'good'},
     {chance:0.35,multiplier:1.5,text:'📈 AI公司融资成功，1.5倍回报',type:'good'},
     {chance:0.40,multiplier:0.3,text:'💀 AI公司倒闭，亏损70%',type:'bad'}
   ]},
-  {id:'energy',name:'新能源项目',icon:'⚡',type:'中风险中回报',riskLabel:'⚖️',minInvest:80000,returnMonths:36,outcomes:[
+  {id:'energy',name:'新能源项目',icon:'⚡',minInvest:80000,returnMonths:18,minRet:-80,maxRet:300,risk:0.55,outcomes:[
     {chance:0.20,multiplier:4.0,text:'🚀 新能源大爆发，4倍回报！',type:'good'},
     {chance:0.30,multiplier:1.8,text:'📈 新能源稳步增长，1.8倍回报',type:'good'},
     {chance:0.50,multiplier:0.2,text:'💀 新能源项目失败，亏损80%',type:'bad'}
   ]},
-  {id:'biotech',name:'生物科技',icon:'🧬',type:'长周期稳定',riskLabel:'🛡️',minInvest:60000,returnMonths:42,outcomes:[
+  {id:'biotech',name:'生物科技',icon:'🧬',minInvest:60000,returnMonths:15,minRet:-90,maxRet:400,risk:0.65,outcomes:[
     {chance:0.15,multiplier:5.0,text:'🚀 新药研发成功，5倍回报！',type:'good'},
     {chance:0.25,multiplier:2.0,text:'📈 生物科技被收购，2倍回报',type:'good'},
     {chance:0.60,multiplier:0.1,text:'💀 临床试验失败，几乎全亏',type:'bad'}
@@ -1451,6 +1288,16 @@ const DECISION_EVENTS=[
       {icon:'🤷',title:'不管它',desc:'没什么大不了的',tag:'忽视',tagCls:'tag-risk',effect:{health:-10},result:'你没当回事。几个月后身体状况更差了，后悔莫及。'}
     ]}
 ];
+
+// ===== V2: Choice Branching Life Events =====
+var CHOICE_EVENTS=[
+{id:'friend_borrow',title:'朋友借钱',desc:'老朋友小李想借¥5万周转，说半年后还。你们认识多年了。',cond:function(){return G.cash>=50000&&G.contacts.length>0},choices:[{label:'爽快借出',hint:'+人脉 -¥5万',fx:{cash:-50000,mood:3},resultText:'小李很感激，你的人脉关系更稳固了'},{label:'借一半',hint:'折中方案 -¥2.5万',fx:{cash:-25000,mood:1},resultText:'小李接受了，表示会按期归还'},{label:'婉言拒绝',hint:'关系微冷',fx:{mood:-3},resultText:'小李有些失望，但表示理解'}]},
+{id:'office_politics',title:'职场站队',desc:'公司高层斗争，领导暗示你表态支持他，但对手势力也不小。',cond:function(){return G.career&&G.career.level>=3},choices:[{label:'坚定支持领导',hint:'可能晋升也可能被牵连',fx:{mood:-5,cash:20000},resultText:'领导记住了你的忠诚'},{label:'保持中立',hint:'安全但两边不讨好',fx:{mood:-2},resultText:'你成功置身事外'},{label:'暗中帮对手',hint:'高风险高回报',fx:{mood:-10,cash:-30000,prestige:-5},resultText:'你赌了一把，结果未知'}]}
+];
+
+// ===== V2: Choice Event Modal Functions =====
+function triggerChoiceEvent(evt){var modal=document.createElement('div');modal.className='choice-modal';modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;display:flex;align-items:center;justify-content:center';var choicesHtml='';for(var i=0;i<evt.choices.length;i++){var c=evt.choices[i];choicesHtml+='<button onclick="resolveChoiceEvent('+i+')" style="display:block;width:100%;padding:12px;margin:8px 0;border:none;border-radius:8px;background:#f0f0f0;font-size:14px;text-align:left;cursor:pointer" onmouseover="this.style.background=\'#e0e0e0\'" onmouseout="this.style.background=\'#f0f0f0\'">'+c.label+'<br><span style="font-size:11px;color:#666">'+c.hint+'</span></button>'}modal.innerHTML='<div style="background:#fff;border-radius:12px;padding:20px;width:85%;max-width:340px"><h3 style="margin-bottom:8px">'+evt.title+'</h3><p style="font-size:13px;color:#555;margin-bottom:12px">'+evt.desc+'</p>'+choicesHtml+'<button onclick="this.closest(\'.choice-modal\').remove()" style="width:100%;padding:10px;margin-top:8px;border:none;background:#eee;border-radius:8px">跳过</button></div>';document.body.appendChild(modal);window._curChoiceEvt=evt;window._curChoiceModal=modal}
+function resolveChoiceEvent(idx){var evt=window._curChoiceEvt;var choice=evt.choices[idx];if(choice.fx){if(choice.fx.cash)G.cash+=choice.fx.cash;if(choice.fx.mood)G.mood=Math.min(100,Math.max(0,G.mood+choice.fx.mood));if(choice.fx.health)G.health=Math.min(100,Math.max(0,G.health+choice.fx.health));if(choice.fx.contacts){G.contacts=G.contacts.concat(choice.fx.contacts)}if(choice.fx.prestige&&G.family)G.family.prestige=(G.family.prestige||0)+choice.fx.prestige}showToast(choice.resultText,choice.fx&&choice.fx.cash>0?'success':'info',2000);if(window._curChoiceModal)window._curChoiceModal.remove()}
 
 // ===== V2: Stock News System =====
 const STOCK_NEWS=[
@@ -2073,9 +1920,15 @@ const LEGACY_UPGRADES=[
 ];
 const NPC_NAMES=['王思聪','马云','马化腾','刘强东','雷军','李彦宏','张一鸣','黄峥','丁磊','钟睒睒','王健林'];
 
+// ========== 游戏状态 ==========
+let G=null;
+var ffConfig={pauseOnCritical:true,pauseOnPromotion:true,pauseOnDeathRisk:true,pauseOnInvestment:true};
+function checkFFRisk(){var r=[];if(G.health<10)r.push('健康极低，有猝死风险');else if(G.health<30)r.push('健康较低，可能重病');if(G.mood<30)r.push('心情低落，可能生病');return r}
+function confirmFF(years){var r=checkFFRisk();if(!r.length)return true;return confirm('当前风险：\n'+r.join('\n')+'\n\n确定要继续快进'+years+'年吗？')}
+
 function defaultState(){
   const legacy=loadLegacy();
-  let cash=100000,hp=100,mood=100,iq=100,eq=100;
+  let cash=10000,hp=100,mood=100,iq=100,eq=100;
   legacy.upgrades.forEach(uid=>{
     const u=LEGACY_UPGRADES.find(x=>x.id===uid);
     if(!u)return;
@@ -2090,7 +1943,7 @@ function defaultState(){
     jobIndex:0,monthsAtJob:0,selfEmployed:false,
     stockHoldings:{},stockPrices:{},
     houses:[],businesses:[],techInvestments:[],
-    spouse:null,children:0,childAges:[],
+    family:{spouse:null,children:[],grandchildren:[],inheritance:null,prestige:0},
     events:[],gameOver:false,gameOverReason:'',
     achievements:[],monthlyTasks:{},
     guideStep:0,salaryBonus:0,
@@ -3064,29 +2917,9 @@ async function advanceMonth(){
   // Monthly task auto-complete
   G.monthlyTasks['advance']=true;
   G.monthlyTasks['promote']=true;
-  // 🥚 彩蛋事件（5%概率，极其稀有）
-  if(Math.random()<0.05&&!G.gameOver){
-    const easterEggs=[
-      {text:'🥚 你中了一个小众平台的NFT，虽然不值钱但很有意思',type:'good',effect:{mood:8,EQ:1}},
-      {text:'🥚 你随手买的刮刮乐中了200块！',type:'good',effect:{money:200,mood:10}},
-      {text:'🥚 你在二手平台卖掉了三年前的旧手机，赚了80块',type:'good',effect:{money:80,mood:5}},
-      {text:'🥚 你被隔壁桌的人认出来"你是不是xxx"（认错人了）',type:'neutral',effect:{mood:3}},
-      {text:'🥚 你今天出门发现鞋带系了一个完美的蝴蝶结，心情莫名好',type:'good',effect:{mood:5}},
-      {text:'🥚 你在地铁上看到一个人在看你，你们对视了3秒后同时笑了',type:'good',effect:{mood:6,EQ:2}},
-      {text:'🥚 你发现自己三年前写的评论被100人点赞了',type:'good',effect:{mood:8}},
-      {text:'🥚 你收到一封来自陌生人的感谢邮件——你忘了帮过他什么忙',type:'good',effect:{mood:10,EQ:2}},
-      {text:'🥚 你在超市抓娃娃机一次就抓到了一个丑萌玩偶',type:'good',effect:{mood:12,money:-15}},
-      {text:'🥚 你的外卖里多送了一份小食，心情大好',type:'good',effect:{mood:8,money:-25}},
-      {text:'🥚 你随手转发的抽奖居然中了一箱零食',type:'good',effect:{mood:15,money:50}},
-      {text:'🥚 你翻出了一张5年前的照片，回忆杀',type:'neutral',effect:{mood:6}},
-      {text:'🥚 你今天随机被一个小孩叫了声"哥哥/姐姐"，虽然你已经不小了',type:'good',effect:{mood:8}},
-      {text:'🥚 你在网上发的帖子突然有了回复，有人认真跟你讨论',type:'good',effect:{mood:5,IQ:1}},
-      {text:'🥚 你今天发现自己的公交卡里还有200块余额',type:'good',effect:{money:200,mood:10}},
-    ];
-    const egg=easterEggs[randInt(0,easterEggs.length-1)];
-    applySmallEvent(egg);
-    if(G._recentEvents)G._recentEvents.push('🥚彩蛋：'+egg.text.replace(/[\u{1F300}-\u{1FFFF}]/gu,'').substring(0,20));
-  }
+  // V2: Monthly task system
+  G.monthCount=(G.monthCount||0)+1;
+  if(G.monthCount%30===0){genMonthlyTasks()}else{checkMonthlyTasks()};
   // Phone triggers
   if(!G.gameOver){initPhoneState();triggerFollowUps();triggerPhoneMessages();processScheduledDates().catch(e=>console.error("scheduledDates error:",e));triggerParentHelp();if(Math.random()<0.50)triggerAIMoments().catch(()=>{});if(Math.random()<0.40)triggerMoments();generateNotifications();generateGossipEvent();triggerGathering();}
   // 社交拓展：每月有概率触发偶遇场景
@@ -3105,18 +2938,24 @@ async function advanceMonth(){
   checkStudyProgress();triggerProjectEvents();
   // Guide
   advanceGuide();
+  childrenGrowth();
+  autoSave();
+  // V2: Choice branching events (8% chance)
+  if(!G.gameOver&&Math.random()<0.08){var validEvents=CHOICE_EVENTS.filter(function(e){return e.cond&&e.cond()});if(validEvents.length>0){var picked=validEvents[Math.floor(Math.random()*validEvents.length)];setTimeout(function(){triggerChoiceEvent(picked)},500)}}
+  checkAttrThresholds();
   // Game over check
   if(G.health<=0){G.gameOver=true;G.gameOverReason='健康归零，人生结束';}
   else if(getAge()>=80&&Math.random()<0.3){G.gameOver=true;G.gameOverReason='安享晚年，人生圆满结束';}
-}
+updateAgeDisplay();}
 
-async function fastForward(years){
-  G.events=[];
-  for(let i=0;i<years*12;i++){if(G.gameOver)break;await advanceMonth();}
-  saveGame();refreshAll();checkAchievements();
-  if(G.gameOver)setTimeout(()=>showGameOver(),500);
-  else showToast('⏩ 快进了'+years+'年！');
-}
+// ========== 家庭系统 ==========
+function marry(npc){if(G.family.spouse){showToast('您已结婚','info');return}if(G.cash<(npc.dowry||50000)){showToast('资金不足（需¥'+(npc.dowry||50000)+'）','warning');return}G.cash-=(npc.dowry||50000);G.family.spouse={name:npc.name,age:G.age,type:npc.spouseType||'neutral',intimacy:80,icon:npc.icon||'❤️'};G.mood=Math.min(100,G.mood+15);showToast('🎉 与'+npc.name+'结婚！','success',2000)}
+function haveChild(){if(!G.family.spouse){showToast('需要先结婚','warning');return}if(G.family.children.length>=5){showToast('最多5个子女','warning');return}var talents=['文科','理科','艺术','体育','社交'];G.family.children.push({name:genName(),age:0,gender:Math.random()>.5?'男':'女',iq:Math.floor((G.iq+50)/2+rand(-15,15)),charm:Math.floor((G.charm+50)/2+rand(-15,15)),talent:talents[Math.floor(Math.random()*5)],stage:'baby',edu:{type:null,inv:0}});G.mood=Math.min(100,G.mood+10);showToast('👶 子女出生！','success',2000)}
+function genName(){var s=['张','王','李','赵','陈','刘','杨','黄','周','吴'];var n=['伟','芳','娜','强','敏','静','杰','磊','洋','艳','明','丽','超','秀','玲'];var g=s[Math.floor(Math.random()*s.length)]+n[Math.floor(Math.random()*n.length)];return G.gender==='男'?g:g+'（女）'}
+function educateChild(idx,type){var child=G.family.children[idx];if(!child){return}var cost={cram:5000,interest:3000,studyAbroad:200000};var c=cost[type];if(G.cash<c){showToast('资金不足（需¥'+c+'）','warning');return}G.cash-=c;child.edu.type=type;child.edu.inv+=c;showToast(child.name+'开始'+(type==='cram'?'上补习班':type==='interest'?'上兴趣班':'留学'),'success')}
+function childrenGrowth(){var ch=G.family.children;for(var i=0;i<ch.length;i++){ch[i].age+=1/12;if(ch[i].age>=18&&ch[i].stage!=='adult'){ch[i].stage='adult';var bonus=ch[i].edu.inv>100000?20:10;G.family.prestige+=bonus;showToast(ch[i].name+'已成年，家族声望+'+bonus,'success')}else if(ch[i].age>=6&&ch[i].stage==='baby'){ch[i].stage='youth'}else if(ch[i].age>=12&&ch[i].stage==='youth'){ch[i].stage='adult'}}}
+
+function fastForward(years){if(ffConfig.pauseOnCritical&&!confirmFF(years))return;var paused=false;for(var i=0;i<years*12;i++){if(ffConfig.pauseOnCritical&&checkFFRisk().length>0){paused=true;showToast('快进暂停：'+checkFFRisk()[0],'warning',2000);break}advanceMonth(false)}if(!paused)showToast('快进完成'+(i/12)+'年','info')}
 
 function applySmallEvent(evt){
   const e={text:evt.text,type:evt.type};const eff=evt.effect;
@@ -3138,6 +2977,11 @@ function applySmallEvent(evt){
     if(G._recentEvents.length>5)G._recentEvents.shift();
   }
 }
+
+// ========== V2: Monthly Task System ==========
+function genMonthlyTasks(){var allTaskDefs=[{id:'income',title:'月收入达到¥5万',check:function(){return(G.lastMonthInc||0)>=50000},reward:{cash:5000,mood:10}},{id:'social',title:'本月结交3位新朋友',check:function(){return(G.newContacts||0)>=3},reward:{mood:15}},{id:'health',title:'保持健康≥80',check:function(){return G.health>=80},reward:{health:5}},{id:'invest',title:'投资收益超¥1万',check:function(){return(G.lastMonthInvInc||0)>=10000},reward:{cash:20000}},{id:'family',title:'陪伴家人（心情≥70）',check:function(){return G.mood>=70&&G.family&&G.family.spouse},reward:{prestige:5}},{id:'study',title:'提升任意属性到60',check:function(){return Math.max(G.iq||0,G.charm||0,G.strength||0)>=60},reward:{attrPts:1}}];G.monthlyTasks=[];var picked=[];var pool=allTaskDefs.slice();while(G.monthlyTasks.length<3&&pool.length>0){var idx=Math.floor(Math.random()*pool.length);var t=pool.splice(idx,1)[0];G.monthlyTasks.push({defId:t.id,title:t.title,progress:0,done:false,check:t.check,reward:t.reward})}G.newContacts=0;G.lastMonthInc=0;G.lastMonthInvInc=0}
+function checkMonthlyTasks(){if(!G.monthlyTasks)return;for(var i=0;i<G.monthlyTasks.length;i++){var t=G.monthlyTasks[i];if(t.done)continue;if(t.check()){t.done=true;var rw=t.reward;if(rw.cash){G.cash+=rw.cash;showToast('✓ '+t.title+' +¥'+rw.cash,'success')}if(rw.mood){G.mood=Math.min(100,G.mood+rw.mood);showToast('✓ '+t.title+' +心情'+rw.mood,'success')}if(rw.health){G.health=Math.min(100,G.health+rw.health)}if(rw.attrPts){G.attrPoints=(G.attrPoints||0)+rw.attrPts;showToast('✓ '+t.title+' +属性点'+rw.attrPts,'success')}if(rw.prestige&&G.family){G.family.prestige=(G.family.prestige||0)+rw.prestige}}}}
+function renderMonthlyTasks(){if(!G.monthlyTasks||!G.monthlyTasks.length)return '';var html='<div style="padding:12px"><h4>📋 月度任务</h4>';for(var i=0;i<G.monthlyTasks.length;i++){var t=G.monthlyTasks[i];html+='<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee;opacity:'+(t.done?.5:1)+'"><span style="flex:1;font-size:13px">'+(t.done?'✓ ':'○ ')+t.title+'</span>'+(t.done?'<span style="color:#4CAF50;font-size:12px">已完成</span>':'')+'</div>'}html+='</div>';return html}
 
 // ========== V2: Decision Event System ==========
 function triggerDecisionEvent(){
@@ -4260,47 +4104,6 @@ function renderRanking(){
 }
 
 // ========== 重生系统 ==========
-function showRebirthPanel(){
-  document.getElementById('rebirthLP').textContent=G.legacyPoints||0;
-  let html='';
-  LEGACY_UPGRADES.forEach(u=>{
-    const owned=G.legacyUpgrades.includes(u.id);
-    const canBuy=!owned&&(G.legacyPoints||0)>=u.cost;
-    html+='<div class="upgrade-item"><div><span class="upgrade-name">'+u.name+'</span>';if(u.detail)html+='<span class="text-sm text-muted" style="margin-left:8px;font-style:italic;">'+u.detail+'</span>';html+='</div>';
-    if(owned)html+='<span class="tag tag-green">已拥有</span>';
-    else html+='<button class="btn btn-sm '+(canBuy?'btn-warning':'btn-outline')+'" '+(canBuy?'':'disabled')+' onclick="buyLegacy(\''+u.id+'\')">'+u.cost+' LP</button>';
-    html+='</div>';
-  });
-  document.getElementById('upgradeList').innerHTML=html;
-  document.getElementById('rebirthPanel').classList.add('show');
-}
-function closeRebirthPanel(){document.getElementById('rebirthPanel').classList.remove('show');}
-function buyLegacy(id){
-  const u=LEGACY_UPGRADES.find(x=>x.id===id);if(!u)return;
-  if(G.legacyUpgrades.includes(id)){showToast('已拥有！');return;}
-  if((G.legacyPoints||0)<u.cost){showToast('LP不足！');return;}
-  G.legacyPoints-=u.cost;G.legacyUpgrades.push(id);
-  saveLegacy();showRebirthPanel();showToast('✅ 购买成功！');
-}
-function doRebirth(){
-  showModal({title:'确定重生？',content:'当前人生将结束，已购买的升级将在下一轮生效。\n\n当前LP：'+(G.legacyPoints||0),success(res){
-    if(res.confirm){
-      const total=calcTotalAsset();
-      const careerLP=G.selfEmployed?G.businesses.length*15:JOBS[G.jobIndex].level*10;
-      const earnedLP=Math.floor(total/100000)+G.achievements.length*5+careerLP;
-      G.legacyPoints=(G.legacyPoints||0)+earnedLP;
-      saveLegacy();
-      if(!G.lifeEvents)G.lifeEvents=[];G.lifeEvents.push({month:G.totalMonths,icon:'♻️',title:'人生重生',detail:'结束当前人生，获得'+earnedLP+'轮回点',type:'career'});
-      clearGame();G=defaultState();initStockPrices();saveGame();
-      refreshAll();switchTab('life');
-      closeRebirthPanel();
-      showToast('♻️ 重生成功！获得 '+earnedLP+' LP，继承上一轮加成');
-      checkAchievements();
-    }
-  }});
-}
-
-// ========== 分享海报 ==========
 function generateSharePoster(){
   const canvas=document.createElement('canvas');
   canvas.width=750;canvas.height=1334;
@@ -6591,6 +6394,12 @@ const NPC_STYLE_INSTRUCTIONS={
 };
 
 // Generate NPC reply using GLM API
+
+// ====== NPC Chat Context Linking ======
+function getNPCContext(npc){var states=[];if(G.career&&G.career.status==='promoted')states.push('职场得意');if(G.family&&G.family.children&&G.family.children.length>0)states.push('已为人父母');if((G.cash||0)>1000000)states.push('腰缠万贯');if(G.career&&G.career.status==='unemployed')states.push('正在求职');if(G.health<30)states.push('身体抱恙');if(G.mood<30)states.push('心情低落');var ctx='';if(states.length>0)ctx='（'+states.join('，')+'）';return ctx}
+function npcChat(npc,msg){var ctx=getNPCContext(npc);if(npc.intimacy!==undefined)npc.intimacy=Math.min(100,npc.intimacy+1);var reply='';if(ctx)reply=''+ctx+' ';return reply}
+function genChatReply(npc,msg,ctx){var replies=['嗯，有道理！','嗯，你说得对～','这让我想到了...','要不要一起去喝杯咖啡？','我听说最近有个好机会，回头聊','改天聚聚！'];var r=replies[Math.floor(Math.random()*replies.length)];return (ctx?ctx+' ':'')+npc.name+'：'+r}
+
 async function generateNPCReply(npcId,playerMsg,history){
   const p=NPC_PERSONALITIES[npcId];
   if(!p)return'...';
@@ -9494,853 +9303,16 @@ if(_origTriggerStockNews){
   };
 }
 
-</script>
+function showToast(msg,type,dur){type=type||'info';dur=dur||1500;var c=document.getElementById('toastContainer');if(!c)return;var t=document.createElement('div');t.className='toast '+type;t.textContent=msg;c.appendChild(t);setTimeout(function(){if(t.parentNode)t.parentNode.removeChild(t)},dur)}
 
-<!-- 玩法指南 -->
-<div class="guide-overlay" id="guideOverlay" onclick="if(event.target===this)closeGuide()">
-  <div class="guide-box">
-    <div class="guide-header">
-      <h2>📖 玩法说明</h2>
-      <p>从0到首富的人生模拟器</p>
-    </div>
-    <div class="guide-body" id="guideBody">
-      <!-- Page 1: Basic -->
-      <div class="guide-page active" id="guidePage1">
-        <div class="guide-step">
-          <div class="guide-num">1</div>
-          <div class="guide-text">
-            <h4>🚀 度过一月</h4>
-            <p>点击底部「🚀 度过一月」按钮推进时间。每月会随机触发事件、收入、支出。</p>
-          </div>
-        </div>
-        <div class="guide-step">
-          <div class="guide-num">2</div>
-          <div class="guide-text">
-            <h4>📊 提升属性</h4>
-            <p>健康❤️、心情😊、智商🧠、情商💬 四维属性影响事件结果。在「📚成长」页学习充电可提升属性。</p>
-          </div>
-        </div>
-        <div class="guide-step">
-          <div class="guide-num">3</div>
-          <div class="guide-text">
-            <h4>💼 升职加薪</h4>
-            <p>在「💼工作」页查看职业路线。满足条件后可升职，薪资翻倍。不同年龄解锁不同职业。</p>
-          </div>
-        </div>
-        <div class="guide-tip">
-          💡 <b>小提示：</b>心情太低会生病，健康太低会猝死。保持属性平衡很重要！
-        </div>
-      </div>
-      <!-- Page 2: Investment -->
-      <div class="guide-page" id="guidePage2">
-        <div class="guide-step">
-          <div class="guide-num">4</div>
-          <div class="guide-text">
-            <h4>📈 股票投资</h4>
-            <p>在「📈投资」页买股票。关注新闻事件对股价的影响，低买高卖赚差价。</p>
-          </div>
-        </div>
-        <div class="guide-step">
-          <div class="guide-num">5</div>
-          <div class="guide-text">
-            <h4>🏠 房产商铺</h4>
-            <p>买房收租、开店赚钱。房产每月增值，商铺每月产出租金或利润。</p>
-          </div>
-        </div>
-        <div class="guide-step">
-          <div class="guide-num">6</div>
-          <div class="guide-text">
-            <h4>🚀 科技投资</h4>
-            <p>投资AI、新能源等高科技项目。周期长但回报高，点击可查看进度和收益。</p>
-          </div>
-        </div>
-        <div class="guide-tip">
-          💡 <b>小提示：</b>在投资页点击已拥有的商铺/项目，可查看盈亏详情和ROI！
-        </div>
-      </div>
-      <!-- Page 3: Social -->
-      <div class="guide-page" id="guidePage3">
-        <div class="guide-step">
-          <div class="guide-num">7</div>
-          <div class="guide-text">
-            <h4>📱 手机消息</h4>
-            <p>NPC会主动给你发消息（事业机会、社交邀请、人生事件）。点击「📱手机」查看并回复。</p>
-          </div>
-        </div>
-        <div class="guide-step">
-          <div class="guide-num">8</div>
-          <div class="guide-text">
-            <h4>💬 AI聊天</h4>
-            <p>消息列表底部的联系人可发起AI自由聊天。输入任何内容，NPC会根据人设回应。</p>
-          </div>
-        </div>
-        <div class="guide-step">
-          <div class="guide-num">9</div>
-          <div class="guide-text">
-            <h4>👥 社交聚会</h4>
-            <p>首页点击「🤝社交聚会」花¥3000，可偶遇新朋友并加微信，拓展人脉。</p>
-          </div>
-        </div>
-        <div class="guide-tip">
-          💡 <b>重要：</b>有未读消息时无法推进月份！先处理完消息再继续。
-        </div>
-      </div>
-      <!-- Page 4: Advanced -->
-      <div class="guide-page" id="guidePage4">
-        <div class="guide-step">
-          <div class="guide-num">10</div>
-          <div class="guide-text">
-            <h4>🏆 成就系统</h4>
-            <p>完成特定条件解锁成就。成就越多，五维评分越高。</p>
-          </div>
-        </div>
-        <div class="guide-step">
-          <div class="guide-num">11</div>
-          <div class="guide-text">
-            <h4>♻️ 重生系统</h4>
-            <p>人生结束后获得轮回点(LP)，用于解锁永久加成。下一轮起步更强！</p>
-          </div>
-        </div>
-        <div class="guide-step">
-          <div class="guide-num">12</div>
-          <div class="guide-text">
-            <h4>🎯 终极目标</h4>
-            <p>成为人生首富！积累财富、拓展人脉、解锁成就，打造你的传奇人生。</p>
-          </div>
-        </div>
-        <div class="guide-tip">
-          💡 <b>现在就开始：</b>点击「🚀度过一月」按钮，开启你的人生之旅！
-        </div>
-      </div>
-    </div>
-    <div class="guide-dots">
-      <div class="guide-dot active" onclick="goGuidePage(1)"></div>
-      <div class="guide-dot" onclick="goGuidePage(2)"></div>
-      <div class="guide-dot" onclick="goGuidePage(3)"></div>
-      <div class="guide-dot" onclick="goGuidePage(4)"></div>
-    </div>
-    <div class="guide-footer">
-      <button class="btn btn-outline btn-sm" id="guidePrev" onclick="prevGuidePage()" style="display:none;">上一页</button>
-      <button class="btn btn-primary btn-sm" id="guideNext" onclick="nextGuidePage()">下一页</button>
-      <button class="btn btn-success btn-sm" id="guideClose" onclick="closeGuide()" style="display:none;">开始游戏</button>
-    </div>
-  </div>
-</div>
-<div class="help-fab" id="helpFab" onclick="openGuide()" style="width:50px;height:50px;border-radius:50%;padding:0;box-sizing:border-box;border:none;font-size:13px;font-weight:600;letter-spacing:1px;">指引<span class="fab-close" onclick="event.stopPropagation();document.getElementById('helpFab').style.display='none';">×</span></div>
-
-
-<!-- v4.0.0 Upgrade JS -->
-<script>
-// v4.0.0 升级数据定义 - 事件标签库 / DLC / 合作任务
-// Phase 2.1: 事件标签库
-const EVENT_TAG_LIBRARY = {
-  age: {
-    '18-22': ['校园','初恋','宿舍','考试','社团','兼职','迷茫','毕业'],
-    '23-30': ['职场新人','租房','跳槽','相亲','催婚','副业','人脉','加班'],
-    '31-40': ['中年危机','房贷','子女教育','父母养老','事业瓶颈','健康预警'],
-    '41-50': ['事业巅峰','子女高考','婚姻危机','投资转型','养生'],
-    '51+': ['退休规划','含饴弄孙','健康焦虑','传承','回忆录']
-  },
-  career: {
-    tech: ['技术攻坚','代码重构','技术分享','开源贡献','技术选型','裁员焦虑'],
-    manager: ['团队管理','画饼','向上管理','跨部门撕逼','组织结构优化'],
-    sales: ['拿下大单','客户应酬','业绩压力','市场开拓','价格谈判'],
-    freelance: ['接单困难','甲方催稿','自由迷茫','收入波动','个人品牌'],
-    entrepreneur: ['找融资','合伙人撕逼','产品发布','现金流危机','扩张焦虑']
-  },
-  attribute: {
-    iq_high: ['技术洞察','投资眼光','学习碾压','问题一眼看透'],
-    eq高: ['升职靠人脉','化解尴尬','领导力','社交达人'],
-    health_low: ['突然猝死','病倒住院','体检异常','亚健康警告'],
-    mood_low: ['焦虑发作','抑郁倾向','情绪崩溃','需要心理咨询']
-  },
-  random: ['捡到钱包','迷路','偶遇老同学','被表白','钱包丢了','中彩票小奖','邻居装修','小区停水']
-};
-
-// Phase 2.1: 付费DLC包定义
-const DLC_PACKS = {
-  startup: {
-    name: '创业风云',
-    icon: '🚀',
-    color: '#e67e22',
-    desc: '从车库起家到纳斯达克敲钟，体验996的创业人生',
-    events: [
-      {title:'车库创业',scene:'你在简陋的车库里写代码，充满了改变世界的热情',options:[
-        {icon:'💡',title:'开发MVP',desc:'花3个月做原型',tag:'风险',tagCls:'tag-risk',effect:{cash:-30000,health:-10,mood:20,IQ:8},result:'终于做出了MVPdemo，虽然粗糙但很激动'},
-        {icon:'🤝',title:'找合伙人',desc:'找个技术互补的',tag:'稳妥',tagCls:'tag-safe',effect:{EQ:8,mood:10},result:'找到了一个设计师合伙人，两人互补'},
-        {icon:'💰',title:'先去融资',desc:'靠PPT拿钱',tag:'金色',tagCls:'tag-golden',effect:{mood:-5,IQ:5},result:'花了2个月见30个投资人，还没拿到钱'}
-      ]},
-      {title:'A轮融资',scene:'终于有VC愿意投了！但条件很苛刻',options:[
-        {icon:'🔥',title:'接受条款',desc:'让出20%股份拿500万',tag:'金色',tagCls:'tag-golden',effect:{salaryBonus:2,mood:15},result:'到账了！你终于有工资了'},
-        {icon:'💪',title:'谈更好的',desc:'再找几家竞价',tag:'风险',tagCls:'tag-risk',effect:{EQ:8,mood:-5},result:'另一家给了更好的条款！估值翻倍'},
-        {icon:'❌',title:'独立发展',desc:'不融资自己赚',tag:'稳妥',tagCls:'tag-safe',effect:{mood:-10},result:'发展慢一些，但股权全在自己手里'}
-      ]},
-      {title:'公司上市',scene:'你的公司终于要IPO了！纳斯达克在向你招手',options:[
-        {icon:'🎉',title:'纳斯达克敲钟',desc:'功成名就',tag:'金色',tagCls:'tag-golden',effect:{mood:30,cash:5000000},result:'铛！股票翻倍，你瞬间亿万身家'},
-        {icon:'📉',title:'港股上市',desc:'更近的资本市场',tag:'稳妥',tagCls:'tag-safe',effect:{mood:15,cash:1000000},result:'在港交所上市，市值也不错'},
-        {icon:'😴',title:'不上市',desc:'闷声发财',tag:'稳妥',tagCls:'tag-safe',effect:{mood:5},result:'继续做私人企业，日子很舒服'}
-      ]}
-    ]
-  },
-  overseas: {
-    name: '海外人生',
-    icon: '🌏',
-    color: '#3498db',
-    desc: '留学、移民、海外打拼，体验不一样的文化冲击',
-    events: [
-      {title:'留学签证',scene:'签证官看着你的材料，面无表情',options:[
-        {icon:'🎓',title:'名校offer',desc:'哈佛MIT全奖',tag:'金色',tagCls:'tag-golden',effect:{EQ:10,mood:20,IQ:15},result:'恭喜！全额奖学金！'},
-        {icon:'💰',title:'自费留学',desc:'花家里100万',tag:'风险',tagCls:'tag-risk',effect:{cash:-1000000,mood:10},result:'虽然花了钱，但学到了很多'},
-        {icon:'😔',title:'被拒签了',desc:'人品问题',tag:'稳妥',tagCls:'tag-safe',effect:{mood:-15},result:'心情低落了一周，决定再战'}
-      ]},
-      {title:'文化冲击',scene:'你发现国外的生活跟想象完全不一样',options:[
-        {icon:'🍜',title:'自己做饭',desc:'自力更生',tag:'稳妥',tagCls:'tag-safe',effect:{mood:10,health:3},result:'练就了一手好厨艺'},
-        {icon:'👥',title:'融入local',desc:'多和外国人社交',tag:'风险',tagCls:'tag-risk',effect:{EQ:12,mood:5},result:'交到了各国朋友，口语飞速进步'},
-        {icon:'🎮',title:'宅在宿舍',desc:'和国内朋友打游戏',tag:'稳妥',tagCls:'tag-safe',effect:{mood:-3,IQ:5},result:'GPA倒是满分，但没啥社交'}
-      ]}
-    ]
-  },
-  chill: {
-    name: '佛系躺平',
-    icon: '🧘',
-    color: '#27ae60',
-    desc: '不卷不抢，体验低物欲的极简人生哲学',
-    events: [
-      {title:'躺平宣言',scene:'你决定不卷了，走自己的节奏',options:[
-        {icon:'🌿',title:'极简主义',desc:'断舍离',tag:'稳妥',tagCls:'tag-safe',effect:{mood:20,health:8},result:'扔掉不需要的东西，心情无比舒畅'},
-        {icon:'🏠',title:'回老家',desc:'种菜养花',tag:'风险',tagCls:'tag-risk',effect:{mood:15,cash:-50000},result:'在老家买了个小院子，岁月静好'},
-        {icon:'💼',title:'数字游民',desc:'远程工作满世界跑',tag:'金色',tagCls:'tag-golden',effect:{mood:25,EQ:10},result:'你在巴厘岛的海滩上写代码，月薪照拿'}
-      ]},
-      {title:'知足常乐',scene:'朋友都在比谁赚得多，你只想说：够用就好',options:[
-        {icon:'☯️',title:'打太极',desc:'养生最重要',tag:'稳妥',tagCls:'tag-safe',effect:{health:15,mood:10},result:'身体倍棒，胃口好'},
-        {icon:'📚',title:'读书修心',desc:'读100本书',tag:'金色',tagCls:'tag-golden',effect:{IQ:15,mood:15},result:'腹有诗书气自华'},
-        {icon:'🫠',title:'彻底摆烂',desc:'啥也不管',tag:'风险',tagCls:'tag-risk',effect:{mood:-5},result:'摆了三天后觉得无聊，还是找点事做吧'}
-      ]}
-    ]
-  }
-};
-
-// Phase 2.2: NPC合作任务定义
-const COOP_MISSIONS = [
-  {
-    id:'invest_tip',name:'内幕消息',icon:'💰',
-    desc:'朋友得到可靠投资消息，邀你一起入伙',
-    minTrust:40,minIntimacy:50,
-    reward:{cash:[5000,50000],IQ:3,mood:8},
-    risk:{cash:[-10000,-1],mood:-5}
-  },
-  {
-    id:'job_referral',name:'内推机会',icon:'💼',
-    desc:'朋友公司正在招人，TA可以帮你内推',
-    minTrust:60,minIntimacy:40,
-    reward:{salaryBonus:0.2,EQ:5,mood:10},
-    risk:{mood:-3}
-  },
-  {
-    id:'business_partner',name:'合伙创业',icon:'🚀',
-    desc:'朋友有个创业项目想拉你一起',
-    minTrust:70,minIntimacy:60,
-    reward:{cash:[100000,1000000],mood:20},
-    risk:{cash:[-200000,-10000],mood:-15,health:-10}
-  },
-  {
-    id:'lending_money',name:'借钱周转',icon:'🏦',
-    desc:'朋友资金周转困难，向你借钱',
-    minTrust:50,minIntimacy:30,
-    reward:{EQ:8,affection:20},
-    risk:{cash:[-50000,-5000]}
-  },
-  {
-    id:'house_deal',name:'买房情报',icon:'🏠',
-    desc:'朋友知道一个低于市场价的好房源',
-    minTrust:30,minIntimacy:30,
-    reward:{mood:5,IQ:3},
-    risk:{}
-  },
-  {
-    id:'gym_workout',name:'健身搭子',icon:'💪',
-    desc:'朋友约你一起健身互相监督',
-    minTrust:20,minIntimacy:20,
-    reward:{health:15,mood:10,affection:8},
-    risk:{}
-  }
-];
-
-// ============================================================
-// v4.0.0 爆款升级方案 - Phase 1 + Phase 2
-// ============================================================
-
-// ===== 工具函数 =====
-function _v4_debug(){return (typeof V4_FLAGS!=='undefined'&&V4_FLAGS.debug);}
-function _v4_clamp(v,lo,hi){return Math.max(lo,Math.min(hi,v));}
-
-// ============================================================
-// Phase 1.1: 新手引导与认知负荷管理
-// ============================================================
-const TUTORIAL_STEPS = [
-  {id:'welcome',title:'欢迎来到人生首富',desc:'这是一场从0到巅峰的人生模拟。\n\n你不是在"玩游戏"——你是在"活一遍"。\n\n每个月的推进都会带来新的事件和选择。',target:'nextMonthBtn',pos:'top'},
-  {id:'first_month',title:'度过一月',desc:'点击「度过一月」推进时间。每月会有收入、随机事件和NPC消息。\n\n记得随时关注你的现金和属性！',target:'nextMonthBtn',pos:'top',trigger:'month1'},
-  {id:'handle_message',title:'处理消息',desc:'NPC会主动找你聊天，记得经常查看手机！\n\n红色徽章=未读消息，点击手机Tab查看。',target:'tab-phone',pos:'bottom',trigger:'month1'},
-  {id:'attributes',title:'四维属性',desc:'健康 心情 智商 情商\n\n属性太低会有严重后果——心情太低会抑郁，健康太低会猝死！\n\n保持平衡很重要。',target:'lifePage',pos:'bottom',trigger:'month2'},
-  {id:'invest',title:'投资赚钱',desc:'在工作累积了初始资金后，去投资页面买股票、买房。\n\n低买高卖是核心投资策略！',target:'tab-invest',pos:'bottom',trigger:'month3'},
-  {id:'job',title:'升职加薪',desc:'在工作页面查看职业路线。满足条件后升职，薪资翻倍。\n\n年龄越大，可选择的职业越高级！',target:'tab-job',pos:'bottom',trigger:'month2'},
-  {id:'social',title:'社交人脉',desc:'手机里的联系人可以AI自由聊天。\n\n多聊天能增进关系，高关系解锁新剧情和约会系统。',target:'tab-phone',pos:'bottom',trigger:'month4'}
-];
-
-let _tut_state = {currentIdx:0,completed:[]};
-
-function _tut_shouldShow(stepId){
-  if(!G.tutorialCompleted) G.tutorialCompleted=[];
-  if(G.tutorialCompleted.includes(stepId)) return false;
-  const step = TUTORIAL_STEPS.find(s=>s.id===stepId);
-  if(!step || !step.trigger) return true;
-  if(step.trigger==='month1') return G.totalMonths>=1;
-  if(step.trigger==='month2') return G.totalMonths>=2;
-  if(step.trigger==='month3') return G.totalMonths>=3;
-  if(step.trigger==='month4') return G.totalMonths>=4;
-  if(step.trigger==='has_unread') return hasUnread();
-  return true;
-}
-
-function showTutorial(stepId){
-  if(!G.tutorialCompleted) G.tutorialCompleted=[];
-  if(G.tutorialCompleted.includes(stepId)) return;
-  const idx = TUTORIAL_STEPS.findIndex(s=>s.id===stepId);
-  if(idx<0) return;
-  _tut_state.currentIdx = idx;
-  _tut_showOverlay(idx);
-}
-
-function _tut_showOverlay(idx){
-  _tut_state.currentIdx = idx;
-  const step = TUTORIAL_STEPS[idx];
-  if(!step) return;
-  const existing = document.getElementById('tutOverlay');
-  if(existing) existing.remove();
-  const overlay = document.createElement('div');
-  overlay.id = 'tutOverlay';
-  overlay.className = 'tut-overlay';
-  overlay.innerHTML = '<div class="tut-card">'+
-    '<div class="tut-step-num">'+(idx+1)+'/'+TUTORIAL_STEPS.length+'</div>'+
-    '<div class="tut-title">'+step.title+'</div>'+
-    '<div class="tut-desc">'+step.desc.replace(/\n/g,'<br>')+'</div>'+
-    '<div class="tut-actions">'+
-    (idx>0?'<button class="btn btn-outline btn-sm" onclick="_tut_prev()">上一步</button>':'')+
-    '<button class="btn btn-primary btn-sm" onclick="_tut_next()">'+(idx===TUTORIAL_STEPS.length-1?'开始游戏!':'下一步')+'</button>'+
-    '</div>'+
-    '<div class="tut-skip" onclick="_tut_skipAll()">跳过教程</div>'+
-    '</div>';
-  document.body.appendChild(overlay);
-  if(step.target){
-    const el = document.getElementById(step.target);
-    if(el) el.classList.add('tut-highlight');
-  }
-}
-
-function _tut_next(){
-  const idx = _tut_state.currentIdx;
-  const step = TUTORIAL_STEPS[idx];
-  if(step){
-    if(!G.tutorialCompleted.includes(step.id)) G.tutorialCompleted.push(step.id);
-    const el = document.getElementById(step.target);
-    if(el) el.classList.remove('tut-highlight');
-  }
-  const ov = document.getElementById('tutOverlay');
-  if(ov) ov.remove();
-  if(idx < TUTORIAL_STEPS.length-1){_tut_showOverlay(idx+1);}
-  else{saveGame();showToast('教程完成！开始你的人生之旅吧！');}
-}
-
-function _tut_prev(){const idx=_tut_state.currentIdx;const step=TUTORIAL_STEPS[idx];if(step){const el=document.getElementById(step.target);if(el)el.classList.remove('tut-highlight');}document.getElementById('tutOverlay').remove();_tut_showOverlay(Math.max(0,idx-1));}
-function _tut_skipAll(){TUTORIAL_STEPS.forEach(s=>{if(!G.tutorialCompleted.includes(s.id))G.tutorialCompleted.push(s.id);});document.getElementById('tutOverlay').remove();saveGame();showToast('已跳过教程');}
-
-function _tut_checkAutoAdvance(){
-  if(!_tut_state) return;
-  if(!G.tutorialCompleted) G.tutorialCompleted=[];
-  const curStep = TUTORIAL_STEPS[_tut_state.currentIdx];
-  if(!curStep) return;
-  // If current step has a trigger that is now satisfied, complete it and advance
-  if(curStep.trigger && !G.tutorialCompleted.includes(curStep.id)){
-    if(_tut_shouldShow(curStep.id)){
-      // Trigger condition met (e.g., month1 satisfied), advance to next
-      if(curStep.target){
-        const el = document.getElementById(curStep.target);
-        if(el) el.classList.remove('tut-highlight');
-      }
-      G.tutorialCompleted.push(curStep.id);
-      const nextIdx = _tut_state.currentIdx + 1;
-      if(nextIdx < TUTORIAL_STEPS.length){
-        _tut_showOverlay(nextIdx);
-        return;
-      }else{
-        saveGame();
-        document.getElementById('tutOverlay').remove();
-        showToast('教程完成！');
-        return;
-      }
-    }
-  }
-  // Check if next step's trigger is now satisfied
-  const nextIdx = _tut_state.currentIdx + 1;
-  if(nextIdx >= TUTORIAL_STEPS.length) return;
-  const nextStep = TUTORIAL_STEPS[nextIdx];
-  if(!nextStep) return;
-  if(G.tutorialCompleted.includes(nextStep.id)) return;
-  if(_tut_shouldShow(nextStep.id)){
-    if(curStep.target){
-      const el = document.getElementById(curStep.target);
-      if(el) el.classList.remove('tut-highlight');
-    }
-    G.tutorialCompleted.push(curStep.id);
-    _tut_showOverlay(nextIdx);
-  }
-}
-
-function _v4_boostInitialState(){
-  G.IQ = Math.max(G.IQ, 50+Math.floor(Math.random()*15));
-  G.EQ = Math.max(G.EQ, 45+Math.floor(Math.random()*15));
-  G.mood = Math.max(G.mood, 65);
-  G.health = Math.max(G.health, 75);
-  G.cash = Math.max(G.cash, 5000);
-}
-
-const PLAYBOOK_PAGES = [
-  {title:'基础玩法',content:'<b>度过一月</b>：推进时间，触发事件<br><b>收入来源</b>：工资+投资+副业<br><b>健康/心情</b>：低于20会出大事!<br><b>金币管理</b>：不要动不动就花钱，留现金应对危机'},
-  {title:'职业系统',content:'<b>职业升级</b>：满足IQ/EQ要求可升职<br><b>薪资增长</b>：每升职一次薪资翻倍<br><b>创业者</b>：高IQ+高EQ+足够资金可创业<br><b>年龄限制</b>：越老可选职业越多越强'},
-  {title:'投资系统',content:'<b>股票</b>：6只股票，受新闻影响涨跌<br><b>房产</b>：可贷款买房，每月还款，持续增值<br><b>商铺</b>：花大钱开店，每月有被动收入<br><b>科技</b>：投资AI/新能源，周期长回报高'},
-  {title:'手机社交',content:'<b>消息</b>：NPC会主动发消息，必须处理<br><b>AI聊天</b>：自由输入，NPC会根据人设回复<br><b>日程</b>：聊天中约饭会创建日程<br><b>关系</b>：亲密度/信任度/好感度决定可玩内容'},
-  {title:'学习聚会',content:'<b>学习</b>：报培训班，花时间提升属性<br><b>聚会</b>：花钱拓展人脉，遇到新朋友并加微信'},
-  {title:'成就重生',content:'<b>成就</b>：达成条件解锁成就<br><b>五维评分</b>：身心/物质/关系/事业/自由<br><b>重生</b>：人生结束后获得LP点解锁永久加成'}
-];
-function showPlaybook(pageIdx){if(!pageIdx) pageIdx=0;const p=PLAYBOOK_PAGES[pageIdx];const navHTML=PLAYBOOK_PAGES.map(function(pp,i){return '<button class="btn btn-sm '+(i===pageIdx?'btn-primary':'btn-outline')+'" onclick="showPlaybook('+i+')">'+pp.title.split(' ')[0]+'</button>';}).join('');const html='<div class="playbook-nav">'+navHTML+'</div><h3 style="margin:12px 0 8px;">'+p.title+'</h3><div class="playbook-content">'+p.content+'</div>';showModal({title:'玩法手册',content:html,showCancel:false,confirmText:'知道了'});}
-
-// ============================================================
-// Phase 1.2: 结算动画与即时反馈
-// ============================================================
-function showSettlementAnimation(before,after){
-  const overlay = document.createElement('div');
-  overlay.id = 'settlementOverlay';
-  overlay.className = 'settlement-overlay';
-  const income = after.cash - before.cash;
-  const assetChange = after.totalAsset - before.totalAsset;
-  overlay.innerHTML = '<div class="settlement-card">'+
-    '<div class="settlement-header">第'+G.totalMonths+'个月结算</div>'+
-    '<div class="settlement-row"><span class="settlement-label">收支</span><span class="settlement-val '+(income>=0?'pos':'neg')+'">'+(income>=0?'+':'')+fmt(income)+'</span></div>'+
-    '<div class="settlement-row"><span class="settlement-label">净资产</span><span class="settlement-val '+(assetChange>=0?'pos':'neg')+'">'+fmt(after.totalAsset)+'</span></div>'+
-    '<div class="settlement-row"><span class="settlement-label">健康</span><span class="settlement-val">'+Math.round(after.health)+'</span></div>'+
-    '<div class="settlement-row"><span class="settlement-label">心情</span><span class="settlement-val">'+Math.round(after.mood)+'</span></div>'+
-    '<div class="settlement-bar"></div></div>';
-  document.body.appendChild(overlay);
-  setTimeout(function(){overlay.classList.add('show');},50);
-  setTimeout(function(){overlay.classList.remove('show');setTimeout(function(){overlay.remove();},300);},1800);
-}
-
-// Web Audio音效系统
-let _v4_audioCtx = null;
-function _v4_getAudioCtx(){if(!_v4_audioCtx){try{_v4_audioCtx=new (window.AudioContext||window.webkitContext)();}catch(e){return null;}}return _v4_audioCtx;}
-function v4PlaySound(type){
-  try{
-    const ctx = _v4_getAudioCtx(); if(!ctx) return;
-    const osc = ctx.createOscillator(); const gain = ctx.createGain();
-    osc.connect(gain); gain.connect(ctx.destination); const now = ctx.currentTime;
-    if(type==='celebrate'){
-      osc.frequency.setValueAtTime(523,now);osc.frequency.setValueAtTime(659,now+0.1);
-      osc.frequency.setValueAtTime(784,now+0.2);osc.frequency.setValueAtTime(1047,now+0.3);
-      gain.gain.setValueAtTime(0.3,now);gain.gain.linearRampToValueAtTime(0,now+0.6);
-      osc.start(now);osc.stop(now+0.6);
-    } else if(type==='coin'){
-      osc.frequency.setValueAtTime(1200,now);gain.gain.setValueAtTime(0.2,now);
-      gain.gain.linearRampToValueAtTime(0,now+0.15);osc.start(now);osc.stop(now+0.15);
-    } else if(type==='levelup'){
-      osc.type='triangle';osc.frequency.setValueAtTime(440,now);
-      osc.frequency.setValueAtTime(554,now+0.08);osc.frequency.setValueAtTime(659,now+0.16);
-      gain.gain.setValueAtTime(0.25,now);gain.gain.linearRampToValueAtTime(0,now+0.5);
-      osc.start(now);osc.stop(now+0.5);
-    }
-  } catch(e){}
-}
-
-// 全屏庆祝弹窗
-function showCelebration(type,title,desc){
-  v4PlaySound('celebrate');
-  const existing = document.getElementById('celebOverlay');
-  if(existing) existing.remove();
-  const overlay = document.createElement('div');
-  overlay.id = 'celebOverlay';
-  overlay.className = 'celeb-overlay';
-  overlay.innerHTML = '<div class="celeb-card">'+
-    '<div class="celeb-icon">'+ (type==='promotion'?'🎉':type==='invest'?'💰':type==='wedding'?'💒':'🏆') +'</div>'+
-    '<div class="celeb-title">'+title+'</div>'+
-    '<div class="celeb-desc">'+desc+'</div>'+
-    '<button class="btn btn-warning btn-sm" onclick="_shareCelebration(\''+type+'\')">分享喜悦</button>'+
-    '<button class="btn btn-primary btn-sm" onclick="document.getElementById(\'celebOverlay\').remove();" style="margin-top:8px;">继续人生</button>'+
-    '</div>';
-  document.body.appendChild(overlay);
-  // Confetti
-  const colors=['#f39c12','#e74c3c','#3498db','#27ae60','#9b59b6','#1abc9c'];
-  for(let i=0;i<15;i++){
-    const c=document.createElement('div');c.className='confetti';
-    c.style.left=Math.random()*100+'%';c.style.animationDelay=(Math.random()*0.5)+'s';
-    c.style.background=colors[Math.floor(Math.random()*6)];
-    overlay.appendChild(c);
-  }
-  setTimeout(function(){overlay.classList.add('show');},50);
-}
-
-function _shareCelebration(type){showToast('截图手动分享！');}
-
-// 雷达图
-function drawRadarChart(canvasId,data){
-  const canvas=document.getElementById(canvasId);if(!canvas)return;
-  const ctx=canvas.getContext('2d');
-  const w=canvas.width,h=canvas.height;
-  const cx=w/2,cy=h/2,r=Math.min(w,h)*0.36;
-  const labels=data.map(function(d){return d.name;});
-  const values=data.map(function(d){return d.score/100;});
-  const n=labels.length;
-  const angleStep=Math.PI*2/n;
-  ctx.clearRect(0,0,w,h);
-  for(let ring=1;ring<=4;ring++){ctx.beginPath();ctx.arc(cx,cy,r*ring/4,0,Math.PI*2);ctx.strokeStyle='rgba(52,152,213,'+(0.1+ring*0.03)+')';ctx.lineWidth=1;ctx.stroke();}
-  for(let i=0;i<n;i++){const a=angleStep*i-Math.PI/2;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r);ctx.strokeStyle='rgba(52,152,213,0.2)';ctx.stroke();}
-  ctx.beginPath();values.forEach(function(v,i){const a=angleStep*i-Math.PI/2;x=cx+Math.cos(a)*r*v;y=cy+Math.sin(a)*r*v;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});ctx.closePath();
-  ctx.fillStyle='rgba(52,152,213,0.25)';ctx.fill();ctx.strokeStyle='#3498db';ctx.lineWidth=2;ctx.stroke();
-  values.forEach(function(v,i){const a=angleStep*i-Math.PI/2;const x=cx+Math.cos(a)*r*v;const y=cy+Math.sin(a)*r*v;ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fillStyle='#3498db';ctx.fill();ctx.fillStyle='#333';ctx.font='11px sans-serif';const lx=cx+Math.cos(a)*(r+18);const ly=cy+Math.sin(a)*(r+18);ctx.textAlign='center';ctx.fillText(labels[i],lx,ly+4);});
-}
-
-function showRadarModal(){
-  const dims = _v4_getRadarData();
-  const html = '<canvas id="radarCanvas" width="280" height="280" style="display:block;margin:0 auto;"></canvas><div style="text-align:center;margin-top:12px;font-size:20px;font-weight:700;">综合评分: '+_v4_calcOverall(dims)+'/100</div>';
-  showModal({title:'人生雷达图',content:html,cancelText:'',confirmText:'明白了',success:function(){}});
-  setTimeout(function(){drawRadarChart('radarCanvas',dims);},100);
-}
-
-function _v4_getRadarData(){
-  const healthScore=Math.round((G.health+G.mood)/2);
-  const totalAsset=calcTotalAsset();
-  const wealthScore=Math.min(100,Math.round(Math.log10(Math.max(1,totalAsset))*10));
-  let relScore=0;if(G.spouse)relScore+=40;relScore+=Math.min(60,G.children*20);
-  const careerScore=G.selfEmployed?Math.min(100,G.businesses.length*20+40):Math.round((G.jobIndex/(JOBS.length-1))*100);
-  const passive=calcPassiveIncome();const active=G.selfEmployed?passive*0.5:JOBS[G.jobIndex].salary/12;
-  const freedomScore=Math.min(100,Math.round((passive/Math.max(1,active+passive))*100));
-  return [{name:'身心',score:healthScore},{name:'物质',score:wealthScore},{name:'关系',score:relScore},{name:'事业',score:careerScore},{name:'自由',score:freedomScore}];
-}
-
-function _v4_calcOverall(dims){return Math.round(dims.reduce(function(s,d){return s+d.score;},0)/dims.length);}
-
-// ============================================================
-// Phase 1.3: 人生回顾与阶段性报告
-// ============================================================
-function checkLifeReview(){
-  if(!G.totalMonths) return;
-  if(G.totalMonths % 60 !== 0) return;
-  if(G.lifeReviewShown && G.lifeReviewShown.includes(G.totalMonths)) return;
-  if(!G.lifeReviewShown) G.lifeReviewShown = [];
-  G.lifeReviewShown.push(G.totalMonths);
-  showLifeReport();
-}
-
-function showLifeReport(){
-  const age = getAge();
-  const total = calcTotalAsset();
-  const job = G.selfEmployed ? '创业者' : JOBS[G.jobIndex].name;
-  var html = '<canvas id="lifeChart" width="340" height="220" style="display:block;margin:0 auto 12px;border-radius:8px;background:#fafafa;"></canvas>';
-  html += '<div class="report-stats">';
-  html += '<div class="report-stat"><span class="report-label">总资产</span><span class="report-val">'+fmt(total)+'</span></div>';
-  html += '<div class="report-stat"><span class="report-label">职业</span><span class="report-val">'+job+'</span></div>';
-  html += '<div class="report-stat"><span class="report-label">感情</span><span class="report-val">'+(G.spouse?'已婚':'单身')+'</span></div>';
-  html += '<div class="report-stat"><span class="report-label">五维</span><span class="report-val">'+_v4_calcOverall(_v4_getRadarData())+'/100</span></div>';
-  html += '</div>';
-  html += '<div class="report-compare"><div class="report-section-title">如果当初</div>';
-  html += '<div class="compare-item"><span class="compare-label">如果当初更稳妥</span><span class="compare-val">'+fmt(Math.round(total*0.7))+'</span></div>';
-  html += '<div class="compare-item"><span class="compare-label">如果当初更大胆</span><span class="compare-val">'+fmt(Math.round(total*1.8))+'</span></div>';
-  html += '</div>';
-  html += '<div style="text-align:center;margin-top:12px;"><button class="btn btn-warning btn-sm" onclick="generateSharePoster()">生成分享海报</button></div>';
-  showModal({title:age+'岁人生报告',content:html,showCancel:false,confirmText:'继续人生',success:function(){}});
-  setTimeout(function(){_drawLifeChart('lifeChart',total);},150);
-}
-
-function _drawLifeChart(canvasId,currentTotal){
-  var canvas = document.getElementById(canvasId);if(!canvas)return;
-  var ctx = canvas.getContext('2d');
-  var w=canvas.width,h=canvas.height;
-  ctx.clearRect(0,0,w,h);
-  var points = []; var val = currentTotal*0.3;
-  for(var i=0;i<=12;i++){val = val + (currentTotal-val)*(0.5+Math.random()*0.3);points.push(val);}
-  points[points.length-1] = currentTotal;
-  for(var i=1;i<points.length;i++){if(points[i]<points[i-1]*0.8)points[i]=points[i-1]*1.02;}
-  var maxV = Math.max.apply(null,points)*1.1;
-  var minV = Math.min.apply(null,points)*0.9;
-  var pad = {l:40,r:10,t:20,b:30};
-  var cw = w-pad.l-pad.r, ch = h-pad.t-pad.b;
-  ctx.strokeStyle='#eee';ctx.lineWidth=1;
-  for(var i=0;i<=4;i++){var y=pad.t+ch*i/4;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(w-pad.r,y);ctx.stroke();ctx.fillStyle='#aaa';ctx.font='10px sans-serif';ctx.textAlign='right';ctx.fillText(fmt(Math.round(maxV-(maxV-minV)*i/4)),pad.l-4,y+3);}
-  ctx.beginPath();points.forEach(function(v,i){var x=pad.l+cw*i/(points.length-1);var y=pad.t+ch*(1-(v-minV)/(maxV-minV));if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});ctx.lineTo(pad.l+cw,pad.t+ch);ctx.lineTo(pad.l,pad.t+ch);ctx.closePath();
-  var grad = ctx.createLinearGradient(0,pad.t,0,pad.t+ch);grad.addColorStop(0,'rgba(52,152,213,0.3)');grad.addColorStop(1,'rgba(52,152,213,0.02)');ctx.fillStyle=grad;ctx.fill();
-  ctx.beginPath();points.forEach(function(v,i){var x=pad.l+cw*i/(points.length-1);var y=pad.t+ch*(1-(v-minV)/(maxV-minV));if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});ctx.strokeStyle='#3498db';ctx.lineWidth=2;ctx.stroke();
-}
-
-function generateSharePoster(){
-  v4PlaySound('coin');
-  var age = getAge(); var total = calcTotalAsset();
-  var dims = _v4_getRadarData(); var overall = _v4_calcOverall(dims);
-  var canvas = document.createElement('canvas');
-  canvas.width=750; canvas.height=1334;
-  var ctx = canvas.getContext('2d');
-  var bg = ctx.createLinearGradient(0,0,750,1334);
-  bg.addColorStop(0,'#1a1a2e');bg.addColorStop(0.5,'#16213e');bg.addColorStop(1,'#0f3460');
-  ctx.fillStyle=bg;ctx.fillRect(0,0,750,1334);
-  ctx.fillStyle='#fff';ctx.font='bold 48px sans-serif';ctx.textAlign='center';
-  ctx.fillText('人生首富模拟器',375,160);
-  ctx.font='28px sans-serif';ctx.fillStyle='rgba(255,255,255,0.7)';
-  ctx.fillText('我的'+age+'岁人生报告',375,210);
-  ctx.font='bold 80px sans-serif';ctx.fillStyle='#f1c40f';
-  ctx.fillText(fmt(total),375,380);
-  ctx.font='22px sans-serif';ctx.fillStyle='rgba(255,255,255,0.6)';
-  ctx.fillText('累计资产',375,420);
-  _v4_drawRadarToCanvas(ctx,375,620,140,dims);
-  ctx.font='26px sans-serif';ctx.textAlign='left';
-  var stats = [G.selfEmployed?'创业者':(JOBS[G.jobIndex]?JOBS[G.jobIndex].name:'无业'),G.spouse?'已婚':'单身',Math.round(G.health)+'',Math.round(G.IQ)+'',Math.round(G.EQ)+'',overall+'分'];
-  stats.forEach(function(s,i){var col=i%2,row=Math.floor(i/2);ctx.fillStyle='rgba(255,255,255,0.9)';ctx.fillText(s,120+col*340,880+row*55);});
-  ctx.textAlign='center';ctx.font='20px sans-serif';ctx.fillStyle='rgba(255,255,255,0.4)';
-  ctx.fillText('扫码开启你的人生之旅',375,1200);
-  ctx.strokeStyle='rgba(255,255,255,0.3)';ctx.lineWidth=2;
-  ctx.strokeRect(310,1220,130,100);
-  ctx.fillStyle='rgba(255,255,255,0.5)';ctx.font='14px sans-serif';
-  ctx.fillText('QR Code',375,1275);
-  ctx.fillStyle='rgba(255,255,255,0.2)';ctx.font='16px sans-serif';
-  ctx.fillText('v4.0.0 Life Simulator',375,1310);
-  var dataUrl = canvas.toDataURL('image/png');
-  var html = '<div style="text-align:center;"><img src="'+dataUrl+'" style="max-width:100%;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.3);"><div style="margin-top:12px;color:#666;">长按图片保存并分享!</div><a href="'+dataUrl+'" download="人生报告_'+age+'岁.png" class="btn btn-primary btn-sm" style="display:inline-block;margin-top:8px;">下载海报</a></div>';
-  showModal({title:'我的分享海报',content:html,showCancel:false,confirmText:'关闭'});
-}
-
-function _v4_drawRadarToCanvas(ctx,cx,cy,r,data){
-  var n=data.length,angleStep=Math.PI*2/n;
-  for(var ring=1;ring<=4;ring++){ctx.beginPath();ctx.arc(cx,cy,r*ring/4,0,Math.PI*2);ctx.strokeStyle='rgba(255,255,255,'+(0.05+ring*0.02)+')';ctx.lineWidth=1;ctx.stroke();}
-  for(var i=0;i<n;i++){var a=angleStep*i-Math.PI/2;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r);ctx.strokeStyle='rgba(255,255,255,0.15)';ctx.stroke();}
-  ctx.beginPath();data.forEach(function(d,i){var a=angleStep*i-Math.PI/2;var v=d.score/100;var x=cx+Math.cos(a)*r*v,y=cy+Math.sin(a)*r*v;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});ctx.closePath();
-  ctx.fillStyle='rgba(52,152,213,0.3)';ctx.fill();ctx.strokeStyle='#3498db';ctx.lineWidth=2;ctx.stroke();
-  data.forEach(function(d,i){var a=angleStep*i-Math.PI/2;var v=d.score/100;var x=cx+Math.cos(a)*r*v,y=cy+Math.sin(a)*r*v;ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fillStyle='#3498db';ctx.fill();ctx.fillStyle='rgba(255,255,255,0.8)';ctx.font='12px sans-serif';ctx.textAlign='center';ctx.fillText(d.name,cx+Math.cos(a)*(r+20),cy+Math.sin(a)*(r+20)+4);});
-}
-
-// ============================================================
-// Phase 2.1: 扩充内容库与AI生成机制
-// ============================================================
-function _v4_getEventTags(){
-  var age = getAge();
-  var job = G.selfEmployed ? 'entrepreneur' : (G.jobIndex<2?'tech':G.jobIndex<4?'manager':'sales');
-  var ageKey = age<=22?'18-22':age<=30?'23-30':age<=40?'31-40':age<=50?'41-50':'51+';
-  var tags = [];
-  if(EVENT_TAG_LIBRARY.age[ageKey]) tags = tags.concat(EVENT_TAG_LIBRARY.age[ageKey]);
-  if(EVENT_TAG_LIBRARY.career[job]) tags = tags.concat(EVENT_TAG_LIBRARY.career[job]);
-  if(G.IQ>120) tags = tags.concat(EVENT_TAG_LIBRARY.attribute.iq_high);
-  if(G.health<30) tags = tags.concat(EVENT_TAG_LIBRARY.attribute.health_low);
-  return tags;
-}
-
-function triggerDLCEvent(){
-  if(!G.dlcUnlocked||G.dlcUnlocked.length===0) return false;
-  if(Math.random()>0.12) return false;
-  var dlc = DLC_PACKS[G.dlcUnlocked[Math.floor(Math.random()*G.dlcUnlocked.length)]];
-  if(!dlc) return false;
-  if(!G.dlcProgress) G.dlcProgress={};
-  var progress = G.dlcProgress[dlc.name]||0;
-  if(progress>=dlc.events.length) return false;
-  var evt = dlc.events[progress];
-  G.dlcProgress[dlc.name]=progress+1;
-  showDecisionEvent(evt);
-  return true;
-}
-
-function showDLCPanel(){
-  var html = '<div class="dlc-list">';
-  Object.keys(DLC_PACKS).forEach(function(key){
-    var dlc = DLC_PACKS[key];
-    var unlocked = G.dlcUnlocked && G.dlcUnlocked.includes(key);
-    var progress = G.dlcProgress && G.dlcProgress[dlc.name] || 0;
-    html += '<div class="dlc-card '+(unlocked?'unlocked':'locked')+'">';
-    html += '<div class="dlc-header"><span class="dlc-icon">'+dlc.icon+'</span><span class="dlc-name">'+dlc.name+'</span></div>';
-    html += '<div class="dlc-desc">'+dlc.desc+'</div>';
-    if(unlocked){html += '<div class="dlc-progress">进度: '+progress+'/'+dlc.events.length+'事件</div>';}
-    else{html += '<div class="dlc-locked">完成游戏一次后解锁</div>';}
-    html += '</div>';
-  });
-  html += '</div>';
-  showModal({title:'人生百态DLC',content:html,cancelText:'',confirmText:'知道了'});
-}
-
-function _v4_snapshotAsset(){
-  if(!G._assetHistory) G._assetHistory=[];
-  G._assetHistory.push({month:G.totalMonths,total:calcTotalAsset(),cash:G.cash});
-  if(G._assetHistory.length>60) G._assetHistory=G._assetHistory.slice(-60);
-}
-
-// ============================================================
-// Phase 2.2: 人脉网络与合作任务
-// ============================================================
-function triggerCoopMission(){
-  if(Math.random()>0.10) return;
-  var eligible = [];
-  var npcIds = ['bestie','colleague','classmate','exColleague','mentor','neighbor','banker','realtor','gymCoach'];
-  npcIds.forEach(function(id){
-    var rel = getRelationship(id);
-    COOP_MISSIONS.forEach(function(m){
-      if(rel.trust>=m.minTrust && rel.intimacy>=m.minIntimacy){eligible.push({npcId:id,mission:m});}
-    });
-  });
-  if(eligible.length===0) return;
-  var pick = eligible[Math.floor(Math.random()*eligible.length)];
-  _showCoopMission(pick.npcId, pick.mission);
-}
-
-function _showCoopMission(npcId,mission){
-  var npc = NPC_PERSONALITIES[npcId] || {name:'NPC',avatar:'👤'};
-  var thread = {
-    id: G.phone.nextId++, npcId: npcId, npcName: npc.name, npcAvatar: npc.avatar,
-    tplId: 'coop_'+mission.id+'_'+G.totalMonths, type: 'wechat',
-    rounds: [{
-      npcMsgs: [npc.name+'发来了合作邀请！', mission.desc, '最低要求：信任'+mission.minTrust+' 亲密度'+mission.minIntimacy],
-      opts: [
-        {text: '接受',fx:_v4_coopReward(mission),next:-1},
-        {text: '婉拒',fx:{intimacy:-3,trust:-2},next:-1}
-      ]
-    }],
-    currentRound: 0, status:'unread', receivedMonth:G.totalMonths, readMonth:null, followUp:null, flagClear:null
-  };
-  pushPhoneThread(thread); updatePhoneBadge();
-}
-
-function _v4_coopReward(mission){
-  var r = {};
-  if(mission.reward.cash){var c=mission.reward.cash;r.cash=Array.isArray(c)?Math.round(c[0]+Math.random()*(c[1]-c[0])):c;}
-  if(mission.reward.IQ)r.IQ=mission.reward.IQ;
-  if(mission.reward.mood)r.mood=mission.reward.mood;
-  if(mission.reward.salaryBonus)r.salaryBonus=mission.reward.salaryBonus;
-  r.intimacy=10;r.trust=5; r.affection=5;
-  return r;
-}
-
-function showRelationNetwork(){
-  var html = '<canvas id="relationCanvas" width="340" height="340" style="display:block;margin:0 auto;"></canvas><div style="text-align:center;margin-top:8px;font-size:12px;color:#888;">节点越大=关系越近</div>';
-  showModal({title:'我的关系网',content:html,cancelText:'',confirmText:'关闭'});
-  setTimeout(function(){_drawRelationNetwork('relationCanvas');},100);
-}
-
-function _drawRelationNetwork(canvasId){
-  var canvas = document.getElementById(canvasId);if(!canvas)return;
-  var ctx = canvas.getContext('2d');
-  var w=canvas.width,h=canvas.height;
-  ctx.clearRect(0,0,w,h);ctx.fillStyle='#fafafa';ctx.fillRect(0,0,w,h);
-  var nodes = [{id:'player',name:'我',x:w/2,y:h/2,r:20,color:'#3498db'}];
-  var allNpcs = ['mom','dad','bestie','colleague','boss','classmate','neighbor','exColleague','mentor','gymCoach'];
-  var angleStep = Math.PI*2/allNpcs.length;
-  allNpcs.forEach(function(id,i){
-    var rel = getRelationship(id);
-    if(rel.intimacy>0||rel.trust>0){
-      var angle = angleStep*i;
-      var dist = 80 + (100-rel.intimacy)*0.5;
-      var p = NPC_PERSONALITIES[id] || {name:id};
-      nodes.push({id:id,name:p.name,x:w/2+Math.cos(angle)*dist,y:h/2+Math.sin(angle)*dist,r:8+rel.intimacy/12,color:'#27ae60'});
-    }
-  });
-  nodes.forEach(function(n,i){if(i===0)return;var d=Math.sqrt((n.x-nodes[0].x)*(n.x-nodes[0].x)+(n.y-nodes[0].y)*(n.y-nodes[0].y));var alpha=Math.min(0.7,n.r/25);ctx.beginPath();ctx.moveTo(nodes[0].x,nodes[0].y);ctx.lineTo(n.x,n.y);ctx.strokeStyle='rgba(52,152,213,'+alpha+')';ctx.lineWidth=Math.max(1,n.r/4);ctx.stroke();});
-  nodes.forEach(function(n){ctx.beginPath();ctx.arc(n.x,n.y,n.r,0,Math.PI*2);ctx.fillStyle=n.color;ctx.fill();ctx.fillStyle='#333';ctx.font='10px sans-serif';ctx.textAlign='center';ctx.fillText(n.name,n.x,n.y+n.r+14);});
-}
-
-// ============ HOOKS / PATCHES ============
-var _v4_origStartGame = startGame;
-function startGame(){
-  if(loadGame()&&!G.gameOver){migrateSave();document.getElementById('welcomePage').style.display='none';document.getElementById('gameApp').style.display='flex';initStockPrices();initPhoneState();refreshAll();_v4_postLoadHook();return;}
-  G=defaultState();initStockPrices();initPhoneState();initChildRelationships();
-  _v4_boostInitialState();
-  saveGame();
-  document.getElementById('welcomePage').style.display='none';
-  document.getElementById('gameApp').style.display='flex';
-  refreshAll();
-  setTimeout(function(){showTutorial('welcome');},500);
-}
-function _v4_postLoadHook(){if(!G.tutorialCompleted)G.tutorialCompleted=[];if(!G._assetHistory)G._assetHistory=[];initChildRelationships();}
-
-var _v4_origAdvanceMonth = advanceMonth;
-window['advanceMonth'] = function(){
-  _v4_snapshotAsset();
-  _v4_origAdvanceMonth();
-  checkLifeReview();
-  triggerCoopMission();
-  _tut_checkAutoAdvance();
-};
-
-var _v4_origDoAdvance = _doAdvanceMonth;
-window['_doAdvanceMonth'] = function(){
-  var before = _monthBeforeSnapshot();
-  _v4_origDoAdvance();
-  advancePetMonthly();
-};
-
-var _v4_origShowGameOver = showGameOver;
-window['showGameOver'] = function(){
-  if(!G.dlcUnlocked) G.dlcUnlocked=[];
-  if(!G.dlcUnlocked.includes('chill')) G.dlcUnlocked.push('chill');
-  if((G.legacyPoints||0)>50 && !G.dlcUnlocked.includes('startup')) G.dlcUnlocked.push('startup');
-  if((G.legacyPoints||0)>100 && !G.dlcUnlocked.includes('overseas')) G.dlcUnlocked.push('overseas');
-  _v4_origShowGameOver();
-};
-
-var _v4_origRefreshFive = refreshFiveDim;
-window['refreshFiveDim'] = function(){
-  _v4_origRefreshFive();
-  var container = document.getElementById('fiveDim');
-  if(container && !document.getElementById('radarBtn')){
-    var btn = document.createElement('button');
-    btn.id='radarBtn'; btn.className='btn btn-outline btn-sm';
-    btn.style.marginTop='10px'; btn.textContent='查看雷达图';
-    btn.onclick=showRadarModal;
-    container.appendChild(btn);
-  }
-};
-
-// 庆祝检测 - 监听晋升/结婚等关键事件
-window['selectJob'] = function(idx){
-  var oldJob = G.jobIndex;
-  G.jobIndex = idx;
-  G.monthsAtJob = 0;
-  if(typeof refreshWork === 'function') refreshWork();
-  if(typeof refreshHeader === 'function') refreshHeader();
-  if(idx > oldJob){
-    showCelebration('promotion','升职成功!',JOBS[idx].name+' - 薪资'+(JOBS[idx].salary/10000)+'万','🎉');
-  }
-};
-
-console.log('v4.0.0 loaded');
-
-</script>
-
-<!-- v4.0.0: 浮动快捷入口 -->
-<button class="v4-fab" onclick="showV4QuickMenu()" title="更多功能" style="width:50px;height:50px;border-radius:50%;padding:0;box-sizing:border-box;border:none;font-size:13px;font-weight:600;letter-spacing:1px;">更多<span class="fab-close" onclick="event.stopPropagation();this.parentElement.style.display='none';">×</span></button>
-<div id="v4QuickMenu" class="v4-quick-menu" style="display:none;">
-  <div class="v4-menu-item" onclick="showPlaybook();document.getElementById('v4QuickMenu').style.display='none';">📖玩法手册</div>
-  <div class="v4-menu-item" onclick="showRadarModal();document.getElementById('v4QuickMenu').style.display='none';">📊雷达图</div>
-  <div class="v4-menu-item" onclick="showRelationNetwork();document.getElementById('v4QuickMenu').style.display='none';">🕸️关系网</div>
-  <div class="v4-menu-item" onclick="showDLCPanel();document.getElementById('v4QuickMenu').style.display='none';">🎮DLC包</div>
-</div>
-<style>
-.v4-quick-menu{position:fixed;bottom:140px;right:16px;background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.15);z-index:91;overflow:hidden;}
-.v4-menu-item{padding:12px 20px;font-size:14px;cursor:pointer;border-bottom:1px solid #f5f5f5;transition:background .15s;white-space:nowrap;}
-.v4-menu-item:active{background:#f0f0f0;}
-</style>
-<script>
-function showV4QuickMenu(){
-  var m=document.getElementById('v4QuickMenu');
-  m.style.display = m.style.display==='none' ? 'block' : 'none';
-}
-</script>
-
-
-
-
-
-<script>
-
+// ====== LOCAL SAVE SYSTEM ======
+var SAVE_KEY='lifeSimulator_v2_saves',AUTO_SAVE_KEY='lifeSimulator_v2_autosave';
+function getSaves(){try{var d=localStorage.getItem(SAVE_KEY);return d?JSON.parse(d):[null,null,null]}catch(e){return[null,null,null]}}
+function saveGame(slot){var s=getSaves();s[slot]={gameState:JSON.parse(JSON.stringify(gameState)),ts:Date.now(),age:gameState.age,asset:calcTotalAsset()};try{localStorage.setItem(SAVE_KEY,JSON.stringify(s));showToast('📁 存档已保存 插槽'+(slot+1),'success');return true}catch(e){showToast('❌ 存档失败','danger');return false}}
+function loadGame(slot){var s=getSaves();if(!s[slot]){showToast('⚠️ 插槽'+(slot+1)+'无存档','warning');return false}gameState=s[slot].gameState;renderAll();showToast('📂 读档成功','success');return true}
+function autoSave(){try{localStorage.setItem(AUTO_SAVE_KEY,JSON.stringify({gameState:gameState,ts:Date.now()}))}catch(e){}}
+function hasAutoSave(){return !!localStorage.getItem(AUTO_SAVE_KEY)}
+function loadAutoSave(){try{var d=JSON.parse(localStorage.getItem(AUTO_SAVE_KEY));gameState=d.gameState;renderAll();showToast('♻️ 已恢复自动存档','success');return true}catch(e){return false}}
 
 // ===== 归档：按NPC合并消息线程 =====
 function pushPhoneThread(thread){
@@ -10446,969 +9418,205 @@ async function generateEncounterAIResponse(sceneKey, npcName, choiceText, choice
   var goodEffect = choiceEffect && (choiceEffect.eq > 0 || choiceEffect.mood > 0 || choiceEffect.health > 0);
   return {text:fallbackText, wantFriend:goodEffect};
 }
-// ===== Helper: 将事件转为NPC消息（让玩家在消息栏看到） =====
-function notifyAsMessage(npcId,text){
-  if(!G.phone)return;
-  // System messages go to notifications tab, not messages tab
-  if(npcId==='system'){
-    addNotification('system',text);
-    return;
+
+function checkAttrThresholds(){var h=G.health,m=G.mood;if(h<10)showToast('⚠️ 健康过低，猝死风险极高！','danger',2000);else if(h<30)showToast('⚠️ 健康较低，注意休息','warning',1500);if(m<15)showToast('⚠️ 心情崩溃边缘……','danger',2000);else if(m<30)showToast('心情低落，建议社交或娱乐','warning')}
+function renderAttrs(){var keys=['health','mood','iq','charm','strength'],names=['健康','心情','智商','魅力','体魄'],th=[30,30,20,20,20];var html='';for(var i=0;i<keys.length;i++){var v=G[keys[i]];var cls=v<10?'attr-danger':v<th[i]?'attr-warn':'';html+='<div class="attr-item '+cls+'"><span>'+names[i]+'</span><span>'+v+'</span><span class="attr-threshold">警戒线:'+th[i]+'</span></div>'}var el=document.getElementById('attrPanel');if(el)el.innerHTML=html}
+
+function socialParty(cost){if(G.cash<cost){showToast('资金不足','warning');return}G.cash-=cost;var npcs=genNPCs(cost);for(var i=0;i<npcs.length;i++){G.contacts.push(npcs[i]);showToast('新结识 · '+npcs[i].name+'（'+npcs[i].tag+'）','success')}showSocialResult(npcs,cost)}
+function showSocialResult(npcs,cost){var html='<div class="modal" id="socialModal" style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;display:flex;align-items:center;justify-content:center"><div style="background:#fff;border-radius:12px;padding:20px;width:85%;max-width:340px"><h3>社交成果</h3><p>花费：¥'+cost+'</p><h4>结识人脉：</h4>';for(var i=0;i<npcs.length;i++){html+='<div class="npc-result"><span class="npc-icon">'+npcs[i].icon+'</span><span class="npc-name">'+npcs[i].name+'</span><span class="npc-tag">'+npcs[i].tag+'</span><span class="npc-benefit">'+npcs[i].benefit+'</span></div>'}html+='<button onclick="closeModal(\'socialModal\')" style="margin-top:12px;width:100%">确定</button></div></div>';document.body.insertAdjacentHTML('beforeend',html)}
+function closeModal(id){var el=document.getElementById(id);if(el)el.remove()}
+function genNPCs(cost){var tiers={500:{n:[1,2],t:'normal'},3000:{n:[1,3],t:'high'},10000:{n:[2,5],t:'top'}};var cfg=tiers[cost]||tiers[500];var num=Math.floor(Math.random()*(cfg.n[1]-cfg.n[0]+1))+cfg.n[0];var r=[];for(var i=0;i<num;i++)r.push(createNPC(cfg.t));return r}
+function createNPC(t){var tagMap={normal:[{tag:'普通白领',benefit:'日常交流'}],high:[{tag:'行业精英',benefit:'内推机会'},{tag:'投资人',benefit:'项目对接'}],top:[{tag:'企业高管',benefit:'高管内推'},{tag:'知名投资人',benefit:'投资机会'},{tag:'政府人士',benefit:'政策资讯'}]};var pool=tagMap[t]||tagMap.normal;var item=pool[Math.floor(Math.random()*pool.length)];return {name:genNPCName(),icon:'👤',tag:item.tag,benefit:item.benefit,company:'某公司',intimacy:20,rel:'acquaintance'}}
+function genNPCName(){var s=['张','王','李','赵','陈','刘','杨','黄'];var n=['伟','芳','娜','强','敏','静','杰','磊'];return s[Math.floor(Math.random()*s.length)]+n[Math.floor(Math.random()*n.length)]+'某'}
+var SIDE_JOBS=[{type:'writing',name:'写作',attr:'iq',inc:[2000,8000],cost:3},{type:'consulting',name:'咨询',attr:'iq',inc:[5000,20000],cost:5},{type:'reselling',name:'代购',attr:'charm',inc:[1000,5000],cost:2},{type:'tutoring',name:'家教',attr:'iq',inc:[3000,10000],cost:3}];
+function doSideJob(job){if(G.age>1){showToast('兼职仅限新手首月','info');return}var av=G[job.attr]||50;var min=job.inc[0],max=job.inc[1];var inc=Math.floor(min+(max-min)*(av/100));var noise=Math.floor(inc*0.1);inc+=Math.floor(Math.random()*noise*2-noise);G.cash+=inc;G.mood-=job.cost;showToast(job.name+'兼职：+¥'+inc,'success')}
+function renderSideJobs(){var el=document.getElementById('sideJobBtns');if(!el)return;var html='';for(var i=0;i<SIDE_JOBS.length;i++){var j=SIDE_JOBS[i];html+='<button onclick="doSideJob(SIDE_JOBS['+i+'])">'+j.name+'<br>心情-'+j.cost+'</button>'}el.innerHTML=html}
+function renderInvestCard(inv){var er=inv.minRet+'-'+inv.maxRet;var rc=inv.risk<.2?'risk-low':inv.risk<.4?'risk-mid':inv.risk<.6?'risk-high':'risk-extreme';var rl=inv.risk<.2?'低':inv.risk<.4?'中':inv.risk<.6?'高':'极高';var pb=Math.ceil(inv.price/((inv.minRet+inv.maxRet)/2/100/12));return '<div class="invest-card"><h4>'+inv.name+'</h4><div class="invest-stat">预期年化：<span>'+er+'%</span></div><div class="invest-stat">风险等级：<span class="'+rc+'">● '+rl+'</span></div><div class="invest-stat">预计回本：<span>'+pb+'个月</span></div><div class="invest-stat">价格：<span>¥'+fmt(inv.price)+'</span></div><button onclick="buyInvest(\''+inv.id+'\')">购买</button></div>'}
+function buyInvest(id){var allItems=[];STOCKS.forEach(function(s){allItems.push({id:s.code,name:s.name,price:s.basePrice,minRet:s.minRet,maxRet:s.maxRet,risk:s.risk})});BUSINESSES.forEach(function(b){allItems.push({id:b.id,name:b.name,price:b.price,minRet:b.minRet,maxRet:b.maxRet,risk:b.risk})});TECH_INVESTMENTS.forEach(function(t){allItems.push({id:t.id,name:t.name,price:t.minInvest,minRet:t.minRet,maxRet:t.maxRet,risk:t.risk})});HOUSES.forEach(function(h){allItems.push({id:h.id,name:h.name,price:h.price,minRet:h.minRet,maxRet:h.maxRet,risk:h.risk})});var item=allItems.find(function(t){return t.id===id});if(!item)return;if(G.cash<item.price){showModal({title:'余额不足',content:'现金不足以购买 '+item.name+'！',showCancel:false});return;}showModal({title:'购买 '+item.name,content:'确认投资：'+item.name+'\\n投入：¥'+fmt(item.price)+'\\n预期年化：'+item.minRet+'~'+item.maxRet+'%\\n风险等级：'+(item.risk<.2?'低':item.risk<.4?'中':item.risk<.6?'高':'极高'),success:function(res){if(res.confirm){G.cash-=item.price;showFloatText('✅ 投资 '+item.name+' 成功！',true);saveGame();}}})}
+
+// ====== Bottom Tab Navigation ======
+function switchTab(tab){var items=document.querySelectorAll('.tab-item');for(var i=0;i<items.length;i++)items[i].classList.toggle('active',items[i].dataset.tab===tab);var pages=document.querySelectorAll('.tab-page');for(var j=0;j<pages.length;j++){var isActive=pages[j].dataset.tab===tab;pages[j].classList.toggle('active',isActive);pages[j].style.display=isActive?'block':'none'}}
+
+
+// ====== 数据可视化图表 ======
+function renderAssetTrend(){var h=G.assetHistory||[];var recent=h.slice(-12);if(recent.length<2)return '<div class="chart-box"><div class="chart-title">📈 年度资产趋势</div><div style="font-size:12px;color:#999;text-align:center;padding:16px">刚起步，暂无历史</div></div>';var max=Math.max.apply(null,recent);if(max<=0)max=100;var bars='';for(var i=0;i<recent.length;i++){var pct=Math.max(2,(recent[i]/max)*80);bars+='<div class="chart-bar" style="height:'+pct+'px" title="¥'+fmt(recent[i])+'"></div>'}return '<div class="chart-box"><div class="chart-title">📈 近期资产趋势</div><div class="mini-chart">'+bars+'</div><div style="font-size:11px;text-align:right;color:#999">最高: ¥'+fmt(max)+'</div></div>'}
+function renderAssetPie(){var segs=[{l:'现金',v:G.cash||0,c:'#4472C4'},{l:'股票',v:G.stockVal||0,c:'#E06030'},{l:'商铺',v:G.bizVal||0,c:'#4CAF50'},{l:'投资',v:G.investVal||0,c:'#9C27B0'}];var tot=segs.reduce(function(s,x){return s+x.v},0)||1;var cum=0;var stops=segs.map(function(s){if(s.v<=0)return null;var st=cum;var deg=(s.v/tot)*360;cum+=deg;return s.c+' '+st+'deg '+cum+'deg'}).filter(function(x){return x});var grad=stops.length?stops.join(', '):'#eee 0deg 360deg';return '<div class="chart-box"><div class="chart-title">🥧 资产结构</div><div style="width:120px;height:120px;border-radius:50%;margin:0 auto;background:conic-gradient('+grad+')"></div><div class="pie-legend">'+segs.map(function(s){return '<span><i style="background:'+s.c+'"></i>'+s.l+'</span>'}).join('')+'</div></div>'}
+
+
+calcWealthScore=function(){return Math.min(1000,Math.floor((G.cash+(G.stockVal||0)+(G.bizVal||0))/10000))};
+calcFameScore=function(){return Math.min(1000,Math.floor(((G.career&&G.career.level?G.career.level*100:0)+(G.family?G.family.prestige*10:0))))};
+calcHappyScore=function(){return Math.min(1000,Math.floor((G.health+G.mood*2+((G.family&&G.family.spouse)?100:0))/40*100))};
+calcWisdomScore=function(){return Math.min(1000,Math.floor(G.iq*5+(G.eduLevel||0)*50))};
+calcLegacyScore=function(){return Math.min(1000,Math.floor(((G.family&&G.family.children?G.family.children.length*50:0)+(G.rebirthCount||0)*30)))};
+renderDims=function(){var dims=[{n:'财富',s:calcWealthScore(),mx:1000,t:'总资产每¥1万=1分'},{n:'声望',s:calcFameScore(),mx:1000,t:'职业职位+家族声望'},{n:'幸福',s:calcHappyScore(),mx:1000,t:'心情+健康+家庭'},{n:'智慧',s:calcWisdomScore(),mx:1000,t:'智商+学历'},{n:'传承',s:calcLegacyScore(),mx:1000,t:'家族+轮回'}];var html='';for(var i=0;i<dims.length;i++){var d=dims[i];var pct=(d.s/d.mx*100).toFixed(1);html+='<div class="dim-row"><span class="dim-name">'+d.n+'</span><div class="dim-bar"><div class="dim-fill" style="width:'+pct+'%"></div></div><span class="dim-score">'+d.s+'/'+d.mx+'</span></div><span class="dim-tip">'+d.t+'</span>'}return html};
+renderAchievements=function(){var list=[{id:'first_job',name:'初出茅庐',icon:'🎒',cond:'获得第一份工作',tier:'bronze'},{id:'million',name:'百万富翁',icon:'💰',cond:'资产超过¥100万',tier:'bronze'},{id:'marriage',name:'步入婚姻',icon:'💍',cond:'与伴侣结婚',tier:'bronze'},{id:'first_child',name:'为人父母',icon:'👶',cond:'拥有第一个子女',tier:'silver'},{id:'billion',name:'亿万富翁',icon:'💎',cond:'资产超过¥1亿',tier:'silver'},{id:'startup',name:'创业者',icon:'🚀',cond:'成功创业一次',tier:'silver'},{id:'grandchild',name:'四世同堂',icon:'👴',cond:'迎来孙辈',tier:'gold'},{id:'legend',name:'传奇人生',icon:'👑',cond:'累计轮回10次',tier:'gold'}];var tiers=[{id:'gold',name:'🏆 金',c:'#FFD700'},{id:'silver',name:'🥈 银',c:'#C0C0C0'},{id:'bronze',name:'🥉 铜',c:'#CD7F32'}];var html='';for(var t=0;t<tiers.length;t++){html+='<div class="ach-tier"><div class="ach-tier-title" style="border-left-color:'+tiers[t].c+'">'+tiers[t].name+'</div>';for(var i=0;i<list.length;i++){var a=list[i];if(a.tier!==tiers[t].id)continue;var unlocked=G.achievements&&G.achievements[a.id];html+='<div class="ach-item '+(unlocked?'':'locked')+'"><span class="ach-icon">'+(unlocked?a.icon:'🔒')+'</span><span class="ach-name">'+a.name+'</span><span class="ach-cond">'+a.cond+'</span>'+(unlocked?'<span class="ach-unlocked">✓</span>':'')+'</div>'}html+='</div>'}return html};
+
+// ====== 轮回系统强化 V2.0 ======
+function setTabContent(tab, html){
+  var el=document.getElementById('customPanel');
+  if(!el){
+    el=document.createElement('div');
+    el.id='customPanel';
+    el.style.cssText='position:fixed;inset:0;background:#fff;z-index:9999;overflow-y:auto;padding-bottom:60px';
+    document.body.appendChild(el);
   }
-  const npc=NPCS[npcId]||{name:'系统',avatar:'📱'};
-  const thread={
-    id:G.phone.nextId++,npcId:npcId,npcName:npc.name,npcAvatar:npc.avatar,
-    tplId:'event_'+G.totalMonths+'_'+npcId,type:'wechat',
-    rounds:[{npcMsgs:[text],opts:[{text:'知道了',fx:{},next:-1}]}],
-    currentRound:0,status:'unread',receivedMonth:G.totalMonths,readMonth:null,
-    followUp:null,flagClear:null
-  };
-  pushPhoneThread(thread);
+  el.innerHTML=html;
+  el.style.display='block';
+  // Add close button if not in html
+  if(html.indexOf('closeCustomPanel')<0){
+    var back=document.createElement('button');
+    back.textContent='← 返回';
+    back.style.cssText='position:fixed;bottom:16px;left:16px;right:16px;padding:12px;background:#f0f0f0;border:none;border-radius:8px;font-size:16px;cursor:pointer;z-index:10000';
+    back.onclick=function(){document.getElementById('customPanel').style.display='none'};
+    el.appendChild(back);
+  }
+}
+function calcLifeRating(score){
+  if(score>=500)return{emoji:'👑',title:'传奇人生',stars:5};
+  if(score>=300)return{emoji:'⭐',title:'精彩人生',stars:4};
+  if(score>=150)return{emoji:'😊',title:'平凡人生',stars:3};
+  return{emoji:'😅',title:'普通一生',stars:2}
+}
+function calcLifeScore(){
+  var s=0;
+  s+=Math.floor((G.peakAsset||G.cash||0)/10000);
+  s+=Object.keys(G.achievements||{}).length*10;
+  s+=(G.rebirthCount||0)*5;
+  s+=(((G.family&&G.family.children)||[]).length+((G.family&&G.family.grandchildren)||[]).length)*5;
+  s+=Math.floor(((G.family&&G.family.prestige)||0)/5);
+  return s
+}
+function generateLifeSummary(){
+  var score=calcLifeScore();
+  var rating=calcLifeRating(score);
+  var pts=calcRebirthPts();
+  var stats=[
+    {label:'峰值资产',value:'¥'+(fmt(G.peakAsset||G.cash||0))},
+    {label:'职业巅峰',value:(G.career&&G.career.peakTitle)||'无'},
+    {label:'成就数量',value:Object.keys(G.achievements||{}).length+'个'},
+    {label:'家族人数',value:(((G.family&&G.family.children.length)||0)+((G.family&&G.family.grandchildren.length)||0)+(G.family&&G.family.spouse?1:0))+'人'},
+    {label:'轮回次数',value:(G.rebirthCount||0)+'次'},
+    {label:'游戏时长',value:(G.totalMonths||0)+'个月'}
+  ];
+  var timeline=G.memory||[];
+  return{rating:rating,stats:stats,timeline:timeline,pts:pts,score:score}
+}
+function renderLifeSummary(s){
+  var html='<div class="ls-screen"><div class="ls-header">'+s.rating.emoji+' '+s.rating.title+'</div><div class="ls-sub">人生结束，以下是你的成绩单</div><div class="ls-star" style="font-size:28px;margin-bottom:16px">';
+  for(var i=0;i<5;i++){html+='<span style="opacity:'+(i<s.rating.stars?1:.2)+'">⭐</span>'}
+  html+='</div><div class="ls-stats">';
+  for(var j=0;j<s.stats.length;j++){html+='<div class="ls-stat"><div class="val">'+s.stats[j].value+'</div><div class="lbl">'+s.stats[j].label+'</div></div>'}
+  html+='</div>';
+  if(s.timeline.length>0){
+    html+='<div class="ls-timeline"><h4>📜 人生大事件</h4>';
+    for(var k=0;k<Math.min(s.timeline.length,15);k++){html+='<div class="tl-item"><span class="tl-year">'+s.timeline[k].year+'岁</span><span>'+s.timeline[k].text+'</span></div>'}
+    html+='</div>'
+  }
+  html+='<div style="margin-top:20px;font-size:14px">轮回点 <b style="color:#4472C4">+'+s.pts+'</b></div><button class="ls-btn" onclick="showRebirthPanel()">🔄 开始新人生</button><button class="ls-btn ls-btn-secondary" onclick="window.location.reload()" style="margin-top:8px">重新开始</button></div>';
+  return html
+}
+function showLifeSummary(){
+  var s=generateLifeSummary();
+  saveRebirthRecord();
+  var el=document.getElementById('tab-mine');
+  if(el){el.innerHTML=renderLifeSummary(s)}
+  var nav=document.getElementById('bottomTab');
+  if(nav)nav.style.display='none';
+  showToast('人生结算完成！','success',3000)
 }
 
-// v3.12.0: Stub for compatibility - notifications are rendered via _getNotificationsHTML in renderPhoneList
-function _renderNotificationsInMessages(html){
-  // 将系统通知追加到消息列表
-  const el=document.getElementById('phone-messages');
-  if(!el)return;
-  const notifHTML=_getNotificationsHTML();
-  if(notifHTML){
-    el.innerHTML+=notifHTML;
-  }
+function calcRebirthPts(){
+  var pts=0;
+  pts+=Math.floor((G.cash||0)/10000);
+  pts+=Object.keys(G.achievements||{}).length*10;
+  pts+=(G.rebirthCount||0)*5;
+  pts+=Math.floor(((G.family&&G.family.prestige)||0)/5);
+  return Math.max(1,pts)
 }
-// v3.12.2: Debug helper - force-add test moments
-function _debugAddTestMoments(){
-  if(!G||!G.phone){alert('G.phone不存在');return;}
-  const testNpcs=[
-    {npcId:'mom',npcName:'妈妈',npcAvatar:'👩',text:'今天天气真好，出去散步了 ☀️ 退休生活就是悠闲~'},
-    {npcId:'bestie',npcName:'老王',npcAvatar:'🍻',text:'升职了！从今天开始是部门经理了 💼 感谢所有支持我的人！'},
-    {npcId:'colleague',npcName:'小李',npcAvatar:'💼',text:'又是加班到深夜的一天 😴 但看到成果还是有成就感的'}
+function showRebirthPanel(){
+  var pts=calcRebirthPts();
+  var rb=G.rebirthCount||0;
+  bonuses=[
+    {name:'初始资金加成',val:'+'+(rb*10)+'%',unl:true,desc:'每轮回+10%开局资金'},
+    {name:'全属性加成',val:'+'+(rb*3),unl:true,desc:'每轮回全属性+3'},
+    {name:'富二代',val:'解锁',unl:rb>=3,desc:'3轮后解锁富二代开局'},
+    {name:'资产继承',val:'上局1%',unl:rb>=5,desc:'继承上轮1%资产'},
+    {name:'隐藏职业投资人',val:'投资人',unl:rb>=10,desc:'10轮后解锁特殊职业'}
   ];
-  const commentPool=['mom','dad','bestie','colleague','classmate','neighbor','boss'];
-  testNpcs.forEach(t=>{
-    const comments=[];
-    const shuffled=commentPool.filter(id=>id!==t.npcId).sort(()=>Math.random()-0.5);
-    for(let i=0;i<3;i++){
-      const cn=NPCS[shuffled[i]]||{name:'朋友',avatar:'👤'};
-      comments.push({npcId:shuffled[i],npcName:cn.name,npcAvatar:cn.avatar,text:['恭喜恭喜！🎉','厉害了👍','加油💪'][i]});
-    }
-    const likedNpcs=shuffled.slice(0,5);
-    G.phone.moments.unshift({id:G.phone.nextId++,npcId:t.npcId,npcName:t.npcName,npcAvatar:t.npcAvatar,text:t.text,month:G.totalMonths,liked:false,comments:comments,playerComments:[],likedNpcs:likedNpcs});
+  var html='<div style="padding:16px;text-align:center"><div style="font-size:24px;margin-bottom:8px">🔄 轮回转世</div><div style="font-size:14px;color:#666">本轮获得 <b style="color:#4472C4">'+pts+'</b> 轮回点</div><div style="margin:16px 0;text-align:left;background:#f8f9fa;border-radius:12px;padding:12px">';
+  for(var i=0;i<bonuses.length;i++){
+    var b=bonuses[i];
+    html+='<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee;opacity:'+(b.unl?1:.4)+'"><span>'+b.name+(b.unl?' <span style="color:#4CAF50">✓</span>':' 🔒')+'</span><span style="color:#4472C4">'+b.val+'</span></div>'
+  }
+  html+='</div><button onclick="confirmRebirth()" style="width:100%;padding:12px;background:#4472C4;color:#fff;border:none;border-radius:8px;font-size:16px;cursor:pointer">开始新人生（+'+pts+'轮回点）</button></div>';
+  setTabContent('custom',html)
+}
+function confirmRebirth(){
+  var pts=calcRebirthPts();
+  G.rebirthCount=(G.rebirthCount||0)+1;
+  G.rebirthPoints=(G.rebirthPoints||0)+pts;
+  saveRebirthRecord();
+  resetGame(G.rebirthCount);
+  var cp=document.getElementById('customPanel');if(cp)cp.style.display='none';
+  showToast('🔄 第'+G.rebirthCount+'次人生开始！','success',2000)
+}
+function saveRebirthRecord(){
+  var h=JSON.parse(localStorage.getItem('rebirth_history')||'[]');
+  h.push({
+    rebirth:G.rebirthCount,
+    peakAsset:G.peakAsset||G.cash,
+    achCount:Object.keys(G.achievements||{}).length,
+    familySize:((G.family&&G.family.children.length)||0)+((G.family&&G.family.grandchildren.length)||0),
+    months:G.totalMonths
   });
-  renderMoments();
+  localStorage.setItem('rebirth_history',JSON.stringify(h))
+}
+function resetGame(rbCount){
+  var rbBonus=1+(rbCount*0.1);
+  var history=JSON.parse(localStorage.getItem('rebirth_history')||'[]');
+  var lastPeak=history.length>0?history[history.length-1].peakAsset:0;
+  var inheritBonus=rbCount>=5?Math.floor(lastPeak*0.01):0;
+  Object.assign(G,defaultState());
+  G.cash=Math.floor(10000*rbBonus)+inheritBonus;
+  G.attrPoints=(G.attrPoints||0)+rbCount*3;
+  G.rebirthCount=rbCount;
+  G.achievements={};
+  G.memory=[];
   saveGame();
-  alert('已添加3条测试朋友圈（含NPC评论+点赞），请切换到朋友圈查看');
-}
-// v4.0.0: Debug log removed
-
-// ===== v4.3.0: 宠物商店+宠物系统 =====
-var PET_STORE = [
-  {id:'tuxie',type:'cat',name:'土猫',emoji:'🐈',price:2000,rarity:'common',desc:'街头流浪猫，独立不粘人',mod:{hyg:0.7,md:1.2}},
-  {id:'tabby',type:'cat',name:'虎斑猫',emoji:'🐱',price:5000,rarity:'rare',desc:'活泼好动，爱抓东西',mod:{hyg:0.7,md:1.0}},
-  {id:'ragdoll',type:'cat',name:'布偶猫',emoji:'😺',price:15000,rarity:'epic',desc:'优雅温顺，颜值爆表',mod:{hyg:0.8,md:0.8}},
-  {id:'garfield',type:'cat',name:'加菲猫',emoji:'🐱',price:50000,rarity:'legend',desc:'橘色传说，吃货本质',mod:{hyg:0.9,md:0.7}},
-  {id:'tugou',type:'dog',name:'中华田园犬',emoji:'🐕',price:2000,rarity:'common',desc:'忠诚看家，不挑食',mod:{hg:1.1,md:1.0}},
-  {id:'jinmao',type:'dog',name:'金毛',emoji:'🐕‍🦺',price:8000,rarity:'rare',desc:'暖男代表，超高服从',mod:{hg:1.0,md:0.8}},
-  {id:'hashiqi',type:'dog',name:'哈士奇',emoji:'🐶',price:18000,rarity:'epic',desc:'拆家专家，精力无穷',mod:{hg:1.3,md:1.2}},
-  {id:'corgi',type:'dog',name:'柯基',emoji:'🐕',price:55000,rarity:'legend',desc:'小短腿蜜桃臀，快乐源泉',mod:{hg:1.0,md:0.6}},
-  {id:'goldfish',type:'fish',name:'锦鲤',emoji:'🐟',price:1500,rarity:'common',desc:'躺着养，观赏为主',mod:{hg:0.5,md:0.0}},
-  {id:'koi',type:'fish',name:'锦鲤·红白',emoji:'🐠',price:6000,rarity:'rare',desc:'招财进宝，好运连连',mod:{hg:0.5,md:0.0}},
-  {id:'dragonfish',type:'fish',name:'龙鱼',emoji:'🐡',price:25000,rarity:'epic',desc:'霸气侧漏，身份象征',mod:{hg:0.5,md:0.0}},
-  {id:'parrot',type:'bird',name:'虎皮鹦鹉',emoji:'🦜',price:3000,rarity:'common',desc:'能学说话，叽叽喳喳',mod:{hg:1.0,md:1.3}},
-  {id:'cockatoo',type:'bird',name:'葵花鹦鹉',emoji:'🐦',price:12000,rarity:'rare',desc:'高智商，能聊天',mod:{hg:1.0,md:1.0}}
-];
-
-// 宠物食品
-var PET_FOODS = [
-  {id:'food_normal',name:'普通狗粮',emoji:'🍖',price:200,desc:'基础饱腹',hunger:30,tag:'food'},
-  {id:'food_premium',name:'高级狗粮',emoji:'🥩',price:500,desc:'营养均衡',hunger:60,tag:'food'},
-  {id:'food_cat',name:'精选猫粮',emoji:'🐟',price:300,desc:'猫咪最爱',hunger:40,tag:'food'},
-  {id:'food_fish',name:'观赏鱼食',emoji:'🪱',price:100,desc:'小鱼快吃',hunger:20,tag:'food'},
-  {id:'food_pill',name:'营养丸',emoji:'💊',price:800,desc:'全面补充',hunger:50,mood:20,tag:'food'}
-];
-
-// 宠物用品
-var PET_SUPPLIES = [
-  {id:'bed_soft',name:'舒适睡垫',emoji:'🛏️',price:600,desc:'+每月精力恢复',effect:'energy',tag:'supply'},
-  {id:'toy_ball',name:'弹力小球',emoji:'⚽',price:200,desc:'逗宠神器',effect:'mood',tag:'supply'},
-  {id:'leash',name:'时尚牵引绳',emoji:'🎀',price:300,desc:'遛弯必备',effect:'walk',tag:'supply'},
-  {id:'shampoo',name:'宠物沐浴露',emoji:'🧴',price:250,desc:'清洁+20',effect:'hygiene',tag:'supply'},
-  {id:'clothes_cute',name:'可爱衣服',emoji:'👔',price:500,desc:'拍照更萌',effect:'photo',tag:'supply'}
-];
-
-// 当前商店分类
-var _petShopCat = 'adopt';
-
-function initPetState(){
-  if(!G.pets)G.pets=[];
-  if(!G.petStoreLastRefresh)G.petStoreLastRefresh=0;
-  if(!G.petFood||G.petFood<0)G.petFood=5;
-  if(!G.petSupplies)G.petSupplies=[];
-}
-
-function switchPetTab(tab,el){
-  var tabs=document.querySelectorAll('.pet-subtab');
-  tabs.forEach(function(t){t.classList.remove('active');});
-  if(el)el.classList.add('active');
-  var store=document.getElementById('petStoreView');
-  var detail=document.getElementById('petDetailView');
-  if(tab==='shop'){
-    store.style.display='block';
-    detail.style.display='none';
-    renderPetShop();
-  } else if(tab==='mypet'){
-    store.style.display='none';
-    detail.style.display='block';
-    if(G.pets.length>0)renderPetDetail(G.pets[0]);
-  }
-}
-
-function renderPetPage(){
-  initPetState();
-  var hasPets = G.pets.length > 0;
-  var subTabs=document.getElementById('petSubTabs');
-  if(hasPets){
-    subTabs.style.display='flex';
-    // Show my pet tab if coming from store (first time)
-    switchPetTab('shop', subTabs.querySelector('.pet-subtab'));
-  } else {
-    subTabs.style.display='none';
-    document.getElementById('petStoreView').style.display='block';
-    document.getElementById('petDetailView').style.display='none';
-    renderPetShop();
-  }
-  updatePetBadge();
-}
-
-function renderPetShop(){
-  var el=document.getElementById('petStoreView');if(!el)return;
-  var h='<div class="pet-shop-hd">';
-  h+='<h2>🐾 宠物商店</h2>';
-  h+='<div class="coin">💰 ¥'+(G.cash?G.cash.toLocaleString():'0')+' &nbsp;|&nbsp; 📦 狗粮 '+(G.petFood||0)+' 袋</div>';
-  h+='</div>';
-  // Category bar
-  h+='<div class="pet-cat-bar">';
-  h+='<div class="pet-cat-btn '+(_petShopCat==='adopt'?'active':'')+'" onclick="setShopCat(\'adopt\',this)">🐾 领取宠物</div>';
-  h+='<div class="pet-cat-btn '+(_petShopCat==='food'?'active':'')+'" onclick="setShopCat(\'food\',this)">🍖 宠物食品</div>';
-  h+='<div class="pet-cat-btn '+(_petShopCat==='supply'?'active':'')+'" onclick="setShopCat(\'supply\',this)">🐾 宠物用品</div>';
-  h+='</div>';
-  h+='<div class="pet-shop-grid">';
-  if(_petShopCat==='adopt'){
-    PET_STORE.forEach(function(ps){
-      var owned = G.pets.some(function(p){return p.id===ps.id;});
-      var rc = 'rarity-'+ps.rarity;
-      var rt = {common:'普通',rare:'稀有',epic:'史诗',legend:'传说'};
-      h+='<div class="pet-shop-item '+rc+'" onclick="buyPet(\''+ps.id+'\')">';
-      h+='<span class="ps-rank">'+rt[ps.rarity]+'</span>';
-      h+='<span class="ps-emoji">'+ps.emoji+'</span>';
-      h+='<div class="ps-name">'+ps.name+'</div>';
-      h+='<div class="ps-desc">'+ps.desc+'</div>';
-      h+='<div class="ps-price '+(owned?'owned':'')+'">'+(owned?'✅ 已领养':'¥'+ps.price.toLocaleString())+'</div>';
-      h+='</div>';
-    });
-  } else if(_petShopCat==='food'){
-    PET_FOODS.forEach(function(f){
-      h+='<div class="pet-shop-item rarity-common" onclick="buyFood(\''+f.id+'\')">';
-      h+='<span class="ps-rank">食品</span>';
-      h+='<span class="ps-icon">'+f.emoji+'</span>';
-      h+='<div class="ps-name">'+f.name+'</div>';
-      h+='<div class="ps-effect">恢复饥饿 +'+f.hunger+'</div>';
-      h+='<div class="ps-price">¥'+f.price.toLocaleString()+'</div>';
-      h+='</div>';
-    });
-  } else if(_petShopCat==='supply'){
-    PET_SUPPLIES.forEach(function(s){
-      h+='<div class="pet-shop-item rarity-rare" onclick="buySupply(\''+s.id+'\')">';
-      h+='<span class="ps-rank">用品</span>';
-      h+='<span class="ps-icon">'+s.emoji+'</span>';
-      h+='<div class="ps-name">'+s.name+'</div>';
-      h+='<div class="ps-effect">'+s.desc+'</div>';
-      var owned = G.petSupplies && G.petSupplies.includes(s.id);
-      h+='<div class="ps-price '+(owned?'owned':'')+'">'+(owned?'✅ 已购买':'¥'+s.price.toLocaleString())+'</div>';
-      h+='</div>';
-    });
-  }
-  h+='</div>';
-  el.innerHTML=h;
-  // Show sub-tabs if has pets
-  if(G.pets.length>0){
-    document.getElementById('petSubTabs').style.display='flex';
-  }
-}
-
-function setShopCat(cat,el){
-  _petShopCat=cat;
-  var btns=document.querySelectorAll('.pet-cat-btn');
-  btns.forEach(function(b){b.classList.remove('active');});
-  if(el)el.classList.add('active');
-  renderPetShop();
-}
-
-function buyPet(pid){
-  var ps=PET_STORE.find(function(p){return p.id===pid;});if(!ps)return;
-  if(G.cash<ps.price){showToast('💸 还差'+(ps.price-G.cash)+'元...');return;}
-  if(G.pets.find(function(p){return p.id===pid;})){showToast('你已经有一只'+ps.name+'了！');return;}
-  G.cash-=ps.price;
-  var pet={id:pid,name:ps.name,emoji:ps.emoji,type:ps.type,rarity:ps.rarity,
-    hunger:80,hygiene:100,mood:100,energy:100,intimacy:30,age:2,sick:false,skills:0,
-    mod:ps.mod||{},boughtMonth:G.totalMonths};
-  G.pets.push(pet);
-  showToast('🎉 恭喜！'+ps.emoji+' '+ps.name+'成为你的家人！');
-  saveGame();
-  // Show sub-tabs now that player has a pet
-  document.getElementById('petSubTabs').style.display='flex';
-  document.getElementById('petMyPetTab').click();
-}
-
-function buyFood(fid){
-  var f=PET_FOODS.find(function(x){return x.id===fid;});if(!f)return;
-  if(G.cash<f.price){showToast('💸 钱不够！');return;}
-  G.cash-=f.price;
-  // Give food items
-  if(fid==='food_fish'||fid==='food_pill'){
-    // Special foods apply immediately to all pets
-    if(G.pets.length===0){showToast('你没有宠物可喂食！');G.cash+=f.price;return;}
-    G.pets.forEach(function(p){p.hunger=Math.min(100,p.hunger+f.hunger);if(f.mood)p.mood=Math.min(100,p.mood+f.mood);});
-    showToast(f.emoji+' 所有宠物饥饿+'+f.hunger);
-  } else {
-    // Regular food = pet food bags
-    var qty = fid==='food_premium'?3:5;
-    G.petFood=(G.petFood||0)+qty;
-    showToast(f.emoji+' '+f.name+' x'+qty+'！');
-  }
-  saveGame();renderPetShop();updatePetBadge();
-}
-
-function buySupply(sid){
-  var s=PET_SUPPLIES.find(function(x){return x.id===sid;});if(!s)return;
-  if(G.petSupplies&&G.petSupplies.includes(sid)){showToast('已经拥有！');return;}
-  if(G.cash<s.price){showToast('💸 钱不够！');return;}
-  G.cash-=s.price;
-  if(!G.petSupplies)G.petSupplies=[];
-  G.petSupplies.push(sid);
-  // Apply immediate effects
-  if(s.effect==='hygiene'&&G.pets.length>0){G.pets.forEach(function(p){p.hygiene=Math.min(100,p.hygiene+20);});}
-  if(s.effect==='mood'&&G.pets.length>0){G.pets.forEach(function(p){p.mood=Math.min(100,p.mood+10);});}
-  if(s.effect==='energy'&&G.pets.length>0){G.pets.forEach(function(p){p.energy=Math.min(100,p.energy+15);});}
-  showToast(s.emoji+' 购买'+s.name+'成功！');
-  saveGame();renderPetShop();
-}
-
-// ===== 宠物详情页 =====
-function renderPetDetail(pet){
-  var el=document.getElementById('petDetailView');if(!el)return;
-  var stage = pet.age<3?'幼崽期':pet.age<12?'成长期':pet.age<48?pet.age<96?'壮年期':'老年期':'寿终期';
-  var h='<div class="pet-card">';
-  h+='<div class="pet-display">';
-  h+='<span class="pet-emoji" onclick="petPet(\''+pet.id+'\')">'+pet.emoji+'</span>';
-  h+='<div class="pet-name">'+pet.name+'</div>';
-  h+='<span class="pet-stage">'+stage+' · '+Math.floor(pet.age)+'月</span>';
-  h+='</div>';
-  h+='<div class="pet-bars">';
-  h+=petBar('🍖','饥饿',pet.hunger,'hunger');
-  h+=petBar('🧼','清洁',pet.hygiene,'hygiene');
-  h+=petBar('😊','心情',pet.mood,'mood');
-  h+=petBar('⚡','精力',pet.energy,'energy');
-  h+=petBar('❤️','亲密',pet.intimacy,'intimacy');
-  h+='</div>';
-  h+='<div class="pet-actions">';
-  h+='<div class="pet-btn feed" onclick="petFeed(\''+pet.id+'\')"><span class="b-icon">🍖</span><span class="b-name">喂食</span><span class="b-cost">'+(G.petFood>0?'库存'+G.petFood:'¥200')+'</span></div>';
-  h+='<div class="pet-btn play" onclick="petPlay(\''+pet.id+'\')"><span class="b-icon">🎾</span><span class="b-name">玩耍</span><span class="b-cost">小游戏</span></div>';
-  h+='<div class="pet-btn clean" onclick="petClean(\''+pet.id+'\')"><span class="b-icon">🛁</span><span class="b-name">洗澡</span><span class="b-cost">¥300</span></div>';
-  h+='<div class="pet-btn pet" onclick="petPet(\''+pet.id+'\')"><span class="b-icon">🤚</span><span class="b-name">抚摸</span><span class="b-cost">免费</span></div>';
-  if(pet.type==='dog'||pet.type==='cat'){
-    h+='<div class="pet-btn walk" onclick="petWalk(\''+pet.id+'\')"><span class="b-icon">🌳</span><span class="b-name">遛弯</span><span class="b-cost">随机</span></div>';
-  }
-  h+='<div class="pet-btn train" onclick="petTrain(\''+pet.id+'\')"><span class="b-icon">🎓</span><span class="b-name">训练</span><span class="b-cost">小游戏</span></div>';
-  h+='<div class="pet-btn heal" onclick="petHeal(\''+pet.id+'\')"><span class="b-icon">🏥</span><span class="b-name">治病</span><span class="b-cost">¥2000</span></div>';
-  h+='<div class="pet-btn store" onclick="document.getElementById(\'petSubTabs\').style.display=\'flex\';document.querySelector(\'.pet-subtab\').click()"><span class="b-icon">🏪</span><span class="b-name">商店</span><span class="b-cost">重返</span></div>';
-  h+='</div></div>';
-  // Multi-pet navigation
-  if(G.pets.length>1){
-    h+='<div style="display:flex;gap:6px;justify-content:center;margin-top:10px;flex-wrap:wrap;">';
-    G.pets.forEach(function(p,i){
-      h+='<span style="padding:6px 14px;border-radius:14px;font-size:12px;cursor:pointer;background:'+(p.id===pet.id?'#ff9800':'#f5f5f5')+';color:'+(p.id===pet.id?'#fff':'#666')+';border:'+(p.id===pet.id?'2px solid #ff9800':'2px solid #e0e0e0')+';" onclick="renderPetDetail(G.pets['+i+'])">'+p.emoji+' '+p.name+'</span>';
-    });
-    h+='</div>';
-  }
-  el.innerHTML=h;
-}
-
-function petBar(icon,label,val,cls){
-  var pct=Math.max(0,Math.min(100,val));
-  var c=pct<30?'font-weight:700;color:#e74c3c;':'';
-  return '<div class="pet-bar-row"><span class="bar-label">'+icon+' '+label+'</span><div class="bar-track"><div class="bar-fill bar-'+cls+'" style="width:'+pct+'%"></div></div><span class="bar-val" style="'+c+'">'+Math.round(pct)+'</span></div>';
-}
-
-function updatePetBadge(){
-  if(!G.pets||G.pets.length===0)return;
-  var needs = G.pets.filter(function(p){return p.hunger<30||p.mood<30||p.intimacy<40;}).length;
-  var b=document.getElementById('petBadge');
-  if(b&&needs>0){b.textContent=needs;b.style.display='flex';}
-  else if(b){b.style.display='none';}
-}
-
-// Feeding with mini-game
-function petFeed(id){
-  var pet=G.pets.find(function(p){return p.id===id;});if(!pet)return;
-  if(G.petFood>0){G.petFood--;}
-  else if(G.cash<200){showToast('💸 没钱买狗粮了！');return;}
-  else{G.cash-=200;}
-  showMiniGame('feed',pet);
-}
-
-function petPlay(id){
-  var pet=G.pets.find(function(p){return p.id===id;});if(!pet)return;
-  showMiniGame('play',pet);
-}
-
-function petTrain(id){
-  var pet=G.pets.find(function(p){return p.id===id;});if(!pet)return;
-  showMiniGame('train',pet);
-}
-
-function showMiniGame(type,pet){
-  var overlay=document.createElement('div');
-  overlay.className='game-overlay';
-  overlay.id='petGameOverlay';
-  var html='';
-  if(type==='feed'){
-    html='<div class="mini-game"><h3>🍖 喂食 '+pet.name+'</h3>';
-    html+='<div style="font-size:12px;color:#666;">点击食物投入食盆，连续命中8次！</div>';
-    html+='<div class="mg-timer" id="mgTimer">8</div>';
-    html+='<div style="position:relative;width:200px;height:120px;margin:10px auto;background:linear-gradient(180deg,#fff3e0,#ffe0b2);border-radius:12px;overflow:hidden;">';
-    html+='<div id="mgFood" class="mg-target" style="position:absolute;font-size:30px;display:none;" onclick="mgHitFood()">🍖</div>';
-    html+='<div style="position:absolute;bottom:5px;left:50%;transform:translateX(-50%);font-size:20px;">🥣</div>';
-    html+='</div>';
-    html+='<div><button onclick="closePetGame()" class="btn btn-outline btn-sm">跳过</button></div></div>';
-  } else if(type==='play'){
-    html='<div class="mini-game"><h3>🎾 陪'+pet.name+'玩耍</h3>';
-    html+='<div style="font-size:12px;color:#666;">接住飞盘！点击移动的 🎾</div>';
-    html+='<div class="mg-score" id="mgScore">得分: 0</div>';
-    html+='<div id="frisbeeArena" style="position:relative;width:240px;height:160px;margin:10px auto;background:linear-gradient(180deg,#87ceeb,#4caf50);border-radius:12px;overflow:hidden;cursor:crosshair;">';
-    html+='<div id="frisbee" class="mg-target" style="position:absolute;font-size:32px;" onclick="mgCatchFrisbee()">🎾</div>';
-    html+='</div>';
-    html+='<div><button onclick="closePetGame()" class="btn btn-outline btn-sm">跳过</button></div></div>';
-  } else if(type==='train'){
-    html='<div class="mini-game"><h3>🎓 训练 '+pet.name+'</h3>';
-    html+='<div style="font-size:12px;color:#666;">记住闪亮的格子顺序！</div>';
-    html+='<div class="mg-score" id="mgTrainStatus">准备...</div>';
-    html+='<div class="mg-grid" id="mgTrainGrid">';
-    for(var i=0;i<9;i++){html+='<div class="mg-train-cell" style="width:50px;height:50px;background:#f5f5f5;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;" data-idx="'+i+'" onclick="mgTrainClick(this)"></div>';}
-    html+='</div><div><button onclick="closePetGame()" class="btn btn-outline btn-sm">跳过</button></div></div>';
-  }
-  overlay.innerHTML=html;
-  document.body.appendChild(overlay);
-
-  if(type==='feed'){startFeedGame(pet);}
-  else if(type==='play'){startPlayGame(pet);}
-  else if(type==='train'){startTrainGame(pet);}
-}
-
-var _mgState={hits:0,timer:null,frisbeeTimer:null,cells:[],playerIdx:0,round:0,seq:[]};
-
-function closePetGame(){
-  if(_mgState.timer)clearInterval(_mgState.timer);
-  if(_mgState.frisbeeTimer)clearInterval(_mgState.frisbeeTimer);
-  var o=document.getElementById('petGameOverlay');
-  if(o)o.remove();
-}
-
-function startFeedGame(pet){
-  _mgState.hits=0;
-  var elapsed=0;
-  var food=document.getElementById('mgFood');
-  var timer=document.getElementById('mgTimer');
-  function moveFood(){
-    if(!food||!food.parentNode)return;
-    var aw=food.parentNode.offsetWidth-40,ah=food.parentNode.offsetHeight-40;
-    food.style.left=Math.random()*aw+'px';
-    food.style.top=Math.random()*ah+'px';
-    food.style.display='block';
-    food.classList.remove('caught');
-  }
-  _mgState.timer=setInterval(function(){
-    elapsed++;
-    if(elapsed>=15){clearInterval(_mgState.timer);finishFeed(pet);}
-  },1000);
-  moveFood();
-}
-
-function mgHitFood(){
-  _mgState.hits++;
-  var food=document.getElementById('mgFood');
-  if(!food||!food.parentNode)return;
-  food.classList.add('caught');
-  var timer=document.getElementById('mgTimer');
-  if(timer)timer.textContent=8-_mgState.hits;
-  if(_mgState.hits>=8){
-    clearInterval(_mgState.timer);
-    var pet=G.pets[0];if(pet)finishFeed(pet);
-  } else {
-    setTimeout(function(){
-      var f=document.getElementById('mgFood');
-      if(f&&f.parentNode){f.classList.remove('caught');var w=f.parentNode.offsetWidth-40,h=f.parentNode.offsetHeight-40;f.style.left=Math.random()*w+'px';f.style.top=Math.random()*h+'px';}
-    },200);
-  }
-}
-
-function finishFeed(pet){
-  if(!pet)return;
-  var s=Math.min(100,_mgState.hits*12);
-  pet.hunger=Math.min(100,pet.hunger+s);
-  pet.intimacy=Math.min(100,pet.intimacy+3);
-  pet.mood=Math.min(100,pet.mood+8);
-  showToast('🍖 '+pet.name+'饱餐一顿！饥饿+'+Math.round(s)+'，亲密+3');
-  closePetGame();saveGame();renderPetDetail(pet);
-}
-
-function startPlayGame(pet){
-  _mgState.hits=0;
-  var frisbee=document.getElementById('frisbee');
-  function moveFrisbee(){
-    if(!frisbee||!frisbee.parentNode)return;
-    var w=frisbee.parentNode.offsetWidth-40,h=frisbee.parentNode.offsetHeight-40;
-    frisbee.style.left=Math.random()*w+'px';
-    frisbee.style.top=Math.random()*h+'px';
-    frisbee.style.display='block';
-    frisbee.classList.remove('caught');
-  }
-  _mgState.frisbeeTimer=setInterval(moveFrisbee,800);
-  setTimeout(function(){clearInterval(_mgState.frisbeeTimer);finishPlay(pet);},10000);
-}
-
-function mgCatchFrisbee(){
-  _mgState.hits++;
-  var sc=document.getElementById('mgScore');
-  if(sc)sc.textContent='得分: '+_mgState.hits;
-  var fr=document.getElementById('frisbee');
-  if(fr)fr.classList.add('caught');
-  setTimeout(function(){var f=document.getElementById('frisbee');if(f)f.classList.remove('caught');},150);
-}
-
-function finishPlay(pet){
-  if(!pet)return;
-  var moodUp=_mgState.hits*4;
-  pet.mood=Math.min(100,pet.mood+moodUp);
-  pet.intimacy=Math.min(100,pet.intimacy+5);
-  pet.energy=Math.max(0,pet.energy-_mgState.hits*3);
-  showToast('🎾 '+pet.name+'玩得很开心！心情+'+moodUp+'，亲密+5');
-  closePetGame();saveGame();renderPetDetail(pet);
-}
-
-function startTrainGame(pet){
-  var cells=[];for(var i=0;i<9;i++)cells.push(0);
-  var grid=document.getElementById('mgTrainGrid');
-  if(!grid)return;
-  var cells2=grid.querySelectorAll('.mg-train-cell');
-  _mgState.playerIdx=0;
-  var seq=[Math.floor(Math.random()*9),Math.floor(Math.random()*9),Math.floor(Math.random()*9)];
-  var status=document.getElementById('mgTrainStatus');
-  if(status)status.textContent='记住顺序...';
-  seq.forEach(function(idx,i){
-    setTimeout(function(){
-      if(cells2[idx]){cells2[idx].style.background='#ff9800';cells2[idx].textContent='⭐';}
-    },i*600);
-  });
-  setTimeout(function(){
-    seq.forEach(function(idx){if(cells2[idx]){cells2[idx].style.background='#f5f5f5';cells2[idx].textContent='';}});
-    if(status)status.textContent='你的回合！第1步';
-  },seq.length*600+500);
-  _mgState.seq=seq;
-}
-
-function mgTrainClick(el){
-  var idx=parseInt(el.dataset.idx);
-  var seq=_mgState.seq;
-  var status=document.getElementById('mgTrainStatus');
-  if(idx===seq[_mgState.playerIdx]){
-    el.style.background='#4caf50';el.textContent='✅';_mgState.playerIdx++;
-    if(_mgState.playerIdx>=seq.length){
-      var pet=G.pets[0];if(pet){
-        var ip=8+Math.floor(Math.random()*5);
-        pet.intimacy=Math.min(100,pet.intimacy+ip);
-        pet.skills=(pet.skills||0)+1;
-        if(status)status.textContent='🎉 成功！亲密+'+ip+' 技能+1';
-        setTimeout(function(){closePetGame();saveGame();renderPetDetail(pet);},1500);
-      }
-      return;
-    }
-    if(status)status.textContent='对了！第'+(_mgState.playerIdx+1)+'步';
-  } else {
-    el.style.background='#e74c3c';el.textContent='❌';
-    var pet=G.pets[0];if(pet){pet.intimacy=Math.min(100,pet.intimacy+2);}
-    if(status)status.textContent='有点难... 亲密+2';
-    setTimeout(function(){closePetGame();saveGame();if(G.pets[0])renderPetDetail(G.pets[0]);},1500);
-  }
-}
-
-function petClean(id){
-  var pet=G.pets.find(function(p){return p.id===id;});if(!pet)return;
-  if(G.cash<300){showToast('💸 没钱买沐浴露！');return;}
-  G.cash-=300;
-  pet.hygiene=100;pet.mood=Math.min(100,pet.mood+10);
-  showToast('🛁 '+pet.name+'洗得香喷喷！清洁+100，心情+10');
-  saveGame();renderPetDetail(pet);
-}
-
-function petPet(id){
-  var pet=G.pets.find(function(p){return p.id===id;});if(!pet)return;
-  pet.intimacy=Math.min(100,pet.intimacy+2);pet.mood=Math.min(100,pet.mood+8);
-  var el=document.querySelector('.pet-emoji');if(el)el.classList.add('pet-acting');
-  setTimeout(function(){var e=document.querySelector('.pet-emoji');if(e)e.classList.remove('pet-acting');},600);
-  saveGame();renderPetDetail(pet);
-}
-
-function petHeal(id){
-  var pet=G.pets.find(function(p){return p.id===id;});if(!pet)return;
-  if(G.cash<2000){showToast('💸 没钱看病！');return;}
-  G.cash-=2000;
-  pet.sick=false;pet.health=100;pet.mood=Math.min(100,pet.mood+15);
-  showToast('🏥 '+pet.name+'恢复健康！');
-  saveGame();renderPetDetail(pet);
-}
-
-function petWalk(id){
-  var pet=G.pets.find(function(p){return p.id===id;});if(!pet)return;
-  var overlay=document.createElement('div');
-  overlay.className='game-overlay';
-  overlay.id='walkOverlay';
-  var h='<div class="mini-game" style="max-width:340px;">';
-  h+='<h3>🌳 带'+pet.name+'遛弯</h3>';
-  h+='<div class="walk-scene" id="walkScene">';
-  h+='<div class="walk-pet" id="walkPet">'+pet.emoji+'</div>';
-  h+='</div>';
-  h+='<div class="walk-bar"><div class="walk-bar-fill" id="walkBar" style="width:0%"></div></div>';
-  h+='<div class="walk-event" id="walkEvent"></div>';
-  h+='<div class="walk-btns">';
-  h+='<button onclick="walkSearch()" class="btn btn-outline btn-sm">🔍 搜索</button>';
-  h+='<button onclick="closeWalk()" class="btn btn-outline btn-sm">🏠 回家</button>';
-  h+='</div></div>';
-  overlay.innerHTML=h;
-  document.body.appendChild(overlay);
-  var progress=0;
-  var events=[
-    {t:20,e:'sniff',txt:'🐕 '+pet.name+'发现了埋在地下的骨头！',fx:function(){pet.intimacy=Math.min(100,pet.intimacy+5);}},
-    {t:40,e:'meet',txt:'😄 遇到路人，宠物很乖！',fx:function(){pet.mood=Math.min(100,pet.mood+15);}},
-    {t:60,e:'item',txt:'💰 在草丛里找到了一些钱... 获得¥'+(50+Math.floor(Math.random()*100)),fx:function(){G.cash+=80+Math.floor(Math.random()*120);}},
-    {t:80,e:'social',txt:'👫 另一位宠物主人邀请一起遛弯',fx:function(){pet.intimacy=Math.min(100,pet.intimacy+8);}}
-  ];
-  var triggered=[];
-  _walkInt=setInterval(function(){
-    progress+=(pet.energy/10);
-    var bar=document.getElementById('walkBar');if(bar)bar.style.width=Math.min(100,progress)+'%';
-    events.forEach(function(ev){
-      if(progress>=ev.t&&!triggered.includes(ev.e)){
-        triggered.push(ev.e);
-        var we=document.getElementById('walkEvent');if(we){we.textContent=ev.txt;we.classList.add('show');}
-        if(ev.fx)ev.fx();
-        showToast(ev.txt);
-      }
-    });
-    if(progress>=100){clearInterval(_walkInt);finishWalk(pet);}
-  },1500);
-  pet.energy=Math.max(0,pet.energy-20);pet.hunger=Math.max(0,pet.hunger-15);
-}
-
-function walkSearch(){
-  var r=Math.random();
-  if(r<0.3){G.cash+=100;showToast('💰 挖到¥100！');}
-  else if(r<0.6){showToast('🦴 挖到一根骨头，宠物很开心');}
-  else{showToast('🕳️ 挖了个空...');}
-}
-
-function finishWalk(pet){
-  if(!pet)return;
-  pet.mood=Math.min(100,pet.mood+20);pet.intimacy=Math.min(100,pet.intimacy+5);
-  G.mood=Math.min(200,G.mood+8);
-  showToast('🌳 遛弯结束！'+pet.name+'心情+20，你也心情+8');
-  closeWalk();saveGame();
-  setTimeout(function(){renderPetDetail(pet);},500);
-}
-
-function closeWalk(){clearInterval(_walkInt);var o=document.getElementById('walkOverlay');if(o)o.remove();}
-
-// ===== 月度衰减 =====
-function advancePetMonthly(){
-  if(!G.pets||G.pets.length===0)return;
-  G.pets.forEach(function(pet){
-    if(!pet.mod)pet.mod={};
-    var hg=pet.mod.hg||1,hyg=pet.mod.hyg||1,md=pet.mod.md||1;
-    var bedBonus=(G.petSupplies&&G.petSupplies.includes('bed_soft'))?5:0;
-    pet.hunger=Math.max(0,pet.hunger-(10*hg));
-    pet.hygiene=Math.max(0,pet.hygiene-(8*hyg));
-    pet.mood=Math.max(0,pet.mood-(5*md));
-    pet.energy=Math.min(100,pet.energy+20+bedBonus);
-    pet.age+=1;
-    if(pet.hunger<=10||pet.hygiene<=15){pet.sick=true;}
-  });
-  G.pets.forEach(function(p){
-    if(p.mood>=80&&p.intimacy>=60){G.mood=Math.min(200,G.mood+5);}
-  });
-  updatePetBadge();
+  refreshAll();
+  switchTab('life');
+  if(inheritBonus>0)showToast('继承资产+¥'+inheritBonus,'success')
 }
 
 
-function renderPetDetail(pet){
-  const el=document.getElementById('petDetailView');
-  const stage = pet.age<3?'幼崽期':pet.age<12?'成长期':pet.age<48?pet.age<96?'壮年期':'老年期':'寿终期';
-  const rarityC={common:'#666',rare:'#ff9800',epic:'#9c27b0',legend:'#f44336'};
-  let h='<div class="pet-page">';
-  h+='<div class="pet-card">';
-  h+='<div class="pet-display">';
-  h+='<span class="pet-emoji" onclick="petPet(\''+pet.id+'\')">'+pet.emoji+'</span>';
-  h+='<div class="pet-name">'+pet.name+'</div>';
-  h+='<span class="pet-stage">'+stage+' · '+Math.floor(pet.age)+'月</span>';
-  h+='</div>';
-  h+='<div class="pet-bars">';
-  h+=petBar('🍖','饥饿',pet.hunger,'hunger');
-  h+=petBar('🧼','清洁',pet.hygiene,'hygiene');
-  h+=petBar('😊','心情',pet.mood,'mood');
-  h+=petBar('⚡','精力',pet.energy,'energy');
-  h+=petBar('❤️','亲密',pet.intimacy,'intimacy');
-  h+='</div>';
-  h+='<div class="pet-actions">';
-  h+='<div class="pet-btn feed" onclick="petFeed(\''+pet.id+'\')"><span class="b-icon">🍖</span><span class="b-name">喂食</span><span class="b-cost">'+(G.petFood>0?'库存'+(G.petFood||0)+'袋':'¥200')+'</span></div>';
-  h+='<div class="pet-btn play" onclick="petPlay(\''+pet.id+'\')"><span class="b-icon">🎾</span><span class="b-name">玩耍</span><span class="b-cost">小游戏</span></div>';
-  h+='<div class="pet-btn clean" onclick="petClean(\''+pet.id+'\')"><span class="b-icon">🛁</span><span class="b-name">洗澡</span><span class="b-cost">¥300</span></div>';
-  h+='<div class="pet-btn pet" onclick="petPet(\''+pet.id+'\')"><span class="b-icon">🤚</span><span class="b-name">抚摸</span><span class="b-cost">免费</span></div>';
-  if(pet.type==='dog'||pet.type==='cat'){
-    h+='<div class="pet-btn walk" onclick="petWalk(\''+pet.id+'\')"><span class="b-icon">🌳</span><span class="b-name">遛弯</span><span class="b-cost">随机</span></div>';
-  }
-  h+='<div class="pet-btn train" onclick="petTrain(\''+pet.id+'\')"><span class="b-icon">🎓</span><span class="b-name">训练</span><span class="b-cost">小游戏</span></div>';
-  h+='<div class="pet-btn heal" onclick="petHeal(\''+pet.id+'\')"><span class="b-icon">🏥</span><span class="b-name">治病</span><span class="b-cost">¥2000</span></div>';
-  h+='<div class="pet-btn store" onclick="switchPetTab(\'shop\',document.getElementById(\'petSubTabs\').querySelector(\'.pet-subtab\'))"><span class="b-icon">🏪</span><span class="b-name">商店</span><span class="b-cost">'+(G.petFood<5?'买粮':'逛逛')+'</span></div>';
-  h+='</div></div>';
-  // Multi-pet navigation
-  if(G.pets.length>1){
-    h+='<div style="display:flex;gap:6px;justify-content:center;margin-top:8px;">';
-    G.pets.forEach((p,i)=>{
-      h+='<span style="padding:4px 12px;border-radius:12px;font-size:11px;cursor:pointer;background:'+(p.id===pet.id?'#ff9800':'#f5f5f5')+';color:'+(p.id===pet.id?'#fff':'#666')+'" onclick="renderPetDetail(G.pets['+i+'])">'+p.emoji+'</span>';
-    });
-    h+='</div>';
-  }
-  h+='</div>';
-  el.innerHTML=h;
-}
-function petBar(icon,label,val,cls){const pct=Math.max(0,Math.min(100,val));const c=pct<30?'font-weight:700;color:#e74c3c;':'';return '<div class="pet-bar-row"><span class="bar-label">'+icon+' '+label+'</span><div class="bar-track"><div class="bar-fill bar-'+cls+'" style="width:'+pct+'%"></div></div><span class="bar-val" style="'+c+'">'+Math.round(pct)+'</span></div>';}
+function updateAgeDisplay(){var age=G.age||18;var lifeExpect=80;var pct=Math.min(100,(age/lifeExpect)*100);var el=document.getElementById('ageBar');if(!el)return;el.innerHTML='<span class="cur-age">'+Math.floor(age)+'岁</span><div class="life-prog"><div class="life-prog-fill" style="width:'+pct+'%"></div></div><span class="life-pct">'+Math.floor(pct)+'%</span>'}
 
-function updatePetBadge(){
-  if(!G.pets||G.pets.length===0)return;
-  const needs = G.pets.filter(p=>p.hunger<30||p.mood<30||p.intimacy<40).length;
-  const b=document.getElementById('petBadge');
-  if(b&&needs>0){b.textContent=needs;b.style.display='flex';}
-}
+// ====== Interactive Onboarding Tutorial ======
+function startOnboarding(){if(localStorage.getItem('ob_done_v2'))return;showOBStep(0)}
+function showOBStep(idx){var steps=[{title:'欢迎来到人生首富',body:'在这里，你将从零开始，经历成长、工作、投资、家庭……最终成为首富或体验平凡人生。',btnText:'开始旅程',hl:null},{title:'推进时间 ⏩',body:'点击底部的「推进」按钮让时间流逝。每个月都可能发生工作、社交等事件。',btnText:'下一步',hl:'#btnAdvanceMonth'},{title:'关注属性 💪',body:'心情太低会生病，健康太低会猝死（<30警告，<10危险）。保持平衡才能走得更远。',btnText:'明白了',hl:'#attrPanel'},{title:'找份工作 💼',body:'工作页面可以投简历找工作。积累经验后晋升或跳槽。',btnText:'知道了',hl:'[data-tab="work"]'},{title:'第一桶金 💰',body:'工资发到账户。留一部分应急，其余可以投资理财。',btnText:'继续',hl:'#cashDisplay'},{title:'广结善缘 👥',body:'社交聚会可以结识NPC，他们可能成为伴侣、贵人、合作伙伴。',btnText:'去看看',hl:'[data-tab="social"]'},{title:'钱生钱 📈',body:'把钱投入股票、商铺、科技，让资产被动增长。高收益=高风险！',btnText:'去投资',hl:'[data-tab="invest"]'},{title:'成家立业 🏠',body:'遇到心仪的人可以结婚生子，子女长大后也能帮你。',btnText:'去家庭',hl:'#familyPanel'},{title:'引导完成！🎉',body:'你已掌握基础玩法。去创造属于你的人生吧！奖励：轮回点+5。',btnText:'开始游戏',hl:null}];if(idx>=steps.length){localStorage.setItem('ob_done_v2','true');G.rebirthPoints=(G.rebirthPoints||0)+5;showToast('🎉 新手引导完成！轮回点+5','success',2000);var ov=document.getElementById('obOverlay');if(ov)ov.remove();return}var step=steps[idx];var dots='';for(var i=0;i<steps.length;i++){var cls=i===idx?'active':i<idx?'done':'';dots+='<div class="pdot '+cls+'"></div>'}var html='<div class="ob-overlay" id="obOverlay"><div class="ob-card"><div class="ob-progress">'+dots+'</div><div class="ob-step active"><div class="ob-title">'+step.title+'</div><div class="ob-body">'+step.body+'</div><div class="ob-actions">'+(idx>0?'<button class="btn-prev" onclick="showOBStep('+(idx-1)+')">上一步</button>':'<span></span>')+'<button class="btn-next" onclick="showOBStep('+(idx+1)+')">'+step.btnText+'</button></div><button class="ob-skip" onclick="skipOnboarding()">跳过引导</button></div></div></div>';var existing=document.getElementById('obOverlay');if(existing)existing.remove();document.body.insertAdjacentHTML('beforeend',html)}
+function skipOnboarding(){localStorage.setItem('ob_done_v2','true');var ov=document.getElementById('obOverlay');if(ov)ov.remove();showToast('可随时在「我的」页面重玩引导','info')}
 
-function petFeed(id){
-  const pet=G.pets.find(p=>p.id===id);if(!pet)return;
-  if(G.petFood>0){G.petFood--;}
-  else if(G.cash<200){showToast('💸 没钱买狗粮了！');return;}
-  else{G.cash-=200;}
-  // Feeding mini-game: timing game
-  showMiniGame('feed',pet);
-}
-function showMiniGame(type,pet){
-  const overlay=document.createElement('div');
-  overlay.className='game-overlay';
-  overlay.id='petGameOverlay';
-  let html='';
-  if(type==='feed'){
-    html='<div class="mini-game"><h3>🍖 喂食 '+pet.name+'</h3>';
-    html+='<div style="font-size:12px;color:#666;">点击食物投入食盆，连续命中8次！</div>';
-    html+='<div class="mg-timer" id="mgTimer">8</div>';
-    html+='<div style="position:relative;width:200px;height:120px;margin:10px auto;background:linear-gradient(180deg,#fff3e0,#ffe0b2);border-radius:12px;overflow:hidden;">';
-    html+='<div id="mgFood" class="mg-target" style="position:absolute;font-size:30px;display:none;" onclick="mgHitFood()">🍖</div>';
-    html+='<div style="position:absolute;bottom:5px;left:50%;transform:translateX(-50%);font-size:20px;">🥣</div>';
-    html+='</div>';
-    html+='<div><button onclick="closePetGame()" class="btn btn-outline btn-sm">跳过</button></div></div>';
-  } else if(type==='play'){
-    html='<div class="mini-game"><h3>🎾 陪'+pet.name+'玩耍</h3>';
-    html+='<div style="font-size:12px;color:#666;">接住飞盘！点击移动的 🎾</div>';
-    html+='<div class="mg-score" id="mgScore">得分: 0</div>';
-    html+='<div id="frisbeeArena" style="position:relative;width:240px;height:160px;margin:10px auto;background:linear-gradient(180deg,#87ceeb,#4caf50);border-radius:12px;overflow:hidden;cursor:crosshair;">';
-    html+='<div id="frisbee" class="mg-target" style="position:absolute;font-size:32px;" onclick="mgCatchFrisbee()">🎾</div>';
-    html+='</div>';
-    html+='<div><button onclick="closePetGame()" class="btn btn-outline btn-sm">跳过</button></div></div>';
-  } else if(type==='train'){
-    html='<div class="mini-game"><h3>🎓 训练 '+pet.name+'</h3>';
-    html+='<div style="font-size:12px;color:#666;">记住闪亮的格子顺序！</div>';
-    html+='<div class="mg-score" id="mgTrainStatus">准备...</div>';
-    html+='<div class="mg-grid" id="mgTrainGrid">';
-    for(let i=0;i<9;i++){html+='<div class="mg-train-cell" style="width:50px;height:50px;background:#f5f5f5;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;" data-idx="'+i+'" onclick="mgTrainClick(this)"></div>';}
-    html+='</div><div><button onclick="closePetGame()" class="btn btn-outline btn-sm">跳过</button></div></div>';
-  }
-  overlay.innerHTML=html;
-  document.body.appendChild(overlay);
+// Auto-start onboarding on page load
+setTimeout(function(){startOnboarding()},1000);
 
-  if(type==='feed'){startFeedGame(pet);}
-  else if(type==='play'){startPlayGame(pet);}
-  else if(type==='train'){startTrainGame(pet);}
-}
 
-var _mgState={hits:0,timer:null,frisbeeTimer:null,cells:[],playerIdx:0,round:0};
-function closePetGame(){
-  if(_mgState.timer)clearInterval(_mgState.timer);
-  if(_mgState.frisbeeTimer)clearInterval(_mgState.frisbeeTimer);
-  const o=document.getElementById('petGameOverlay');
-  if(o)o.remove();
-}
+// ====== Interactive Onboarding Tutorial ======
+function startOnboarding(){if(localStorage.getItem('ob_done_v2'))return;showOBStep(0)}
+function showOBStep(idx){var steps=[{title:'欢迎来到人生首富',body:'在这里，你将从零开始，经历成长、工作、投资、家庭……最终成为首富或体验平凡人生。',btnText:'开始旅程',hl:null},{title:'推进时间 ⏩',body:'点击底部的「推进」按钮让时间流逝。每个月都可能发生工作、社交等事件。',btnText:'下一步',hl:'#btnAdvanceMonth'},{title:'关注属性 💪',body:'心情太低会生病，健康太低会猝死（<30警告，<10危险）。保持平衡才能走得更远。',btnText:'明白了',hl:'#attrPanel'},{title:'找份工作 💼',body:'工作页面可以投简历找工作。积累经验后晋升或跳槽。',btnText:'知道了',hl:'[data-tab="work"]'},{title:'第一桶金 💰',body:'工资发到账户。留一部分应急，其余可以投资理财。',btnText:'继续',hl:'#cashDisplay'},{title:'广结善缘 👥',body:'社交聚会可以结识NPC，他们可能成为伴侣、贵人、合作伙伴。',btnText:'去看看',hl:'[data-tab="social"]'},{title:'钱生钱 📈',body:'把钱投入股票、商铺、科技，让资产被动增长。高收益=高风险！',btnText:'去投资',hl:'[data-tab="invest"]'},{title:'成家立业 🏠',body:'遇到心仪的人可以结婚生子，子女长大后也能帮你。',btnText:'去家庭',hl:'#familyPanel'},{title:'引导完成！🎉',body:'你已掌握基础玩法。去创造属于你的人生吧！奖励：轮回点+5。',btnText:'开始游戏',hl:null}];if(idx>=steps.length){localStorage.setItem('ob_done_v2','true');G.rebirthPoints=(G.rebirthPoints||0)+5;showToast('🎉 新手引导完成！轮回点+5','success',2000);var ov=document.getElementById('obOverlay');if(ov)ov.remove();return}var step=steps[idx];var dots='';for(var i=0;i<steps.length;i++){var cls=i===idx?'active':i<idx?'done':'';dots+='<div class="pdot '+cls+'"></div>'}var html='<div class="ob-overlay" id="obOverlay"><div class="ob-card"><div class="ob-progress">'+dots+'</div><div class="ob-step active"><div class="ob-title">'+step.title+'</div><div class="ob-body">'+step.body+'</div><div class="ob-actions">'+(idx>0?'<button class="btn-prev" onclick="showOBStep('+(idx-1)+')">上一步</button>':'<span></span>')+'<button class="btn-next" onclick="showOBStep('+(idx+1)+')">'+step.btnText+'</button></div><button class="ob-skip" onclick="skipOnboarding()">跳过引导</button></div></div></div>';var existing=document.getElementById('obOverlay');if(existing)existing.remove();document.body.insertAdjacentHTML('beforeend',html)}
+function skipOnboarding(){localStorage.setItem('ob_done_v2','true');var ov=document.getElementById('obOverlay');if(ov)ov.remove();showToast('可随时在「我的」页面重玩引导','info')}
 
-function startFeedGame(pet){
-  _mgState.hits=0;
-  let target=8;
-  let elapsed=0;
-  const food=document.getElementById('mgFood');
-  const timer=document.getElementById('mgTimer');
-  function moveFood(){
-    const arena=food.parentElement;
-    const aw=arena.offsetWidth-40,ah=arena.offsetHeight-40;
-    food.style.left=Math.random()*aw+'px';
-    food.style.top=Math.random()*ah+'px';
-    food.style.display='block';
-    food.classList.remove('caught');
-  }
-  function tick(){
-    elapsed++;
-    if(elapsed>=15){clearInterval(_mgState.timer);finishFeed(pet);}
-  }
-  _mgState.timer=setInterval(tick,1000);
-  moveFood();
-}
-function mgHitFood(){
-  _mgState.hits++;
-  const food=document.getElementById('mgFood');
-  food.classList.add('caught');
-  document.getElementById('mgTimer').textContent=8-_mgState.hits;
-  if(_mgState.hits>=8){clearInterval(_mgState.timer);finishFeed(pet);}
-  else setTimeout(()=>{const f=document.getElementById('mgFood');if(f){f.classList.remove('caught');const a=f.parentElement;const w=a.offsetWidth-40,h=a.offsetHeight-40;f.style.left=Math.random()*w+'px';f.style.top=Math.random()*h+'px';}},200);
-}
-function finishFeed(pet){
-  const s=Math.min(100,_mgState.hits*12);
-  pet.hunger=Math.min(100,pet.hunger+s);
-  pet.intimacy=Math.min(100,pet.intimacy+3);
-  pet.mood=Math.min(100,pet.mood+8);
-  showToast('🍖 '+pet.name+'饱餐一顿！饥饿+'+Math.round(s)+'，亲密+3');
-  closePetGame();saveGame();renderPetDetail(pet);
-}
-
-function startPlayGame(pet){
-  _mgState.hits=0;
-  const frisbee=document.getElementById('frisbee');
-  function moveFrisbee(){
-    const arena=frisbee.parentElement;
-    const w=arena.offsetWidth-40,h=arena.offsetHeight-40;
-    frisbee.style.left=Math.random()*w+'px';
-    frisbee.style.top=Math.random()*h+'px';
-    frisbee.style.display='block';
-    frisbee.classList.remove('caught');
-  }
-  _mgState.frisbeeTimer=setInterval(moveFrisbee,800);
-  setTimeout(()=>{clearInterval(_mgState.frisbeeTimer);finishPlay(pet);},10000);
-}
-function mgCatchFrisbee(){
-  _mgState.hits++;
-  document.getElementById('mgScore').textContent='得分: '+_mgState.hits;
-  const fr=document.getElementById('frisbee');
-  fr.classList.add('caught');
-  setTimeout(()=>{const f=document.getElementById('frisbee');if(f)f.classList.remove('caught');},150);
-}
-function finishPlay(pet){
-  const moodUp=_mgState.hits*4;
-  pet.mood=Math.min(100,pet.mood+moodUp);
-  pet.intimacy=Math.min(100,pet.intimacy+5);
-  pet.energy=Math.max(0,pet.energy-_mgState.hits*3);
-  showToast('🎾 '+pet.name+'玩得很开心！心情+'+moodUp+'，亲密+5');
-  closePetGame();saveGame();renderPetDetail(pet);
-}
-
-function startTrainGame(pet){
-  const cells=[];for(let i=0;i<9;i++)cells.push(0);
-  const grid=document.getElementById('mgTrainGrid');
-  const cells2=grid.querySelectorAll('.mg-train-cell');
-  _mgState.round=0;_mgState.cells=cells2;_mgState.playerIdx=0;
-  const seq=[Math.floor(Math.random()*9),Math.floor(Math.random()*9),Math.floor(Math.random()*9)];
-  const status=document.getElementById('mgTrainStatus');
-  // Flash sequence
-  status.textContent='记住顺序...';
-  seq.forEach((idx,i)=>{
-    setTimeout(()=>{
-      if(cells2[idx])cells2[idx].style.background='#ff9800';
-      cells2[idx].textContent='⭐';
-    },i*600);
-  });
-  setTimeout(()=>{
-    seq.forEach((idx,i)=>{
-      setTimeout(()=>{
-        if(cells2[idx]){cells2[idx].style.background='#f5f5f5';cells2[idx].textContent='';}
-      },0);
-    });
-    status.textContent='你的回合！第1步';
-  },seq.length*600+500);
-  _mgState.trainSeq=seq;
-}
-function mgTrainClick(el){
-  const idx=parseInt(el.dataset.idx);
-  const seq=_mgState.trainSeq;
-  const status=document.getElementById('mgTrainStatus');
-  if(idx===seq[_mgState.playerIdx]){
-    el.style.background='#4caf50';el.textContent='✅';_mgState.playerIdx++;
-    if(_mgState.playerIdx>=seq.length){
-      const pet=G.pets[0]; // assume first pet
-      const ip=8+Math.floor(Math.random()*5);
-      pet.intimacy=Math.min(100,pet.intimacy+ip);
-      pet.skills=(pet.skills||0)+1;
-      status.textContent='🎉 成功！亲密+'+ip+' 技能+1';
-      setTimeout(()=>{closePetGame();saveGame();renderPetDetail(pet);},1500);
-      return;
-    }
-    status.textContent='对了！第'+(_mgState.playerIdx+1)+'步';
-  } else {
-    el.style.background='#e74c3c';el.textContent='❌';
-    const pet=G.pets[0];
-    pet.intimacy=Math.min(100,pet.intimacy+2);
-    status.textContent='有点难... 亲密+2';
-    setTimeout(()=>{closePetGame();saveGame();renderPetDetail(pet);},1500);
-  }
-}
-
-function petClean(id){
-  const pet=G.pets.find(p=>p.id===id);if(!pet)return;
-  if(G.cash<300){showToast('💸 没钱买沐浴露！');return;}
-  G.cash-=300;
-  pet.hygiene=100;pet.mood=Math.min(100,pet.mood+10);
-  showToast('🛁 '+pet.name+'洗得香喷喷！清洁+100，心情+10');
-  saveGame();renderPetDetail(pet);
-}
-function petPet(id){
-  const pet=G.pets.find(p=>p.id===id);if(!pet)return;
-  pet.intimacy=Math.min(100,pet.intimacy+2);pet.mood=Math.min(100,pet.mood+8);
-  const el=document.querySelector('.pet-emoji');if(el)el.classList.add('pet-acting');
-  setTimeout(()=>{const e=document.querySelector('.pet-emoji');if(e)e.classList.remove('pet-acting');},600);
-  saveGame();renderPetDetail(pet);
-}
-function petHeal(id){
-  const pet=G.pets.find(p=>p.id===id);if(!pet)return;
-  if(G.cash<2000){showToast('💸 没钱看病！');return;}
-  G.cash-=2000;
-  pet.sick=false;pet.health=100;pet.mood=Math.min(100,pet.mood+15);
-  showToast('🏥 '+pet.name+'恢复健康！');
-  saveGame();renderPetDetail(pet);
-}
-
-// ===== 遛弯子系统 =====
-function petWalk(id){
-  const pet=G.pets.find(p=>p.id===id);if(!pet)return;
-  const overlay=document.createElement('div');
-  overlay.className='game-overlay';
-  overlay.id='walkOverlay';
-  let h='<div class="mini-game" style="max-width:340px;">';
-  h+='<h3>🌳 带'+pet.name+'遛弯</h3>';
-  h+='<div class="walk-scene" id="walkScene">';
-  h+='<div class="walk-pet" id="walkPet">'+pet.emoji+'</div>';
-  h+='</div>';
-  h+='<div class="walk-bar"><div class="walk-bar-fill" id="walkBar" style="width:0%"></div></div>';
-  h+='<div class="walk-event" id="walkEvent"></div>';
-  h+='<div class="walk-btns">';
-  h+='<button onclick="walkSearch()" class="btn btn-outline btn-sm">🔍 搜索</button>';
-  h+='<button onclick="closeWalk()" class="btn btn-outline btn-sm">🏠 回家</button>';
-  h+='</div></div>';
-  overlay.innerHTML=h;
-  document.body.appendChild(overlay);
-  // Walk simulation
-  let progress=0,energy=pet.energy;
-  const events=[
-    {t:20,e:'sniff',txt:'🐕 '+pet.name+'发现了埋在地下的骨头！',fx:function(){pet.intimacy=Math.min(100,pet.intimacy+5);}},
-    {t:40,e:'meet',txt:'😄 遇到路人，宠物很乖！',fx:function(){pet.mood=Math.min(100,pet.mood+15);}},
-    {t:60,e:'item',txt:'💰 在草丛里找到了一些钱... 获得¥'+(50+Math.floor(Math.random()*100)),fx:function(){G.cash+=80+Math.floor(Math.random()*120);}},
-    {t:80,e:'social',txt:'👫 另一位宠物主人邀请一起遛弯',fx:function(){pet.intimacy=Math.min(100,pet.intimacy+8);}}
-  ];
-  let triggered=[];
-  _walkInt=setInterval(()=>{
-    progress+=(energy/10);
-    document.getElementById('walkBar').style.width=Math.min(100,progress)+'%';
-    events.forEach(ev=>{
-      if(progress>=ev.t&&!triggered.includes(ev.e)){
-        triggered.push(ev.e);
-        const we=document.getElementById('walkEvent');
-        we.textContent=ev.txt;we.classList.add('show');
-        if(ev.fx)ev.fx();
-        showToast(ev.txt);
-      }
-    });
-    if(progress>=100){clearInterval(_walkInt);finishWalk(pet);}
-  },1500);
-  pet.energy=Math.max(0,pet.energy-20);pet.hunger=Math.max(0,pet.hunger-15);
-}
-function walkSearch(){
-  const r=Math.random();
-  if(r<0.3){G.cash+=100;showToast('💰 挖到¥100！');}
-  else if(r<0.6){showToast('🦴 挖到一根骨头，宠物很开心');}
-  else{showToast('🕳️ 挖了个空...');}
-}
-function finishWalk(pet){
-  pet.mood=Math.min(100,pet.mood+20);pet.intimacy=Math.min(100,pet.intimacy+5);
-  G.mood=Math.min(200,G.mood+8);
-  showToast('🌳 遛弯结束！'+pet.name+'心情+20，你也心情+8');
-  closeWalk();saveGame();
-  setTimeout(()=>{renderPetDetail(pet);},500);
-}
-function closeWalk(){clearInterval(_walkInt);const o=document.getElementById('walkOverlay');if(o)o.remove();}
-
-// ===== 宠物商店 =====
-function openPetStore(){
-  initPetState();
-  const overlay=document.createElement('div');
-  overlay.className='modal-overlay';
-  overlay.onclick=function(e){if(e.target===this)this.remove();};
-  const card=document.createElement('div');
-  card.className='modal-card';
-  card.style.maxWidth='360px';
-  let h='<div class="modal-title">🏪 宠物商店 <span style="font-size:11px;color:#999;">(购买食物、领养宠物)</span></div>';
-  h+='<div class="pet-store-tabs">';
-  h+='<div class="pet-store-tab active" onclick="filterStore(\'all\',this)">全部</div>';
-  h+='<div class="pet-store-tab" onclick="filterStore(\'dog\',this)">🐕 狗</div>';
-  h+='<div class="pet-store-tab" onclick="filterStore(\'cat\',this)">🐈 猫</div>';
-  h+='<div class="pet-store-tab" onclick="filterStore(\'fish\',this)">🐟 鱼</div>';
-  h+='<div class="pet-store-tab" onclick="filterStore(\'bird\',this)">🐦 鸟</div>';
-  h+='<div class="pet-store-tab" onclick="buyFood(this)">🍖 狗粮x5(¥500)</div>';
-  h+='</div>';
-  h+='<div class="pet-store-grid" id="petGrid">';
-  PET_STORE.forEach(ps=>{
-    const rc={common:'rarity-common',rare:'rarity-rare',epic:'rarity-epic',legend:'rarity-legend'};
-    const rt={common:'普通',稀有:'稀有',epic:'史诗',legend:'传说'};
-    h+='<div class="pet-store-item '+rc[ps.rarity]+'" onclick="buyPet(\''+ps.id+'\')">';
-    h+='<span class="psstat '+rc[ps.rarity]+'">'+rt[ps.rarity]+'</span>';
-    h+='<span class="psi">'+ps.emoji+'</span>';
-    h+='<div class="psn">'+ps.name+'</div>';
-    h+='<div class="psp">¥'+ps.price.toLocaleString()+'</div>';
-    h+='<div style="font-size:10px;color:#999;margin-top:4px;">'+ps.desc+'</div>';
-    if(pet && pet.id===ps.id) h+='<div style="font-size:10px;color:#ff5722;margin-top:4px;">✓ 已购买</div>';
-    h+='</div>';
-  });
-  h+='</div>';
-  h+='<div class="modal-btns"><button onclick="this.closest(\'.modal-overlay\').remove()" class="btn btn-outline">关闭</button></div>';
-  card.innerHTML=h;
-  overlay.appendChild(card);
-  document.body.appendChild(overlay);
-}
-function filterStore(type,el){
-  const parent=el.parentElement;
-  parent.querySelectorAll('.pet-store-tab').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');
-  const grid=document.getElementById('petGrid');
-  const items=grid.querySelectorAll('.pet-store-item');
-  items.forEach(item=>{
-    if(type==='all')item.style.display='';
-    else{const pid=item.getAttribute('onclick').match(/'([^']+)'/)[1];const ps=PET_STORE.find(p=>p.id===pid);item.style.display=(ps.type===type)?'':'';}
-  });
-}
-function buyFood(el){
-  if(G.cash<500){showToast('💸 钱不够！');return;}
-  G.cash-=500;G.petFood+=5;
-  showToast('🍖 购买狗粮x5成功！');
-  el.textContent='🍖 狗粮x5(¥500) 库存:'+G.petFood;
-}
-
-// ===== 月度宠物衰减 =====
+// Auto-start onboarding on page load
+setTimeout(function(){startOnboarding()},1000);
 </script>
+
+<!-- ===== Bottom Tab Navigation ===== -->
+<nav class="bottom-tab" id="bottomTab">
+  <div class="tab-item active" data-tab="home" onclick="switchTab('home')"><span class="icon">🏠</span><span>首页</span></div>
+  <div class="tab-item" data-tab="growth" onclick="switchTab('growth')"><span class="icon">📈</span><span>成长</span></div>
+  <div class="tab-item" data-tab="work" onclick="switchTab('work')"><span class="icon">💼</span><span>工作</span></div>
+  <div class="tab-item" data-tab="invest" onclick="switchTab('invest')"><span class="icon">💰</span><span>投资</span></div>
+  <div class="tab-item" data-tab="social" onclick="switchTab('social')"><span class="icon">👥</span><span>社交</span></div>
+  <div class="tab-item" data-tab="mine" onclick="switchTab('mine')"><span class="icon">👤</span><span>我的</span></div>
+</nav>
 </body>
 </html>
