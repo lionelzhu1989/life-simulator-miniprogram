@@ -646,7 +646,7 @@ const DATE_ACTIVITIES=[
   {id:'sports',icon:'🏃',name:'一起运动',cost:100,minIntimacy:15,minTrust:10,annualLeave:0},
   {id:'date',icon:'💕',name:'约会',cost:400,minIntimacy:40,minTrust:30,annualLeave:0},
   {id:'trip',icon:'✈️',name:'旅游',cost:3000,minIntimacy:60,minTrust:50,annualLeave:3},
-  {id:'hotel',icon:'🏨',name:'开房',cost:600,minIntimacy:70,minTrust:60,annualLeave:0}
+  {id:'marry',icon:'💒',name:'结婚',cost:50000,minIntimacy:90,minTrust:80,annualLeave:0}
 ];
 
 function toggleDatePanel(){
@@ -701,12 +701,12 @@ function startPlayerDate(activityId){
   G.cash=clamp(G.cash-act.cost,-999999,999999999);
   if(act.annualLeave>0)G.annualLeave=(G.annualLeave||0)-act.annualLeave;
   // Update relationship
-  const intimacyGain=activityId==='hotel'?15:(activityId==='trip'?12:(activityId==='date'?10:5));
-  const affectionGain=activityId==='hotel'?20:(activityId==='trip'?15:(activityId==='date'?12:3));
-  const trustGain=activityId==='hotel'?5:(activityId==='trip'?10:3);
+  const intimacyGain=activityId==='marry'?30:(activityId==='trip'?12:(activityId==='date'?10:5));
+  const affectionGain=activityId==='marry'?35:(activityId==='trip'?15:(activityId==='date'?12:3));
+  const trustGain=activityId==='marry'?20:(activityId==='trip'?10:3);
   updateRelationship(npcId,{intimacy:intimacyGain,affection:affectionGain,trust:trustGain,dateCount:1,lastActivity:G.totalMonths,lastActivityType:activityId});
   // Show in chat
-  const typeNames={dinner:'请'+p.name+'吃了顿饭',movie:'和'+p.name+'看了场电影',coffee:'和'+p.name+'喝了杯咖啡',shopping:'和'+p.name+'去逛街',sports:'和'+p.name+'一起运动',date:'和'+p.name+'约会',trip:'和'+p.name+'去旅游',hotel:'和'+p.name+'去了酒店'};
+  const typeNames={dinner:'请'+p.name+'吃了顿饭',movie:'和'+p.name+'看了场电影',coffee:'和'+p.name+'喝了杯咖啡',shopping:'和'+p.name+'去逛街',sports:'和'+p.name+'一起运动',date:'和'+p.name+'约会',trip:'和'+p.name+'去旅游',marry:'和'+p.name+'领了结婚证'};
   addChatBubble('sys','💕 '+typeNames[activityId]+'，花费¥'+fmt(act.cost)+(act.annualLeave>0?'，消耗'+act.annualLeave+'天年假':''));
   // NPC responds based on activity
   const responses={
@@ -717,7 +717,7 @@ function startPlayerDate(activityId){
     sports:['今天运动量够了！','你体力不错啊','下次还来'],
     date:['今天好开心~','和你在一起时间过得好快','下次还约我哦'],
     trip:['旅行真开心！','这个地方好美','和你一起看世界~'],
-    hotel:['……','你…你别乱来啊','今天…嗯…']
+    marry:['我愿意！','终于等到这一天了','好幸福啊！','从今以后你就是我的另一半了']
   };
   const respArr=responses[activityId]||['嗯嗯'];
   const resp=respArr[Math.floor(Math.random()*respArr.length)];
