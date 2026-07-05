@@ -682,20 +682,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
   <div class="promo-salary" id="promoSalary"></div>
 </div>
 
-<div class="rebirth-panel" id="rebirthPanel">
-  <div class="rebirth-card">
-    <div class="rebirth-title">♻️ 重生轮回</div>
-    <div class="lp-display">
-      <div style="font-size:14px;opacity:.8;">轮回点 (LP)</div>
-      <div class="lp-num" id="rebirthLP">0</div>
-    </div>
-    <div id="upgradeList"></div>
-    <div style="margin-top:16px;display:flex;gap:10px;">
-      <button class="btn btn-outline" style="flex:1;" onclick="closeRebirthPanel()">返回</button>
-      <button class="btn btn-warning" style="flex:1;" onclick="doRebirth()">♻️ 重生开始</button>
-    </div>
-  </div>
-</div>
+
 
 
 <div id="chatOverlay" class="chat-overlay">
@@ -2568,46 +2555,6 @@ function renderRanking(){
 }
 
 // ========== 重生系统 ==========
-function showRebirthPanel(){
-  document.getElementById('rebirthLP').textContent=G.legacyPoints||0;
-  let html='';
-  LEGACY_UPGRADES.forEach(u=>{
-    const owned=G.legacyUpgrades.includes(u.id);
-    const canBuy=!owned&&(G.legacyPoints||0)>=u.cost;
-    html+='<div class="upgrade-item"><span class="upgrade-name">'+u.name+'</span>';
-    if(owned)html+='<span class="tag tag-green">已拥有</span>';
-    else html+='<button class="btn btn-sm '+(canBuy?'btn-warning':'btn-outline')+'" '+(canBuy?'':'disabled')+' onclick="buyLegacy(\''+u.id+'\')">'+u.cost+' LP</button>';
-    html+='</div>';
-  });
-  document.getElementById('upgradeList').innerHTML=html;
-  document.getElementById('rebirthPanel').classList.add('show');
-}
-function closeRebirthPanel(){document.getElementById('rebirthPanel').classList.remove('show');}
-function buyLegacy(id){
-  const u=LEGACY_UPGRADES.find(x=>x.id===id);if(!u)return;
-  if(G.legacyUpgrades.includes(id)){showToast('已拥有！');return;}
-  if((G.legacyPoints||0)<u.cost){showToast('LP不足！');return;}
-  G.legacyPoints-=u.cost;G.legacyUpgrades.push(id);
-  saveLegacy();showRebirthPanel();showToast('✅ 购买成功！');
-}
-function doRebirth(){
-  showModal({title:'确定重生？',content:'当前人生将结束，已购买的升级将在下一轮生效。\n\n当前LP：'+(G.legacyPoints||0),success(res){
-    if(res.confirm){
-      const total=calcTotalAsset();
-      const earnedLP=Math.floor(total/100000)+G.achievements.length*5+JOBS[G.jobIndex].level*10;
-      G.legacyPoints=(G.legacyPoints||0)+earnedLP;
-      saveLegacy();
-      if(!G.lifeEvents)G.lifeEvents=[];G.lifeEvents.push({month:G.totalMonths,icon:'♻️',title:'人生重生',detail:'结束当前人生，获得'+earnedLP+'轮回点',type:'career'});
-      clearGame();G=defaultState();initStockPrices();saveGame();
-      refreshAll();switchTab('life');
-      closeRebirthPanel();
-      showToast('♻️ 重生成功！获得 '+earnedLP+' LP');
-      checkAchievements();
-    }
-  }});
-}
-
-// ========== 分享海报 ==========
 function generateSharePoster(){
   const canvas=document.createElement('canvas');
   canvas.width=750;canvas.height=1334;
@@ -5287,6 +5234,90 @@ calcWisdomScore=function(){return Math.min(1000,Math.floor(G.iq*5+(G.eduLevel||0
 calcLegacyScore=function(){return Math.min(1000,Math.floor(((G.family&&G.family.children?G.family.children.length*50:0)+(G.rebirthCount||0)*30)))};
 renderDims=function(){var dims=[{n:'财富',s:calcWealthScore(),mx:1000,t:'总资产每¥1万=1分'},{n:'声望',s:calcFameScore(),mx:1000,t:'职业职位+家族声望'},{n:'幸福',s:calcHappyScore(),mx:1000,t:'心情+健康+家庭'},{n:'智慧',s:calcWisdomScore(),mx:1000,t:'智商+学历'},{n:'传承',s:calcLegacyScore(),mx:1000,t:'家族+轮回'}];var html='';for(var i=0;i<dims.length;i++){var d=dims[i];var pct=(d.s/d.mx*100).toFixed(1);html+='<div class="dim-row"><span class="dim-name">'+d.n+'</span><div class="dim-bar"><div class="dim-fill" style="width:'+pct+'%"></div></div><span class="dim-score">'+d.s+'/'+d.mx+'</span></div><span class="dim-tip">'+d.t+'</span>'}return html};
 renderAchievements=function(){var list=[{id:'first_job',name:'初出茅庐',icon:'🎒',cond:'获得第一份工作',tier:'bronze'},{id:'million',name:'百万富翁',icon:'💰',cond:'资产超过¥100万',tier:'bronze'},{id:'marriage',name:'步入婚姻',icon:'💍',cond:'与伴侣结婚',tier:'bronze'},{id:'first_child',name:'为人父母',icon:'👶',cond:'拥有第一个子女',tier:'silver'},{id:'billion',name:'亿万富翁',icon:'💎',cond:'资产超过¥1亿',tier:'silver'},{id:'startup',name:'创业者',icon:'🚀',cond:'成功创业一次',tier:'silver'},{id:'grandchild',name:'四世同堂',icon:'👴',cond:'迎来孙辈',tier:'gold'},{id:'legend',name:'传奇人生',icon:'👑',cond:'累计轮回10次',tier:'gold'}];var tiers=[{id:'gold',name:'🏆 金',c:'#FFD700'},{id:'silver',name:'🥈 银',c:'#C0C0C0'},{id:'bronze',name:'🥉 铜',c:'#CD7F32'}];var html='';for(var t=0;t<tiers.length;t++){html+='<div class="ach-tier"><div class="ach-tier-title" style="border-left-color:'+tiers[t].c+'">'+tiers[t].name+'</div>';for(var i=0;i<list.length;i++){var a=list[i];if(a.tier!==tiers[t].id)continue;var unlocked=G.achievements&&G.achievements[a.id];html+='<div class="ach-item '+(unlocked?'':'locked')+'"><span class="ach-icon">'+(unlocked?a.icon:'🔒')+'</span><span class="ach-name">'+a.name+'</span><span class="ach-cond">'+a.cond+'</span>'+(unlocked?'<span class="ach-unlocked">✓</span>':'')+'</div>'}html+='</div>'}return html};
+
+// ====== 轮回系统强化 V2.0 ======
+function setTabContent(tab, html){
+  var el=document.getElementById('customPanel');
+  if(!el){
+    el=document.createElement('div');
+    el.id='customPanel';
+    el.style.cssText='position:fixed;inset:0;background:#fff;z-index:9999;overflow-y:auto;padding-bottom:60px';
+    document.body.appendChild(el);
+  }
+  el.innerHTML=html;
+  el.style.display='block';
+  // Add close button if not in html
+  if(html.indexOf('closeCustomPanel')<0){
+    var back=document.createElement('button');
+    back.textContent='← 返回';
+    back.style.cssText='position:fixed;bottom:16px;left:16px;right:16px;padding:12px;background:#f0f0f0;border:none;border-radius:8px;font-size:16px;cursor:pointer;z-index:10000';
+    back.onclick=function(){document.getElementById('customPanel').style.display='none'};
+    el.appendChild(back);
+  }
+}
+function calcRebirthPts(){
+  var pts=0;
+  pts+=Math.floor((G.cash||0)/10000);
+  pts+=Object.keys(G.achievements||{}).length*10;
+  pts+=(G.rebirthCount||0)*5;
+  pts+=Math.floor(((G.family&&G.family.prestige)||0)/5);
+  return Math.max(1,pts)
+}
+function showRebirthPanel(){
+  var pts=calcRebirthPts();
+  var rb=G.rebirthCount||0;
+  bonuses=[
+    {name:'初始资金加成',val:'+'+(rb*10)+'%',unl:true,desc:'每轮回+10%开局资金'},
+    {name:'全属性加成',val:'+'+(rb*3),unl:true,desc:'每轮回全属性+3'},
+    {name:'富二代',val:'解锁',unl:rb>=3,desc:'3轮后解锁富二代开局'},
+    {name:'资产继承',val:'上局1%',unl:rb>=5,desc:'继承上轮1%资产'},
+    {name:'隐藏职业投资人',val:'投资人',unl:rb>=10,desc:'10轮后解锁特殊职业'}
+  ];
+  var html='<div style="padding:16px;text-align:center"><div style="font-size:24px;margin-bottom:8px">🔄 轮回转世</div><div style="font-size:14px;color:#666">本轮获得 <b style="color:#4472C4">'+pts+'</b> 轮回点</div><div style="margin:16px 0;text-align:left;background:#f8f9fa;border-radius:12px;padding:12px">';
+  for(var i=0;i<bonuses.length;i++){
+    var b=bonuses[i];
+    html+='<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee;opacity:'+(b.unl?1:.4)+'"><span>'+b.name+(b.unl?' <span style="color:#4CAF50">✓</span>':' 🔒')+'</span><span style="color:#4472C4">'+b.val+'</span></div>'
+  }
+  html+='</div><button onclick="confirmRebirth()" style="width:100%;padding:12px;background:#4472C4;color:#fff;border:none;border-radius:8px;font-size:16px;cursor:pointer">开始新人生（+'+pts+'轮回点）</button></div>';
+  setTabContent('custom',html)
+}
+function confirmRebirth(){
+  var pts=calcRebirthPts();
+  G.rebirthCount=(G.rebirthCount||0)+1;
+  G.rebirthPoints=(G.rebirthPoints||0)+pts;
+  saveRebirthRecord();
+  resetGame(G.rebirthCount);
+  var cp=document.getElementById('customPanel');if(cp)cp.style.display='none';
+  showToast('🔄 第'+G.rebirthCount+'次人生开始！','success',2000)
+}
+function saveRebirthRecord(){
+  var h=JSON.parse(localStorage.getItem('rebirth_history')||'[]');
+  h.push({
+    rebirth:G.rebirthCount,
+    peakAsset:G.peakAsset||G.cash,
+    achCount:Object.keys(G.achievements||{}).length,
+    familySize:((G.family&&G.family.children.length)||0)+((G.family&&G.family.grandchildren.length)||0),
+    months:G.totalMonths
+  });
+  localStorage.setItem('rebirth_history',JSON.stringify(h))
+}
+function resetGame(rbCount){
+  var rbBonus=1+(rbCount*0.1);
+  var history=JSON.parse(localStorage.getItem('rebirth_history')||'[]');
+  var lastPeak=history.length>0?history[history.length-1].peakAsset:0;
+  var inheritBonus=rbCount>=5?Math.floor(lastPeak*0.01):0;
+  Object.assign(G,defaultState());
+  G.cash=Math.floor(10000*rbBonus)+inheritBonus;
+  G.attrPoints=(G.attrPoints||0)+rbCount*3;
+  G.rebirthCount=rbCount;
+  G.achievements={};
+  G.memory=[];
+  saveGame();
+  refreshAll();
+  switchTab('life');
+  if(inheritBonus>0)showToast('继承资产+¥'+inheritBonus,'success')
+}
+
 </script>
 
 <!-- ===== Bottom Tab Navigation ===== -->
