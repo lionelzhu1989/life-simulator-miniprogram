@@ -1554,7 +1554,7 @@ let G=null;
 
 function defaultState(){
   const legacy=loadLegacy();
-  let cash=100000,hp=100,mood=100,iq=100,eq=100;
+  let cash=5000,hp=100,mood=100,iq=100,eq=100;
   legacy.upgrades.forEach(uid=>{
     const u=LEGACY_UPGRADES.find(x=>x.id===uid);
     if(!u)return;
@@ -1566,8 +1566,8 @@ function defaultState(){
   });
   return{
     totalMonths:0,cash,health:hp,mood,IQ:iq,EQ:eq,
-    jobIndex:0,monthsAtJob:0,selfEmployed:false,
-    stockHoldings:{},stockPrices:{},
+    jobIndex:0,monthsAtJob:0,
+    stockHoldings:{},stockPrices:{},stockCostBasis:{},
     houses:[],businesses:[],techInvestments:[],
     spouse:null,children:0,childAges:[],
     events:[],gameOver:false,gameOverReason:'',
@@ -1577,20 +1577,14 @@ function defaultState(){
     // V2 new fields
     activeNews:[],decisionCount:0,
     unlockedTiers:{},luxuryItems:[],
-    forbesShown:false,shortPositions:{},phone:{threads:[],moments:[],aiMoments:[],notifications:[],flags:{},lastTriggerMonth:0,nextId:1,chatHistory:{}},
-    lifeEvents:[],socialContacts:[],relationships:{},friendGroups:[],friendGroupings:{},
-    savings:0,careerBranches:[],
-    romance:{npcId:null,stage:'none',affection:0,metMonth:0,lastInteraction:0},
-    scheduledDates:[]
+    forbesShown:false,shortPositions:{},phone:{threads:[],moments:[],notifications:[],flags:{},lastTriggerMonth:0,nextId:1,chatHistory:{}},
+    pets:[],petFood:5,petStoreLastRefresh:0,
+    lifeEvents:[],socialContacts:[],friendGroups:[],friendGroupings:{}
   };
 }
 
 // ========== 存储 ==========
-function saveGame(){localStorage.setItem('offer_save',JSON.stringify(G));
-  // v4.0.0: Show save indicator
-  var ind=document.getElementById('saveIndicator');
-  if(ind){ind.classList.remove('show');void ind.offsetWidth;ind.classList.add('show');}
-}
+function saveGame(){localStorage.setItem('offer_save',JSON.stringify(G));}
 function loadGame(){try{const s=localStorage.getItem('offer_save');if(s){G=JSON.parse(s);return true;}}catch(e){}return false;}
 function clearGame(){localStorage.removeItem('offer_save');}
 function saveLegacy(){localStorage.setItem('offer_legacy',JSON.stringify({points:G.legacyPoints,upgrades:G.legacyUpgrades}));}
@@ -1635,7 +1629,6 @@ function switchTab(name){
   const tabs=['life','work','invest','pet','more','task','phone'];
   document.querySelectorAll('.tab-item').forEach((t,i)=>t.classList.toggle('active',tabs[i]===name));
   refreshPage(name);
-  _tut_checkAutoAdvance();
 }
 function switchInvestTab(name){
   document.querySelectorAll('.invest-tab').forEach(t=>t.classList.remove('active'));
@@ -1647,20 +1640,14 @@ function switchInvestTab(name){
 
 // ========== 初始化 ==========
 function startGame(){
-  
   if(loadGame()&&!G.gameOver){
-    migrateSave();
     document.getElementById('welcomePage').style.display='none';
     document.getElementById('gameApp').style.display='flex';
-    var go=document.getElementById('guideOverlay');if(go)go.style.display='none';
-    var ob=document.getElementById('obOverlay');if(ob)ob.style.display='none';
-    initStockPrices();initPhoneState();refreshAll();return;
+    initStockPrices();initPhoneState();initPetState();refreshAll();return;
   }
   G=defaultState();initStockPrices();initPhoneState();saveGame();
   document.getElementById('welcomePage').style.display='none';
   document.getElementById('gameApp').style.display='flex';
-  var go=document.getElementById('guideOverlay');if(go)go.style.display='none';
-  var ob=document.getElementById('obOverlay');if(ob)ob.style.display='none';
   refreshAll();
 }
 function initStockPrices(){STOCKS.forEach(s=>{if(!G.stockPrices[s.code])G.stockPrices[s.code]=s.basePrice;});}
@@ -1718,15 +1705,7 @@ function refreshLearning(){
 }
 function refreshHeader(){
   const job=JOBS[G.jobIndex];
-  const careerLabel=G.selfEmployed?'🚀 创业者':job.name;
-  const yr=Math.floor(G.totalMonths/12);
-  const mo=(G.totalMonths%12)+1;
-  const el=document.getElementById('headerSub');
-  el.textContent='第'+yr+'年 '+mo+'月 · '+getAge()+'岁 · '+careerLabel;
-  // 月份变化时闪一下
-  el.classList.remove('month-flash');
-  void el.offsetWidth;
-  el.classList.add('month-flash');
+  document.getElementById('headerSub').textContent='年龄 '+getAge()+'岁 · '+job.name+' · '+getMonth()+'月';
   document.getElementById('lpDisplay').textContent=G.legacyPoints||0;
 }
 function refreshLife(){
@@ -1743,20 +1722,6 @@ function refreshLife(){
   renderTierBanner();
   renderLifeEvents();
   renderRecentMsgs();
-  // 恋爱状态显示（18-23岁）
-  const age=getAge();
-  const romanceEl=document.getElementById('romanceStatus');
-  if(romanceEl){
-    if(age>=18&&age<=23&&G.romance&&G.romance.npcId==='campusGirl'){
-      const aff=G.romance.affection;
-      const hearts=aff>=80?'💕💕💕💕':aff>=60?'💕💕💕🤍':aff>=40?'💕💕🤍🤍':aff>=20?'💕🤍🤍🤍':'🤍🤍🤍🤍';
-      const stageText=G.romance.stage==='dating'?'❤️ 已在一起':G.romance.stage==='close'?'💗 暧昧升温':G.romance.stage==='normal'?'💙 普通朋友':'🤍 刚认识';
-      romanceEl.innerHTML='<div style="background:linear-gradient(135deg,#fff0f5,#ffe4e8);border-radius:10px;padding:8px 12px;margin-top:8px;"><div style="font-size:12px;font-weight:600;color:#e74c3c;">👧 小雨 · '+stageText+'</div><div style="font-size:11px;margin-top:3px;">好感度：'+hearts+' '+aff+'</div></div>';
-      romanceEl.style.display='block';
-    }else{
-      romanceEl.style.display='none';
-    }
-  }
   document.getElementById('nextMonthBtn').disabled=G.gameOver;
 }
 
@@ -1817,20 +1782,12 @@ function renderRecentMsgs(){
   list.innerHTML=html;
   card.style.display=recent.length>0?'block':'none';
 }
-function setAttrBar(name,val){val=clamp(Math.round(val),0,200);const pct=Math.min(val,100);document.getElementById('bar'+name).style.width=pct+'%';document.getElementById('val'+name).textContent=val;
-  // v4.0.0: Dynamic color based on value
-  var bar=document.getElementById('bar'+name);
-  var color;
-  if(val>=80)color='#27ae60';
-  else if(val>=50)color='#f1c40f';
-  else color='#e74c3c';
-  bar.style.background=color;
-}
+function setAttrBar(name,val){val=clamp(Math.round(val),0,200);const barEl=document.getElementById('bar'+name);const valEl=document.getElementById('val'+name);if(!barEl)return;let barBg='#27ae60',textColor='#333';if(name==='Health'){if(val<10){barBg='#c0392b';textColor='#c0392b';}else if(val<30){barBg='#e74c3c';textColor='#e74c3c';}}if(name==='Mood'){if(val<20){textColor='#e67e22';}}barEl.style.width=Math.min(val,100)+'%';barEl.style.background=barBg;if(valEl){valEl.textContent=val;valEl.style.color=textColor;if(name==='Health'&&val<10){valEl.innerHTML=val+' ⚠️';valEl.style.fontWeight='bold';}}}
 function refreshPage(name){
   if(name==='work')refreshWork();
   else if(name==='invest'){refreshInvest('stock');refreshInvest('house');refreshInvest('business');refreshInvest('tech');}
-  else if(name==='pet')renderPetPage();
   else if(name==='task'){refreshTasks();refreshAchievements();refreshFiveDim();renderRanking();}
+  else if(name==='pet'){initPetState();renderPetPage();updatePetBadge();}
   else if(name==='more')refreshLearning();
   else if(name==='phone')refreshPhone();
 }
@@ -1924,113 +1881,31 @@ function closeForbes(){
 }
 
 // ========== 核心：度过一月 ==========
-async function nextMonth(){
+function nextMonth(){
   if(G.gameOver)return;
-  if(G._autoChainActive)return;
-  
-  // v4.1.0: Unread messages → show confirm modal with force-advance option
-  if(hasUnread()){
-    // Count unread
-    let unreadCount=0;
-    if(G.phone&&G.phone.threads){
-      G.phone.threads.forEach(t=>{
-        if(t.status!=='replied'&&t.rounds[t.currentRound]&&!t.rounds[t.currentRound]._playerChoice)unreadCount++;
-      });
-    }
-    if(G.phone&&G.phone.chatHistory){
-      Object.keys(G.phone.chatHistory).forEach(nid=>{
-        const h=G.phone.chatHistory[nid];
-        if(h&&h.length>0){const last=h[h.length-1];if(last.npc&&!last._playerRead)unreadCount++;}
-      });
-    }
-
-    // Show force-advance modal
-    const _existingFaModal=document.getElementById('forceAdvanceModal');
-    if(_existingFaModal) _existingFaModal.remove();
-
-    const _faModal=document.createElement('div');
-    _faModal.id='forceAdvanceModal';
-    _faModal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;animation:fadeIn .2s';
-    _faModal.innerHTML=`
-      <div style="background:#fff;border-radius:16px;padding:24px;max-width:320px;width:85%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.2)">
-        <div style="font-size:40px;margin-bottom:12px">⚠️</div>
-        <div style="font-size:16px;font-weight:600;margin-bottom:8px">有 \${unreadCount} 条消息未处理</div>
-        <div style="font-size:13px;color:#666;margin-bottom:20px">确定要无视这些消息，强制推进到下个月吗？<br>未读消息将被标记为已读。</div>
-        <div style="display:flex;flex-direction:column;gap:8px">
-          <button id="faHandleBtn" style="width:100%;padding:12px;border:none;border-radius:10px;background:#f0f0f0;font-size:14px;cursor:pointer">📱 去处理消息</button>
-          <button id="faForceBtn" style="width:100%;padding:12px;border:none;border-radius:10px;background:linear-gradient(135deg,#e74c3c,#c0392b);color:#fff;font-size:14px;font-weight:600;cursor:pointer">⚡ 无视未读，强制推进</button>
-        </div>
-      </div>
-    `;
-
-    _faModal.querySelector('#faHandleBtn').onclick=()=>{
-      _faModal.remove();
-      switchTab('phone');
-      const phoneTab=document.getElementById('phoneTabItem');
-      if(phoneTab){phoneTab.classList.add('tab-phone-highlight');setTimeout(()=>phoneTab.classList.remove('tab-phone-highlight'),3000);}
-      const hint=document.getElementById('phoneHint');
-      const hintText=document.getElementById('phoneHintText');
-      if(hint&&hintText){
-        hintText.textContent='📱 有 '+unreadCount+' 条消息未处理，请先处理后再度过本月';
-        hint.style.display='block';
-      }
-    };
-    _faModal.querySelector('#faForceBtn').onclick=()=>{
-      _faModal.remove();
-      // Mark all unread as read/skipped
-      if(G.phone&&G.phone.threads){
-        G.phone.threads.forEach(t=>{
-          if(t.rounds&&t.rounds[t.currentRound]) t.rounds[t.currentRound]._playerChoice='skip';
-        });
-      }
-      if(G.phone&&G.phone.chatHistory){
-        Object.keys(G.phone.chatHistory).forEach(nid=>{
-          const h=G.phone.chatHistory[nid];
-          if(h&&h.length>0){const last=h[h.length-1];if(last.npc)last._playerRead=true;}
-        });
-      }
-      _doAdvanceMonth();
-    };
-
-    document.body.appendChild(_faModal);
-    return;
-  }
-
-  // _pendingDecision: keep original blocking behavior
-  if(G._pendingDecision){
-    const btn=document.getElementById('nextMonthBtn');
-    btn.classList.add('btn-shake');
-    setTimeout(()=>btn.classList.remove('btn-shake'),600);
-    switchTab('phone');
-    const phoneTab=document.getElementById('phoneTabItem');
-    if(phoneTab){
-      phoneTab.classList.add('tab-phone-highlight');
-      setTimeout(()=>phoneTab.classList.remove('tab-phone-highlight'),3000);
-    }
-    return;
-  }
-  
-  // No pending items, advance directly
-  _doAdvanceMonth();
+  if(hasUnread()){showToast('📱 请先处理所有未读消息！');switchTab('phone');return;}
+  if(G._pendingDecision){showToast('⚡ 请先完成当前事件！');return;}
+  advanceMonth();
+  saveGame();refreshAll();
+  checkAchievements();
+  if(G.gameOver)setTimeout(()=>showGameOver(),500);
 }
-async function advanceMonth(){
+function advanceMonth(){
   G.totalMonths++;G.monthsAtJob++;G.events=[];
   G._encounterActive=false; // 重置月度场景标记
-  if(!G._recentEvents)G._recentEvents=[]; // 连锁反应记忆（最近事件记录）
   const job=JOBS[G.jobIndex];
-  // 创业者没有工资收入，只有副业/房租/配偶收入
-  let income=G.selfEmployed?0:job.salary/12;
+  let income=job.salary/12;
   // V2: Early income slightly lower (first 24 months penalty)
-  if(!G.selfEmployed&&G.totalMonths<=24)income*=0.85;
+  if(G.totalMonths<=24)income*=0.85;
   // V2: Mid-late income boost (after 120 months)
-  if(!G.selfEmployed&&G.totalMonths>120)income*=1.15;
-  if(!G.selfEmployed&&G.salaryBonus>0)income*=(1+G.salaryBonus);
+  if(G.totalMonths>120)income*=1.15;
+  if(G.salaryBonus>0)income*=(1+G.salaryBonus);
   let expense=0;
   if(G.spouse){const sp=SPOUSES.find(s=>s.id===G.spouse);income+=sp.salary/12;}
   let rentIncome=0;G.houses.forEach(h=>{const info=HOUSES.find(x=>x.id===h.id);rentIncome+=info?info.rent:0;});
   income+=rentIncome;
   let loanPay=0;
-  G.houses.forEach(h=>{if(h.loan&&h.loanBalance>0){const pay=Math.min(h.loanMonthly,h.loanBalance);h.loanBalance-=pay;h.loanMonthly=h.loanBalance>0?h.loanMonthly:0;loanPay+=pay;if(h.loanBalance<=0){h.loanBalance=0;h.loan=false;h.own=true;G.events.push({text:'🏦 恭喜！房贷已还清！',type:'good'});notifyAsMessage('system','🏦 恭喜！房贷已还清！');}}});
+  G.houses.forEach(h=>{if(h.loan&&h.loanBalance>0){const pay=Math.min(h.loanMonthly,h.loanBalance);h.loanBalance-=pay;h.loanMonthly=h.loanBalance>0?h.loanMonthly:0;loanPay+=pay;if(h.loanBalance<=0){h.loanBalance=0;h.loan=false;h.own=true;G.events.push({text:'🏦 恭喜！房贷已还清！',type:'good'});}}});
   expense+=loanPay;
   const childCost=G.children*20000/12;expense+=childCost;
   // Business income
@@ -2038,19 +1913,13 @@ async function advanceMonth(){
   G.businesses.forEach(b=>{
     const info=BUSINESSES.find(x=>x.id===b.id);
     if(!info)return;
-    if(!b.totalIncome)b.totalIncome=0;if(!b.totalLoss)b.totalLoss=0;if(!b.monthsOwned)b.monthsOwned=0;
-    b.monthsOwned++;
     if(Math.random()<info.risk){
       const loss=info.price*randFloat(0.1,0.3);
       bizIncome-=loss;
-      b.totalLoss+=loss;
-      b.lastMonthIncome=-loss;
       G.events.push({text:info.icon+' '+info.name+' 本月亏损 '+fmt(loss),type:'bad'});
     }else{
       const inc=randInt(info.monthlyIncome[0],info.monthlyIncome[1]);
       bizIncome+=inc;
-      b.totalIncome+=inc;
-      b.lastMonthIncome=inc;
     }
   });
   income+=bizIncome;
@@ -2101,11 +1970,6 @@ async function advanceMonth(){
   const net=income-expense;G.cash+=net;
   // V2: Health decay faster
   G.health=clamp(G.health-0.3,0,200);
-  // v4.0.0: Health crisis - sudden death risk when health < 30
-  if(G.health>0&&G.health<30&&G.totalMonths>12&&Math.random()<0.10){
-    G.gameOver=true;G.gameOverReason='猝死：长期健康不良导致突发疾病，人生结束';
-    G.events.push({text:'💔 突发健康危机！长期透支身体导致了不可挽回的后果...',type:'bad'});
-  }
   // V2: Mood recovery slightly if healthy
   let moodDecay=-0.25;
   if(G.health>70)moodDecay=-0.15;
@@ -2137,74 +2001,40 @@ async function advanceMonth(){
     triggerStockNews();
   }
   G.houses.forEach(h=>{const info=HOUSES.find(x=>x.id===h.id);const change=(Math.random()-0.45)*0.05*h.marketValue/12;h.marketValue=Math.round(h.marketValue+change);if(info)h.marketValue=Math.max(info.price*0.3,h.marketValue);});
-  // v4.0.0: Career branch check (30% chance when not self-employed)
-  if(!G.selfEmployed&&Math.random()<0.30){
-    var branch=checkCareerBranch();
-    if(branch){showCareerBranch(branch);}
-  }
-  // v4.0.0: Narrative events trigger
-  if(tryTriggerNarrativeEvent())return;
-  // V2: Decision events (40% chance per month, age-appropriate)
-  if(Math.random()<0.40){
+  // V2: Decision events (20% chance per month, age-appropriate)
+  if(Math.random()<0.20){
     triggerDecisionEvent();
   }
-  // V2: Small random events (AI生成，模板仅API失败兜底)
-  if(Math.random()<0.50){
-    if(AI_ENGINE.enabled&&AI_ENGINE._fallbackCount<AI_ENGINE.maxFallback){
-      callAI(buildSmallEventPrompt,'small').then(result=>{
-        if(result&&result.text){
-          applySmallEvent({text:result.text,type:result.type||'neutral',effect:result.effect||{}});
-        }else{
-          applySmallEvent(TEMPLATE_SMALL_EVENTS[randInt(0,TEMPLATE_SMALL_EVENTS.length-1)]);
-        }
-      }).catch(()=>{applySmallEvent(TEMPLATE_SMALL_EVENTS[randInt(0,TEMPLATE_SMALL_EVENTS.length-1)]);});
-    }else{
-      applySmallEvent(TEMPLATE_SMALL_EVENTS[randInt(0,TEMPLATE_SMALL_EVENTS.length-1)]);
-    }
+  // V2: Small random events still happen (15%)
+  if(Math.random()<0.15){
+    const smallEvents=[
+      {text:'💰 朋友还钱，收到3000元',type:'good',effect:{money:3000}},
+      {text:'💪 坚持健身，健康+3',type:'good',effect:{health:3}},
+      {text:'📚 课余学习，智商+2',type:'neutral',effect:{IQ:2,mood:-2}},
+      {text:'🎭 参加社团活动，情商+2',type:'neutral',effect:{EQ:2}},
+      {text:'🍻 朋友聚会，心情+5',type:'neutral',effect:{mood:5,money:-300}},
+      {text:'📱 手机被偷',type:'bad',effect:{money:-3000,mood:-5}},
+      {text:'🏥 生病住院',type:'bad',effect:{money:-8000,health:-8}},
+      {text:'🎰 买彩票中了2000元',type:'good',effect:{money:2000}},
+      {text:'📉 股市震荡，持仓亏损10%',type:'bad',effect:{stockLoss:0.1}},
+      {text:'📜 考下专业证书，智商+3',type:'neutral',effect:{IQ:3}}
+    ];
+    const evt=smallEvents[randInt(0,smallEvents.length-1)];
+    applySmallEvent(evt);
   }
   const nm=getMonth();G.events.unshift({text:'📅 '+getAge()+'年'+nm+'月 · 净收入：'+fmt(net),type:net>=0?'good':'bad'});
   // Monthly task auto-complete
   G.monthlyTasks['advance']=true;
   G.monthlyTasks['promote']=true;
-  // 🥚 彩蛋事件（5%概率，极其稀有）
-  if(Math.random()<0.05&&!G.gameOver){
-    const easterEggs=[
-      {text:'🥚 你中了一个小众平台的NFT，虽然不值钱但很有意思',type:'good',effect:{mood:8,EQ:1}},
-      {text:'🥚 你随手买的刮刮乐中了200块！',type:'good',effect:{money:200,mood:10}},
-      {text:'🥚 你在二手平台卖掉了三年前的旧手机，赚了80块',type:'good',effect:{money:80,mood:5}},
-      {text:'🥚 你被隔壁桌的人认出来"你是不是xxx"（认错人了）',type:'neutral',effect:{mood:3}},
-      {text:'🥚 你今天出门发现鞋带系了一个完美的蝴蝶结，心情莫名好',type:'good',effect:{mood:5}},
-      {text:'🥚 你在地铁上看到一个人在看你，你们对视了3秒后同时笑了',type:'good',effect:{mood:6,EQ:2}},
-      {text:'🥚 你发现自己三年前写的评论被100人点赞了',type:'good',effect:{mood:8}},
-      {text:'🥚 你收到一封来自陌生人的感谢邮件——你忘了帮过他什么忙',type:'good',effect:{mood:10,EQ:2}},
-      {text:'🥚 你在超市抓娃娃机一次就抓到了一个丑萌玩偶',type:'good',effect:{mood:12,money:-15}},
-      {text:'🥚 你的外卖里多送了一份小食，心情大好',type:'good',effect:{mood:8,money:-25}},
-      {text:'🥚 你随手转发的抽奖居然中了一箱零食',type:'good',effect:{mood:15,money:50}},
-      {text:'🥚 你翻出了一张5年前的照片，回忆杀',type:'neutral',effect:{mood:6}},
-      {text:'🥚 你今天随机被一个小孩叫了声"哥哥/姐姐"，虽然你已经不小了',type:'good',effect:{mood:8}},
-      {text:'🥚 你在网上发的帖子突然有了回复，有人认真跟你讨论',type:'good',effect:{mood:5,IQ:1}},
-      {text:'🥚 你今天发现自己的公交卡里还有200块余额',type:'good',effect:{money:200,mood:10}},
-    ];
-    const egg=easterEggs[randInt(0,easterEggs.length-1)];
-    applySmallEvent(egg);
-    if(G._recentEvents)G._recentEvents.push('🥚彩蛋：'+egg.text.replace(/[\u{1F300}-\u{1FFFF}]/gu,'').substring(0,20));
-  }
   // Phone triggers
-  if(!G.gameOver){initPhoneState();triggerFollowUps();triggerPhoneMessages();processScheduledDates().catch(e=>console.error("scheduledDates error:",e));triggerParentHelp();if(Math.random()<0.50)triggerAIMoments().catch(()=>{});if(Math.random()<0.40)triggerMoments();generateNotifications();generateGossipEvent();triggerGathering();}
+  if(!G.gameOver){initPhoneState();triggerFollowUps();if(Math.random()<0.4)triggerPhoneMessages();if(Math.random()<0.12)triggerMoments();generateNotifications();generateGossipEvent();triggerGathering();}
   // 社交拓展：每月有概率触发偶遇场景
   if(!G.gameOver && !G._encounter && !G._pendingDecision){
     tryTriggerEncounter();
   }
-  // 恋爱状态：太久不聊天好感度衰减
-  if(G.romance&&G.romance.npcId==='campusGirl'&&getAge()<=23){
-    const monthsSinceInteraction=G.totalMonths-G.romance.lastInteraction;
-    if(monthsSinceInteraction>2){
-      G.romance.affection=clamp(G.romance.affection-Math.min(monthsSinceInteraction*2,10),0,100);
-      if(G.romance.affection<20)G.romance.stage='normal';
-      if(G.romance.affection<=0){G.romance.stage='none';G.romance.npcId=null;}
-    }
-  }
   checkStudyProgress();triggerProjectEvents();
+  // ===== AI底座：系统联动引擎 =====
+  processSystemLinkages();
   // Guide
   advanceGuide();
   // Game over check
@@ -2212,9 +2042,9 @@ async function advanceMonth(){
   else if(getAge()>=80&&Math.random()<0.3){G.gameOver=true;G.gameOverReason='安享晚年，人生圆满结束';}
 }
 
-async function fastForward(years){
+function fastForward(years){
   G.events=[];
-  for(let i=0;i<years*12;i++){if(G.gameOver)break;await advanceMonth();}
+  for(let i=0;i<years*12;i++){if(G.gameOver)break;advanceMonth();}
   saveGame();refreshAll();checkAchievements();
   if(G.gameOver)setTimeout(()=>showGameOver(),500);
   else showToast('⏩ 快进了'+years+'年！');
@@ -2229,16 +2059,6 @@ function applySmallEvent(evt){
   if(eff.EQ)G.EQ=clamp(G.EQ+eff.EQ,0,200);
   if(eff.stockLoss){for(const code in G.stockHoldings){G.stockPrices[code]=Math.max(1,G.stockPrices[code]*(1-eff.stockLoss));}}
   G.events.push(e);
-  // v3.9: 小事件也发消息（系统通知）
-  if(evt.type==='bad'||(eff.money&&eff.money<0)){
-    notifyAsMessage('system',e.text);
-  }
-  // 连锁反应记忆
-  if(G._recentEvents){
-    const clean=e.text.replace(/[\u{1F300}-\u{1FFFF}]/gu,'').trim().substring(0,25);
-    G._recentEvents.push(clean);
-    if(G._recentEvents.length>5)G._recentEvents.shift();
-  }
 }
 
 // ========== V2: Decision Event System ==========
@@ -2260,12 +2080,6 @@ function triggerDecisionEvent(){
 function showDecisionEvent(evt){
   G.decisionCount=(G.decisionCount||0)+1;
   G._pendingDecision=true;
-  // 连锁反应记忆
-  if(G._recentEvents){
-    const clean=(evt.title||'决策事件').replace(/[\u{1F300}-\u{1FFFF}]/gu,'').trim().substring(0,25);
-    G._recentEvents.push(clean);
-    if(G._recentEvents.length>5)G._recentEvents.shift();
-  }
   let optionsHtml='';
   evt.options.forEach((opt,i)=>{
     const locked=(opt.reqIQ&&G.IQ<opt.reqIQ)||(opt.reqEQ&&G.EQ<opt.reqEQ);
@@ -2308,16 +2122,6 @@ function selectDecisionOption(optIndex){
   if(eff.EQ)G.EQ=clamp(G.EQ+eff.EQ,0,200);
   if(eff.salaryBonus)G.salaryBonus+=eff.salaryBonus;
   if(eff.money)G.cash+=eff.money;
-  // 创业/离职状态处理
-  if(eff.career==='selfEmployed'){
-    G.selfEmployed=true;
-    if(!G.achievements.includes('entrepreneur'))G.achievements.push('entrepreneur');
-    G.events.push({text:'🚀 你辞职了，正式成为一名创业者！',type:'neutral'});
-  }
-  if(eff.career==='reEmploy'){
-    G.selfEmployed=false;
-    G.events.push({text:'💼 你重新找到了工作！',type:'good'});
-  }
   // Check for chance-based outcomes
   let resultText=opt.result;
   if(opt.resultChance!==undefined){
@@ -2340,19 +2144,6 @@ function selectDecisionOption(optIndex){
   closeDecisionEvent();
   showModal({title:evt.title,content:resultText,showCancel:false,confirmText:'继续'});
   G.events.push({text:evt.title+': '+opt.title,type:'neutral'});
-  // v3.9: 决策结果也发一条消息给玩家
-  notifyAsMessage('system','📋 '+evt.title+'：你选择了「'+opt.title+'」');
-  // 恋爱事件更新恋爱状态
-  if(evt.id&&evt.id.indexOf('campus_romance')>=0){
-    if(!G.romance)G.romance={npcId:null,stage:'none',affection:0,metMonth:0,lastInteraction:0};
-    if(!G.romance.npcId){G.romance.npcId='campusGirl';G.romance.metMonth=G.totalMonths;G.romance.stage='normal';}
-    const affChange=opt.effect.mood>10?15:opt.effect.mood>5?8:opt.effect.mood<-5?-10:-3;
-    G.romance.affection=clamp(G.romance.affection+affChange,0,100);
-    G.romance.lastInteraction=G.totalMonths;
-    if(G.romance.affection>=80)G.romance.stage='dating';
-    else if(G.romance.affection>=50)G.romance.stage='close';
-    else G.romance.stage='normal';
-  }
   saveGame();refreshAll();
 }
 
@@ -2360,10 +2151,6 @@ function closeDecisionEvent(){
   document.getElementById('choiceOverlay').classList.remove('show');
   window._currentDecision=null;
   G._pendingDecision=false;
-  // If auto-chain is active, continue to next item after decision
-  if(G._autoChainActive&&G._autoChainQueue&&G._autoChainQueue.length>0){
-    setTimeout(()=>_processAutoChain(),600);
-  }
 }
 
 // ========== V2: Stock News System ==========
@@ -2391,8 +2178,6 @@ function triggerStockNews(){
       const impact=(Math.random()>0.3)?news.impact:news.impact*0.5;
       G.stockPrices[s.code]=Math.max(1,G.stockPrices[s.code]*(1+impact));
     });
-    // v3.9: 新闻也发消息
-    notifyAsMessage('system','📰 '+news.title+' — '+news.desc);
   });
 }
 
@@ -2530,44 +2315,35 @@ function triggerGatherEvent(type){
 // ========== 工作页面 ==========
 function refreshWork(){
   const job=JOBS[G.jobIndex];
-  let html,jobHtml='';
-  if(G.selfEmployed){
-    // 创业者状态：不显示职场晋升路径
-    html='<div class="list-item"><div class="list-info"><div class="name">🚀 创业者</div><div class="desc">已辞职创业 | 收入来源：副业/房租/投资</div></div><span class="tag tag-golden">创业中</span></div>';
-    jobHtml='<div class="list-item" style="text-align:center;color:#888;"><div class="list-info"><div class="desc">你已经离开了职场，正在创业路上拼搏。<br>收入取决于你的生意和投资，而不是工资。</div></div></div>';
-  }else{
-    html='<div class="list-item"><div class="list-info"><div class="name">'+job.name+'</div><div class="desc">月薪：'+fmt(job.salary/12)+' | 在岗：'+G.monthsAtJob+'个月</div></div><span class="tag tag-green">当前</span></div>';
-    JOBS.forEach((j,i)=>{
-      const isCurrent=i===G.jobIndex;
-      const isNext=i===G.jobIndex+1;
-      const canPromote=isNext&&G.IQ>=j.requireIQ&&G.EQ>=j.requireEQ&&G.monthsAtJob>=j.requireMonths;
-      const locked=isNext&&!canPromote;
-      let action='';
-      if(isCurrent)action='<span class="tag tag-blue">在职</span>';
-      else if(canPromote)action='<button class="btn btn-primary btn-sm" onclick="tryPromote('+i+')">晋升</button>';
-      else if(i<G.jobIndex)action='<span class="text-sm text-muted">已过</span>';
-      else if(locked){
-        const reasons=[];
-        if(G.IQ<j.requireIQ)reasons.push('IQ≥'+j.requireIQ);
-        if(G.EQ<j.requireEQ)reasons.push('EQ≥'+j.requireEQ);
-        if(G.monthsAtJob<j.requireMonths)reasons.push('经验'+Math.ceil(j.requireMonths/12)+'年');
-        action='<span class="text-sm text-muted">'+reasons.join(' ')+'</span>';
-      }
-      jobHtml+='<div class="list-item"><div class="list-info"><div class="name">'+(isCurrent?'▶ ':'')+j.name+' <span class="text-sm text-muted">月薪'+fmtShort(j.salary/12)+'</span></div><div class="desc">要求：IQ≥'+j.requireIQ+' EQ≥'+j.requireEQ+(j.requireMonths?' 经验'+Math.ceil(j.requireMonths/12)+'年':'')+'</div></div><div class="list-action">'+action+'</div></div>';
-    });
-  }
+  let html='<div class="list-item"><div class="list-info"><div class="name">'+job.name+'</div><div class="desc">月薪：'+fmt(job.salary/12)+' | 在岗：'+G.monthsAtJob+'个月</div></div><span class="tag tag-green">当前</span></div>';
+  document.getElementById('currentJob').innerHTML=html;
+  let jobHtml='';
+  JOBS.forEach((j,i)=>{
+    const isCurrent=i===G.jobIndex;
+    const isNext=i===G.jobIndex+1;
+    const canPromote=isNext&&G.IQ>=j.requireIQ&&G.EQ>=j.requireEQ&&G.monthsAtJob>=j.requireMonths;
+    const locked=isNext&&!canPromote;
+    let action='';
+    if(isCurrent)action='<span class="tag tag-blue">在职</span>';
+    else if(canPromote)action='<button class="btn btn-primary btn-sm" onclick="tryPromote('+i+')">晋升</button>';
+    else if(i<G.jobIndex)action='<span class="text-sm text-muted">已过</span>';
+    else if(locked){
+      const reasons=[];
+      if(G.IQ<j.requireIQ)reasons.push('IQ≥'+j.requireIQ);
+      if(G.EQ<j.requireEQ)reasons.push('EQ≥'+j.requireEQ);
+      if(G.monthsAtJob<j.requireMonths)reasons.push('经验'+Math.ceil(j.requireMonths/12)+'年');
+      action='<span class="text-sm text-muted">'+reasons.join(' ')+'</span>';
+    }
+    jobHtml+='<div class="list-item"><div class="list-info"><div class="name">'+(isCurrent?'▶ ':'')+j.name+' <span class="text-sm text-muted">月薪'+fmtShort(j.salary/12)+'</span></div><div class="desc">要求：IQ≥'+j.requireIQ+' EQ≥'+j.requireEQ+(j.requireMonths?' 经验'+Math.ceil(j.requireMonths/12)+'年':'')+'</div></div><div class="list-action">'+action+'</div></div>';
+  });
   document.getElementById('jobList').innerHTML=jobHtml;
   refreshFamily();
 }
 function tryPromote(jobIndex){
-  var j=JOBS[jobIndex];
+  const j=JOBS[jobIndex];
   if(G.IQ<j.requireIQ||G.EQ<j.requireEQ||G.monthsAtJob<j.requireMonths){showToast('条件不足！');return;}
-  var iqR=G.IQ/j.requireIQ,eqR=G.EQ/j.requireEQ;
-  // v4.0.0: Attribute threshold modifiers
-  var modChance=1.0;
-  if(G.IQ<70)modChance*=0.8; // IQ<70: 20% less likely to pass
-  if(G.mood<50)modChance*=0.85; // Mood<50: 15% less likely
-  var chance=Math.min(0.95,(iqR+eqR)/2*0.85*modChance);
+  const iqR=G.IQ/j.requireIQ;const eqR=G.EQ/j.requireEQ;
+  const chance=Math.min(0.95,(iqR+eqR)/2*0.85);
   if(Math.random()<chance){
     G.jobIndex=jobIndex;G.monthsAtJob=0;G.mood=clamp(G.mood+10,0,200);
     if(!G.lifeEvents)G.lifeEvents=[];
@@ -2575,10 +2351,8 @@ function tryPromote(jobIndex){
     saveGame();refreshAll();refreshWork();
     showPromotionAnimation(j);
   }else{
-    // v4.0.0: Failed promotion also reduces mood + small stat penalty
     G.mood=clamp(G.mood-15,0,200);
-    G.EQ=clamp(G.EQ-1,0,200);
-    showToast('😢 晋升失败，心情下降，EQ-1...');
+    showToast('😢 晋升失败，心情下降...');
     saveGame();refreshAll();refreshWork();
   }
 }
@@ -2638,17 +2412,23 @@ function refreshStock(){
         newsTag=relatedNews.type==='good'?'<span class="tag tag-green" style="margin-left:6px;font-size:10px;">利好</span>':'<span class="tag tag-red" style="margin-left:6px;font-size:10px;">利空</span>';
       }
     }
-    html+='<div class="list-item" style="flex-wrap:wrap;overflow:hidden;"><div class="list-info" style="width:100%;min-width:0;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;"><span class="name" style="font-size:15px;font-weight:600;">'+s.name+'</span>'+newsTag+'</div><div style="display:flex;align-items:baseline;gap:8px;"><span class="stock-price '+cls+'">¥'+price.toFixed(2)+'</span><span class="stock-change '+cls+'" style="font-size:13px;font-weight:600;">'+(change>0?'+':'')+change+'%</span></div><div style="font-size:12px;color:var(--text-light);margin-top:4px;">持有 '+hold+' 股</div></div><div class="list-action" style="width:100%;display:flex;gap:8px;margin-top:8px;padding:0 2px;box-sizing:border-box;"><button class="btn btn-danger btn-sm" style="flex:1;min-width:0;font-size:12px;" onclick="stockSell(\''+s.code+'\')" '+(hold<=0?'disabled':'')+'>'+String.fromCharCode(21334)+String.fromCharCode(20986)+'</button><button class="btn btn-success btn-sm" style="flex:1;min-width:0;font-size:12px;" onclick="stockBuy(\''+s.code+'\')" '+(maxBuy<=0?'disabled':'')+'>'+String.fromCharCode(20080)+String.fromCharCode(20837)+'</button></div></div>';
+    const riskColor=s.expectedReturn>=20?'#e74c3c':s.expectedReturn>=12?'#e67e22':'#27ae60';
+    html+='<div class="list-item" style="flex-wrap:wrap;"><div class="list-info" style="width:100%;"><div class="flex-between"><span class="name">'+s.name+newsTag+'</span><span class="stock-price '+cls+'">¥'+price.toFixed(2)+'</span></div><div class="flex-between mt-8"><span class="stock-hold">涨跌：<span class="'+cls+'">'+(change>0?'+':'')+change+'%</span></span><span class="stock-hold">持有：'+hold+'股</span></div><div class="mt-8" style="font-size:11px;color:#666;">预期年化：<b style="color:'+riskColor+';">'+s.expectedReturn+'%</b> | 风险：<b>'+s.risk+'</b>('+s.riskDesc+') | 波动率：'+(s.volatility*100).toFixed(0)+'%</div></div><div class="list-action" style="width:100%;display:flex;gap:8px;margin-top:8px;"><button class="btn btn-danger btn-sm" style="flex:1;" onclick="stockSell(\''+s.code+'\')" '+(hold<=0?'disabled':'')+'>卖出</button><button class="btn btn-success btn-sm" style="flex:1;" onclick="stockBuy(\''+s.code+'\')" '+(maxBuy<=0?'disabled':'')+'>买入</button></div></div>';
   });
   document.getElementById('stockList').innerHTML=html;
-  let holdHtml='';let totalVal=0;
+  let holdHtml='';let totalVal=0;let totalCost=0;
   for(const code in G.stockHoldings){
     const shares=G.stockHoldings[code];if(shares<=0)continue;
-    const s=STOCKS.find(x=>x.code===code);const val=shares*G.stockPrices[code];totalVal+=val;
-    holdHtml+='<div class="list-item"><div class="list-info"><div class="name">'+s.name+'</div><div class="desc">'+'持有 '+shares+' 股'+'</div></div><span style="font-weight:600;color:var(--warning);">'+fmt(val)+'</span></div>';
+    const s=STOCKS.find(x=>x.code===code);const price=G.stockPrices[code];const val=shares*price;totalVal+=val;
+    const basis=G.stockCostBasis&&G.stockCostBasis[code]?G.stockCostBasis[code]:s.basePrice;
+    const cost=basis*shares;totalCost+=cost;
+    const pl=val-cost;const plPct=cost>0?((price-basis)/basis*100):0;
+    const plColor=pl>=0?'#27ae60':'#e74c3c';
+    const plSign=pl>=0?'+':'';
+    holdHtml+='<div class="list-item"><div class="list-info"><div class="name">'+s.name+'</div><div class="desc">'+shares+'股 × ¥'+price.toFixed(2)+' | 成本¥'+basis.toFixed(2)+'</div><div class="desc" style="color:'+plColor+';font-weight:600;">盈亏：'+plSign+fmt(pl)+'（'+plSign+plPct.toFixed(1)+'%）</div></div><span style="font-weight:600;color:var(--warning);">'+fmt(val)+'</span></div>';
   }
   if(!holdHtml)holdHtml='<div class="text-center text-sm text-muted" style="padding:16px 0;">暂无持仓</div>';
-  else holdHtml+='<div class="divider"></div><div class="flex-between"><span class="text-sm">持仓总市值</span><span style="font-weight:700;color:var(--warning);">'+fmt(totalVal)+'</span></div>';
+  else{const totalPl=totalVal-totalCost;const totalPlSign=totalPl>=0?'+':'';holdHtml+='<div class="divider"></div><div class="flex-between"><span class="text-sm">持仓总市值</span><span style="font-weight:700;color:var(--warning);">'+fmt(totalVal)+'</span></div>';holdHtml+='<div class="flex-between" style="color:'+(totalPl>=0?'#27ae60':'#e74c3c')+';"><span class="text-sm">总盈亏</span><span style="font-weight:700;">'+totalPlSign+fmt(totalPl)+'（'+totalPlSign+(totalCost>0?(totalPl/totalCost*100).toFixed(1):'0')+'%）</span></div>';}
   document.getElementById('myStocks').innerHTML=holdHtml;
 }
 // ========== Stock Trade Modal ==========
@@ -2723,7 +2503,13 @@ function confirmTrade(){
     if(!G.lifeEvents)G.lifeEvents=[];
     G.lifeEvents.push({month:G.totalMonths,icon:'📈',title:'买入'+s.name,detail:'花了'+fmt(cost)+'买入'+s.name+' '+shares+'股',type:'invest'});
     G.monthlyTasks['invest_stock']=true;
+    // Track cost basis for P/L
+    if(!G.stockCostBasis)G.stockCostBasis={};
+    const oldShares=G.stockHoldings[code]-shares;
+    const oldCost=(G.stockCostBasis[code]||0)*oldShares;
+    G.stockCostBasis[code]=oldShares>0?((oldCost+cost)/G.stockHoldings[code]):price;
     saveGame();refreshStock();refreshLife();
+    showToast('📈 买入成功！'+s.name+' ×'+shares+'股','success');
     showFloatText('📈 买入'+shares+'股 '+s.name,true);
   }else{
     const revenue=shares*price;
@@ -2732,7 +2518,12 @@ function confirmTrade(){
     if(G.stockHoldings[code]<=0)delete G.stockHoldings[code];
     if(!G.lifeEvents)G.lifeEvents=[];
     G.lifeEvents.push({month:G.totalMonths,icon:'💰',title:'卖出'+s.name,detail:'卖出'+shares+'股，获得'+fmt(revenue),type:'invest'});
+    // Calculate P/L
+    const basis=G.stockCostBasis&&G.stockCostBasis[code]?G.stockCostBasis[code]:price;
+    const pl=revenue-shares*basis;
     saveGame();refreshStock();refreshLife();
+    const plStr=pl>=0?'+'+fmt(pl):'-'+fmt(Math.abs(pl));
+    showToast((pl>=0?'💰 盈利 ':'📉 亏损 ')+plStr+' ('+s.name+')',pl>=0?'success':'error');
     showFloatText('💰 卖出'+shares+'股 '+s.name,true);
   }
   closeTradeModal();
@@ -2750,7 +2541,9 @@ function refreshHouse(){
     if(owned){const tagCls=owned.loan?'tag-orange':'tag-green';action='<span class="tag '+tagCls+'">'+(owned.loan?'按揭中':'已拥有')+'</span>';}
     else if(locked)action='<span class="text-sm text-muted">🔒 资产'+fmtShort(h.unlockAsset)+'</span>';
     else action='<button class="btn btn-primary btn-sm" onclick="buyHouse(\''+h.id+'\')">购买</button>';
-    html+='<div class="list-item"><div class="list-info"><div class="name">'+h.name+' <span class="text-sm text-muted">'+h.area+'㎡</span></div><div class="desc">价格：'+fmt(h.price)+' | 月租：'+fmt(h.rent)+'/月</div></div><div class="list-action">'+action+'</div></div>';
+    const annualYield=((h.rent*12)/h.price*100).toFixed(1);
+    const paybackMonths=Math.round(h.price/h.rent);
+    html+='<div class="list-item"><div class="list-info"><div class="name">'+h.name+' <span class="text-sm text-muted">'+h.area+'㎡</span></div><div class="desc">价格：'+fmt(h.price)+' | 月租：'+fmt(h.rent)+'/月</div><div class="desc" style="font-size:11px;color:#666;">预期年化：<b style="color:#27ae60;">'+annualYield+'%</b> | 风险：<b style="color:#27ae60;">低(租金稳定)</b> | 回本：约'+paybackMonths+'月</div></div><div class="list-action">'+action+'</div></div>';
   });
   document.getElementById('houseList').innerHTML=html;
   let myHtml='';let totalRent=0;
@@ -2798,55 +2591,24 @@ function sellHouse(houseId){
 // ========== 商业投资 ==========
 function refreshBusiness(){
   let html='';
-  // Investment summary
-  if(G.businesses.length>0){
-    let totalInvest=0,totalIncome=0,totalLoss=0;
-    G.businesses.forEach(b=>{
-      const info=BUSINESSES.find(x=>x.id===b.id);if(!info)return;
-      totalInvest+=info.price;
-      totalIncome+=(b.totalIncome||0);
-      totalLoss+=(b.totalLoss||0);
-    });
-    const profit=totalIncome-totalLoss;
-    html+='<div style="background:linear-gradient(135deg,#f0f9ff,#e8f4fd);padding:12px 16px;border-radius:8px;margin-bottom:12px;">';
-    html+='<div style="font-size:12px;color:#666;">📊 投资总览</div>';
-    html+='<div style="display:flex;justify-content:space-between;margin-top:8px;">';
-    html+='<div><div style="font-size:11px;color:#999;">总投入</div><div style="font-weight:600;">'+fmt(totalInvest)+'</div></div>';
-    html+='<div><div style="font-size:11px;color:#999;">累计收入</div><div style="font-weight:600;color:#27ae60;">'+fmt(totalIncome)+'</div></div>';
-    html+='<div><div style="font-size:11px;color:#999;">累计亏损</div><div style="font-weight:600;color:#e74c3c;">'+fmt(totalLoss)+'</div></div>';
-    html+='<div><div style="font-size:11px;color:#999;">净利润</div><div style="font-weight:600;color:'+(profit>=0?'#27ae60':'#e74c3c')+';">'+fmt(profit)+'</div></div>';
-    html+='</div></div>';
-  }
   BUSINESSES.forEach(b=>{
     const owned=G.businesses.find(x=>x.id===b.id);
     const total=calcTotalAsset();
     const locked=b.unlockAsset>0&&total<b.unlockAsset&&!owned;
     let action='';
-    if(owned){
-      const profit=(owned.totalIncome||0)-(owned.totalLoss||0);
-      action='<span style="font-size:12px;color:'+(profit>=0?'#27ae60':'#e74c3c')+';">净利润 '+fmt(profit)+'</span>';
-    }
+    if(owned)action='<span class="tag tag-green">已拥有</span>';
     else if(locked)action='<span class="text-sm text-muted">🔒 资产'+fmtShort(b.unlockAsset)+'</span>';
     else action='<button class="btn btn-primary btn-sm" onclick="buyBusiness(\''+b.id+'\')">加盟 '+fmt(b.price)+'</button>';
-    const clickAction=owned?'openBusinessDetail(\''+b.id+'\')':'';
-    html+='<div class="list-item" style="'+(owned?'cursor:pointer;':'')+'" '+(clickAction?'onclick="'+clickAction+'"':'')+'>';
-    html+='<div class="list-info"><div class="name">'+b.icon+' '+b.name+'</div>';
-    html+='<div class="desc">投入：'+fmt(b.price)+' | 风险：'+Math.round(b.risk*100)+'% | 月收入：'+fmt(b.monthlyIncome[0])+'~'+fmt(b.monthlyIncome[1])+'</div>';
-    if(owned){
-      html+='<div class="desc" style="color:#999;font-size:11px;">持有'+(owned.monthsOwned||0)+'个月 | 上月：'+(owned.lastMonthIncome>=0?'+':'')+fmt(owned.lastMonthIncome||0)+'</div>';
-    }
-    html+='</div><div class="list-action">'+action+'</div></div>';
+    const avgIncome=(b.monthlyIncome[0]+b.monthlyIncome[1])/2;const roi=avgIncome*12/b.price*100;const payback=Math.round(b.price/avgIncome);
+    const riskLabels=['低','中','高','极高'];const riskVal=Math.min(3,Math.floor((b.risk||0.1)*10));const riskColors=['#27ae60','#f39c12','#e67e22','#e74c3c'];
+    html+='<div class="list-item"><div class="list-info"><div class="name">'+b.icon+' '+b.name+'</div><div class="desc">投入：'+fmt(b.price)+' | 月收入：'+fmt(b.monthlyIncome[0])+'~'+fmt(b.monthlyIncome[1])+'</div><div class="desc" style="font-size:11px;color:#666;">预期年化：<b style="color:#27ae60;">'+roi.toFixed(0)+'%</b> | 风险：<b style="color:'+riskColors[riskVal]+';">'+riskLabels[riskVal]+'</b> | 回本：约'+payback+'月</div></div><div class="list-action">'+action+'</div></div>';
   });
   document.getElementById('businessList').innerHTML=html;
   let myHtml='';
   G.businesses.forEach(b=>{
     const info=BUSINESSES.find(x=>x.id===b.id);if(!info)return;
-    const profit=(b.totalIncome||0)-(b.totalLoss||0);
-    myHtml+='<div class="list-item" onclick="openBusinessDetail(\''+b.id+'\')" style="cursor:pointer;">';
-    myHtml+='<div class="list-info"><div class="name">'+info.icon+' '+info.name+'</div>';
-    myHtml+='<div class="desc">投入：'+fmt(info.price)+' | 持有'+(b.monthsOwned||0)+'个月</div>';
-    myHtml+='<div class="desc" style="font-size:11px;">累计收入：'+fmt(b.totalIncome||0)+' | 累计亏损：'+fmt(b.totalLoss||0)+' | <span style="color:'+(profit>=0?'#27ae60':'#e74c3c')+';">净利润：'+fmt(profit)+'</span></div>';
-    myHtml+='</div><div class="list-action"><span style="font-size:12px;color:#3498db;">详情 ›</span></div></div>';
+    const avgInc=(info.monthlyIncome[0]+info.monthlyIncome[1])/2;
+    myHtml+='<div class="list-item"><div class="list-info"><div class="name">'+info.icon+' '+info.name+'</div><div class="desc">投入：'+fmt(info.price)+' | 月均收入：'+fmt(avgInc)+' | 年化约'+(avgInc*12/info.price*100).toFixed(0)+'%</div></div><div class="list-action"><button class="btn btn-danger btn-sm" onclick="sellBusiness(\''+b.id+'\')">转让</button></div></div>';
   });
   if(!myHtml)myHtml='<div class="text-center text-sm text-muted" style="padding:16px 0;">暂无商铺</div>';
   document.getElementById('myBusinesses').innerHTML=myHtml;
@@ -2855,7 +2617,8 @@ function buyBusiness(id){
   const b=BUSINESSES.find(x=>x.id===id);
   if(G.businesses.find(x=>x.id===id)){showToast('已拥有！');return;}
   if(G.cash<b.price){showToast('现金不足！');return;}
-  showModal({title:'加盟 '+b.name,content:'投入：'+fmt(b.price)+'\n预期月收入：'+fmt(b.monthlyIncome[0])+'~'+fmt(b.monthlyIncome[1])+'\n风险：'+(b.risk*100)+'%',success(res){if(res.confirm){G.cash-=b.price;G.businesses.push({id:b.id});if(!G.lifeEvents)G.lifeEvents=[];G.lifeEvents.push({month:G.totalMonths,icon:'🏪',title:'投资'+b.name,detail:'投入'+fmt(b.price)+'开设'+b.name,type:'invest'});G.monthlyTasks['invest_stock']=true;saveGame();refreshBusiness();refreshLife();showFloatText('🏪 开业大吉！',true);checkAchievements();}}});
+  const avgInc=(b.monthlyIncome[0]+b.monthlyIncome[1])/2;const roi=avgInc*12/b.price*100;
+  showModal({title:'加盟 '+b.name,content:'投入：'+fmt(b.price)+'\n预期月收入：'+fmt(b.monthlyIncome[0])+'~'+fmt(b.monthlyIncome[1])+'\n风险：'+(b.risk*100)+'%\n预期年化：'+roi.toFixed(0)+'%\n回本周期：约'+Math.round(b.price/avgInc)+'个月',success(res){if(res.confirm){G.cash-=b.price;G.businesses.push({id:b.id});if(!G.lifeEvents)G.lifeEvents=[];G.lifeEvents.push({month:G.totalMonths,icon:'🏪',title:'投资'+b.name,detail:'投入'+fmt(b.price)+'开设'+b.name,type:'invest'});G.monthlyTasks['invest_stock']=true;saveGame();refreshBusiness();refreshLife();showToast('🏪 开业大吉！'+b.name+'已开业','success');showFloatText('🏪 开业大吉！',true);checkAchievements();}}});
 }
 function sellBusiness(id){
   const idx=G.businesses.findIndex(x=>x.id===id);if(idx===-1)return;
@@ -2872,8 +2635,11 @@ function refreshTech(){
     if(active)action='<span class="tag tag-blue">投资中 ('+active.monthsRemaining+'月)</span>';
     else action='<button class="btn btn-primary btn-sm" onclick="investTech(\''+t.id+'\')">投资 '+fmt(t.minInvest)+'</button>';
     const maxMult=t.outcomes.reduce((m,o)=>Math.max(m,o.multiplier),0);
-    var riskColor=t.id==='ai'?'#e74c3c':t.id==='energy'?'#f39c12':'#27ae60';
-    html+='<div class="list-item"><div class="list-info"><div class="name">'+t.name+' <span style="font-size:10px;color:'+riskColor+';border:1px solid '+riskColor+';padding:1px 4px;border-radius:3px;">'+(t.type||'')+'</span></div><div class="desc">最低投入：'+fmt(t.minInvest)+' | 周期：'+t.returnMonths+'月 | 最高回报：'+maxMult+'x</div></div><div class="list-action">'+action+'</div></div>';
+    const minMult=t.outcomes.reduce((m,o)=>Math.min(m,o.multiplier),999);
+    const expMult=t.outcomes.reduce((sum,o)=>sum+o.multiplier*o.chance,0);
+    const labels={'ai':'高风险高回报','energy':'绿色能源-政策利好','biotech':'生物医药-周期长'};
+    const tags={'ai':'高风险,高回报','energy':'政策扶持,稳健','biotech':'科研型,周期长'};
+    html+='<div class="list-item"><div class="list-info"><div class="name">'+t.icon+' '+t.name+'</div><div class="desc">最低投入：'+fmt(t.minInvest)+' | 周期：'+t.returnMonths+'月 | 回报：'+minMult+'x~'+maxMult+'x</div><div class="desc" style="font-size:11px;color:#666;">预期年化：<b style="color:#3498db;">'+Math.round((Math.pow(expMult,12/t.returnMonths)-1)*100)+'%+</b> | 风险：<b style="color:#e74c3c;">高</b> | 标签：'+tags[t.id]+'</div></div><div class="list-action">'+action+'</div></div>';
   });
   document.getElementById('techList').innerHTML=html;
   let myHtml='';
@@ -2900,7 +2666,7 @@ function investTech(id){
       morale:80,techProgress:20,funding:50,market:50,
       events:[],eventLog:[],resolved:[]});
     if(!G.lifeEvents)G.lifeEvents=[];G.lifeEvents.push({month:G.totalMonths,icon:'🚀',title:'科技投资'+t.name,detail:'投入'+fmt(t.minInvest)+'开始'+t.name,type:'invest'});
-    G.monthlyTasks['invest_stock']=true;saveGame();refreshTech();refreshLife();showFloatText('🚀 投资成功！',true);
+    G.monthlyTasks['invest_stock']=true;saveGame();refreshTech();refreshLife();showToast('🚀 投资成功！'+t.name+'项目启动','success');showFloatText('🚀 投资成功！',true);
   }}});
 }
 
@@ -3065,48 +2831,10 @@ function checkAchievements(){
   }
 }
 function refreshAchievements(){
-  var total=calcTotalAsset(),stockVal=calcStockValue();
-  var html='';
-  // v4.0.0: Achievement progress hints
-  var achChecks={
-    'first100k':total,'first1m':total,'millionaire':total,'billionaire':total,
-    'houseowner':G.houses.some(function(h){return h.own;}),
-    'stockking':stockVal,'bizowner':G.businesses.length>0,
-    'promotion4':G.jobIndex>=4,'director':G.jobIndex>=5,
-    'twokids':G.children,'married':!!G.spouse,
-    'highiq':G.IQ,'workeq':G.EQ,'techking':false,
-    'rebirth1':G.legacyUpgrades&&G.legacyUpgrades.length>0,
-    'forbes':false,'philanthropist':false,
-    'realty_king':G.houses.length,'decision_maker':(G.decisionCount||0),
-    'entrepreneur':G.selfEmployed
-  };
-  var achThresholds={
-    'first100k':100000,'first1m':1000000,'millionaire':10000000,'billionaire':100000000,
-    'stockking':1000000,'twokids':2,'highiq':150,'workeq':150,
-    'realty_king':3,'decision_maker':20,'promotion4':1,'director':1
-  };
-  ACHIEVEMENTS_DEF.forEach(function(a){
-    var unlocked=G.achievements.includes(a.id);
-    var progress='';
-    if(!unlocked&&achThresholds[a.id]!==undefined){
-      var cur=achChecks[a.id],thr=achThresholds[a.id];
-      if(cur!==false&&cur!==true&&typeof cur==='number'){
-        var pct=Math.min(100,Math.round(cur/thr*100));
-        if(pct>=20&&pct<100){
-          var remaining=Math.max(0,thr-cur);
-          progress='<div style="font-size:9px;color:#e67e22;margin-top:2px;">进度 '+pct+'%';
-          if(['first100k','first1m','millionaire','billionaire','stockking'].indexOf(a.id)>=0){
-            progress+=' · 差'+fmt(remaining);
-          }
-          progress+='</div>';
-        }
-      }
-    }
-    html+='<div class="ach-item '+(unlocked?'':'locked')+'" style="position:relative;">'+
-      '<div class="ach-icon">'+a.icon+'</div>'+
-      '<div class="ach-name">'+a.name+'</div>'+
-      '<div class="ach-desc">'+a.desc+'</div>'+
-      progress+'</div>';
+  let html='';
+  ACHIEVEMENTS_DEF.forEach(a=>{
+    const unlocked=G.achievements.includes(a.id);
+    html+='<div class="ach-item '+(unlocked?'':'locked')+'"><div class="ach-icon">'+a.icon+'</div><div class="ach-name">'+a.name+'</div><div class="ach-desc">'+a.desc+'</div></div>';
   });
   document.getElementById('achList').innerHTML=html;
 }
@@ -3119,14 +2847,8 @@ function refreshFiveDim(){
   let relScore=0;if(G.spouse)relScore+=40;relScore+=Math.min(60,G.children*20);
   // V2: Charity boost for relationship
   if(G.luxuryItems&&G.luxuryItems.includes('charity_fund'))relScore=Math.min(100,relScore+30);
-  let careerScore;
-  if(G.selfEmployed){
-    // 创业者：事业分=生意数量*20+资产对数分，上限100
-    careerScore=Math.min(100,G.businesses.length*20+Math.min(40,Math.round(Math.log10(Math.max(1,totalAsset))*5)));
-  }else{
-    careerScore=Math.round((G.jobIndex/(JOBS.length-1))*100);
-  }
-  const passive=calcPassiveIncome();const active=G.selfEmployed?passive*0.5:JOBS[G.jobIndex].salary/12;
+  const careerScore=Math.round((G.jobIndex/(JOBS.length-1))*100);
+  const passive=calcPassiveIncome();const active=JOBS[G.jobIndex].salary/12;
   const freedomScore=Math.min(100,Math.round((passive/Math.max(1,active+passive))*100));
   const total=Math.round((healthScore+wealthScore+relScore+careerScore+freedomScore)/5);
   const dims=[
@@ -3186,7 +2908,7 @@ function showRebirthPanel(){
   LEGACY_UPGRADES.forEach(u=>{
     const owned=G.legacyUpgrades.includes(u.id);
     const canBuy=!owned&&(G.legacyPoints||0)>=u.cost;
-    html+='<div class="upgrade-item"><div><span class="upgrade-name">'+u.name+'</span>';if(u.detail)html+='<span class="text-sm text-muted" style="margin-left:8px;font-style:italic;">'+u.detail+'</span>';html+='</div>';
+    html+='<div class="upgrade-item"><span class="upgrade-name">'+u.name+'</span>';
     if(owned)html+='<span class="tag tag-green">已拥有</span>';
     else html+='<button class="btn btn-sm '+(canBuy?'btn-warning':'btn-outline')+'" '+(canBuy?'':'disabled')+' onclick="buyLegacy(\''+u.id+'\')">'+u.cost+' LP</button>';
     html+='</div>';
@@ -3206,15 +2928,14 @@ function doRebirth(){
   showModal({title:'确定重生？',content:'当前人生将结束，已购买的升级将在下一轮生效。\n\n当前LP：'+(G.legacyPoints||0),success(res){
     if(res.confirm){
       const total=calcTotalAsset();
-      const careerLP=G.selfEmployed?G.businesses.length*15:JOBS[G.jobIndex].level*10;
-      const earnedLP=Math.floor(total/100000)+G.achievements.length*5+careerLP;
+      const earnedLP=Math.floor(total/100000)+G.achievements.length*5+JOBS[G.jobIndex].level*10;
       G.legacyPoints=(G.legacyPoints||0)+earnedLP;
       saveLegacy();
       if(!G.lifeEvents)G.lifeEvents=[];G.lifeEvents.push({month:G.totalMonths,icon:'♻️',title:'人生重生',detail:'结束当前人生，获得'+earnedLP+'轮回点',type:'career'});
       clearGame();G=defaultState();initStockPrices();saveGame();
       refreshAll();switchTab('life');
       closeRebirthPanel();
-      showToast('♻️ 重生成功！获得 '+earnedLP+' LP，继承上一轮加成');
+      showToast('♻️ 重生成功！获得 '+earnedLP+' LP');
       checkAchievements();
     }
   }});
@@ -3238,20 +2959,14 @@ function generateSharePoster(){
   ctx.strokeStyle='rgba(241,196,15,0.5)';ctx.lineWidth=2;
   ctx.beginPath();ctx.moveTo(100,280);ctx.lineTo(650,280);ctx.stroke();
   const age=getAge();const job=JOBS[G.jobIndex];const total=calcTotalAsset();
-  const careerLabel=G.selfEmployed?'🚀 创业者':job.name;
   ctx.fillStyle='#fff';ctx.font='32px sans-serif';
-  const stats=['🎂 年龄：'+age+'岁','💼 职业：'+careerLabel,'📅 时长：'+(age-22)+'年'+getMonth()+'个月','💰 总资产：'+fmt(total),'📈 股票市值：'+fmt(calcStockValue()),'🏠 房产数量：'+G.houses.length+'套','📖 人生抉择：'+(G.decisionCount||0)+'次'];
+  const stats=['🎂 年龄：'+age+'岁','💼 职业：'+job.name,'📅 时长：'+(age-22)+'年'+getMonth()+'个月','💰 总资产：'+fmt(total),'📈 股票市值：'+fmt(calcStockValue()),'🏠 房产数量：'+G.houses.length+'套','📖 人生抉择：'+(G.decisionCount||0)+'次'];
   stats.forEach((t,i)=>{ctx.fillText(t,375,340+i*50);});
   const healthScore=Math.round((G.health+G.mood)/2);
   const wealthScore=Math.min(100,Math.round(Math.log10(Math.max(1,total))*10));
   let relScore=0;if(G.spouse)relScore+=40;relScore+=Math.min(60,G.children*20);
   if(G.luxuryItems&&G.luxuryItems.includes('charity_fund'))relScore=Math.min(100,relScore+30);
-  let careerScore;
-  if(G.selfEmployed){
-    careerScore=Math.min(100,G.businesses.length*20+Math.min(40,Math.round(Math.log10(Math.max(1,total))*5)));
-  }else{
-    careerScore=Math.round((G.jobIndex/(JOBS.length-1))*100);
-  }
+  const careerScore=Math.round((G.jobIndex/(JOBS.length-1))*100);
   const totalScore=Math.round((healthScore+wealthScore+relScore+careerScore)/4);
   ctx.fillStyle='#f1c40f';ctx.font='bold 36px sans-serif';
   ctx.fillText('综合评分：'+totalScore+'分',375,700);
@@ -3276,68 +2991,32 @@ function showGuide(msg,icon){
   document.getElementById('guideText').textContent=msg;
   document.getElementById('guideOverlay').classList.add('show');
 }
-function closeGuide(){
-  var g=document.getElementById('guideOverlay');
-  g.classList.remove('show');
-  g.style.display='none';
-  // Fix: clear unread messages that block month advance
-  if(G.phone){
-    if(G.phone.threads){
-      G.phone.threads.forEach(t=>{
-        if(t.rounds&&t.rounds[t.currentRound]){
-          t.rounds[t.currentRound]._playerChoice=true;
-        }
-      });
-    }
-    if(G.phone.chatHistory){
-      Object.keys(G.phone.chatHistory).forEach(nid=>{
-        const h=G.phone.chatHistory[nid];
-        if(h&&h.length>0){
-          h.forEach(m=>{if(m)npc={};}); // break npc ref to clear unread
-        }
-      });
-      G.phone.chatHistory={};
-    }
-  }
-  // Clear pending decision
-  G._pendingDecision=false;
-  window._currentDecision=null;
-  // Mark guide as done
-  G.guideStep=1;
-  saveGame();
-}
+function closeGuide(){document.getElementById('guideOverlay').classList.remove('show');}
 function advanceGuide(){
-  // Auto-show guide on first 3 months if not yet seen
-  if(G.guideStep===0){
-    G.guideStep=1;
-    openGuide();
-  }
+  if(G.guideStep>=3)return;
+  const msgs=[
+    ['💡','先去"工作"标签找份工作吧！点击晋升按钮试试'],
+    ['📈','攒点钱，去"投资"标签试试买一手股票！'],
+    ['🏠','多赚钱，去"投资→房产"买套小房子！']
+  ];
+  showGuide(msgs[G.guideStep][1],msgs[G.guideStep][0]);
+  G.guideStep++;
 }
 
 // ========== AI浮窗 ==========
-function handleAIClick(){
-  // v4.1.2: Open in-game AI chat instead of external URL
-  if(typeof showAIChat==='function'){
-    showAIChat();
-  } else {
-    showToast('AI聊天功能开发中...');
-  }
-}
+function handleAIClick(){window.open('https://your-recruitment-ai.com','_blank');}
 function closeAIFloat(){document.getElementById('aiFloatBtn').style.display='none';}
 
 // ========== 游戏结束 ==========
 function showGameOver(){
   const total=calcTotalAsset();const job=JOBS[G.jobIndex];
-  const careerLabel=G.selfEmployed?'🚀 创业者':job.name;
   let emoji='💀';
   if(total>10000000)emoji='🏆';else if(total>1000000)emoji='🎉';else if(total>100000)emoji='😊';else if(G.gameOverReason.includes('圆满'))emoji='🌅';
-  const careerLP=G.selfEmployed?G.businesses.length*15:JOBS[G.jobIndex].level*10;
-  const earnedLP=Math.floor(total/100000)+G.achievements.length*5+careerLP;
-  const content=emoji+'\n'+G.gameOverReason+'\n\n活到 '+getAge()+' 岁\n最终职业：'+careerLabel+'\n最终总资产：'+fmt(total)+'\n人生抉择：'+(G.decisionCount||0)+'次\n成就：'+G.achievements.length+'个\n\n获得轮回点：+'+earnedLP+' LP\n\n想找到最适合你的工作？让AI帮你匹配 👉\nhttps://your-recruitment-ai.com';
+  const earnedLP=Math.floor(total/100000)+G.achievements.length*5+JOBS[G.jobIndex].level*10;
+  const content=emoji+'\n'+G.gameOverReason+'\n\n活到 '+getAge()+' 岁\n最终职业：'+job.name+'\n最终总资产：'+fmt(total)+'\n人生抉择：'+(G.decisionCount||0)+'次\n成就：'+G.achievements.length+'个\n\n获得轮回点：+'+earnedLP+' LP\n\n想找到最适合你的工作？让AI帮你匹配 👉\nhttps://your-recruitment-ai.com';
   showModal({title:'🎊 人生结束',content,showCancel:false,confirmText:'重新开始/重生',success(){
     const total2=calcTotalAsset();
-    const careerLP2=G.selfEmployed?G.businesses.length*15:JOBS[G.jobIndex].level*10;
-    const lp=Math.floor(total2/100000)+G.achievements.length*5+careerLP2;
+    const lp=Math.floor(total2/100000)+G.achievements.length*5+JOBS[G.jobIndex].level*10;
     G.legacyPoints=(G.legacyPoints||0)+lp;
     saveLegacy();
     showModal({title:'♻️ 选择',content:'获得 '+lp+' LP\n当前总LP：'+G.legacyPoints+'\n\n是直接重生（保留加成），还是重开人生？',confirmText:'♻️ 重生',cancelText:'🔄 重开',success(res){
@@ -3354,7 +3033,8 @@ function confirmRestart(){
 
 // ===== Phone System Functions =====
 function initPhoneState(){
-  if(!G.phone)G.phone={threads:[],moments:[],notifications:[],flags:{},lastTriggerMonth:0,nextId:1,activeChats:[],lastNpcMessageMonth:0};
+  if(!G.phone)G.phone={threads:[],moments:[],notifications:[],flags:{},lastTriggerMonth:0,nextId:1,activeChats:[]};
+  if(!G.notes)G.notes={};
 }
 function initPetState(){
   if(!G.pets)G.pets=[];
@@ -3623,21 +3303,6 @@ const MEETABLE_NPCS = {
     responses:['有什么需要帮忙的说一声','你妈让我给你带点菜','这小区物业最近又涨价了'],
     followups:['我认识一个不错的相亲对象','你要不要参加小区的活动？','听说隔壁栋要搬来一个新邻居']
   }
-};
-
-// ===== 关系类型定义 =====
-const RELATION_TYPES={
-  stranger:{label:'陌生人',color:'#999',icon:'👤'},
-  acquaintance:{label:'认识',color:'#3498db',icon:'👋'},
-  friend:{label:'朋友',color:'#27ae60',icon:'🤝'},
-  close_friend:{label:'好友',color:'#e74c3c',icon:'❤️'},
-  crush:{label:'暗恋',color:'#e91e63',icon:'💓'},
-  dating:{label:'恋爱中',color:'#9c27b0',icon:'💕'},
-  engaged:{label:'已订婚',color:'#ff9800',icon:'💍'},
-  married:{label:'已结婚',color:'#f44336',icon:'💒'},
-  affair:{label:'情妇',color:'#c62828',icon:'🔥'},
-  ex:{label:'前任',color:'#999',icon:'💔'},
-  family:{label:'家人',color:'#ff5722',icon:'👨‍👩‍👧‍👦'}
 };
 
 // ===== 遇见场景定义 =====
@@ -3958,62 +3623,30 @@ function updateFriendLevel(contact){
 // ===== 注入动态联系人到NPC系统 =====
 function injectDynamicContacts(){
   initSocialContacts();
-  // 家人特殊处理：确保初始关系是family类型
-  ['dad','mom'].forEach(function(fId){
-    if(!G.relationships)G.relationships={};
-    if(!G.relationships[fId]){
-      G.relationships[fId]={type:'family',intimacy:80,trust:90,affection:70,metMonth:0,lastInteraction:0,chatCount:0,giftCount:0,dateCount:0,flags:{}};
-    }else{
-      G.relationships[fId].type='family';
-      G.relationships[fId].intimacy=Math.max(G.relationships[fId].intimacy,70);
-      G.relationships[fId].trust=Math.max(G.relationships[fId].trust,80);
-      G.relationships[fId].affection=Math.max(G.relationships[fId].affection,60);
-    }
-  });
   G.socialContacts.forEach(function(c){
     if(!NPC_PERSONALITIES[c.id]){
-      // Get dynamic relationship
-      const rel=getRelationship(c.id);
-      const relDef=RELATION_TYPES[rel.type]||RELATION_TYPES.stranger;
+      var safeTraits = Array.isArray(c.traits) ? c.traits : ['友善','健谈'];
+      var safeResponses = Array.isArray(c.responses) ? c.responses : ['最近还不错','谢谢有空聊','改天一起聚聚'];
+      var safeFollowups = Array.isArray(c.followups) ? c.followups : ['下次再约','保持联系'];
       NPC_PERSONALITIES[c.id] = {
         name: c.name,
-        avatar: c.avatar,
-        traits: c.traits,
+        avatar: c.avatar || '🤝',
+        traits: safeTraits,
         greetings: [{text:'嘿，最近怎么样？',tag:'日常'},{text:'有空聊聊？',tag:'叙旧'},{text:'最近忙什么？',tag:'近况'}],
         responses: {
-          '日常': c.responses.slice(),
-          '叙旧': c.followups.slice(),
-          '近况': c.followups.slice()
+          '日常': safeResponses.slice(),
+          '叙旧': safeFollowups.slice(),
+          '近况': safeFollowups.slice()
         },
-        followups: c.followups
+        followups: safeFollowups
       };
       NPC_STYLE_INSTRUCTIONS[c.id] = 
-        '你是玩家的'+relDef.label+'，'+c.name+'。'+
-        '你们在第'+c.metMonth+'个月'+c.metWhere+'。'+
-        '你的性格是'+c.traits.join('、')+'。'+
-        '关系类型：'+relDef.label+'。'+
-        '亲密值：'+rel.intimacy+'/100，信任值：'+rel.trust+'/100，好感度：'+rel.affection+'/100。'+
-        '已聊天'+(rel.chatCount||0)+'次，约会'+(rel.dateCount||0)+'次。'+
-        '根据关系调整语气：陌生人要礼貌，朋友可以随意，恋人要亲密暧昧。'+
+        '你是玩家的'+(c.relation||'朋友')+'，'+c.name+'。'+
+        '你们在第'+(c.metMonth||G.totalMonths||1)+'个月'+(c.metWhere||'认识的')+'。'+
+        '你的性格是'+safeTraits.join('、')+'。'+
+        '关系等级：'+(['陌生人','认识','熟悉','好友'][c.friendLevel]||'认识')+'。'+
         '像真人一样自然回复，不超过3-4句话。';
-      NPC_RELATIONS[c.id] = relDef.label;
-    }else{
-      // Update existing personality with current relationship state
-      const rel=getRelationship(c.id);
-      const relDef=RELATION_TYPES[rel.type]||RELATION_TYPES.stranger;
-      NPC_STYLE_INSTRUCTIONS[c.id] = 
-        '你是玩家的'+relDef.label+'，'+c.name+'。'+
-        '你们在第'+c.metMonth+'个月'+c.metWhere+'。'+
-        '你的性格是'+c.traits.join('、')+'。'+
-        '关系类型：'+relDef.label+'。'+
-        '亲密值：'+rel.intimacy+'/100，信任值：'+rel.trust+'/100，好感度：'+rel.affection+'/100。'+
-        '已聊天'+(rel.chatCount||0)+'次，约会'+(rel.dateCount||0)+'次。'+
-        (rel.type==='family'?'你是家人，永远无条件支持和关爱，唠叨但出于爱。':
-         rel.intimacy>=70?'你们关系很亲密，说话可以很随意，有暧昧和亲密的氛围。':
-         rel.intimacy>=40?'你们是朋友，说话自然随意，可以开玩笑。':
-         '你们还不太熟，说话礼貌但有距离。')+
-        '像真人一样自然回复，不超过3-4句话。';
-      NPC_RELATIONS[c.id] = relDef.label;
+      NPC_RELATIONS[c.id] = c.relation || '朋友';
     }
   });
 }
@@ -4023,26 +3656,16 @@ function injectDynamicContacts(){
 
 // ===== 好友分组系统 =====
 function initFriendGroups(){
-  if(!G.friendGroups) G.friendGroups=[];
-  // 确保4个默认分组始终存在（兼容旧存档）
-  const defaults=[
-    {id:'family',name:'亲人',color:'#e91e63',icon:'👨‍👩‍👧',isDefault:true},
-    {id:'close_friends',name:'亲密好友',color:'#e74c3c',icon:'❤️',isDefault:true},
-    {id:'friends',name:'普通朋友',color:'#27ae60',icon:'👥',isDefault:true},
-    {id:'business',name:'商业伙伴',color:'#3498db',icon:'💼',isDefault:true},
-    {id:'acquaintance',name:'点头之交',color:'#95a5a6',icon:'👋',isDefault:true}
-  ];
-  defaults.forEach(d=>{
-    if(!G.friendGroups.find(g=>g.id===d.id)) G.friendGroups.push(d);
-  });
+  if(!G.friendGroups || G.friendGroups.length===0){
+    G.friendGroups=[
+      {id:'close_friends',name:'亲密好友',color:'#e74c3c',icon:'❤️',isDefault:true},
+      {id:'friends',name:'普通朋友',color:'#27ae60',icon:'👥',isDefault:true},
+      {id:'business',name:'商业伙伴',color:'#3498db',icon:'💼',isDefault:true},
+      {id:'acquaintance',name:'点头之交',color:'#95a5a6',icon:'👋',isDefault:true}
+    ];
+    saveGame();
+  }
   if(!G.friendGroupings) G.friendGroupings={};
-  // 自动将核心家人归入「亲人」分组
-  const familyNpcs=['mom','dad','spouse','child'];
-  familyNpcs.forEach(npcId=>{
-    if(NPC_PERSONALITIES[npcId] && !G.friendGroupings[npcId]){
-      G.friendGroupings[npcId]='family';
-    }
-  });
 }
 
 function getFriendGroup(groupId){
@@ -4055,7 +3678,6 @@ function getNpcGroupId(npcId){
 
 function setNpcGroup(npcId,groupId){
   if(!G.friendGroupings) G.friendGroupings={};
-  // Validate group exists
   if(!getFriendGroup(groupId)) groupId='acquaintance';
   G.friendGroupings[npcId]=groupId;
   saveGame();
@@ -4063,36 +3685,31 @@ function setNpcGroup(npcId,groupId){
 
 function createFriendGroup(name,color,icon){
   if(!G.friendGroups) G.friendGroups=[];
-  gid='custom_'+Date.now();
-  // Check for duplicate names
-  if((G.friendGroups||[]).find(g=>g.name===name)){
-    showToast('分组名称已存在');
-    return null;
-  }
+  if(name.length>8){showToast('名称不能超过8个字');return null;}
+  if((G.friendGroups||[]).find(g=>g.name===name)){showToast('分组名称已存在');return null;}
+  var gid='custom_'+Date.now();
   G.friendGroups.push({id:gid,name:name,color:color||'#8e44ad',icon:icon||'🏷️',isDefault:false});
   saveGame();
   return gid;
 }
 
 function deleteFriendGroup(groupId){
-  const g=getFriendGroup(groupId);
+  var g=getFriendGroup(groupId);
   if(!g || g.isDefault){showToast('默认分组不能删除');return false;}
-  // Move all friends in this group to acquaintance
   if(G.friendGroupings){
-    Object.keys(G.friendGroupings).forEach(npcId=>{
+    Object.keys(G.friendGroupings).forEach(function(npcId){
       if(G.friendGroupings[npcId]===groupId) G.friendGroupings[npcId]='acquaintance';
     });
   }
-  G.friendGroups=(G.friendGroups||[]).filter(g=>g.id!==groupId);
+  G.friendGroups=(G.friendGroups||[]).filter(function(g){return g.id!==groupId;});
   saveGame();
   return true;
 }
 
 function showGroupSelector(npcId){
-  const p=NPC_PERSONALITIES[npcId]||{name:'未知',avatar:'👤'};
-  const currentGroup=getNpcGroupId(npcId);
-  
-  let overlay=document.getElementById('groupSelectOverlay');
+  var p=NPC_PERSONALITIES[npcId]||{name:'未知',avatar:'👤'};
+  var currentGroup=getNpcGroupId(npcId);
+  var overlay=document.getElementById('groupSelectOverlay');
   if(!overlay){
     overlay=document.createElement('div');
     overlay.id='groupSelectOverlay';
@@ -4100,11 +3717,9 @@ function showGroupSelector(npcId){
     overlay.addEventListener('click',function(e){if(e.target===overlay)hideGroupSelect();});
     document.body.appendChild(overlay);
   }
-  
-  let html='<div class="group-select-title">设置 '+p.avatar+' '+p.name+' 的分组</div>';
-  html+='<div>';
-  (G.friendGroups||[]).forEach(g=>{
-    const sel=g.id===currentGroup?'selected':'';
+  var html='<div class="group-select-title">设置 '+p.avatar+' '+p.name+' 的分组</div><div>';
+  (G.friendGroups||[]).forEach(function(g){
+    var sel=g.id===currentGroup?'selected':'';
     html+='<div class="group-select-item '+sel+'" onclick="doSetNpcGroup(\''+npcId+'\',\''+g.id+'\')">';
     html+='<span class="gs-icon">'+g.icon+'</span>';
     html+='<span class="gs-name" style="color:'+g.color+'">'+g.name+'</span>';
@@ -4113,11 +3728,11 @@ function showGroupSelector(npcId){
   });
   html+='</div>';
   overlay.innerHTML=html;
-  overlay.classList.add('show');
+  overlay.style.display='flex';
 }
 function hideGroupSelect(){
-  const overlay=document.getElementById('groupSelectOverlay');
-  if(overlay)overlay.classList.remove('show');
+  var overlay=document.getElementById('groupSelectOverlay');
+  if(overlay)overlay.style.display='none';
 }
 function doSetNpcGroup(npcId,groupId){
   setNpcGroup(npcId,groupId);
@@ -4127,7 +3742,7 @@ function doSetNpcGroup(npcId,groupId){
 }
 
 function showManageGroups(){
-  let overlay=document.getElementById('manageGroupsOverlay');
+  var overlay=document.getElementById('manageGroupsOverlay');
   if(!overlay){
     overlay=document.createElement('div');
     overlay.id='manageGroupsOverlay';
@@ -4136,17 +3751,16 @@ function showManageGroups(){
     document.body.appendChild(overlay);
   }
   renderManageGroupsModal(overlay);
-  overlay.classList.add('show');
+  overlay.style.display='flex';
 }
 function hideManageGroups(){
-  const overlay=document.getElementById('manageGroupsOverlay');
-  if(overlay)overlay.classList.remove('show');
+  var overlay=document.getElementById('manageGroupsOverlay');
+  if(overlay)overlay.style.display='none';
 }
 function renderManageGroupsModal(overlay){
-  let html='<div class="group-select-title">管理好友分组</div>';
-  html+='<div class="manage-groups-list">';
-  (G.friendGroups||[]).forEach(g=>{
-    const count=Object.values(G.friendGroupings||{}).filter(v=>v===g.id).length;
+  var html='<div class="group-select-title">管理好友分组</div><div class="manage-groups-list">';
+  (G.friendGroups||[]).forEach(function(g){
+    var count=Object.values(G.friendGroupings||{}).filter(function(v){return v===g.id;}).length;
     html+='<div class="manage-group-item">';
     html+='<span class="mg-icon">'+g.icon+'</span>';
     html+='<span class="mg-name" style="color:'+g.color+'">'+g.name+'</span>';
@@ -4162,33 +3776,31 @@ function renderManageGroupsModal(overlay){
   overlay.innerHTML=html;
 }
 function doCreateGroup(){
-  const input=document.getElementById('newGroupName');
+  var input=document.getElementById('newGroupName');
   if(!input)return;
-  const name=input.value.trim();
+  var name=input.value.trim();
   if(!name){showToast('请输入分组名称');return;}
-  if(name.length>8){showToast('名称不能超过8个字');return;}
-  const icons=['🌟','🎯','💎','🔥','🎪','🎨','🍀',''];
-  const icon=icons[Math.floor(Math.random()*icons.length)];
-  const gid=createFriendGroup(name,'#8e44ad',icon);
+  var icons=['🌟','🎯','💎','🔥','🎪','🎨','🍀','🎵'];
+  var icon=icons[Math.floor(Math.random()*icons.length)];
+  var gid=createFriendGroup(name,'#8e44ad',icon);
   if(gid){
     showToast('分组创建成功');
-    const overlay=document.getElementById('manageGroupsOverlay');
+    var overlay=document.getElementById('manageGroupsOverlay');
     if(overlay)renderManageGroupsModal(overlay);
   }
 }
 function doDeleteGroup(groupId){
-  if(confirm('确定要删除这个分组吗\n其中的好友将移至"点头之交"')){
+  if(confirm('确定删除此分组吗\n其中好友将移至"点头之交"')){
     if(deleteFriendGroup(groupId)){
       showToast('分组已删除');
-      const overlay=document.getElementById('manageGroupsOverlay');
+      var overlay=document.getElementById('manageGroupsOverlay');
       if(overlay)renderManageGroupsModal(overlay);
-      renderContacts();
     }
   }
 }
 
 function toggleFriendGroup(groupId){
-  const collapsedStates=JSON.parse(localStorage.getItem('friend_group_collapsed')||'{}');
+  var collapsedStates=JSON.parse(localStorage.getItem('friend_group_collapsed')||'{}');
   if(collapsedStates[groupId])delete collapsedStates[groupId];
   else collapsedStates[groupId]=true;
   localStorage.setItem('friend_group_collapsed',JSON.stringify(collapsedStates));
@@ -4196,56 +3808,52 @@ function toggleFriendGroup(groupId){
 }
 
 function renderContacts(){
-  initFriendGroups();
-  const el=document.getElementById('phone-contacts');if(!el)return;
+  var el=document.getElementById('phone-contacts');if(!el)return;
   if(!G.phone)G.phone={threads:[],moments:[],notifications:[],flags:{},lastTriggerMonth:0,nextId:1,activeChats:[]};
   if(!G.phone.activeChats)G.phone.activeChats=[];
+  if(!G.friendGroupings)G.friendGroupings={};
   initSocialContacts();
-  
-  // Build manage bar
-  let html='<div class="group-manage-bar"><span style="font-size:13px;font-weight:600;color:#333;">好友分组</span><button class="group-manage-btn" onclick="showManageGroups()">⚙️ 管理分组</button></div>';
-  
-  // Collect all contact NPCs: core NPCs + social contacts
-  const allNpcIds=[];
-  const coreNpcIds=[];
-  Object.keys(NPC_PERSONALITIES).forEach(npcId=>{
+  initFriendGroups();
+
+  // 管理栏
+  var html='<div class="group-manage-bar"><span style="font-size:13px;font-weight:600;color:#333;">好友分组</span><button class="group-manage-btn" onclick="showManageGroups()">⚙️ 管理分组</button></div>';
+
+  // 收集所有NPC
+  var allNpcIds=[];
+  Object.keys(NPC_PERSONALITIES).forEach(function(npcId){
     if(npcId==='spouse'&&!G.spouse)return;
     if(npcId==='exColleague'&&G.totalMonths<12)return;
     if(npcId==='mentor'&&G.totalMonths<18)return;
     if(npcId==='gymCoach'&&G.totalMonths<6)return;
-    if(npcId==='child'&&(!G.children||G.children<1))return;
-    coreNpcIds.push(npcId);
     allNpcIds.push(npcId);
   });
-  injectDynamicContacts();
   (G.socialContacts||[]).forEach(function(c){
-    if(NPC_PERSONALITIES[c.id] && !allNpcIds.includes(c.id)){
+    if(NPC_PERSONALITIES[c.id] && allNpcIds.indexOf(c.id)<0){
       allNpcIds.push(c.id);
     }
   });
-  
-  // Group NPC ids
-  const groupNpcMap={};
-  if(!G.friendGroupings)G.friendGroupings={};
-  const groupOrder=['family','close_friends','friends','business','acquaintance'];
-  // Add custom group ids
-  (G.friendGroups||[]).forEach(g=>{if(!groupOrder.includes(g.id))groupOrder.push(g.id);});
-  groupOrder.forEach(gid=>{groupNpcMap[gid]=[];});
-  
-  allNpcIds.forEach(npcId=>{
-    let gid=G.friendGroupings[npcId]||'acquaintance';
+
+  // 分组映射
+  var groupOrder=['close_friends','friends','business','acquaintance'];
+  (G.friendGroups||[]).forEach(function(g){if(groupOrder.indexOf(g.id)<0)groupOrder.push(g.id);});
+  var groupNpcMap={};
+  groupOrder.forEach(function(gid){groupNpcMap[gid]=[];});
+  allNpcIds.forEach(function(npcId){
+    var gid=G.friendGroupings[npcId]||'acquaintance';
     if(!groupNpcMap[gid])gid='acquaintance';
     groupNpcMap[gid].push(npcId);
   });
-  
-  // Render each group
-  const collapsedStates=JSON.parse(localStorage.getItem('friend_group_collapsed')||'{}');
-  groupOrder.forEach(gid=>{
-    const grp=getFriendGroup(gid);
+
+  // 折叠状态
+  var collapsedStates=JSON.parse(localStorage.getItem('friend_group_collapsed')||'{}');
+
+  // 渲染各分组
+  groupOrder.forEach(function(gid){
+    var grp=getFriendGroup(gid);
     if(!grp)return;
-    const npcIds=groupNpcMap[gid]||[];
-    const isCollapsed=collapsedStates[gid]?true:false;
-    const toggleIcon=isCollapsed?'▶':'▼';
+    var npcIds=groupNpcMap[gid]||[];
+    var isCollapsed=collapsedStates[gid]?true:false;
+    var toggleIcon=isCollapsed?'▶':'▼';
     html+='<div class="friend-group-header '+(isCollapsed?'collapsed':'')+'" onclick="toggleFriendGroup(\''+gid+'\')">';
     html+='<span class="friend-group-toggle">'+toggleIcon+'</span>';
     html+='<span>'+grp.icon+' '+grp.name+'</span>';
@@ -4255,35 +3863,27 @@ function renderContacts(){
     if(npcIds.length===0){
       html+='<div class="empty-group-hint">暂无好友</div>';
     }
-    npcIds.forEach(npcId=>{
-      const isCore=coreNpcIds.includes(npcId);
-      let p,rel,relDef;
-      if(isCore){
-        p=NPC_PERSONALITIES[npcId];
-        rel=getRelationship(npcId);
-        relDef=RELATION_TYPES[rel.type]||RELATION_TYPES.stranger;
-      }else{
-        var c=(G.socialContacts||[]).find(c=>c.id===npcId);
-        if(!c)return;
-        p=NPC_PERSONALITIES[npcId];
-        if(!p)return;
-        rel=getRelationship(npcId);
-        relDef=RELATION_TYPES[rel.type]||RELATION_TYPES.stranger;
-      }
-      const hasNew=G.phone.activeChats&&G.phone.activeChats.some(ch=>ch.npcId===npcId&&ch.status==='active');
-      const groupId=G.friendGroupings[npcId]||'acquaintance';
-      const curGrp=getFriendGroup(groupId);
-      
+    npcIds.forEach(function(npcId){
+      var p=NPC_PERSONALITIES[npcId];if(!p)return;
+      var friendLabels=['陌生人','认识','熟悉','好友'];
+      var friendColors=['#999','#3498db','#27ae60','#e74c3c'];
+      var fl=0;
+      var contact=(G.socialContacts||[]).find(function(c){return c.id===npcId;});
+      if(contact) fl=contact.friendLevel||0;
+      var hasNew=G.phone.activeChats&&G.phone.activeChats.some(function(ch){return ch.npcId===npcId&&ch.status==='active';});
+      var groupId=G.friendGroupings[npcId]||'acquaintance';
+      var curGrp=getFriendGroup(groupId);
+
       html+='<div class="contact-item" onclick="openProactiveChat(\''+npcId+'\')">';
-      html+='<div class="contact-avatar" style="background:'+relDef.color+';">'+p.avatar+'</div>';
-      html+='<div class="contact-info"><div class="contact-name">'+p.name+' <span style="font-size:11px;color:'+relDef.color+';">'+relDef.icon+' '+relDef.label+'</span></div>';
-      html+='<div class="contact-status">亲密度 '+rel.intimacy+' · 信任 '+rel.trust+' · 好感 '+(rel.affection||0)+' <span class="contact-group-badge" onclick="event.stopPropagation();showGroupSelector(\''+npcId+'\')" style="background:'+(curGrp?curGrp.color:'#95a5a6')+'22;color:'+(curGrp?curGrp.color:'#95a5a6')+';margin-left:4px;">'+(curGrp?curGrp.icon:'')+' '+(curGrp?curGrp.name:'点头之交')+'</span></div></div>';
+      html+='<div class="contact-avatar" style="background:'+friendColors[fl]+';">'+p.avatar+'</div>';
+      html+='<div class="contact-info"><div class="contact-name">'+p.name+' <span style="font-size:11px;color:'+friendColors[fl]+';">'+friendLabels[fl]+'</span></div>';
+      html+='<div class="contact-status">亲密度 '+(contact?contact.intimacy:'50')+' <span class="contact-group-badge" onclick="event.stopPropagation();showGroupSelector(\''+npcId+'\')" style="background:'+(curGrp?curGrp.color:'#95a5a6')+'22;color:'+(curGrp?curGrp.color:'#95a5a6')+';margin-left:4px;">'+(curGrp?curGrp.icon:'')+' '+(curGrp?curGrp.name:'点头之交')+'</span></div></div>';
       if(hasNew)html+='<div style="width:8px;height:8px;border-radius:50%;background:#27ae60;flex-shrink:0;"></div>';
       html+='<div class="contact-arrow">›</div></div>';
     });
     html+='</div>';
   });
-  
+
   el.innerHTML=html;
 }
 
@@ -4297,25 +3897,11 @@ function saveNote(npcId,val){
 }
 
 // ===== 打开主动聊天（AI驱动） =====
-async function openProactiveChat(npcId){
+function openProactiveChat(npcId){
   initChatHistory();
   injectDynamicContacts();
   const p=NPC_PERSONALITIES[npcId];if(!p)return;
   G._openProactiveNpc=npcId;
-  // Mark chat history as read
-  if(G.phone.chatHistory&&G.phone.chatHistory[npcId]){
-    const hist=G.phone.chatHistory[npcId];
-    if(hist.length>0)hist[hist.length-1]._playerRead=true;
-  }
-  // Mark any phone threads from this NPC as read (修复红点不消)
-  if(G.phone&&G.phone.threads){
-    G.phone.threads.forEach(t=>{
-      if(t.npcId===npcId && t.status==='unread'){
-        t.status='reading';
-        t.readMonth=G.totalMonths;
-      }
-    });
-  }
   // Set header
   document.getElementById('chatName').textContent=p.avatar+' '+p.name;
   const body=document.getElementById('chatBody');
@@ -4323,43 +3909,40 @@ async function openProactiveChat(npcId){
   // Load chat history if exists
   const history=G.phone.chatHistory[npcId]||[];
   if(history.length>0){
-    // Show both player and NPC messages for full context
-    const recent=history.slice(-15);
+    // Show last 10 NPC messages only (player's own messages hidden for clean chat feel)
+    const recent=history.slice(-10);
     recent.forEach(h=>{
-      if(h.player)addChatBubble('player',h.player);
       if(h.npc)addChatBubble('npc',h.npc);
     });
   }else{
     // Show welcome message
     body.innerHTML='<div style="text-align:center;padding:20px 0;color:#999;font-size:13px;"><div style="font-size:28px;margin-bottom:8px;">'+p.avatar+'</div>'+p.name+' · '+p.traits.join('/')+'</div>';
-    // v4.1.0: AI生成开场白（替代硬编码npcGreetings）
-    showTypingIndicator();
-    let aiGreeting;
-    try{
-      aiGreeting=await generateNPCReply(npcId,'__greeting__',[]);
-    }catch(e){
-      console.error('AI greeting failed:',e);
-      aiGreeting=getTemplateReply(npcId,'__greeting__');
-      showToast('网络恢复中...');
-    }
-    removeTypingIndicator();
-    if(aiGreeting&&aiGreeting!=='...'){
-      addChatBubble('npc',aiGreeting);
-    }else{
-      addChatBubble('npc','在吗？');
-    }
+    // NPC initiates conversation with natural greeting
+    const npcGreetings={
+      mom:['在吗？吃了吗？','儿子/闺女，忙不忙？','哎，想你了'],
+      dad:['嗯，在吗？','怎么了？','忙不忙'],
+      bestie:['在？','卧槽好久没聊了','出来喝一杯？'],
+      colleague:['在吗？','忙吗','跟你说个事'],
+      boss:['在吗','有空吗','来我办公室一下'],
+      classmate:['在吗老同学','好久不见','最近咋样？'],
+      banker:['朱先生您好','在吗？有好产品给您推荐','朱先生，最近市场不错'],
+      realtor:['朱哥！','在吗？有好房源','朱哥，最近看房吗？'],
+      neighbor:['小朱啊','在吗','跟你说个事'],
+      exColleague:['老朱！','在吗？好久不见','还记得我吗？'],
+      mentor:['在吗','有空聊聊','最近怎么样？'],
+      gymCoach:['兄弟来了','在吗','今天练不练？'],
+      scammer:['您好','请问我可以帮您什么？','您好，有紧急通知'],
+      spouse:['在吗？','你回来啦','亲爱的']
+    };
+    const greetArr=npcGreetings[npcId]||['在吗？'];
+    const greet=greetArr[Math.floor(Math.random()*greetArr.length)];
+    addChatBubble('npc',greet);
   }
   // Show input area
   showChatInputArea(true);
   setupChatInputListener();
   // Show overlay
   document.getElementById('chatOverlay').classList.add('show');
-  // Show relationship bar
-  updateChatRelBar(npcId);
-  // Show/hide date button (family members don't need date button)
-  const isFamily=['dad','mom','spouse'].indexOf(npcId)>=0;
-  const dateBtn=document.getElementById('chatDateBtn');
-  if(dateBtn)dateBtn.style.display=isFamily?'none':'block';
   // Focus input
   setTimeout(()=>{
     const input=document.getElementById('chatInputField');
@@ -4368,17 +3951,18 @@ async function openProactiveChat(npcId){
 }
 
 // ===== 开始对话（选择开场白后） =====
-async function startProactiveChatWith(npcId,greetingIdx){
+function startProactiveChatWith(npcId,greetingIdx){
   const p=NPC_PERSONALITIES[npcId];if(!p)return;
   const greeting=p.greetings[greetingIdx];
-  // v4.1.0: 移除硬编码respArr，AI生成回应
+  const respArr=p.responses[greeting.tag];
+  if(!respArr||respArr.length===0){showToast('对话出错了');return;}
   // Apply personality mood effect
   const moodMap={日常:3,求助:5,分享:8,温情:12,八卦:5,喝酒:8,倾诉:5,打听:3,吐槽:3,秘密:5,汇报:3,谈发展:5,提案:3,叙旧:5,聚会:8,回忆:5,理财:3,贷款:3,市场:5,行情:3,看房:5,投资:5,训练:3,接电话:-5,温情:10,谈心:5,倾诉:8};
   const mood=moodMap[greeting.tag]||3;
   G.mood=clamp(G.mood+mood,0,200);
   // Create active chat
   const chat={id:G.phone.nextId++,npcId:npcId,npcName:p.name,npcAvatar:p.avatar,status:'active',greetingTag:greeting.tag,
-    playerMsg:greeting.text,npcResponses:[],currentResponse:0,followups:p.followups.slice(),
+    playerMsg:greeting.text,npcResponses:respArr.slice(),currentResponse:0,followups:p.followups.slice(),
     effect:{mood:mood}};
   G.phone.activeChats.unshift(chat);
   G._openProactiveChat=chat.id;
@@ -4387,22 +3971,7 @@ async function startProactiveChatWith(npcId,greetingIdx){
   const body=document.getElementById('chatBody');
   body.innerHTML='';
   body.insertAdjacentHTML('beforeend','<div class="chat-bub player">'+greeting.text+'</div>');
-  // v4.1.0: AI生成NPC回应（替代硬编码respArr随机选择）
-  showTypingIndicator();
-  let aiReply;
-  try{
-    aiReply=await generateNPCReply(npcId,greeting.text,[]);
-  }catch(e){
-    console.error('AI start reply failed:',e);
-    aiReply=getTemplateReply(npcId,greeting.text);
-    showToast('网络恢复中...');
-  }
-  removeTypingIndicator();
-  if(aiReply&&aiReply!=='...'){
-    body.insertAdjacentHTML('beforeend','<div class="chat-bub npc">'+aiReply+'</div>');
-  }else{
-    body.insertAdjacentHTML('beforeend','<div class="chat-bub npc">嗯嗯</div>');
-  }
+  body.insertAdjacentHTML('beforeend','<div class="chat-bub npc">'+respArr[randInt(0,respArr.length-1)]+'</div>');
   body.scrollTop=body.scrollHeight;
   // Show follow-ups
   const opts=document.getElementById('chatOpts');
@@ -4416,33 +3985,66 @@ async function startProactiveChatWith(npcId,greetingIdx){
 }
 
 // ===== 继续对话 =====
-async function continueProactiveChat(npcId,followupIdx){
+function continueProactiveChat(npcId,followupIdx){
   const p=NPC_PERSONALITIES[npcId];if(!p)return;
   const chat=G.phone.activeChats.find(c=>c.npcId===npcId&&c.status==='active');
   if(!chat)return;
   const followup=chat.followups[followupIdx];
   if(!followup)return;
   chat.followups.splice(followupIdx,1);
-  // v4.1.0: AI生成回应（移除硬编码traitMap）
+  // NPC personality-based response
+  const trait=p.traits[randInt(0,p.traits.length-1)];
+  const traitMap={
+    '唠叨':['你听我说啊，这个事很重要','我说你啊，就是不听','年轻人就是不听老人言...'],
+    '关心':['你没事吧？','别太累了','身体要紧'],
+    '爱攀比':['你看人家XXX，多厉害','你看看你再看看人家','人家条件比你好多了'],
+    '节俭':['别乱花钱','省着点用','以后用钱的地方多着呢'],
+    '护犊子':['谁欺负你了？告诉我','我儿子/女儿最棒了','别怕，有妈/爸在'],
+    '八卦':['嘿嘿，你知道吗','这个事可有意思了','让我给你扒一扒'],
+    '直爽':['我就直说了','别磨叽','痛快点'],
+    '爱喝酒':['来喝一个','边喝边说','干了这杯再说'],
+    '损友':['就你？哈哈','你可拉倒吧','不是我说你...'],
+    '讲义气':['兄弟的事就是我的事','放心，有我呢','需要帮忙说一声'],
+    '谨慎':['这个...不太好说','你确定要听？','说了你别到处讲'],
+    '消息灵通':['这个我知道！','我听说是这样的','消息绝对靠谱'],
+    '爱吐槽':['你说这叫什么事啊','太过分了','我忍很久了'],
+    '职场生存':['小心点','别站错队','多做少说'],
+    '圆滑':['这个嘛...要看情况','你说得有道理','我考虑考虑'],
+    '惜字如金':['嗯','哦','好'],
+    '画饼':['机会是给有准备的人的','好好干，以后有的是机会','公司不会亏待你的'],
+    '施压':['这个季度指标还没完成呢','你要加油了','竞争很激烈啊'],
+    '偶尔真诚':['说实话，我看好你','加油，我相信你','别太有压力'],
+    '攀比':['你看人家混得多好','你再看看你','差距啊'],
+    '怀旧':['还记得那时候吗','真怀念啊','时间过得真快'],
+    '爱炫耀':['这个我熟','我跟你说啊','这你就不知道了吧'],
+    '专业':['从专业角度来说','建议你这样操作','风险控制很重要'],
+    '殷勤':['朱先生您放心','有什么需要随时联系','我帮您安排'],
+    '推销':['这款产品真的很适合您','现在买最划算','错过就没这个价了'],
+    '信息差':['这个信息一般人不知道','我告诉你个消息','内部消息'],
+    '热情':['来了来了！','欢迎欢迎','有什么需要的？'],
+    '夸大':['这个绝对好','百分百没问题','包你满意'],
+    '逼单':['今天不买明天就涨价了','就剩这一套了','犹豫就没了'],
+    '热心':['有什么事尽管说','别客气','邻里之间互相帮忙'],
+    '操心':['你这事我帮你操心','我帮你问问','别着急'],
+    '小区万事通':['这个我清楚','小区的事我都知道','问我就对了'],
+    '感慨':['人生啊...','不容易','慢慢来'],
+    '有深度':['你再想想','这个问题不简单','值得深思'],
+    '温和':['别着急','慢慢来','没事的'],
+    '亲密':['有你真好','我也想你','你是最棒的'],
+    '需要陪伴':['你能不能陪陪我','别老是忙','我想和你待会儿'],
+    '偶尔吵架':['你又怎么了','能不能讲点道理','我不想吵'],
+    '诈骗':['请配合我们的工作','这是最后机会','千万别告诉别人'],
+    '套路':['只要按照步骤操作','很简单','几分钟就好'],
+    '紧迫感':['时间紧迫','就现在','来不及了'],
+    '爱劝人健身':['你得练练了','光说不练假把式','来练一场就好了'],
+    '八卦体质':['嘿嘿，这个你听不听？','让我给你扒一扒','这个瓜可大了'],
+  };
+  const traitResponses=traitMap[trait]||['嗯嗯','是确实'];
+  const npcReply=traitResponses[randInt(0,traitResponses.length-1)];
+  // Append to chat overlay
   const body=document.getElementById('chatBody');
   body.insertAdjacentHTML('beforeend','<div class="chat-bub player">'+followup+'</div>');
-  // v4.1.0: AI生成NPC回应，使用聊天历史
-  const history=G.phone.chatHistory&&G.phone.chatHistory[npcId]?G.phone.chatHistory[npcId]:[];
-  showTypingIndicator();
-  let aiReply;
-  try{
-    aiReply=await generateNPCReply(npcId,followup,history);
-  }catch(e){
-    console.error('AI continue reply failed:',e);
-    aiReply=getTemplateReply(npcId,followup);
-    showToast('网络恢复中...');
-  }
-  removeTypingIndicator();
-  if(aiReply&&aiReply!=='...'){
-    body.insertAdjacentHTML('beforeend','<div class="chat-bub npc">'+aiReply+'</div>');
-  }else{
-    body.insertAdjacentHTML('beforeend','<div class="chat-bub npc">嗯嗯</div>');
-  }
+  body.insertAdjacentHTML('beforeend','<div class="chat-bub npc">'+npcReply+'</div>');
   body.scrollTop=body.scrollHeight;
   // Update options
   const opts=document.getElementById('chatOpts');
@@ -4542,7 +4144,6 @@ function checkStudyProgress(){
     if(course.healthBonus)G.health=clamp(G.health+course.healthBonus,0,200);
     if(course.moodBonus)G.mood=clamp(G.mood+course.moodBonus,0,200);
     G.events.push({text:'🎓 完成学习：'+course.name+'！IQ+'+(course.iqBonus||0)+' EQ+'+(course.eqBonus||0),type:'good'});
-    notifyAsMessage('system','🎓 完成学习：'+course.name+'！IQ+'+(course.iqBonus||0)+' EQ+'+(course.eqBonus||0));
     if(!G.lifeEvents)G.lifeEvents=[];G.lifeEvents.push({month:G.totalMonths,icon:'🎓',title:'完成'+course.name,detail:'IQ+'+(course.iqBonus||0)+' EQ+'+(course.eqBonus||0),type:'learn'});
     showToast('🎉 恭喜完成 '+course.name+'！');
     addNotification('achievement','🎓 完成学习：'+course.name);
@@ -4583,7 +4184,7 @@ function triggerGathering(){
   if(Math.random()>0.25)return;// 25%概率触发
   const eligible=GATHERINGS.filter(g=>{
     if(g.npc==='spouse'&&!G.spouse)return false;
-    if(g.npc==='boss'&&(G.jobIndex<3||G.selfEmployed))return false;
+    if(g.npc==='boss'&&G.jobIndex<3)return false;
     return true;
   });
   if(eligible.length===0)return;
@@ -4688,20 +4289,12 @@ function generateGossipEvent(){
     {npc:'colleague',texts:['财务部的小王，昨天被查出简历造假，直接开除了！','听说隔壁公司在挖我们组的人，给的薪资特别高','公司茶水间有人打架，因为抢微波炉用！']},
     {npc:'classmate',texts:['你还记得隔壁班那个学霸吗？现在在送外卖，上次我看到他了','大学室友创业做电商，去年亏了200万，现在在卖房还债','高中那个暗恋你的女生，现在是网红了，粉丝50多万']},
     {npc:'mom',texts:['你舅舅家的表弟，不学好，欠了网贷被人追债','隔壁老李的儿子考上清华了，你看看人家','你小学同学现在是大学教授了，出息了']},
-    {npc:'campusGirl',texts:['今天食堂看到你了，你旁边那个女生是谁啊？🙄','我室友说在图书馆看到你和一个女生聊得很开心嘛','你昨天朋友圈发的那张照片，点赞的那个女生是你高中同学？','你最近怎么都不找我聊天了，是不是不想理我了','今天路上遇到你了，你怎么没看到我？还是假装没看到？']},
   ];
   const tpl=gossipTemplates[Math.floor(Math.random()*gossipTemplates.length)];
   const npc=NPCS[tpl.npc];
   const msg=tpl.texts[Math.floor(Math.random()*tpl.texts.length)];
-  // 创建为消息而非通知——让NPC发一条消息过来
-  const thread={
-    id:G.phone.nextId++,npcId:tpl.npc,npcName:npc.name,npcAvatar:npc.avatar,
-    tplId:'gossip_'+tpl.npc+'_'+G.totalMonths,type:'wechat',
-    rounds:[{npcMsgs:[msg],opts:[{text:'哦？说来听听',fx:{mood:2},next:-1},{text:'真假的？',fx:{mood:1},next:-1},{text:'知道了',fx:{},next:-1}]}],
-    currentRound:0,status:'unread',receivedMonth:G.totalMonths,readMonth:null,
-    followUp:null,flagClear:null
-  };
-  pushPhoneThread(thread);
+  // Create a notification
+  addNotification('system','💬 '+npc.name+'发来八卦：'+msg);
   G.phone.flags['_gossip_'+G.totalMonths]=msg;
   saveGame();
 }
@@ -4719,8 +4312,6 @@ function triggerPhoneMessages(){
       if(m.requires.minJobLevel&&G.jobIndex<m.requires.minJobLevel)return false;
       if(m.requires.flag&&!G.phone.flags[m.requires.flag])return false;
       if(m.requires.boss_angry&&!G.phone.flags.boss_angry)return false;
-      // 创业者不触发老板/同事相关事件
-      if(G.selfEmployed&&(m.npc==='boss'||m.npc==='hr'||m.npc==='colleague'))return false;
       if(m.requires.hasLoan){let has=false;G.houses.forEach(h=>{if(h.loan)has=true;});if(!has)return false;}
       if(m.requires.married&&!G.spouse)return false;
     }
@@ -4756,7 +4347,6 @@ function addPhoneThread(tpl){
   };
   pushPhoneThread(thread);
   G.phone.flags['last_'+tpl.id]=G.totalMonths;
-  G.phone.lastNpcMessageMonth=G.totalMonths;
   updatePhoneBadge();
 }
 
@@ -4799,124 +4389,36 @@ function scheduleContactGreeting(contact){
   if(typeof updatePhoneHint==='function')updatePhoneHint();
 }
 
-function hasUnread(){
-  if(!G.phone)return false;
-  if(G.phone.threads.some(t=>{if(t.status==='replied')return false;const r=t.rounds[t.currentRound];return r&&!r._playerChoice;}))return true;
-  // Check chat history unread
-  if(G.phone.chatHistory){
-    for(const npcId of Object.keys(G.phone.chatHistory)){
-      const hist=G.phone.chatHistory[npcId];
-      if(hist&&hist.length>0){const last=hist[hist.length-1];if(last.npc&&!last._playerRead)return true;}
-    }
-  }
-  return false;
-}
+function hasUnread(){return G.phone&&G.phone.threads.some(t=>{if(t.status==='replied')return false;const r=t.rounds[t.currentRound];return r&&!r._playerChoice;});}
 
 function renderPhoneList(){
   const el=document.getElementById('phone-messages');if(!el)return;
-  injectDynamicContacts();
-  let html='';
-  // Collect all items: template threads + social contacts (WeChat unified chat list)
-  const allItems=[];
-  // 1. Template threads (NPC calls/SMS/gatherings/gossip)
-  if(G.phone&&G.phone.threads){
-    G.phone.threads.forEach(t=>{
-      const round=t.rounds[t.currentRound];
-      let preview='[对话进行中]';
-      if(round&&round.npcMsgs&&round.npcMsgs.length>0)preview=round.npcMsgs[round.npcMsgs.length-1].replace(/\[GIVE:\d+\]/g,'').replace(/\[TREAT:\d+\]/g,'').replace(/\[ASK:\d+:.+?\]/g,'').trim().substring(0,32);
-      if(round&&round.npc&&round.npc.length>0)preview=round.npc[round.npc.length-1].substring(0,32);
-      if(t.status==='replied')preview='[已回复]';
-      let unreadCount=0;
-      for(let i=t.currentRound;i<t.rounds.length;i++){
-        if(!t.rounds[i]._playerChoice)unreadCount++;
-      }
-      const unread=t.status==='unread'||(t.status==='reading'&&unreadCount>0);
-      allItems.push({
-        _type:'thread',_id:t.id,_sortTime:t.receivedMonth*100+99,
-        avatar:t.npcAvatar,name:t.npcName+(t.type==='call'?' 📞':t.type==='sms'?' 💬':t.type==='gathering'?' 🎉':t.type==='wechat'?' 💬':''),
-        preview:preview,time:getTimeStr(t.receivedMonth),
-        unread:unread,unreadCount:unreadCount,onclick:'openThread('+t.id+')'
-      });
-    });
+  if(!G.phone||G.phone.threads.length===0){
+    el.innerHTML='<div class="text-center text-sm text-muted" style="padding:40px 0;"><div style="font-size:48px;margin-bottom:12px;">📱</div>消息会在人生旅途中陆续到来<br>点击"度过一月"推进人生</div>';
+    updatePhoneHint();return;
   }
-  // 2. Social contacts (WeChat-style: show as chat items)
-  (G.socialContacts||[]).forEach(function(c){
-    const p=NPC_PERSONALITIES[c.id];
-    const name=p?p.name:c.name;
-    const avatar=p?p.avatar:c.avatar;
-    const friendLabels=['','认识','熟悉','好友'];
-    const friendIcons=['','👋','🤝','❤️'];
-    // Determine preview and time
-    const history=(G.phone&&G.phone.chatHistory)?(G.phone.chatHistory[c.id]||[]):[];
-    let preview=friendLabels[c.friendLevel]||'';
-    let sortTime=c.metMonth||0;
-    let unread=false;
-    if(history.length>1){
-      // Has actual conversation - show last NPC message
-      const lastNpc=history.filter(h=>h.npc).pop();
-      if(lastNpc){
-        preview=lastNpc.npc.replace(/^[^:]+[：:]/,'').substring(0,32);
-        // Check if last message is NPC-initiated (unread)
-        const lastIdx=history.indexOf(lastNpc);
-        const afterLast=history.slice(lastIdx+1);
-        if(afterLast.length===0||!afterLast[afterLast.length-1].player){
-          unread=true;
-        }
-      }
-      if(c.lastChatMonth)sortTime=c.lastChatMonth;
-    }else{
-      preview=friendIcons[c.friendLevel]+' '+preview+(c.metWhere?' · '+c.metWhere:'');
+  let html='';
+  G.phone.threads.forEach(t=>{
+    const round=t.rounds[t.currentRound];
+    let preview='[对话进行中]';
+    if(round&&round.npcMsgs&&round.npcMsgs.length>0)preview=round.npcMsgs[round.npcMsgs.length-1].substring(0,32);if(round&&round.npc&&!round.npcMsgs)preview=round.npc.substring(0,32);
+    if(round&&round.npc&&round.npc.length>0)preview=round.npc[round.npc.length-1].substring(0,32);
+    if(t.status==='replied')preview='[已回复]';
+    // Count unread rounds
+    let unreadCount=0;
+    for(let i=t.currentRound;i<t.rounds.length;i++){
+      if(!t.rounds[i]._playerChoice)unreadCount++;
     }
-    allItems.push({
-      _type:'contact',_id:c.id,_sortTime:sortTime,
-      avatar:avatar,name:name,preview:preview,
-      time:getTimeStr(c.metMonth||0),unread:unread,unreadCount:0,
-      onclick:'openProactiveChat(\''+c.id.replace(/'/g,"\\'")+'\')'
-    });
-  });
-  // 3. Core NPCs with chat history (not in socialContacts but have conversations)
-  const _coreNpcIds=['mom','dad','bestie','colleague','boss','classmate','banker','realtor','neighbor','exColleague','mentor','gymCoach','scammer','spouse'];
-  // v3.17.0: 不再跳过有模板线程的核心NPC，通讯录聊过的对话也要显示在消息Tab
-  _coreNpcIds.forEach(npcId=>{
-    const hist=(G.phone.chatHistory&&G.phone.chatHistory[npcId])||[];
-    if(hist.length===0)return; // no chat history
-    const p=NPC_PERSONALITIES[npcId];if(!p)return;
-    // Check unread: last message is from NPC
-    const lastMsg=hist[hist.length-1];
-    const unread=!!lastMsg.npc&&(!lastMsg._playerRead);
-    // Get relationship
-    const rel=getRelationship(npcId);
-    const friendLabels=['','认识','熟悉','好友'];
-    let preview=lastMsg.npc?lastMsg.npc.substring(0,32):(lastMsg.player?lastMsg.player.substring(0,32):'');
-    // Sort time: use last message timestamp or recency
-    const sortTime=lastMsg.timestamp||0;
-    allItems.push({
-      _type:'npcChat',_id:npcId,_sortTime:sortTime,
-      avatar:p.avatar,name:p.name,
-      preview:preview,time:getTimeStr(rel.metMonth||0),
-      unread:unread,unreadCount:unread?1:0,
-      onclick:'openProactiveChat(\''+npcId.replace(/'/g,"\\'")+'\')'
-    });
-  });
-  // 4. Sort by recency (most recent first)
-  allItems.sort((a,b)=>b._sortTime-a._sortTime);
-  // 4. Render unified chat list
-  allItems.forEach(item=>{
-    const cls=item.unread?'msg-item msg-unread':'msg-item msg-read';
-    const pvCls=item.unread?'msg-pv msg-pv-unread':'msg-pv';
-    html+='<div class="'+cls+'" onclick="'+item.onclick+'">';
-    html+='<div class="msg-av">'+item.avatar;
-    if(item.unread)html+='<div class="unread-dot"></div>';
-    html+='</div>';
-    html+='<div class="msg-bd"><div class="msg-nm">'+item.name+'</div>';
-    html+='<div class="'+pvCls+'">'+item.preview+'</div></div>';
-    html+='<div class="msg-mt"><div class="'+pvCls.replace('msg-pv','msg-tm')+'">'+item.time+'</div>';
-    if(item.unread)html+='<div class="msg-bg">'+(item.unreadCount>1?item.unreadCount+'条':'新')+'</div>';
+    const timeStr=getTimeStr(t.receivedMonth);
+    const unread=t.status==='unread'||(t.status==='reading'&&unreadCount>0);
+    html+='<div class="msg-item" onclick="openThread('+t.id+')" style="'+(unread?'font-weight:600;':'')+'">';
+    html+='<div class="msg-av">'+t.npcAvatar+'</div>';
+    html+='<div class="msg-bd"><div class="msg-nm">'+t.npcName+(t.type==='call'?' 📞':t.type==='sms'?' 💬':t.type==='gathering'?' 🎉':'')+'</div>';
+    html+='<div class="msg-pv">'+preview+'</div></div>';
+    html+='<div class="msg-mt"><div class="msg-tm">'+timeStr+'</div>';
+    if(unread)html+='<div class="msg-bg">'+(unreadCount>1?unreadCount+'条':'新')+'</div>';
     html+='</div></div>';
   });
-  if(!html||html===''){
-    html='<div class="text-center text-sm text-muted" style="padding:40px 0;"><div style="font-size:48px;margin-bottom:12px;">📱</div>消息会在人生旅途中陆续到来<br>点击"度过一月"推进人生</div>';
-  }
   el.innerHTML=html;
   updatePhoneHint();
 }
@@ -4927,11 +4429,6 @@ function openThread(id){
   if(thread.status==='unread'){thread.status='reading';thread.readMonth=G.totalMonths;}
   G._openThreadId=id;
   renderChat();
-  // v3.12.0: 显示模板选项，隐藏AI输入框
-  const opts=document.getElementById('chatOpts');
-  const area=document.getElementById('chatInputArea');
-  if(opts)opts.style.display='flex';
-  if(area)area.style.display='none';
   document.getElementById('chatOverlay').classList.add('show');
   updatePhoneBadge();
 }
@@ -4944,10 +4441,8 @@ function renderChat(){
   // Show all messages up to current round
   for(let r=0;r<=thread.currentRound;r++){
     const round=thread.rounds[r];if(!round)continue;
-    if(round.npcMsgs){round.npcMsgs.forEach(msg=>{
-      // Strip action tags from display
-      const cleanMsg=msg.replace(/\[GIVE:\d+\]/g,'').replace(/\[TREAT:\d+\]/g,'').replace(/\[ASK:\d+:.+?\]/g,'').trim();
-      html+='<div class="chat-bub npc">'+cleanMsg+'</div>';
+    var npcMsgArr=round.npcMsgs||(round.npc?[round.npc]:[]);if(npcMsgArr.length){npcMsgArr.forEach(msg=>{
+      html+='<div class="chat-bub npc">'+msg+'</div>';
     });}
     if(round._playerChoice!==undefined){
       html+='<div class="chat-bub player">'+round._playerChoice+'</div>';
@@ -4977,7 +4472,7 @@ function renderChat(){
   }
 }
 
-async function selectPhoneOption(optIdx){
+function selectPhoneOption(optIdx){
   const thread=G.phone.threads.find(t=>t.id===G._openThreadId);if(!thread||thread.status==='replied')return;
   const round=thread.rounds[thread.currentRound];if(!round||!round.opts)return;
   const opt=round.opts[optIdx];
@@ -4985,114 +4480,54 @@ async function selectPhoneOption(optIdx){
   if(opt.reqEQ&&G.EQ<opt.reqEQ)return;
   // Record player choice
   round._playerChoice=opt.text;
-  // Apply effects (pass npcId for relationship effects)
-  applyPhoneFx(opt.fx, thread.npc);
+  // Apply effects
+  applyPhoneFx(opt.fx);
   // Set flags
   if(opt.flag){for(const k in opt.flag)G.phone.flags[k]=opt.flag[k];}
   // Handle special game integrations
   if(opt.fx&&opt.fx.jobIndex!==undefined){
     G.jobIndex=opt.fx.jobIndex;G.monthsAtJob=0;
-    if(opt.fx.jobFire){G.salaryBonus=0;G.events=G.events||[];G.events.push({text:'💼 你被公司辞退了...',type:'bad'});notifyAsMessage('system','💼 你被公司辞退了...');}
+    if(opt.fx.jobFire){G.salaryBonus=0;G.events=G.events||[];G.events.push({text:'💼 你被公司辞退了...',type:'bad'});}
   }
   if(opt.fx&&opt.fx.spouse){
+    // Find a spouse if not already married
     if(!G.spouse){const sp=SPOUSES[randInt(0,SPOUSES.length-1)];G.spouse=sp.id;}
   }
   if(opt.fx&&opt.fx.houses){
+    // Add a house through phone
     const price=1500000;
     if(G.cash>=price){G.cash-=price;G.houses.push({id:'normal',own:true,loan:false,loanBalance:0,loanTerm:0,loanMonthly:0,marketValue:price});}
   }
   // Move to next round or end
   if(opt.next===-1){
     thread.status='replied';
+    // Handle follow-up
     if(thread.followUp&&thread.followUp.flag&&G.phone.flags[thread.followUp.flag]){
       const fu=thread.followUp;
       G.phone.flags['_fu_trigger_'+thread.tplId]=G.totalMonths+fu.months;
       G.phone.flags['_fu_thread_'+thread.tplId]=fu.thread;
     }
+    // Handle flagClear
     if(thread.flagClear){delete G.phone.flags[thread.flagClear];}
-    // v3.15.0: 即使对话结束，也用AI生成NPC的结束语
-    try{
-      showTypingIndicator();
-      const endMsg=await generateThreadAIReply(thread.npc,'对话结束',opt.text,thread);
-      removeTypingIndicator();
-      if(endMsg){thread.rounds[thread.currentRound].npcMsgs=[endMsg];
-        // v3.15.3: 模板线程也检测日程意图（玩家选择或AI回复）
-        // v3.17.0: 只在玩家选项中检测日程意图，AI回复不触发
-        const sInfo=detectScheduleIntent(opt.text);
-        const sNpc=thread.npc;
-        if(sInfo&&sNpc){
-          setTimeout(()=>{showScheduleConfirm(sNpc,sInfo);},800);
-        }
-      }
-    }catch(e){removeTypingIndicator();}
-    // v3.15.3: 日程线程选择后显示场景结果
-    if(opt._scheduleResult){
-      setTimeout(()=>{showToast('✨ '+opt._scheduleResult);},600);
-    }
     saveGame();refreshAll();
     renderChat();
-    // v3.17.4: Auto-close chat in auto-chain mode so month advancement isn't blocked
-    if(G._autoChainActive){
-      setTimeout(()=>{closeChat();},600);
-    }
     return;
   }
   // Check if next round exists
   if(opt.next<thread.rounds.length){
     thread.currentRound=opt.next;
-    // v3.15.0: 用AI生成NPC的下一条消息，替代预设模板
-    const nextRound=thread.rounds[thread.currentRound];
-    if(nextRound){
-      try{
-        showTypingIndicator();
-        const aiReply=await generateThreadAIReply(thread.npc,'继续对话',opt.text,thread);
-        removeTypingIndicator();
-        if(aiReply){nextRound.npcMsgs=[aiReply];}
-      }catch(e){
-        removeTypingIndicator();
-        console.error('Thread AI reply failed, using template:',e);
-      }
-    }
-    showToast('💬 还有后续消息需要回复');
   }else{
     thread.status='replied';
     if(thread.flagClear){delete G.phone.flags[thread.flagClear];}
-    showToast('✅ 消息已处理');
   }
   saveGame();refreshAll();
   renderChat();
-  // v3.17.4: Auto-close chat in auto-chain mode so month advancement isn't blocked
-  if(G._autoChainActive&&thread.status==='replied'){
-    setTimeout(()=>{closeChat();},600);
-  }
 }
 
 function closeChat(){
   document.getElementById('chatOverlay').classList.remove('show');
   G._openThreadId=null;G._openProactiveNpc=null;
-  // Hide date button and panel
-  var db=document.getElementById('chatDateBtn');if(db)db.style.display='none';
-  var dp=document.getElementById('chatDatePanel');if(dp)dp.classList.remove('show');
-  saveGame();renderPhoneList();renderContacts();updatePhoneBadge();
-  // Auto-chain: continue processing next pending item
-  // v3.17.8: Always continue chain when active (queue may be empty after shift)
-  if(G._autoChainActive){
-    setTimeout(()=>_processAutoChain(),400);
-    return;
-  }
-  // Chain complete, reset flag
-  G._autoChainActive=false;
-  // If still unread (shouldn't happen in chain mode), hint the player
-  if(hasUnread()){
-    let unreadCount=G.phone.threads.filter(t=>t.status!=='replied'&&t.rounds[t.currentRound]&&!t.rounds[t.currentRound]._playerChoice).length;
-    if(G.phone.chatHistory){
-      Object.keys(G.phone.chatHistory).forEach(nid=>{
-        const h=G.phone.chatHistory[nid];
-        if(h&&h.length>0){const last=h[h.length-1];if(last.npc&&!last._playerRead)unreadCount++;}
-      });
-    }
-    if(unreadCount>0)setTimeout(()=>showToast('📱 还有 '+unreadCount+' 条消息待处理'),600);
-  }
+  renderPhoneList();renderContacts();updatePhoneBadge();
 }
 function showChatProfile(){
   const thread=G.phone.threads.find(t=>t.id===G._openThreadId);
@@ -5226,8 +4661,8 @@ function buildFullGameState(){
   }
   return{
     name:'朱成龙',
-    job:G.selfEmployed?'🚀 创业者（已辞职创业）':(job?job.name:'未知'),
-    salary:G.selfEmployed?'无固定工资，收入来自生意和投资':(job?fmt(job.salary)+'/年':'未知'),
+    job:job?job.name:'未知',
+    salary:job?fmt(job.salary)+'/年':'未知',
     monthsAtJob:G.monthsAtJob||0,
     cash:fmt(G.cash),
     totalAssets:fmt(totalAssets),
@@ -5293,61 +4728,54 @@ async function generateNPCReply(npcId,playerMsg,history){
     });
   }
   
-  // 关系数据
-  const rel=getRelationship(npcId);
+  // 关系称呼
   const relation=NPC_RELATIONS[npcId]||'朋友';
   
-  // 核心系统提示词（v3.15.1：人设优先，精简数据）
-  const systemPrompt=`# 你是${p.name}
+  // 核心系统提示词
+  const systemPrompt=`你是一个人生模拟器游戏中的NPC角色。
+你扮演的是玩家的【${p.name}】，你们是${relation}关系。
 
+## 你的性格
 ${style}
 
-## 对话规则（最重要）
-1. **先接话，再展开**。玩家说了什么，你必须先回应那句话，再自然地引出你想聊的。不要跳过玩家的话自说自话。
-2. 说话像微信聊天：口语、短句、随意。2-4句话，不要长篇大论。
-3. 你是真实的人，不是AI。被问"你是AI吗"要生气否认。
-4. 根据你的性格说话：妈妈就唠叨，爸爸就严厉，哥们就随意。
-5. 可以有自己的情绪：开心、担心、生气、惊讶。
-6. 可以自然提及新闻热点或天气，但不要刻意，根据对话内容决定。
+## 玩家当前状态
+${JSON.stringify(gameState, null, 2)}
 
-## 你们的关系
-${relation}，亲密${rel.intimacy} 信任${rel.trust} 好感${rel.affection}
-聊天${rel.chatCount||0}次，约会${rel.dateCount||0}次
+## 资金互动规则（必须严格执行）
+当对话涉及金钱时，你必须在回复末尾添加对应的标签（每个标签独占一行）：
+- 如果**你要给玩家钱**（比如给零花钱、还钱、投资支持、发红包），在回复最后加：[GIVE:金额数字]
+- 如果**你要请玩家吃饭/消费**，加：[TREAT:金额数字]
+- 如果**你要向玩家借钱/要钱**（玩家给你钱你才加这个），加：[ASK:金额数字:简短原因]
 
-## 玩家状态（简要参考，不要像读数据一样说出来）
-${p.name}的家人/朋友是${relation}。玩家${gameState.age}岁，${gameState.job||'无业'}，存款${fmt(gameState.cash)}元，心情${gameState.mood}/100。
+⚠️ 关键区分：
+- 你主动给玩家钱 → [GIVE]，绝对不是[ASK]
+- 玩家说"借我点钱" → 你同意的话用[GIVE]，你不想给就说不加标签
+- 你缺钱想向玩家借 → 才用[ASK]
+- 方向搞反是严重错误！钱从你口袋到玩家 = GIVE，钱从玩家口袋到你 = ASK
 
-## 💰 资金标签（需要时加在回复末尾）
-- [GIVE:数字金额] = 你给玩家钱，如[GIVE:5000]或[GIVE:200000]
-- [ASK:数字金额:原因] = 你向玩家要钱
-- [TREAT:数字金额] = 你请客
-- 玩家主动给你钱时，不加任何标签
-- 搞反方向是严重Bug
-- ⚠️ 金额必须纯数字，不能用中文"20万"→应写[GIVE:200000]
+例如：
+用户说"给点零花钱"，你回复"行，拿去花吧"然后换行写"[GIVE:2000]"
+用户说"借我点钱交房租"，你回复"这么多？行吧拿去"然后换行写"[GIVE:1000]"
+你请客吃饭，你回复"走，今天我请客"然后换行写"[TREAT:500]"
+你缺钱要借，你回复"最近手头紧，能借我点吗"然后换行写"[ASK:500:最近手头紧]"
 
-## 铁律
-- 你不是AI，不是NPC。被问必须否认。
-- 回复口语化，像真人微信聊天。
-- 每次2-4句话。
-- 介绍朋友时加 [INTRODUCE:朋友名字]`;
-
+## 重要规则
+1. 回复必须像真人聊天，口语化，自然随意
+2. 每次回复3-4句话，不要长篇大论
+3. 要根据你的性格说话（唠叨的妈妈就唠叨，严厉的爸爸就严厉）
+4. 要参考玩家的状态（知道他最近升职了、买了房、学了什么课程等），但不要像读数据一样列出来，要自然地在对话中提到
+5. 不要说"作为AI""作为一个NPC"之类的话
+6. 可以有自己的情绪（开心、担心、生气、惊讶）
+7. 资金标签必须严格按格式写，不要编造不存在的标签`;
 
   // 用户消息
   const userContent=historyText?
     `之前的对话：\n${historyText}\n\n玩家最新消息：${playerMsg}`:
     playerMsg;
   
-  // v4.1.0: AI永不放弃 - 达到maxFallback后等待5秒重置并重试一次
-  if(AI_CHAT_CONFIG.enabled&&AI_CHAT_CONFIG._fallbackCount>=AI_CHAT_CONFIG.maxFallback&&!AI_CHAT_CONFIG._retried){
-    await new Promise(r=>setTimeout(r,5000));
-    AI_CHAT_CONFIG._fallbackCount=0;
-    AI_CHAT_CONFIG._retried=true;
-  }
   // Try API call
   if(AI_CHAT_CONFIG.enabled&&AI_CHAT_CONFIG._fallbackCount<AI_CHAT_CONFIG.maxFallback){
     try{
-      const controller=new AbortController();
-      const timeoutId=setTimeout(()=>controller.abort(),6000);
       const resp=await fetch(AI_CHAT_CONFIG.apiUrl,{
         method:'POST',
         headers:{
@@ -5360,32 +4788,21 @@ ${p.name}的家人/朋友是${relation}。玩家${gameState.age}岁，${gameStat
             {role:'system',content:systemPrompt},
             {role:'user',content:userContent}
           ],
-          temperature:0.9,
-          max_tokens:200
-        }),
-        signal:controller.signal
+          temperature:0.8,
+          max_tokens:300
+        })
       });
-      clearTimeout(timeoutId);
       if(resp.ok){
         const data=await resp.json();
         if(data.choices&&data.choices[0]&&data.choices[0].message){
-          const _raw=(data.choices[0].message.content||'').trim();
-          // v3.17.5: 过滤AI返回的错误文本，避免显示给玩家
-          if(_raw&&!/请求失败|request\s*failed|undefined|网络错误|网络异常|timeout|API error/i.test(_raw)){
-            AI_CHAT_CONFIG._fallbackCount=0;
-            return _raw;
-          }
-          console.warn('AI returned error content, using template:',_raw);
+          AI_CHAT_CONFIG._fallbackCount=0;
+          return data.choices[0].message.content;
         }
       }
       AI_CHAT_CONFIG._fallbackCount++;
     }catch(e){
       console.error('AI reply failed:',e);
       AI_CHAT_CONFIG._fallbackCount++;
-      // Exponential backoff before next attempt
-      if(AI_CHAT_CONFIG._fallbackCount < AI_CHAT_CONFIG.maxFallback){
-        await new Promise(r=>setTimeout(r, AI_CHAT_CONFIG._retryDelay * AI_CHAT_CONFIG._fallbackCount));
-      }
     }
   }
   // Fallback to template
@@ -5529,19 +4946,6 @@ function processChatEffects(reply,npcId){
     recordMoneyHistory(npcId,'',npcName+'给了你¥'+amount,amount,'npc_gave');
     refreshLife();
   }
-  // v3.17.7: 自然语言备用解析——AI说"给你转20万"但没加[GIVE:]标签时，自动提取金额
-  else if(/(给你转|给你打|转给你|打给你|给你汇|转你|给你钱|塞给你|孝敬你)[\s\S]*?(\d+[\.\,]?\d*)\s*(万|w|W|千|k|K|百)?/.test(reply) ||
-          /(转了|打了|汇了|塞了)[\s\S]*?(\d+[\.\,]?\d*)\s*(万|w|W|千|k|K|百)?/.test(reply)){
-    const nlReply=reply;
-    const amount=_parseChineseAmount(nlReply);
-    if(amount>0){
-      G.cash=clamp(G.cash+amount,-999999,999999999);
-      const npcName=(NPC_PERSONALITIES[npcId]||{}).name||'NPC';
-      triggered.push('💰 '+npcName+'给了你'+fmt(amount));
-      recordMoneyHistory(npcId,'',npcName+'给了你¥'+amount,amount,'npc_gave');
-      refreshLife();
-    }
-  }
   // Parse TREAT tag from AI reply
   const treatMatch=reply.match(/\[TREAT:(\d+)\]/);
   if(treatMatch){
@@ -5551,19 +4955,6 @@ function processChatEffects(reply,npcId){
     const npcName=(NPC_PERSONALITIES[npcId]||{}).name||'NPC';
     triggered.push('🍺 '+npcName+'请客！心情+8');
   }
-  // v4.0.0: Keyword-based event triggers
-  var keywords=['工作','投资','理财','股票','健康','运动','休息','学习','读书'];
-  keywords.forEach(function(kw){
-    if(reply.indexOf(kw)>=0){
-      if(kw==='工作'&&Math.random()<0.2){showToast('💼 听说有公司在招人，可以关注下！');G.mood=clamp(G.mood+3,0,200);}
-      if(kw==='投资'&&Math.random()<0.15){showToast('💡 聊投资让人增长见识！');G.IQ=clamp(G.IQ+1,0,200);}
-      if(kw==='股票'&&Math.random()<0.15){showTip();}
-      if((kw==='健康'||kw==='运动'||kw==='休息')&&Math.random()<0.25){G.mood=clamp(G.mood+3,0,200);G.health=clamp(G.health+1,0,200);showToast('😊 注意身体，心情变好了！');}
-      if((kw==='学习'||kw==='读书')&&Math.random()<0.2){G.IQ=clamp(G.IQ+1,0,200);showToast('🧠 学习让IQ+1');}
-    }
-  });
-  function showTip(){var tips=['📈 听说新能源板块最近有动作','💰 有个融资项目可以关注','🤖 AI赛道还有一波红利'];showToast(tips[Math.floor(Math.random()*tips.length)]);}
-
   // Parse ASK tag from AI reply - NPC asks player for money
   const askMatch=reply.match(/\[ASK:(\d+):(.+?)\]/);
   if(askMatch){
@@ -5571,42 +4962,6 @@ function processChatEffects(reply,npcId){
     const reason=askMatch[2];
     // Show money decision dialog (deferred to after reply is displayed)
     setTimeout(function(){showMoneyDecision(npcId,amount,reason);},500);
-  }
-  // Parse INTRODUCE tag - NPC introduces a new friend to the player
-  const introMatch=reply.match(/\[INTRODUCE:([^\]]+)\]/);
-  if(introMatch&&npcId&&npcId.startsWith('contact_')){
-    const newName=introMatch[1];
-    const existing=(G.socialContacts||[]).find(c=>c.name===newName);
-    if(!existing){
-      // Create a new social contact introduced by this NPC
-      const introducer=(G.socialContacts||[]).find(c=>c.id===npcId);
-      const categories=['classmate','colleague','gymBuddy','partyFriend','neighbor'];
-      const sceneKey=categories[Math.floor(Math.random()*categories.length)];
-      const template=MEETABLE_NPCS[sceneKey]||{};
-      const newContact={
-        id:'contact_'+Date.now()+'_'+Math.random().toString(36).substr(2,4),
-        templateId:sceneKey,name:newName,avatar:template.avatar||'👤',
-        category:sceneKey,relation:'朋友介绍',
-        traits:(template.traits||['友善','随和']).slice(),
-        responses:(template.responses||['嗯嗯','好的','没问题']).slice(),
-        followups:(template.followups||['最近怎么样？','有空聊聊']).slice(),
-        metMonth:G.totalMonths,metWhere:introducer?(introducer.name+'介绍'):'朋友介绍',
-        friendLevel:1,chatCount:0,lastChatMonth:0
-      };
-      G.socialContacts.push(newContact);
-      // Initialize chat history
-      if(!G.phone)G.phone={threads:[],moments:[],notifications:[],flags:{},lastTriggerMonth:0,nextId:1,chatHistory:{},activeChats:[]};
-      if(!G.phone.chatHistory)G.phone.chatHistory={};
-      G.phone.chatHistory[newContact.id]=[{
-        player:'',npc:newName+'通过'+(introducer?introducer.name:'朋友')+'添加了你',
-        timestamp:Date.now()
-      }];
-      // Inject into NPC system
-      injectDynamicContacts();
-      triggered.push('👋 '+newName+'被介绍给你了！去通讯录看看');
-      addNotification('system','👋 新朋友：'+newName+'（'+(introducer?introducer.name:'朋友')+'介绍）');
-      saveGame();
-    }
   }
   // Show triggered effects as system messages
   if(triggered.length>0){
@@ -5620,23 +4975,7 @@ function processChatEffects(reply,npcId){
     body.scrollTop=body.scrollHeight;
   }
   // Clean action tags from displayed reply
-  // 恋爱状态更新：与小雨聊天增加好感度
-  if(npcId==='campusGirl'){
-    if(!G.romance)G.romance={npcId:null,stage:'none',affection:0,metMonth:0,lastInteraction:0};
-    if(!G.romance.npcId){
-      G.romance.npcId='campusGirl';
-      G.romance.metMonth=G.totalMonths;
-      G.romance.stage='normal';
-    }
-    G.romance.affection=clamp(G.romance.affection+randInt(3,8),0,100);
-    G.romance.lastInteraction=G.totalMonths;
-    // Stage progression
-    if(G.romance.affection>=80)G.romance.stage='dating';
-    else if(G.romance.affection>=50)G.romance.stage='close';
-    else G.romance.stage='normal';
-    saveGame();
-  }
-  return reply.replace(/\[GIVE:\d+\]/g,'').replace(/\[TREAT:\d+\]/g,'').replace(/\[ASK:\d+:.+?\]/g,'').replace(/\[INTRODUCE:[^\]]+\]/g,'').trim();
+  return reply.replace(/\[GIVE:\d+\]/g,'').replace(/\[TREAT:\d+\]/g,'').replace(/\[ASK:\d+:.+?\]/g,'').trim();
 }
 
 // Detect player money giving intent
@@ -5669,7 +5008,7 @@ function detectPlayerGiveIntent(msg){
       return{amount:randInt(200,1000),type:'treat'};
     }
   }
-  // Lend patterns - 玩家借给NPC钱（"借你500"、"借给1000"）
+  // Lend patterns
   const lendPatterns=[
     /借你(\d+)/,/借给(\d+)/,/借你(\d+)块/
   ];
@@ -5680,17 +5019,6 @@ function detectPlayerGiveIntent(msg){
         const num=parseInt(m[i]);
         if(!isNaN(num)&&num>0)return{amount:num,type:'lend'};
       }
-    }
-  }
-  // 玩家向NPC借钱（"借我500"、"借给我1000"）- 不触发给钱确认，直接让AI处理
-  const borrowPatterns=[
-    /借我(\d+)/,/借给我(\d+)/,/借我(\d+)块/
-  ];
-  for(const bp of borrowPatterns){
-    const m=msg.match(bp);
-    if(m){
-      // 玩家向NPC借钱，不触发给钱确认，返回null让AI处理
-      return null;
     }
   }
   return null;
@@ -5828,7 +5156,7 @@ async function sendPlayerMessage(){
   const input=document.getElementById('chatInputField');
   const sendBtn=document.getElementById('chatInputSend');
   const msg=input.value.trim();
-  if(!msg)return;if(!G._openProactiveNpc){showToast('💬 请使用下方选项回复');return;}
+  if(!msg||!G._openProactiveNpc)return;
   // Clear input
   input.value='';
   // Detect player money giving intent
@@ -5866,88 +5194,24 @@ async function _doSendMessage(msg,npcId){
   if(giveIntent){
     aiMsg=msg+'\n（玩家刚刚给了你¥'+giveIntent.amount+'，请根据你的性格和关系决定如何回应）';
   }
-  let reply;
-  try{
-    // Generate AI reply
-    reply=await generateNPCReply(npcId,aiMsg,history);
-  }catch(e){
-    console.error('generateNPCReply error:',e);
-    reply=getTemplateReply(npcId,msg);
-    // v4.0.0: Friendly network error toast
-    showToast('网络恢复中...');
-    // v4.0.0: Add retry button inside catch where 'e' is in scope
-    var retryBtn=document.getElementById('chatRetryBtn');
-    if(!retryBtn){
-      var inputArea=document.getElementById('chatInputArea');
-      if(inputArea){
-        retryBtn=document.createElement('button');
-        retryBtn.id='chatRetryBtn';
-        retryBtn.className='btn btn-sm btn-outline';
-        retryBtn.style.cssText='position:absolute;top:-32px;right:8px;font-size:11px;padding:4px 8px;';
-        retryBtn.textContent='🔄 重试';
-        retryBtn.onclick=function(){this.remove();sendPlayerMessage();};
-        inputArea.style.position='relative';
-        inputArea.appendChild(retryBtn);
-      }
-    }
-  }
-  // Remove typing indicator (ALWAYS, even on error)
+  // Generate AI reply
+  const reply=await generateNPCReply(npcId,aiMsg,history);
+  // Remove typing indicator
   removeTypingIndicator();
-  // ===== 资金方向强制校正 =====
-  // 如果玩家刚给了钱（giveIntent存在），AI不应该再加[GIVE]标签
-  if(giveIntent&&reply){
-    const wrongGive=/\[GIVE:\d+\]/.test(reply);
-    if(wrongGive){
-      reply=reply.replace(/\[GIVE:\d+\]/g,'');
-      
-    }
-  }
-  // 如果玩家刚收到NPC的钱（NPC回复含[GIVE]），检查是否搞反
-  // 安全纠错：文字说"给你/转你"但用了[GIVE]标签（方向搞反）
-  if(reply){
-    var hasGiveText=/(给你|转你|塞给你|发红包|给你钱|给你转|孝敬你)/.test(reply);
-    var hasAskTag=/\[ASK:\d+/.test(reply);
-    var hasGiveTag=/\[GIVE:\d+/.test(reply);
-    if(hasGiveText&&hasAskTag&&!hasGiveTag){
-      reply=reply.replace(/\[ASK:(\d+):[^\]]*\]/g,function(m,p1){return'[GIVE:'+p1+']';});
-    }
-  }
-  // Process chat effects FIRST (strips [GIVE]/[ASK] tags from reply)
-  let cleanReply;
-  try{
-    cleanReply=processChatEffects(reply,npcId);
-  }catch(e){
-    console.error('processChatEffects error:',e);
-    cleanReply=reply.replace(/\[\w+:.*?\]/g,'');
-  }
-  // Add NPC bubble with cleaned reply
-  addChatBubble('npc',cleanReply);
+  // Add NPC bubble
+  addChatBubble('npc',reply);
   // Save to history
   saveChatHistory(npcId,msg,reply);
-  // Mark as read (player just replied)
-  if(G.phone.chatHistory&&G.phone.chatHistory[npcId]){
-    const hist=G.phone.chatHistory[npcId];
-    if(hist.length>0)hist[hist.length-1]._playerRead=true;
-  }
   // 社交拓展：更新好友关系
   if(npcId && npcId.startsWith('contact_')){
     var contact=(G.socialContacts||[]).find(function(c){return c.id===npcId;});
     if(contact) updateFriendLevel(contact);
-    // Update dynamic relationship
-    updateRelationship(npcId,{intimacy:+3,trust:+1,lastActivity:G.totalMonths});
-    checkRelationshipProgression(npcId);
   }
   // Apply mood effect from reply sentiment
   const moodEffect=judgeNPCMood(reply);
   G.mood=clamp(G.mood+moodEffect,0,200);
-  // Detect schedule intent from AI reply OR player message
-  // v3.17.0: 只在玩家消息中检测日程意图，AI回复中的"有空吃饭"等客套话不触发
-  const scheduleInfo=detectScheduleIntent(msg);
-  const canSchedule=!!npcId;
-  if(scheduleInfo&&canSchedule){
-    // Show schedule confirmation in chat
-    setTimeout(()=>{showScheduleConfirm(npcId,scheduleInfo);},500);
-  }
+  // Process chat triggers for game effects
+  processChatEffects(reply,npcId);
   // Save game
   saveGame();
   // Re-enable send button
@@ -5973,13 +5237,11 @@ function setupChatInputListener(){
 function showChatInputArea(show){
   const area=document.getElementById('chatInputArea');
   const opts=document.getElementById('chatOpts');
-  // show=true: AI聊天模式，显示输入框隐藏选项
-  // show=false: 模板消息模式，显示选项隐藏输入框
   if(area)area.style.display=show?'flex':'none';
   if(opts)opts.style.display=show?'none':'flex';
 }
 
-function applyPhoneFx(fx,npcId){
+function applyPhoneFx(fx){
   if(!fx)return;
   if(fx.cash)G.cash=clamp(G.cash+fx.cash,-999999,999999999);
   if(fx.mood)G.mood=clamp(G.mood+fx.mood,0,200);
@@ -5988,29 +5250,6 @@ function applyPhoneFx(fx,npcId){
   if(fx.EQ)G.EQ=clamp(G.EQ+fx.EQ,0,200);
   if(fx.salaryBonus)G.salaryBonus+=fx.salaryBonus;
   if(fx.stockLoss){for(const code in G.stockHoldings){G.stockPrices[code]=Math.max(1,G.stockPrices[code]*(1+fx.stockLoss));}}
-  // v3.17.2: Force refresh cash display after phone effects
-  try{
-    const cashEl=document.getElementById('cashDisplay');
-    if(cashEl)cashEl.textContent=fmt(G.cash);
-    const totalEl=document.getElementById('totalAsset');
-    if(totalEl)totalEl.textContent=fmt(calcTotalAsset());
-  }catch(e){}
-  // 关系效果：亲密度、信任度、好感度
-  if(npcId&&(fx.affection||fx.intimacy||fx.trust)){
-    if(npcId==='campusGirl'&&G.romance){
-      G.romance.affection=clamp(G.romance.affection+(fx.affection||0),0,100);
-      G.romance.lastInteraction=G.totalMonths;
-      if(G.romance.affection>=60)G.romance.stage='dating';
-      else if(G.romance.affection>=30)G.romance.stage='crush';
-    }
-    if(npcId!=='campusGirl'){
-      if(!G.relationships)G.relationships={};
-      if(!G.relationships[npcId])G.relationships[npcId]={type:'stranger',intimacy:0,trust:0,affection:0,metMonth:G.totalMonths,lastInteraction:0};
-      G.relationships[npcId].intimacy=clamp(G.relationships[npcId].intimacy+(fx.intimacy||0),0,100);
-      G.relationships[npcId].trust=clamp(G.relationships[npcId].trust+(fx.trust||0),0,100);
-      G.relationships[npcId].lastInteraction=G.totalMonths;
-    }
-  }
 }
 
 function triggerFollowUps(){
@@ -6044,111 +5283,26 @@ function triggerMoments(){
     if(age<m.ageMin||age>m.ageMax)return;
     if(m.requires&&m.requires.minAsset&&total<m.requires.minAsset)return;
     if(Math.random()>(m.chance||0.05))return;
-    if(G.phone.moments.find(mt=>mt.text===m.text&&G.totalMonths-mt.month<12))return;
+    if(G.phone.moments.find(mt=>mt.text===m.text&&G.totalMonths-mt.month<24))return;
     const npc=NPCS[m.npc]||{name:'未知',avatar:'👤'};
-    const newMoment={id:G.phone.nextId++,npcId:m.npc,npcName:npc.name,npcAvatar:npc.avatar,text:m.text,month:G.totalMonths,liked:false,comments:[],playerComments:[],likedNpcs:[]};
-    // Generate 1-3 random NPC comments
-    const commentPool=['mom','dad','bestie','colleague','classmate','neighbor','boss','mentor','gymCoach','campusGirl','realtor','banker','exColleague'].filter(id=>id!==m.npc);
-    const shuffled=commentPool.sort(()=>Math.random()-0.5);
-    const numComments=randInt(1,3);
-    const defaultComments=[
-      '恭喜恭喜！🎉','厉害了👍','加油💪','不错不错','真好啊~','羡慕！','太强了吧',
-      '一起加油','生活愉快😊','支持！','不错哦','好棒！','哈哈😂','加油加油',
-      '什么时候也带带我','真优秀','向你学习','幸福满满','真不错','赞👍',
-      '好厉害！','羡慕死了','太棒了','冲冲冲','一起努力','这波可以','绝了',
-      '我要哭了😭','好幸福啊','太赞了吧','真的牛','向大佬看齐','冲啊！'
-    ];
-    for(let i=0;i<numComments&&i<shuffled.length;i++){
-      const cid=shuffled[i];
-      const cn=NPCS[cid]||{name:'朋友',avatar:'👤'};
-      newMoment.comments.push({npcId:cid,npcName:cn.name,npcAvatar:cn.avatar,text:defaultComments[randInt(0,defaultComments.length-1)]});
-    }
-    // Generate random NPC likes (3-8 NPCs)
-    const likePool=commentPool.sort(()=>Math.random()-0.5);
-    const numLikes=randInt(3,Math.min(8,likePool.length));
-    newMoment.likedNpcs=likePool.slice(0,numLikes);
-    G.phone.moments.unshift(newMoment);
+    G.phone.moments.unshift({id:G.phone.nextId++,npcId:m.npc,npcName:npc.name,npcAvatar:npc.avatar,text:m.text,month:G.totalMonths,liked:false,likeCount:randInt(3,25)});
   });
 }
 
 function renderMoments(){
-  // v3.12.1: Trigger NPC proactive interactions each time moments are viewed
-  if(G.phone&&G.phone.aiMoments&&G.phone.aiMoments.length>0)_npcInteractWithRecentMoments();
   const el=document.getElementById('phone-moments');if(!el)return;
-  // v3.12.3: Cold-start - auto-inject moments if player has none
-  _coldStartMoments();
-  const aiM=G.phone&&G.phone.aiMoments?G.phone.aiMoments:[];
-  const tplM=G.phone?G.phone.moments:[];
-  const all=[...aiM.map(m=>({...m,_isAI:true})),...tplM.map(m=>({...m,_isAI:false}))];
-  all.sort((a,b)=>b.month-a.month);
-  if(all.length===0){
+  if(!G.phone||G.phone.moments.length===0){
     el.innerHTML='<div class="text-center text-sm text-muted" style="padding:40px 0;"><div style="font-size:48px;margin-bottom:12px;">📷</div>朋友圈暂时没有新动态</div>';return;
   }
   let html='';
-  all.forEach(m=>{
-    const isAI=m._isAI;
-    html+='<div class="moment-card" data-moment-id="'+m.id+'">';
+  G.phone.moments.forEach(m=>{
+    html+='<div class="moment-card">';
     html+='<div class="moment-hd"><div class="moment-av">'+m.npcAvatar+'</div><div class="moment-nm">'+m.npcName+'</div><div class="moment-tm">'+getTimeStr(m.month)+'</div></div>';
     html+='<div class="moment-txt">'+m.text+'</div>';
-    // AI moments: show comments and likes
-    if(isAI){
-      const comments=m.comments||[];
-      const pComments=m.playerComments||[];
-      const allComments=[...comments,...pComments];
-      if(allComments.length>0){
-        html+='<div class="moment-comments">';
-        allComments.forEach(c=>{
-          html+='<div class="moment-comment"><div class="mc-av">'+c.npcAvatar+'</div><div><span class="mc-nm'+(c.byPlayer?' moment-player-comment':'')+'">'+c.npcName+':</span> <span class="mc-txt">'+c.text+'</span></div></div>';
-        });
-        html+='</div>';
-      }
-      // Likes
-      const likedNpcs=(m.likes||[]).map(id=>{const n=NPCS[id];return n?n.name:null;}).filter(Boolean);
-      if(likedNpcs.length>0||m.playerLiked){
-        html+='<div class="moment-likes">❤️ '+(m.playerLiked?'你, ':'')+likedNpcs.join('、')+' 觉得很赞</div>';
-      }
-      // Action buttons
-      html+='<div class="moment-acts">';
-      html+='<div class="moment-act '+(m.playerLiked?'liked':'')+'" onclick="likeAIGMoment('+m.id+')">'+(m.playerLiked?'❤️':'🤍')+' '+(m.playerLiked?likedNpcs.length+1:likedNpcs.length)+'</div>';
-      html+='<div class="moment-act" onclick="showMomentCommentInput('+m.id+')">💬 评论</div>';
-      html+='</div>';
-      // Comment input area (hidden by default)
-      html+='<div id="moment-input-'+m.id+'" style="display:none;margin-top:8px;">';
-      html+='<div class="moment-input-wrap">';
-      html+='<input class="moment-input" id="moment-tf-'+m.id+'" placeholder="写评论...">';
-      html+='<button class="moment-send" onclick="submitMomentComment('+m.id+')">发送</button>';
-      html+='</div></div>';
-      // "Ask NPC about this" button
-      html+='<div class="moment-ask" onclick="askAboutMoment('+m.id+')">💬 问问TA这件事</div>';
-    }else{
-      // Template moments: NPC comments + likes + comment input
-      const comments=m.comments||[];
-      const pComments=m.playerComments||[];
-      const allComments=[...comments,...pComments];
-      if(allComments.length>0){
-        html+='<div class="moment-comments">';
-        allComments.forEach(c=>{
-          html+='<div class="moment-comment"><div class="mc-av">'+c.npcAvatar+'</div><div><span class="mc-nm'+(c.byPlayer?' moment-player-comment':'')+'">'+c.npcName+':</span> <span class="mc-txt">'+c.text+'</span></div></div>';
-        });
-        html+='</div>';
-      }
-      // NPC likes
-      const likedNpcs=(m.likedNpcs||[]).map(id=>{const n=NPCS[id];return n?n.name:null;}).filter(Boolean);
-      if(likedNpcs.length>0||m.liked){
-        html+='<div class="moment-likes">❤️ '+(m.liked?'你, ':'')+likedNpcs.join('、')+' 觉得很赞</div>';
-      }
-      html+='<div class="moment-acts">';
-      html+='<div class="moment-act '+(m.liked?'liked':'')+'" onclick="likeMoment('+m.id+')">'+(m.liked?'❤️':'🤍')+' '+(likedNpcs.length+(m.liked?1:0))+'</div>';
-      html+='<div class="moment-act" onclick="showMomentInput('+m.id+')">💬 评论</div>';
-      html+='</div>';
-      // Pre-rendered comment input area (hidden by default)
-      html+='<div id="moment-input-'+m.id+'" style="display:none;margin-top:8px;">';
-      html+='<div class="moment-input-wrap">';
-      html+='<input class="moment-input" id="moment-tf-'+m.id+'" placeholder="写评论...">';
-      html+='<button class="moment-send" onclick="submitMomentComment('+m.id+')">发送</button>';
-      html+='</div></div>';
-    }
-    html+='</div>';
+    html+='<div class="moment-acts">';
+    html+='<div class="moment-act '+(m.liked?'liked':'')+'" onclick="likeMoment('+m.id+')">'+(m.liked?'❤️':'🤍')+' '+(typeof m.likeCount==='number'?m.likeCount:0)+'</div>';
+    html+='<div class="moment-act" onclick="commentMoment('+m.id+')">💬 评论</div>';
+    html+='</div></div>';
   });
   el.innerHTML=html;
 }
@@ -6156,38 +5310,23 @@ function renderMoments(){
 function likeMoment(id){
   if(!G.phone)return;
   const m=G.phone.moments.find(x=>x.id===id);if(!m)return;
+  if(typeof m.likeCount!=='number')m.likeCount=randInt(3,15);
   m.liked=!m.liked;
-  if(m.liked)G.EQ=clamp(G.EQ+1,0,200);
+  if(m.liked){m.likeCount++;G.EQ=clamp(G.EQ+1,0,200);}
+  else{if(m.likeCount>0)m.likeCount--;}
   renderMoments();saveGame();refreshLife();
 }
 function commentMoment(id){
   if(!G.phone)return;
-  // 查找对应的朋友圈数据
-  const moments=G.phone.moments||[];
-  const m=moments.find(x=>x.id===id);
-  // 如果有评论输入框，直接显示
-  const wrap=document.getElementById('moment-input-'+id);
-  if(wrap){
-    wrap.style.display=wrap.style.display==='none'?'block':'none';
-    return;
-  }
-  // 没有输入框则动态创建
-  const card=document.querySelector('[data-moment-id="'+id+'"]');
-  if(!card)return;
-  const existingWrap=card.querySelector('.moment-input-wrap');
-  if(existingWrap){existingWrap.parentElement.style.display='block';return;}
-  const inputDiv=document.createElement('div');
-  inputDiv.id='moment-input-'+id;
-  inputDiv.style.cssText='margin-top:8px;';
-  inputDiv.innerHTML='<div class="moment-input-wrap"><input class="moment-input" id="moment-tf-'+id+'" placeholder="写评论..."><button class="moment-send" onclick="submitMomentComment('+id+')">发送</button></div>';
-  const acts=card.querySelector('.moment-acts');
-  if(acts)acts.insertAdjacentElement('afterend',inputDiv);
+  showModal({title:'评论',content:'选择评论内容：\n1. 恭喜恭喜！\n2. 好厉害！\n3. 羡慕了',confirmText:'发送评论',success(res){
+    if(res.confirm){showToast('💬 评论成功！');G.EQ=clamp(G.EQ+2,0,200);saveGame();refreshLife();}
+  }});
 }
 
 function addNotification(type,text){
   if(!G.phone)return;
   const icons={achievement:'🏅',stock:'📈',system:'📱',event:'⚡',warning:'⚠️'};
-  G.phone.notifications.unshift({id:G.phone.nextId++,type:type,icon:icons[type]||'📱',text:text,month:G.totalMonths,read:false});
+  G.phone.notifications.unshift({id:G.phone.nextId++,type:type,icon:icons[type]||'📱',text:text,month:G.totalMonths,read:true});
 }
 function generateNotifications(){
   if(!G.phone)return;
@@ -6199,77 +5338,40 @@ function generateNotifications(){
 }
 function renderNotifications(){
   const el=document.getElementById('phone-notifications');if(!el)return;
-  if(!G.phone||!G.phone.notifications||G.phone.notifications.length===0){
-    el.innerHTML='<div class="notif-empty"><div style="font-size:48px;margin-bottom:12px;">🔔</div>暂无系统通知<br>成就、股票、事件通知会出现在这里</div>';return;
+  if(!G.phone||G.phone.notifications.length===0){
+    el.innerHTML='<div class="text-center text-sm text-muted" style="padding:40px 0;"><div style="font-size:48px;margin-bottom:12px;">🔔</div>暂无通知</div>';return;
   }
   let html='';
   G.phone.notifications.forEach(n=>{
     const bgCls=n.type==='achievement'?'#fef9e7':n.type==='stock'?'#d5f5e3':n.type==='warning'?'#fadbd8':'#d6eaf8';
-    const cls=n.read?'notif-item read':'notif-item unread';
-    html+='<div class="'+cls+'" onclick="markNotifRead('+n.id+')">';
-    html+='<div class="notif-icon" style="background:'+bgCls+';">'+n.icon+'</div>';
-    html+='<div class="notif-body"><div class="notif-text">'+n.text+'</div>';
-    html+='<div class="notif-meta">'+getTimeStr(n.month)+'</div></div>';
-    if(!n.read)html+='<div class="notif-dot"></div>';
-    html+='</div>';
+    html+='<div class="notif-item"><div class="notif-ic" style="background:'+bgCls+';">'+n.icon+'</div><div class="notif-body"><div class="notif-title">'+n.text+'</div><div class="notif-tm">'+getTimeStr(n.month)+'</div></div></div>';
   });
   el.innerHTML=html;
-  updateNotifBadge();
 }
 
 function switchPhoneTab(tab){
   document.querySelectorAll('.phone-tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.phone-content').forEach(c=>c.classList.remove('active'));
-  const tabNames=['messages','contacts','schedule','moments','notifications'];
+  const tabNames=['messages','contacts','moments','notifications'];
   const idx=tabNames.indexOf(tab);
   if(idx>=0){const allTabs=document.querySelectorAll('.phone-tab');if(allTabs[idx])allTabs[idx].classList.add('active');}
-  const el=document.getElementById('phone-'+tab);
-  if(el)el.classList.add('active');
+  document.getElementById('phone-'+tab).classList.add('active');
   if(tab==='messages')renderPhoneList();
   else if(tab==='contacts')renderContacts();
-  else if(tab==='schedule')renderSchedule();
   else if(tab==='moments')renderMoments();
   else if(tab==='notifications')renderNotifications();
 }
-function refreshPhone(){renderPhoneList();renderContacts();renderSchedule();renderMoments();renderNotifications();updatePhoneBadge();updateNotifBadge();updatePhoneHint();}
+function refreshPhone(){injectDynamicContacts();renderPhoneList();renderContacts();renderMoments();renderNotifications();updatePhoneBadge();updatePhoneHint();}
 function updatePhoneBadge(){
   const badge=document.getElementById('phoneBadge');if(!badge)return;
-  // 模板消息线程未读数
-  const threadCount=G.phone?G.phone.threads.filter(t=>t.status!=='replied'&&t.rounds[t.currentRound]&&!t.rounds[t.currentRound]._playerChoice).length:0;
-  // 聊天记录未读数（NPC最后发的消息，玩家未读）
-  let chatUnreadCount=0;
-  if(G.phone&&G.phone.chatHistory){
-    Object.keys(G.phone.chatHistory).forEach(npcId=>{
-      const hist=G.phone.chatHistory[npcId];
-      if(hist&&hist.length>0){
-        const last=hist[hist.length-1];
-        if(last.npc&&!last._playerRead)chatUnreadCount++;
-      }
-    });
-  }
-  const msgCount=threadCount+chatUnreadCount;
-  if(msgCount>0){
-    badge.textContent=msgCount>99?'99+':msgCount;
-    badge.style.display='flex';
-    badge.style.animation='none';
-    badge.offsetHeight;
-    badge.style.animation='badgePulse 2s infinite';
-  }else{
-    badge.style.display='none';
-  }
+  const count=G.phone?G.phone.threads.filter(t=>t.status!=='replied').length:0;
+  if(count>0){badge.textContent=count>99?'99+':count;badge.style.display='flex';}
+  else{badge.style.display='none';}
 }
 function updatePhoneHint(){
   const hint=document.getElementById('phoneHint');const txt=document.getElementById('phoneHintText');
   if(!hint||!txt)return;
-  const threadCount=G.phone?G.phone.threads.filter(t=>t.status!=='replied'&&t.rounds[t.currentRound]&&!t.rounds[t.currentRound]._playerChoice).length:0;
-  let chatUnreadCount=0;
-  if(G.phone&&G.phone.chatHistory){
-    Object.keys(G.phone.chatHistory).forEach(npcId=>{
-      const hist=G.phone.chatHistory[npcId];
-      if(hist&&hist.length>0){const last=hist[hist.length-1];if(last.npc&&!last._playerRead)chatUnreadCount++;}
-    });
-  }
-  const count=threadCount+chatUnreadCount;
+  const count=G.phone?G.phone.threads.filter(t=>t.status!=='replied').length:0;
   if(count>0){hint.style.display='flex';txt.textContent='有 '+count+' 条未读消息需要处理才能继续';}
   else{hint.style.display='none';}
 }
@@ -6314,252 +5416,131 @@ function getGameStateContext(){
   for(const code in G.stockHoldings){const s=STOCKS.find(x=>x.code===code);if(s)portfolio.push(s.name+' '+G.stockHoldings[code].shares+'股(现价'+fmt(G.stockPrices[code])+')');}
   const houseList=G.houses.map(h=>{const info=HOUSES.find(x=>x.id===h.id);return info?info.name:'房产';});
   return{
-    age,
-    jobLevel:G.selfEmployed?'创业者':(job?job.title:'未知'),
-    jobSalary:G.selfEmployed?'无固定工资':(job?fmt(job.salary)+'/年':'未知'),
+    age,jobLevel:job?job.title:'未知',jobSalary:job?fmt(job.salary)+'/年':'未知',
     totalAsset:fmt(total),cash:fmt(G.cash),
     health:Math.round(G.health),mood:Math.round(G.mood),IQ:Math.round(G.IQ),EQ:Math.round(G.EQ),
     spouse:G.spouse?true:false,children:G.children,
     stocks:portfolio.slice(0,3),houses:houseList,
-    month:G.totalMonths,
-    jobTitle:G.selfEmployed?'创业者':(job?job.title:'未知'),
-    selfEmployed:G.selfEmployed?true:false
+    month:G.totalMonths,jobTitle:job?job.title:'未知'
   };
 }
 
 function buildDecisionPrompt(ctx){
-  // 构建连锁反应上下文
-  let chainContext='';
-  if(G._recentEvents&&G._recentEvents.length>0){
-    const recent=G._recentEvents.slice(-3);
-    chainContext='\n【近期发生过的事】'+recent.map(e=>'·'+e).join('；')+'\n可以围绕这些事产生后续发展（但不要每次都关联）。';
-  }
   return[{
     role:'system',
-    content:`你是"offer含金量"的人生剧情引擎，风格参考：奇葩说+吐槽大会+真实人生。你的目标是让玩家"卧槽"。
-生成一个随机人生决策事件，必须返回严格JSON（不要markdown代码块）：
+    content:`你是人生模拟游戏"offer含金量"的AI剧情引擎。根据玩家当前状态，生成一个随机的人生决策事件。
+必须返回严格JSON格式（不要markdown代码块），结构如下：
 {
-  "title":"事件标题（含emoji，要有冲击力）",
-  "scene":"场景描述（60-100字，有画面感，口语化，像朋友在跟你讲八卦）",
+  "title":"事件标题（含emoji）",
+  "scene":"场景描述（50-80字，有画面感，口语化）",
   "options":[
-    {"icon":"emoji","title":"选项标题（4-8字，有态度）","desc":"一句话描述（口语化，有画面感）","tag":"标签","tagCls":"tag-safe或tag-risk或tag-golden","effect":{效果},"result":"选择后的结果描述（40-80字，要有戏剧性）"}
+    {"icon":"emoji","title":"选项标题","desc":"一句话描述","tag":"标签","tagCls":"tag-safe或tag-risk或tag-golden","effect":{效果JSON},"result":"选择后的结果描述（30-50字）"}
   ]
 }
-effect可选字段：cash(金额), health(0-100), mood(0-100), IQ(0-100), EQ(0-100), salaryBonus(小数), stockLoss(小数如0.1=跌10%)
-
-【灵魂要求】（最重要！）
-- 选项要大胆：一个"作死"选项、一个"稳妥"选项、一个"骚操作"选项（如果有3个选项的话）
-- 结果要有反转：选了"好选项"可能翻车，选了"坏选项"可能因祸得福
-- 场景要像真实生活：不要"系统提示"，要"你正在xxx，突然xxx"
-- 允许离谱但要合理：可以荒诞，但要在游戏世界观内说得通
-- 涉及金钱时数字要合理（不要出现百万级除非玩家很有钱）
-- 可以出现黑色幽默、反转、意外，但不要负面三观
-
-【联动规则】（按玩家当前状态选择最相关的领域）
-- 18-22岁：学业/社团/实习/恋爱/兼职/考证/室友矛盾（随机）
-- 23-30岁：跳槽/加薪/创业/恋爱/租房/职场政治/副业
-- 31-40岁：房贷/子女/婚姻/中年危机/事业瓶颈/父母养老
-- 40岁+：投资/健康/退休规划/子女教育/创业转型/养生
-- 如果玩家有特定资产（股票/房产/公司），可以和该资产相关
-- 小雨只是众多NPC之一，不要每次都选她
-- 可以完全出乎意料：比如在办公室遇到明星、路上捡到奇怪的东西、突然收到多年不联系的人的消息
-${chainContext}`
+effect可选字段：cash(金额), health(0-100), mood(0-100), IQ(0-100), EQ(0-100), salaryBonus(小数)
+选项2-3个，至少一个稳健(tag-safe)一个激进(tag-risk)。
+tagCls只能是 tag-safe/tag-risk/tag-golden 之一。
+事件要符合玩家年龄和资产水平，有趣、有反转、贴近真实生活。`
   },{
     role:'user',
-    content:`玩家：${ctx.age}岁，${ctx.jobLevel}，资产${ctx.totalAsset}，心情${ctx.mood}，健康${ctx.health}，已婚${ctx.married}，子女${ctx.children}，有股票${ctx.stocks.length>0?'有':'无'}
-请生成一个让玩家"卧槽"的人生决策事件。要有戏剧性、有反转、贴近真实但不无聊。`
+    content:`玩家状态：${JSON.stringify(ctx)}
+请生成一个${ctx.age}岁、资产${ctx.totalAsset}的人可能遇到的人生决策事件。事件要和之前的不同，有新鲜感。`
   }];
 }
 
 function buildPhonePrompt(ctx){
-  // 构建连锁反应上下文
-  let chainContext='';
-  if(G._recentEvents&&G._recentEvents.length>0){
-    const recent=G._recentEvents.slice(-2);
-    chainContext='\n【最近发生过】'+recent.join('；')+'。如果合适，可以让NPC提及这些事。';
-  }
+  // 构建所有可聊天NPC的详细人设信息
   const npcPersonalities = {
-    mom: {name:'妈妈',traits:['唠叨','关心','爱攀比','节俭','护犊子','催婚狂魔'],topics:['催婚','身体健康','工作累不累','花钱大手大脚','别人家孩子','相亲对象']},
+    mom: {name:'妈妈',traits:['唠叨','关心','爱攀比','节俭','护犊子'],topics:['催婚','身体健康','工作累不累','花钱大手大脚','别人家孩子']},
     dad: {name:'爸爸',traits:['沉默','严厉','偶尔温情','报喜不报忧'],topics:['工作顺不顺','身体怎么样','钱够不够花','少熬夜']},
-    bestie: {name:'老王',traits:['八卦','直爽','爱喝酒','损友','讲义气','社会'],topics:['八卦','喝酒','吐槽','赚钱路子','一起玩','借钱']},
-    colleague: {name:'小李',traits:['谨慎','消息灵通','爱吐槽','职场生存'],topics:['公司八卦','老板动向','裁员','跳槽','年终奖','摸鱼']},
-    boss: {name:'张总',traits:['圆滑','惜字如金','画饼','施压','偶尔真诚'],topics:['加班','项目进度','晋升','画饼','表扬','敲打']},
-    classmate: {name:'小张',traits:['攀比','怀旧','消息灵通','爱炫耀'],topics:['聚会','谁混得好','谁离婚了','比较收入','投资']},
+    bestie: {name:'老王',traits:['八卦','直爽','爱喝酒','损友','讲义气'],topics:['八卦','喝酒','吐槽','赚钱路子','一起玩']},
+    colleague: {name:'小李',traits:['谨慎','消息灵通','爱吐槽','职场生存'],topics:['公司八卦','老板动向','裁员','跳槽','年终奖']},
+    boss: {name:'张总',traits:['圆滑','惜字如金','画饼','施压','偶尔真诚'],topics:['加班','项目进度','晋升','画饼','表扬']},
+    classmate: {name:'小张',traits:['攀比','怀旧','消息灵通','爱炫耀'],topics:['聚会','谁混得好','谁离婚了','比较收入']},
     banker: {name:'刘经理',traits:['专业','殷勤','推销','信息差'],topics:['理财产品','存款利率','基金','贷款']},
     realtor: {name:'小陈',traits:['热情','夸大','逼单','信息量大'],topics:['房价','好房源','投资','学区房']},
-    neighbor: {name:'邻居老赵',traits:['热心','八卦','操心','小区万事通'],topics:['小区新闻','物业','邻里八卦','相亲']},
+    neighbor: {name:'邻居老赵',traits:['热心','八卦','操心','小区万事通'],topics:['小区新闻','物业','邻里八卦']},
     exColleague: {name:'前同事小周',traits:['怀旧','感慨','信息量大','爱比较'],topics:['以前公司','跳槽','近况','行业变化']},
     mentor: {name:'李教授',traits:['睿智','温和','惜字如金','有深度'],topics:['人生建议','职业规划','深度思考']},
     gymCoach: {name:'健身教练',traits:['热情','直率','爱劝人健身','八卦体质'],topics:['训练计划','健身房八卦','减脂增肌']},
     spouse: {name:'配偶',traits:['亲密','唠叨','需要陪伴','偶尔吵架'],topics:['日常','陪伴','生活琐事','情感']},
     child: {name:'孩子',traits:['天真','依赖','成长','叛逆'],topics:['学校','成绩','要钱','叛逆']},
-    mysterious: {name:'神秘人',traits:['神秘','信息量大','偶尔有用'],topics:['行业内幕','赚钱机会','警告']},
-    campusGirl: {name:'小雨',traits:['活泼','可爱','有点小脾气','会撒娇','直率'],topics:['日常','学习','约会','校园生活','情感','八卦','生气']}
+    mysterious: {name:'神秘人',traits:['神秘','信息量大','偶尔有用'],topics:['行业内幕','赚钱机会','警告']}
   };
   
+  // 根据玩家年龄和状态筛选合适的NPC
   let availableNpcs = ['mom','dad','bestie','colleague','boss','classmate','neighbor','exColleague','mentor','gymCoach'];
   if(ctx.age >= 25) availableNpcs.push('banker','realtor');
   if(ctx.married) availableNpcs.push('spouse');
   if(ctx.children > 0) availableNpcs.push('child');
-  if(Math.random() < 0.12) availableNpcs.push('mysterious');
-  if(ctx.age >= 18 && ctx.age <= 22 && Math.random() < 0.45){
-    availableNpcs = ['campusGirl','campusGirl','campusGirl','mom','bestie','classmate'];
-  }
+  if(Math.random() < 0.1) availableNpcs.push('mysterious');
   
   return [{
     role:'system',
-    content:`你是"offer含金量"的微信聊天引擎。模拟NPC主动给玩家发微信消息。要像真实微信聊天，不是游戏对话。
+    content:`你是人生模拟游戏的AI对话引擎。你需要模拟不同性格的NPC主动给玩家发微信消息。
 
-可选NPC：
+【重要】你必须选择一个NPC来发起对话，不要让玩家选择NPC。
+
+可选NPC及其性格特点：
 ${availableNpcs.map(id => {
   const p = npcPersonalities[id];
-  return `·${id}(${p.name}): ${p.traits.join('、')}，常聊${p.topics.join('、')}`;
+  return `- ${id}(${p.name}): 性格${p.traits.join('、')}，常聊${p.topics.join('、')}`;
 }).join('\n')}
 
-【对话风格要求】
-- 每个NPC说话要有强烈个人风格，读完第一句话就能猜出是谁
-- NPC可以发语音条（用"[语音条 3'']"表示）、表情包（用"[表情包]"表示）、转账红包
-- 对话可以出乎意料：老板突然真诚了、妈妈居然不催婚了、老王突然认真了
-- 对话要有冲突和转折，不要平铺直叙
-- 可以涉及金钱：NPC给玩家钱用[GIVE:金额]，NPC向玩家借钱用[ASK:金额:原因]
+【对话规则】
+1. 根据NPC性格生成对话内容，要符合人设
+2. NPC说话要自然，像真人微信聊天
+3. 对话2-4轮，每轮NPC发1-2条消息
+4. 每轮给玩家1-3个回复选项
+5. 对话要和玩家当前状态相关（年龄、职业、资产等）
+6. 可以有emoji但不要太多
 
-【NPC说话风格深度指南】
-- 妈妈：前3句关心你，第4句突然催婚/催生/拿你和别人比。会突然发语音。"儿子！！！"开头。
-- 老爸：惜字如金，一条消息不超过10个字。但关键时刻一句话戳心。"嗯""好""少喝酒""钱够不够"。
-- 老王：上来就"兄弟！"或"卧槽！"。话题跳跃极快，从八卦到借钱到约酒。社会气十足。
-- 小李：消息很长，分很多条发。内容都是公司八卦，信息量巨大。"你知道吗""听说""据说"。
-- 老板：先夸再压。"最近表现不错"后面跟"但有个事"。偶尔深夜发消息。画饼大师。
-- 小张：永远在比较。"我xxx了""你呢？"。看似关心实则炫耀。发很多照片。
-- 刘经理：永远在推销。每条消息都像广告。但偶尔透露有用信息。
-- 小陈：热情到让你不好意思拒绝。消息轰炸。"这个真的很好""你考虑一下"。
-- 邻居老赵：消息永远很长，像在讲故事。家长里短，什么都知道。
-- 小周：怀旧杀。"还记得xxx吗""那时候"。突然感慨人生。
-- 李教授：消息少但精。每句话都像格言。"年轻人，xxx"。
-- 健身教练：每条消息都在劝你健身。看到什么都能扯到训练。"该练了！"
-- 配偶：情绪变化大。从"老公/老婆"到"你自己看着办"只需要一条消息。可以吵架。
-- 孩子：要钱/告状/分享/叛逆，四选一。消息带表情包。"爸/妈""我要""同学xxx"。
-- 神秘人：发消息像特工。"xxx有风险""建议你xxx""别问我是谁"。
-- 小雨：语气词多。"哈哈哈""emmm""你猜""哼""不理你了""你好无聊"。会突然生气又突然好。
+【金额标签规则】（重要！）
+- 如果NPC要给玩家钱，在NPC的对话文本中自然地说出来（如"转你500块"、"给你发个红包"）
+- 然后在回复选项中用[GIVE:金额]标签触发转账
+- 如果NPC要向玩家借钱，在NPC的对话文本中自然地说出来（如"能借我2万周转吗"）
+- 然后在回复选项中用[ASK:金额:原因]标签触发决策
+- 【严禁方向搞反！NPC给玩家=用GIVE，NPC向玩家借钱=用ASK】
 
-【对话结构】
-- 2-4轮对话
-- 每轮NPC发1-3条消息，然后给玩家1-3个选项
-- 对话要有起承转合：开场→展开→高潮/反转→结局
-- 最后一轮可以有意外转折（NPC突然说了一件大事）
-
-严格JSON（不要markdown）：
+必须返回严格JSON格式（不要markdown代码块），结构如下：
 {
   "npc":"npcId",
   "type":"wechat",
   "rounds":[
-    {"npcMsgs":["NPC说的话"],"opts":[{"text":"玩家回复","fx":{},"next":-1}]}
+    {"npcMsgs":["NPC说的话1","NPC说的话2"],"opts":[{"text":"玩家回复","fx":{},"next":-1}]}
   ]
 }
-fx可选：{mood:数字, health:数字, IQ:数字, EQ:数字, cash:数字, salaryBonus:小数}`
+fx可选：{mood:数字, health:数字, IQ:数字, EQ:数字, cash:数字, salaryBonus:小数}
+next:-1表示对话结束，next:1表示下一轮。
+
+【示例】妈妈发来消息：
+{"npc":"mom","type":"wechat","rounds":[
+  {"npcMsgs":["儿子，最近忙不忙？","妈看你朋友圈老是加班，要注意身体啊"],opts:[{"text":"妈，我挺好的，就是最近项目忙","fx":{},"next":1}]},
+  {"npcMsgs":["别太累了，钱是赚不完的","对了，你二姨家小明都结婚了...你什么时候带个对象回来？"],opts:[{"text":"妈，我有在看了，别催了","fx":{},"next":-1},{"text":"妈，其实我有对象了","fx":{},"next":-1}]}
+]}`
   },{
     role:'user',
-    content:(function(){
-      let base=`玩家：${ctx.age}岁，${ctx.jobLevel||'待业'}，资产${ctx.totalAsset}，心情${ctx.mood}，健康${ctx.health}，已婚${ctx.married}，子女${ctx.children}人`;
-      if(G._askMomentContext){
-        const mc=G._askMomentContext;
-        base+=`\n\n【重要】玩家刚看了${mc.npcId}的朋友圈："${mc.text}"。让该NPC发消息聊这件事。强制npcId=${mc.npcId}。`;
-        delete G._askMomentContext;
-      }
-      return base+`\n随机选一个NPC，生成一段让人意想不到的微信对话。要戏剧性，要有趣！${chainContext}`;
-    })()
+    content:`玩家状态：年龄${ctx.age}岁，${ctx.jobLevel||'待业'}，资产${ctx.totalAsset}元，已婚：${ctx.married?'是':'否'}，子女：${ctx.children}人，心情${ctx.mood}，健康${ctx.health}
+请生成一条NPC主动发来的微信消息。选择最合适的NPC，对话要自然、有生活气息。`
   }];
 }
 
 function buildSmallEventPrompt(ctx){
-  // 构建连锁反应上下文
-  let chainContext='';
-  if(G._recentEvents&&G._recentEvents.length>0){
-    const recent=G._recentEvents.slice(-2);
-    chainContext='\n【最近发生过】'+recent.join('；')+'。可以有后续反应。';
-  }
   return[{
     role:'system',
-    content:`你是"offer含金量"的小事件引擎。生成一个随机小事件——任何事情都可能发生，越丰富越好。
-严格JSON（不要markdown）：
+    content:`你是人生模拟游戏的小事件引擎。生成一个小随机事件。
+必须返回严格JSON格式（不要markdown代码块），结构如下：
 {
-  "text":"事件描述（含emoji，20-40字，要口语化有画面感）",
+  "text":"事件描述（含emoji，15-25字）",
   "type":"good或bad或neutral",
   "effect":{效果}
 }
-effect：{money:金额, health:数字, mood:数字, IQ:数字, EQ:数字, stockLoss:小数如0.1}
-
-【事件类型池】（每次随机选一个，不要重复）
-🎭 生活反转类：
-- 手机摔了但没碎/摔碎了屏幕
-- 出门前晴天下雨了/带伞了没下雨
-- 快递到了但不是自己的/自己的快递丢了
-- 路上捡到钱/钱包里少了钱
-- 吃到超好吃的/吃到苍蝇了
-- 堵车但旁边车里的人在跳舞/唱歌
-
-💬 社交魔幻类：
-- 发现自己被拉黑了/发消息对方没回
-- 前任突然加你微信/被前任的朋友圈晒到了
-- 有人在背后说你坏话被你听到了
-- 被陌生人夸好看/被搭讪了
-- 朋友突然找你借钱/还你钱
-- 老同学聚会邀请但不想去
-
-💼 职场魔幻类：
-- 被老板点名表扬/批评了
-- 发现同事在摸鱼被抓/自己摸鱼被看到
-- 收到猎头私信/被同事看到在投简历
-- 加班到深夜但第二天放假/加班但没加班费
-- 开会时打瞌睡被叫起来/电脑死机PPT没了
-
-🏃 健康随机类：
-- 跑步时膝盖响了一声/健身后浑身酸痛
-- 体检报告异常但复查没事/复查有问题需要进一步检查
-- 突然失眠/突然睡了12小时
-- 打了个喷嚏/过敏了/感冒了
-
-💕 情感地震类：
-- 发现男/女朋友手机有暧昧消息
-- 被表白但对方发错人了
-- 朋友聚会上被问"你怎么还单身"
-- 帮朋友带孩子被感动/崩溃
-- 和陌生人聊了一晚上超开心
-
-💰 财务惊喜/惊吓类：
-- 发现银行卡多了一笔钱/少了一笔钱
-- 报销下来了/发票丢了
-- 停车费罚款200/路上被贴条
-- 被推销办卡/健身房跑路了
-- 摸彩票中了10块钱/刮刮乐亏了50
-
-🧠 学习成长类：
-- 看到一句话突然顿悟了
-- 学了个新技能超有用/学了但没用
-- 别人请教你问题你答不上来
-- 灵感爆发但没记下来/记下来了写了好东西
-
-🐶 荒诞搞笑类：
-- 被鸟拉了头上
-- 走路踩到口香糖
-- 在电梯里放屁被发现了
-- 打喷嚏把假牙喷出去了
-- 被外卖小哥加了微信说你家地址好找
-
-🎲 随机NPC类：
-- 任何NPC都可能出现在任何场景
-- 陌生人的一个举动改变了你的一天
-- 刷到一个视频让你想了很久
-
-【创意要求】
-- 效果要有冲击力：好的要特别爽，坏的要特别倒霉，neutral的要有意思
-- 描述要有画面感：让玩家能想象出那个场景
-- 可以和玩家当前状态有关联，但也可以完全随机
-- 效果数值合理：不要一下影响太大
-- 事件描述要像朋友在跟你讲"我今天xxx"的语气${chainContext}`
+effect可选：{money:金额, health:数字, mood:数字, IQ:数字, EQ:数字, stockLoss:小数(如0.1)}
+事件要简短有趣，贴近生活。`
   },{
     role:'user',
-    content:`玩家：${ctx.age}岁，${ctx.jobLevel}，资产${ctx.totalAsset}，心情${ctx.mood}，健康${ctx.health}
-随机生成一个小事件，要有趣、要意外、要让人想截图分享！`
+    content:`玩家：${ctx.age}岁，${ctx.jobLevel}，资产${ctx.totalAsset}，健康${ctx.health}，心情${ctx.mood}
+生成一个小事件。`
   }];
 }
 
@@ -6582,15 +5563,42 @@ function buildNewsPrompt(ctx){
 }
 
 async function callAI(promptBuilder,eventType){
-  if(!AI_ENGINE.enabled||AI_ENGINE._fallbackCount>=AI_ENGINE.maxFallback)return Promise.resolve(null);
-  // 入队：等待前一个调用完成后，间隔1秒再执行
-  const task=_aiQueue.then(async()=>{
-    await new Promise(r=>setTimeout(r,1000));
-    return _doCallAI(promptBuilder,eventType);
-  });
-  // 更新队列（不让失败阻塞后续）
-  _aiQueue=task.catch(()=>{});
-  return task;
+  if(!AI_ENGINE.enabled||AI_ENGINE._fallbackCount>=AI_ENGINE.maxFallback)return null;
+  const now=Date.now();
+  if(now-AI_ENGINE.lastCall<AI_ENGINE.minInterval)return null;
+  const ctx=getGameStateContext();
+  const messages=promptBuilder(ctx);
+  const cacheKey=JSON.stringify(messages);
+  if(AI_ENGINE.cache[cacheKey])return AI_ENGINE.cache[cacheKey];
+  AI_ENGINE.lastCall=now;
+  const url=AI_ENGINE.useProxy?AI_ENGINE.proxyUrl:AI_ENGINE.directUrl;
+  const headers={'Content-Type':'application/json'};
+  if(!AI_ENGINE.useProxy)headers['Authorization']='Bearer '+AI_ENGINE.apiKey;
+  try{
+    const ctrl=new AbortController();
+    const tid=setTimeout(()=>ctrl.abort(),8000);
+    const resp=await fetch(url,{
+      method:'POST',headers,
+      body:JSON.stringify({messages,max_tokens:600,temperature:0.85}),
+      signal:ctrl.signal
+    });
+    clearTimeout(tid);
+    if(!resp.ok){AI_ENGINE._fallbackCount++;return null;}
+    const data=await resp.json();
+    const text=data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content;
+    if(!text){AI_ENGINE._fallbackCount++;return null;}
+    // Parse JSON from response (handle possible markdown code blocks)
+    let parsed;
+    const jsonMatch=text.match(/\{[\s\S]*\}/);
+    if(jsonMatch)parsed=JSON.parse(jsonMatch[0]);
+    else{AI_ENGINE._fallbackCount++;return null;}
+    AI_ENGINE.cache[cacheKey]=parsed;
+    AI_ENGINE._fallbackCount=0;
+    return parsed;
+  }catch(e){
+    AI_ENGINE._fallbackCount++;
+    return null;
+  }
 }
 
 // ========== AI-enhanced trigger functions ==========
@@ -6749,7 +5757,7 @@ if(_origTriggerStockNews){
   };
 }
 
-function showToast(msg,dur){const el=document.getElementById('toastEl');el.textContent=msg;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),dur||1800);}
+function showToast(msg,type,dur){type=type||'info';dur=dur||1500;var c=document.getElementById('toastContainer');if(!c)return;var t=document.createElement('div');t.className='toast '+type;t.textContent=msg;c.appendChild(t);setTimeout(function(){if(t.parentNode)t.parentNode.removeChild(t)},dur)}
 
 // ====== AGE DISPLAY ======
 function updateAgeDisplay(){var age=G.age||18;var lifeExpect=80;var pct=Math.min(100,(age/lifeExpect)*100);var el=document.getElementById('ageBar');if(!el)return;el.innerHTML='<span class="cur-age">'+Math.floor(age)+'岁</span><div class="life-prog"><div class="life-prog-fill" style="width:'+pct+'%"></div></div><span class="life-pct">'+Math.floor(pct)+'%</span>'}
@@ -8461,7 +7469,7 @@ function _showMonthlySummary(before,after){
 }
 
 // === _doAdvanceMonth ===
-async function _doAdvanceMonth(){
+function _doAdvanceMonth(){
   // v3.17.6: Ensure auto-chain flag is cleared when entering direct advance
   G._autoChainActive=false;
   var btn=document.getElementById('nextMonthBtn');
@@ -8715,7 +7723,7 @@ function showAIChat(){
 }
 
 // === sendAIChat ===
-async function sendAIChat(){
+function sendAIChat(){
   const input=document.getElementById('aiChatInput');
   const msgs=document.getElementById('aiChatMsgs');
   const text=input.value.trim();
@@ -8823,7 +7831,7 @@ function _getNotificationsHTML(){
 }
 
 // === generateThreadAIReply ===
-async function generateThreadAIReply(npcId,context,playerChoice,thread){
+function generateThreadAIReply(npcId,context,playerChoice,thread){
   const p=NPC_PERSONALITIES[npcId];
   if(!p)return null;
   
@@ -9117,7 +8125,7 @@ function submitMomentComment(id){
 }
 
 // === _triggerMomentNPCComments ===
-async function _triggerMomentNPCComments(momentId){
+function _triggerMomentNPCComments(momentId){
   if(!G.phone)return;
   // 先查AI朋友圈，再查模板朋友圈
   let m=G.phone.aiMoments?G.phone.aiMoments.find(x=>x.id===momentId):null;
@@ -9287,7 +8295,7 @@ function renderSchedule(){
 }
 
 // === processScheduledDates ===
-async function processScheduledDates(){
+function processScheduledDates(){
   if(!G.scheduledDates)return;
   // 清理超过6个月的过期日程，避免数组无限增长
   G.scheduledDates=G.scheduledDates.filter(e=>{
@@ -9308,7 +8316,7 @@ async function processScheduledDates(){
 }
 
 // === triggerScheduleEvent ===
-async function triggerScheduleEvent(event){
+function triggerScheduleEvent(event){
   if(!event||event.status!=='upcoming')return;
   // 费用由createScheduleThread的选项扣除，这里不再重复扣
   // Deduct annual leave
@@ -9372,7 +8380,7 @@ function _getRelationshipType(npcId){
 }
 
 // === generateScheduleSceneAI ===
-async function generateScheduleSceneAI(event,npcId,npcName,npcTraits,relType,activityName){
+function generateScheduleSceneAI(event,npcId,npcName,npcTraits,relType,activityName){
   let relLabels={romance:'恋人/暧昧对象',family:'家人',friend:'好友/同学',colleague:'同事/上司',acquaintance:'刚认识的朋友'};
   // v3.15.7: 根据关系深度调整场景提示
   let relNote='';
@@ -9431,7 +8439,7 @@ async function generateScheduleSceneAI(event,npcId,npcName,npcTraits,relType,act
 }
 
 // === createScheduleThread ===
-async function createScheduleThread(event){
+function createScheduleThread(event){
   const p=NPC_PERSONALITIES[event.npcId]||{name:event.npcName||'朋友',avatar:event.npcAvatar||'👤'};
   const name=p.name;const avatar=p.avatar;
   const isRomance=(event.npcId==='campusGirl');
@@ -9930,7 +8938,7 @@ ${chosen.map(n=>`·${n.id}(${n.name}): ${n.traits.join('、')}，常发${n.topic
 }
 
 // === _doCallAI ===
-async function _doCallAI(promptBuilder,eventType){
+function _doCallAI(promptBuilder,eventType){
   if(!AI_ENGINE.enabled||AI_ENGINE._fallbackCount>=AI_ENGINE.maxFallback)return null;
   const ctx=getGameStateContext();
   const messages=promptBuilder(ctx);
@@ -9964,7 +8972,7 @@ async function _doCallAI(promptBuilder,eventType){
 }
 
 // === triggerAIMoments ===
-async function triggerAIMoments(){
+function triggerAIMoments(){
   if(!G.phone||!AI_ENGINE.enabled)return;
   // 30% chance per month, or 50% if EQ>120
   const chance=G.EQ>120?0.5:0.3;
