@@ -5672,13 +5672,15 @@ function showChatProfile(){
   showModal({title:'📒 联系人资料',content:'姓名：'+npcName+'\n关系：'+relation+(note?('\n备注：'+note):'')+'\n\n'+(isContact?'✅ 已加入通讯录（关系：'+labels[friendLevel]+'）':'尚未加入通讯录，多聊天可提升关系！'),confirmText:'好的',showCancel:false});
 }
 
-// ===== AI Chat System =====
+// ===== AI Chat System (via CORS Proxy) =====
 const AI_CHAT_CONFIG={
-  apiUrl:'https://token-plan-cn.xiaomimimo.com/v1',
-  apiKey:'c4o07etwyxvizor7ga23tk55i1zro65ofs8eynmbgduu9luw',
-  model:'mimo-v2.5',
+  apiUrl:'https://token-plan-cn.xiaomimimo.com/v1/chat/completions',
+  apiKey:'tp-chy2q7xt8dofqyzdqb4bzbcz5g9bmmxyhzm7dcp65wl2vn0', // proxy adds api-key header
+  model:'xiaomi/mimo-v2.5',
   enabled:true,
   _fallbackCount:0,
+  _retried:false,
+  _retryDelay:2000,
   maxFallback:3
 };
 
@@ -5923,8 +5925,8 @@ ${p.name}的家人/朋友是${relation}。玩家${gameState.age}岁，${gameStat
       const resp=await fetch(AI_CHAT_CONFIG.apiUrl,{
         method:'POST',
         headers:{
-          'Content-Type':'application/json',
-          'Authorization':'Bearer '+AI_CHAT_CONFIG.apiKey
+          'api-key':'tp-chy2q7xt8dofqyzdqb4bzbcz5g9bmmxyhzm7dcp65wl2vn0',
+          'Content-Type':'application/json'
         },
         body:JSON.stringify({
           model:AI_CHAT_CONFIG.model,
@@ -5941,7 +5943,7 @@ ${p.name}的家人/朋友是${relation}。玩家${gameState.age}岁，${gameStat
       if(resp.ok){
         const data=await resp.json();
         if(data.choices&&data.choices[0]&&data.choices[0].message){
-          const _raw=(data.choices[0].message.content||'').trim();
+          const _raw=((data.choices[0].message.content||data.choices[0].message.reasoning_content)||'').trim();
           // v3.17.5: 过滤AI返回的错误文本，避免显示给玩家
           if(_raw&&!/请求失败|request\s*failed|undefined|网络错误|网络异常|timeout|API error/i.test(_raw)){
             AI_CHAT_CONFIG._fallbackCount=0;
@@ -7056,10 +7058,10 @@ window.addEventListener('load',()=>{
 });
 const AI_ENGINE={
   enabled:true,
-  proxyUrl:'https://offer-ai-proxy.lionelzhu1989.workers.dev',
-  directUrl:'https://token-plan-cn.xiaomimimo.com/v1',
-  apiKey:'c4o07etwyxvizor7ga23tk55i1zro65ofs8eynmbgduu9luw',
-  model:'mimo-v2.5',
+  proxyUrl:'https://token-plan-cn.xiaomimimo.com/v1/chat/completions',
+  directUrl:'https://token-plan-cn.xiaomimimo.com/v1/chat/completions',
+  apiKey:'tp-chy2q7xt8dofqyzdqb4bzbcz5g9bmmxyhzm7dcp65wl2vn0',
+  model:'xiaomi/mimo-v2.5',
   useProxy:false,
   cache:{},// prompt hash → response
   pending:null,// current fetch promise
@@ -9047,7 +9049,8 @@ async function generateEncounterAIResponse(sceneKey, npcName, choiceText, choice
     try{
       var resp = await fetch(AI_CHAT_CONFIG.endpoint, {
         method:'POST',
-        headers:{'Content-Type':'application/json'},
+        headers:{
+          'api-key':'tp-chy2q7xt8dofqyzdqb4bzbcz5g9bmmxyhzm7dcp65wl2vn0','Content-Type':'application/json'},
         body:JSON.stringify({
           model: AI_CHAT_CONFIG.model,
           messages:[
@@ -9059,7 +9062,7 @@ async function generateEncounterAIResponse(sceneKey, npcName, choiceText, choice
         })
       });
       var data = await resp.json();
-      var text = data.choices[0].message.content;
+      var text = (data.choices[0].message.content||data.choices[0].message.reasoning_content);
       var addFriend = text.indexOf('[ADD_FRIEND:yes]') >= 0;
       AI_CHAT_CONFIG._fallbackCount = 0;
       return {text: text.replace(/\[ADD_FRIEND:(yes|no)\]/g,''), addFriend: addFriend};
@@ -9505,8 +9508,8 @@ async function sendAIChat(){
     const resp=await fetch(AI_CHAT_CONFIG.apiUrl,{
       method:'POST',
       headers:{
-        'Content-Type':'application/json',
-        'Authorization':'Bearer '+AI_CHAT_CONFIG.apiKey
+          'api-key':'tp-chy2q7xt8dofqyzdqb4bzbcz5g9bmmxyhzm7dcp65wl2vn0',
+        'Content-Type':'application/json'
       },
       body:JSON.stringify({
         model:AI_CHAT_CONFIG.model,
@@ -9525,7 +9528,7 @@ async function sendAIChat(){
     }
     
     const data=await resp.json();
-    const reply=data.choices[0].message.content;
+    const reply=(data.choices[0].message.content||data.choices[0].message.reasoning_content);
     
     const replyDiv=document.createElement('div');
     replyDiv.style.cssText='background:#f0f0f0;padding:8px 12px;border-radius:8px;margin-bottom:8px;';
@@ -9701,7 +9704,8 @@ ${threadContext}${historyText?'\n历史消息：\n'+historyText:''}
       const timeoutId=setTimeout(()=>controller.abort(),10000);
       const resp=await fetch(AI_CHAT_CONFIG.apiUrl,{
         method:'POST',
-        headers:{'Content-Type':'application/json','Authorization':'Bearer '+AI_CHAT_CONFIG.apiKey},
+        headers:{
+          'api-key':'tp-chy2q7xt8dofqyzdqb4bzbcz5g9bmmxyhzm7dcp65wl2vn0','Content-Type':'application/json'},
         body:JSON.stringify({
           model:AI_CHAT_CONFIG.model,
           messages:[{role:'system',content:systemPrompt},{role:'user',content:'## 玩家选择\n'+playerChoice+'\n\n（请根据上面的历史消息记忆，给出像真人一样的自然回复。）'}],
@@ -9714,7 +9718,7 @@ ${threadContext}${historyText?'\n历史消息：\n'+historyText:''}
       if(resp.ok){
         const data=await resp.json();
         if(data.choices&&data.choices[0]&&data.choices[0].message){
-          let reply=(data.choices[0].message.content||'').trim();
+          let reply=((data.choices[0].message.content||data.choices[0].message.reasoning_content)||'').trim();
           // 剥离可能的资金标签（模板线程由代码处理资金）
           reply=reply.replace(/\[GIVE:\d+\]/g,'').replace(/\[ASK:\d+:.+?\]/g,'').replace(/\[TREAT:\d+\]/g,'').trim();
           // v3.17.5: 过滤AI返回的错误文本
@@ -10184,13 +10188,14 @@ async function generateScheduleSceneAI(event,npcId,npcName,npcTraits,relType,act
     const _scTid=setTimeout(()=>_scAbort.abort(),8000);
     const resp=await fetch(AI_ENGINE.useProxy?AI_ENGINE.proxyUrl:AI_ENGINE.directUrl,{
       method:'POST',
-      headers:AI_ENGINE.useProxy?{'Content-Type':'application/json'}:{'Content-Type':'application/json','Authorization':'Bearer '+AI_ENGINE.apiKey},
+      headers:{
+          'api-key':'tp-chy2q7xt8dofqyzdqb4bzbcz5g9bmmxyhzm7dcp65wl2vn0','Content-Type':'application/json'},
       body:JSON.stringify({model:AI_ENGINE.model,messages:[{role:'user',content:prompt}],temperature:0.92,max_tokens:500}),
       signal:_scAbort.signal
     });
     clearTimeout(_scTid);
     const data=await resp.json();
-    const txt=(data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content)||'';
+    const txt=(data.choices&&data.choices[0]&&data.choices[0].message&&(data.choices[0].message.content||data.choices[0].message.reasoning_content))||'';
     const match=txt.match(/\{[\s\S]*\}/);
     if(match){
       const parsed=JSON.parse(match[0]);
@@ -10720,7 +10725,6 @@ async function _doCallAI(promptBuilder,eventType){
   const cacheKey=eventType+':'+ctx.totalMonths+':'+Math.random().toString(36).substr(2,4);
   const url=AI_ENGINE.useProxy?AI_ENGINE.proxyUrl:AI_ENGINE.directUrl;
   const headers={'Content-Type':'application/json'};
-  if(!AI_ENGINE.useProxy)headers['Authorization']='Bearer '+AI_ENGINE.apiKey;
   try{
     const ctrl=new AbortController();
     const tid=setTimeout(()=>ctrl.abort(),10000);
@@ -10732,7 +10736,7 @@ async function _doCallAI(promptBuilder,eventType){
     clearTimeout(tid);
     if(!resp.ok){AI_ENGINE._fallbackCount++;return null;}
     const data=await resp.json();
-    const text=data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content;
+    const text=data.choices&&data.choices[0]&&data.choices[0].message&&(data.choices[0].message.content||data.choices[0].message.reasoning_content);
     if(!text){AI_ENGINE._fallbackCount++;return null;}
     let parsed;
     const jsonMatch=text.match(/\{[\s\S]*\}/);
