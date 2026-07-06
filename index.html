@@ -5530,6 +5530,7 @@ ${style}
 4. 根据你的性格说话：妈妈就唠叨，爸爸就严厉，哥们就随意。
 5. 可以有自己的情绪：开心、担心、生气、惊讶。
 6. 可以自然提及新闻热点或天气，但不要刻意，根据对话内容决定。
+7. **你记得之前所有聊过的话**：下面的「用户消息」里包含了最近20条历史对话，请自然地引用或回应之前的话题，让NPC像一个有连续记忆的人
 
 ## 你们的关系
 ${relation}，亲密${rel.intimacy} 信任${rel.trust} 好感${rel.affection}
@@ -7851,7 +7852,7 @@ function confirmEnhancedRebirth(){
 
 // ====== V2 Batch3: 新手引导（修复版） ======
 function startOnboarding(){
-  if(localStorage.getItem('ob_done_v2'))return;
+  if(localStorage.getItem('ob_done_v2')){if(typeof startGame==='function')startGame();return;}
   showOBStep(0);
 }
 function showOBStep(idx){
