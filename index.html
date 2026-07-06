@@ -755,6 +755,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
   <h1>offer含金量</h1>
   <p class="subtitle">从校园到人生巅峰，你的选择决定含金量</p>
   <button class="start-btn" onclick="startGame()">开始挑战</button>
+  <button class="start-btn" style="background:#e74c3c;margin-top:12px;" onclick="newGame()">新游戏</button>
   <div class="features">
     <div class="feat">💼 职业晋升</div>
     <div class="feat">📈 多元投资</div>
@@ -1800,6 +1801,11 @@ function switchInvestTab(name){
 function startGame(){
   if(loadGame()&&!G.gameOver){
     migrateSave();
+    // V5: 旧存档没有职业信息，强制选择
+    if(!G.career){
+      showCareerSelection();
+      return;
+    }
     document.getElementById('welcomePage').style.display='none';
     document.getElementById('gameApp').style.display='flex';
     var go=document.getElementById('guideOverlay');if(go)go.style.display='none';
@@ -1808,6 +1814,14 @@ function startGame(){
   }
   // V5: 新游戏显示职业选择界面
   showCareerSelection();
+}
+// V5: 新游戏（清除存档）
+function newGame(){
+  if(confirm('确定要清除当前存档并开始新游戏吗？')){
+    clearGame();
+    G=null;
+    showCareerSelection();
+  }
 }
 // V5: 显示职业选择界面
 function showCareerSelection(){
