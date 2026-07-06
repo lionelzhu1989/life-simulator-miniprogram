@@ -822,12 +822,12 @@ const JOBS=[
   {id:'director',name:'总监',salary:500000,requireIQ:120,requireEQ:120,level:5,requireMonths:60}
 ];
 const STOCKS=[
-  {code:'TECH001',name:'互联网科技',basePrice:100,volatility:0.3,sector:'tech'},
-  {code:'HOUSE001',name:'地产龙头',basePrice:50,volatility:0.2,sector:'house'},
-  {code:'BANK001',name:'国有银行',basePrice:30,volatility:0.08,sector:'finance'},
-  {code:'MED001',name:'医药生物',basePrice:80,volatility:0.25,sector:'medical'},
-  {code:'AI001',name:'人工智能',basePrice:150,volatility:0.4,sector:'ai'},
-  {code:'ENERGY001',name:'新能源',basePrice:120,volatility:0.35,sector:'energy'}
+  {code:'TECH001',name:'互联网科技',basePrice:100,volatility:0.3,sector:'tech',expectedReturn:18,risk:'中高',riskDesc:'波动大收益高'},
+  {code:'HOUSE001',name:'地产龙头',basePrice:50,volatility:0.2,sector:'house',expectedReturn:8,risk:'中',riskDesc:'稳健型'},
+  {code:'BANK001',name:'国有银行',basePrice:30,volatility:0.08,sector:'finance',expectedReturn:6,risk:'低',riskDesc:'保值型'},
+  {code:'MED001',name:'医药生物',basePrice:80,volatility:0.25,sector:'medical',expectedReturn:12,risk:'中',riskDesc:'长期看好'},
+  {code:'AI001',name:'人工智能',basePrice:150,volatility:0.4,sector:'ai',expectedReturn:25,risk:'高',riskDesc:'高风险高回报'},
+  {code:'ENERGY001',name:'新能源',basePrice:120,volatility:0.35,sector:'energy',expectedReturn:15,risk:'中高',riskDesc:'政策驱动'}
 ];
 const HOUSES=[
   {id:'old',name:'老破小',price:500000,rent:1500,area:50,unlockAsset:0},
@@ -2234,7 +2234,8 @@ function refreshStock(){
         newsTag=relatedNews.type==='good'?'<span class="tag tag-green" style="margin-left:6px;font-size:10px;">利好</span>':'<span class="tag tag-red" style="margin-left:6px;font-size:10px;">利空</span>';
       }
     }
-    html+='<div class="list-item" style="flex-wrap:wrap;"><div class="list-info" style="width:100%;"><div class="flex-between"><span class="name">'+s.name+newsTag+'</span><span class="stock-price '+cls+'">¥'+price.toFixed(2)+'</span></div><div class="flex-between mt-8"><span class="stock-hold">涨跌：<span class="'+cls+'">'+(change>0?'+':'')+change+'%</span></span><span class="stock-hold">持有：'+hold+'股</span></div></div><div class="list-action" style="width:100%;display:flex;gap:8px;margin-top:8px;"><button class="btn btn-danger btn-sm" style="flex:1;" onclick="stockSell(\''+s.code+'\')" '+(hold<=0?'disabled':'')+'>卖出</button><button class="btn btn-success btn-sm" style="flex:1;" onclick="stockBuy(\''+s.code+'\')" '+(maxBuy<=0?'disabled':'')+'>买入</button></div></div>';
+    const riskColor=s.expectedReturn>=20?'#e74c3c':s.expectedReturn>=12?'#e67e22':'#27ae60';
+    html+='<div class="list-item" style="flex-wrap:wrap;"><div class="list-info" style="width:100%;"><div class="flex-between"><span class="name">'+s.name+newsTag+'</span><span class="stock-price '+cls+'">¥'+price.toFixed(2)+'</span></div><div class="flex-between mt-8"><span class="stock-hold">涨跌：<span class="'+cls+'">'+(change>0?'+':'')+change+'%</span></span><span class="stock-hold">持有：'+hold+'股</span></div><div class="mt-8" style="font-size:11px;color:#666;">预期年化：<b style="color:'+riskColor+';">'+s.expectedReturn+'%</b> | 风险：<b>'+s.risk+'</b>('+s.riskDesc+') | 波动率：'+(s.volatility*100).toFixed(0)+'%</div></div><div class="list-action" style="width:100%;display:flex;gap:8px;margin-top:8px;"><button class="btn btn-danger btn-sm" style="flex:1;" onclick="stockSell(\''+s.code+'\')" '+(hold<=0?'disabled':'')+'>卖出</button><button class="btn btn-success btn-sm" style="flex:1;" onclick="stockBuy(\''+s.code+'\')" '+(maxBuy<=0?'disabled':'')+'>买入</button></div></div>';
   });
   document.getElementById('stockList').innerHTML=html;
   let holdHtml='';let totalVal=0;let totalCost=0;
@@ -6860,18 +6861,11 @@ function getAILifeContextHint(){
   return hints.join('；');
 }
 
-
-</script>
-</body>
-</html>
-
 // ===== 归档：按NPC合并消息线程 =====
 function pushPhoneThread(thread){
-  // If same NPC has unread/reading thread, merge rounds into it
-  const existing=G.phone.threads.find(t=>t.npcId===thread.npcId&&t.status!=='replied');
+  var existing=G.phone.threads.find(function(t){return t.npcId===thread.npcId&&t.status!=='replied';});
   if(existing){
-    existing.rounds.push(...thread.rounds);
-    // Keep the latest metadata
+    existing.rounds.push.apply(existing.rounds, thread.rounds);
     if(thread.projectId)existing.projectId=thread.projectId;
     if(thread.projectEventIdx!==undefined)existing.projectEventIdx=thread.projectEventIdx;
     updatePhoneBadge();updatePhoneHint();return;
@@ -6915,48 +6909,38 @@ async function generateEncounterAIResponse(sceneKey, npcName, choiceText, choice
     '5. 如果玩家表现差（冷淡、敷衍、无礼），倾向no\n'+
     '6. 也可以根据NPC性格随机决定，比如老师可能更严格，邻居可能更热情\n'+
     '7. 不要说"作为AI"之类的话，完全以NPC身份回应';
-
   if(AI_CHAT_CONFIG.enabled && AI_CHAT_CONFIG._fallbackCount < AI_CHAT_CONFIG.maxFallback){
     try{
-      var resp = await fetch(AI_CHAT_CONFIG.apiUrl, {
+      var resp = await fetch(AI_CHAT_CONFIG.endpoint, {
         method:'POST',
-        headers:{
-          'Content-Type':'application/json',
-          'Authorization':'Bearer '+AI_CHAT_CONFIG.apiKey
-        },
+        headers:{'Content-Type':'application/json'},
         body:JSON.stringify({
-          model:AI_CHAT_CONFIG.model,
+          model: AI_CHAT_CONFIG.model,
           messages:[
-            {role:'system', content:systemPrompt},
-            {role:'user', content:'玩家选择了：'+choiceText}
+            {role:'system', content: systemPrompt},
+            {role:'user', content: choiceText}
           ],
-          temperature:0.85,
-          max_tokens:200
+          max_tokens: 300,
+          temperature: 0.85
         })
       });
-      if(resp.ok){
-        var data = await resp.json();
-        var text = (data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content)||'';
-        text = text.trim();
-        AI_CHAT_CONFIG._fallbackCount = 0;
-        // 解析标签
-        var wantFriend = true; // 默认愿意
-        var tagMatch = text.match(/\[ADD_FRIEND:(yes|no)\]/i);
-        if(tagMatch){
-          wantFriend = tagMatch[1].toLowerCase() === 'yes';
-          text = text.replace(/\[ADD_FRIEND:(yes|no)\]/gi,'').trim();
-        }
-        return {text:text, wantFriend:wantFriend};
-      }
+      var data = await resp.json();
+      var text = data.choices[0].message.content;
+      var addFriend = text.indexOf('[ADD_FRIEND:yes]') >= 0;
+      AI_CHAT_CONFIG._fallbackCount = 0;
+      return {text: text.replace(/\[ADD_FRIEND:(yes|no)\]/g,''), addFriend: addFriend};
     }catch(e){
       AI_CHAT_CONFIG._fallbackCount = (AI_CHAT_CONFIG._fallbackCount||0)+1;
     }
   }
-  // 降级：用固定模板
-  var responses = (MEETABLE_NPCS[sceneKey]||{}).responses || ['嗯嗯'];
-  var fallbackText = responses[Math.floor(Math.random()*responses.length)];
-  // 根据effect判断态度
-  var goodEffect = choiceEffect && (choiceEffect.eq > 0 || choiceEffect.mood > 0 || choiceEffect.health > 0);
-  return {text:fallbackText, wantFriend:goodEffect};
+  // Fallback - generate local response
+  var fallbackText = npcName+'点点头说："好的，有什么需要随时找我。"';
+  if(choiceEffect && choiceEffect.Eq) fallbackText = npcName+'微笑着回应："你情商真高，很高兴认识你！"';
+  if(choiceEffect && choiceEffect.Iq) fallbackText = npcName+'思考后回应："你这想法很有意思，可以深入聊聊。"';
+  return {text: fallbackText, addFriend: Math.random()<0.6};
 }
- triggered at Mon Jul  6 02:26:19 AM CST 2026
+
+
+</script>
+</body>
+</html>
