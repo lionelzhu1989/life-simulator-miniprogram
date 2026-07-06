@@ -6733,10 +6733,13 @@ function processSystemLinkages(){
   var LS=evaluateLifeState();
   var evts=[];
   // ① 宠物→心情 深度联动
-  if(LS.petCount>0&&LS.highIntimacy>0&&LS.moodStatus==='critical'){
-    var mHeal=Math.floor(LS.highIntimacy*1.5);
-    G.mood=clamp(G.mood+mHeal,0,200);
-    evts.push({text:'🐾 '+G.pets[0].name+'静静地陪着你，心情+'+mHeal,type:'good',source:'ai-link'});
+  if(LS.petCount>0&&(LS.moodStatus==='critical'||LS.moodStatus==='low')){
+    var bestPet=G.pets.reduce(function(a,b){return(a.intimacy||0)>=(b.intimacy||0)?a:b;});
+    if(bestPet.intimacy>=30){
+      var mHeal=Math.max(3,Math.floor(bestPet.intimacy*0.3));
+      G.mood=clamp(G.mood+mHeal,0,200);
+      evts.push({text:'🐾 '+bestPet.name+'静静地陪着你，心情+'+mHeal,type:'good',source:'ai-link'});
+    }
   }
   if(LS.petCount>0&&LS.moodStatus==='happy'&&Math.random()<0.15){
     var bestPet=G.pets.reduce(function(a,b){return(a.intimacy||0)>=(b.intimacy||0)?a:b;});
@@ -6745,7 +6748,7 @@ function processSystemLinkages(){
   }
   // ② 投资大亏→社交消息
   if(LS.stockHealth==='loss'&&LS.totalAsset>50000&&Math.random()<0.25){
-    var lossAmt=Math.floor(LS.totalAsset*0.05);
+    var lossAmt=Math.floor(LS.totalAsset*0.03);
     if((G.socialContacts||[]).length>0){
       var c=G.socialContacts[Math.floor(Math.random()*G.socialContacts.length)];
       if(c&&NPC_PERSONALITIES[c.id]){
@@ -6823,12 +6826,12 @@ function processSystemLinkages(){
     }
   }
   // ⑧ 社交倦怠：低心情时朋友约你出去
-  if((LS.moodStatus==='critical'||LS.moodStatus==='low')&&(G.socialContacts||[]).length>0&&Math.random()<0.15){
+  if((LS.moodStatus==='critical'||LS.moodStatus==='low')&&(G.socialContacts||[]).length>0&&Math.random()<0.20){
     var buddy=G.socialContacts[Math.floor(Math.random()*G.socialContacts.length)];
-    if(buddy&&buddy.friendLevel>=2){
+    if(buddy&&buddy.friendLevel>=1){
       evts.push({text:'🍻 '+buddy.name+'约你出去散心，心情+8',type:'neutral',source:'ai-link'});
       G.mood=clamp(G.mood+8,0,200);
-      G.cash=Math.max(0,G.cash-500);
+      G.cash=Math.max(0,G.cash-300);
     }
   }
   // Push all events
