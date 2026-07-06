@@ -4946,7 +4946,7 @@ async function _generateNPCAIReply(npcId, playerMsg, chatHist){
     const resp=await fetch('https://token-plan-cn.xiaomimimo.com/v1/chat/completions',{
       method:'POST',
       headers:{'Content-Type':'application/json','api-key':'tp-chy2q7xt8dofqyzdqb4bzbcz5g9bmmxyhzm7dcp665wl2vn0'},
-      body:JSON.stringify({model:'mimo-v2.5',messages:[{role:'user',content:prompt}],temperature:0.92,max_tokens:500})
+      body:JSON.stringify({model:'xiaomi/mimo-v2.5',messages:[{role:'user',content:prompt}],temperature:0.92,max_tokens:500})
     });
     if(resp.ok){
       const data=await resp.json();
@@ -5528,7 +5528,7 @@ async function _aiFillThread(thread){
       const resp=await fetch('https://token-plan-cn.xiaomimimo.com/v1/chat/completions',{
         method:'POST',
         headers:{'Content-Type':'application/json','api-key':'tp-chy2q7xt8dofqyzdqb4bzbcz5g9bmmxyhzm7dcp665wl2vn0'},
-        body:JSON.stringify({model:'mimo-v2.5',messages:[{role:'user',content:prompt}],temperature:0.92,max_tokens:300})
+        body:JSON.stringify({model:'xiaomi/mimo-v2.5',messages:[{role:'user',content:prompt}],temperature:0.92,max_tokens:500})
       });
       if(resp.ok){
         const data=await resp.json();
