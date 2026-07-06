@@ -693,6 +693,24 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 /* ===== Friend Grouping ===== */
 .friend-group-header{display:flex;align-items:center;gap:8px;padding:10px 16px;background:#f8f9fa;cursor:pointer;user-select:none;border-bottom:1px solid #eee;font-size:13px;font-weight:600;color:#555;}
 .group-select-modal-overlay.show{display:flex;}
+
+/* ===== Tutorial Overlay ===== */
+.tut-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);z-index:10001;display:flex;align-items:center;justify-content:center;animation:tutFadeIn .25s ease;}
+@keyframes tutFadeIn{from{opacity:0}to{opacity:1}}
+.tut-card{background:#fff;border-radius:18px;padding:28px 24px 20px;max-width:340px;width:85%;position:relative;box-shadow:0 8px 32px rgba(0,0,0,.18);animation:tutSlideUp .3s ease;}
+@keyframes tutSlideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.tut-progress{display:flex;gap:5px;justify-content:center;margin-bottom:16px;min-height:6px;}
+.tut-progress-dot{height:5px;border-radius:3px;transition:all .3s ease;}
+.tut-step-num{text-align:center;font-size:12px;color:#4A90D9;font-weight:600;margin-bottom:10px;}
+.tut-title{font-size:18px;font-weight:700;color:#1a1a2e;margin-bottom:12px;line-height:1.4;}
+.tut-desc{font-size:14px;color:#555;line-height:1.7;margin-bottom:20px;}
+.tut-actions{display:flex;gap:10px;justify-content:center;margin-bottom:14px;}
+.tut-skip{text-align:center;font-size:12px;color:#aaa;cursor:pointer;padding:4px;transition:color .2s;}
+.tut-skip:hover{color:#666;text-decoration:underline;}
+.tut-skip-btn{position:absolute;top:14px;right:16px;background:none;border:1px solid #ddd;border-radius:6px;padding:3px 10px;font-size:11px;color#999;cursor:pointer;transition:all .2s;}
+.tut-skip-btn:hover{background:#f5f5f5;color:#666;border-color:#ccc;}
+.tut-highlight{box-shadow:0 0 0 3px rgba(74,144,217,.5),0 0 12px rgba(74,144,217,.3) !important;position:relative;z-index:10002;border-radius:8px;transition:box-shadow .3s;}
+
 </style>
 </head>
 <body>
@@ -863,11 +881,13 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
       <div class="phone-tab active" onclick="switchPhoneTab('messages')">💬 消息</div>
       <div class="phone-tab" onclick="switchPhoneTab('contacts')">📒 通讯录</div>
       <div class="phone-tab" onclick="switchPhoneTab('moments')">📷 朋友圈</div>
+      <div class="phone-tab" onclick="switchPhoneTab('dashboard')">📊 仪表盘</div>
       <div class="phone-tab" onclick="switchPhoneTab('notifications')">🔔 通知</div>
     </div>
     <div id="phone-messages" class="phone-content active"></div>
     <div id="phone-contacts" class="phone-content"></div>
     <div id="phone-moments" class="phone-content"></div>
+    <div id="phone-dashboard" class="phone-content"></div>
     <div id="phone-notifications" class="phone-content"></div>
   </div>
 
@@ -6220,7 +6240,7 @@ function renderNotifications(){
 function switchPhoneTab(tab){
   document.querySelectorAll('.phone-tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.phone-content').forEach(c=>c.classList.remove('active'));
-  const tabNames=['messages','contacts','schedule','moments','notifications'];
+  const tabNames=['messages','contacts','schedule','moments','dashboard','notifications'];
   const idx=tabNames.indexOf(tab);
   if(idx>=0){const allTabs=document.querySelectorAll('.phone-tab');if(allTabs[idx])allTabs[idx].classList.add('active');}
   const el=document.getElementById('phone-'+tab);
@@ -6229,8 +6249,169 @@ function switchPhoneTab(tab){
   else if(tab==='contacts')renderContacts();
   else if(tab==='schedule')renderSchedule();
   else if(tab==='moments')renderMoments();
+  else if(tab==='dashboard')renderDashboard();
   else if(tab==='notifications')renderNotifications();
 }
+
+function renderDashboard(){
+  const el=document.getElementById('phone-dashboard');if(!el)return;
+  const cash=G.cash||0;
+  // 投资市值
+  let investValue=0;
+  if(G.houses)G.houses.forEach(h=>{investValue+=(h.marketValue||0);});
+  // 负债
+  let totalLoan=0;
+  if(G.houses)G.houses.forEach(h=>{totalLoan+=(h.loanBalance||0);});
+  // 股票市值
+  let stockValue=calcStockValue&&typeof calcStockValue==='function'?calcStockValue():0;
+  // 科技投资
+  let techValue=0;
+  if(G.techInvestments)G.techInvestments.forEach(t=>{techValue+=(t.investAmount||0);});
+  // 总资产
+  const totalAssets=cash+investValue+stockValue+techValue-totalLoan;
+  // 月度收支
+  const job=JOBS[G.jobIndex];
+  const monthlyIncome=G.selfEmployed?0:(job?Math.round(job.salary/12):0);
+  const passiveIncome=calcPassiveIncome&&typeof calcPassiveIncome==='function'?calcPassiveIncome():0;
+  const childCost=(G.children||0)*20000/12;
+  let loanPay=0;
+  if(G.houses)G.houses.forEach(h=>{if(h.loan&&h.loanBalance>0)loanPay+=Math.min(h.loanMonthly||0,h.loanBalance);});
+  const monthlyExpense=Math.round(childCost+loanPay);
+  const netCashflow=monthlyIncome+passiveIncome-monthlyExpense;
+  // 商业投资
+  let bizTotal=0,bizMonthIncome=0,bizCumulative=0;
+  if(G.businesses)G.businesses.forEach(b=>{
+    const info=BUSINESSES.find(x=>x.id===b.id);
+    if(info){
+      bizTotal+=info.price;
+      bizMonthIncome+=(b.lastMonthIncome||0);
+    }
+  });
+  // 职业晋升
+  const currentJob=JOBS[G.jobIndex];
+  let nextJob=null,monthsNeeded=0;
+  if(currentJob){
+    nextJob=JOBS[G.jobIndex+1];
+    if(nextJob){
+      monthsNeeded=Math.max(0,nextJob.requireMonths-(G.monthsAtJob||0));
+    }
+  }
+  // 财富等级
+  let wealthLv='赤贫';
+  if(totalAssets>=100000000)wealthLv='亿万富翁';
+  else if(totalAssets>=10000000)wealthLv='千万富豪';
+  else if(totalAssets>=1000000)wealthLv='百万富翁';
+  else if(totalAssets>=500000)wealthLv='小有积蓄';
+  else if(totalAssets>=100000)wealthLv='温饱';
+  else if(totalAssets>=0)wealthLv='草根';
+  else wealthLv='负债累累';
+  // 格式化辅助
+  const f=fmt;
+  // 属性
+  const hp=Math.round(G.health||0);
+  const mp=Math.round(G.mood||0);
+  const iqVal=Math.round(G.IQ||0);
+  const eqVal=Math.round(G.EQ||0);
+
+  const netColor=netCashflow>=0?'#27ae60':'#e74c3c';
+  const loanColor=totalLoan>0?'#e74c3c':'#999';
+
+  let html='<div style="padding:12px 12px 60px;overflow-y:auto;height:calc(100% - 40px)">';
+  html+='<div style="text-align:center;font-size:20px;font-weight:800;margin-bottom:16px">📊 人生仪表盘</div>';
+
+  // 资产概览
+  html+='<div style="background:linear-gradient(135deg,#667eea,#764ba2);border-radius:14px;padding:16px;margin-bottom:12px;color:#fff;box-shadow:0 4px 15px rgba(102,126,234,0.3)">';
+  html+='<div style="font-size:13px;opacity:.8;margin-bottom:4px">💰 总资产</div>';
+  html+='<div style="font-size:28px;font-weight:800;margin-bottom:12px">'+f(totalAssets)+'</div>';
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">';
+  html+='<div style="background:rgba(255,255,255,.15);border-radius:8px;padding:8px"><div style="opacity:.7">现金</div><div style="font-weight:700">'+f(cash)+'</div></div>';
+  html+='<div style="background:rgba(255,255,255,.15);border-radius:8px;padding:8px"><div style="opacity:.7">股票市值</div><div style="font-weight:700">'+f(stockValue)+'</div></div>';
+  html+='<div style="background:rgba(255,255,255,.15);border-radius:8px;padding:8px"><div style="opacity:.7">房产价值</div><div style="font-weight:700">'+f(investValue)+'</div></div>';
+  html+='<div style="background:rgba(255,255,255,.15);border-radius:8px;padding:8px"><div style="opacity:.7">负债</div><div style="font-weight:700;color:#ffeb3b">'+f(totalLoan)+'</div></div>';
+  html+='</div></div>';
+
+  // 月度收支
+  html+='<div style="background:#fff;border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 2px 10px rgba(0,0,0,0.06)">';
+  html+='<div style="font-size:14px;font-weight:700;color:#27ae60;margin-bottom:10px">📈 月度收支</div>';
+  html+='<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:#666;font-size:13px">工资收入</span><span style="font-weight:600;color:#27ae60">+'+f(monthlyIncome)+'</span></div>';
+  html+='<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:#666;font-size:13px">被动收入</span><span style="font-weight:600;color:#27ae60">+'+f(passiveIncome)+'</span></div>';
+  html+='<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:#666;font-size:13px">商业收益</span><span style="font-weight:600;color:#27ae60">+'+f(bizMonthIncome)+'</span></div>';
+  html+='<div style="height:1px;background:#f0f0f0;margin:8px 0"></div>';
+  html+='<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:#666;font-size:13px">子女支出</span><span style="font-weight:600;color:#e74c3c">'+f(Math.round(childCost))+'</span></div>';
+  html+='<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:#666;font-size:13px">房贷月供</span><span style="font-weight:600;color:#e74c3c">'+f(Math.round(loanPay))+'</span></div>';
+  html+='<div style="height:1px;background:#f0f0f0;margin:8px 0"></div>';
+  html+='<div style="display:flex;justify-content:space-between"><span style="font-weight:700;font-size:14px">净现金流</span><span style="font-weight:800;font-size:16px;color:'+netColor+'">'+(netCashflow>=0?'+':'')+f(netCashflow)+'</span></div>';
+  html+='</div>';
+
+  // 职业
+  html+='<div style="background:#fff;border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 2px 10px rgba(0,0,0,0.06)">';
+  html+='<div style="font-size:14px;font-weight:700;color:#4A90D9;margin-bottom:10px">💼 职业</div>';
+  if(currentJob){
+    html+='<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:#666;font-size:13px">当前职位</span><span style="font-weight:600">'+currentJob.name+'</span></div>';
+    html+='<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:#666;font-size:13px">年薪</span><span style="font-weight:600;color:#f39c12">'+f(currentJob.salary)+'</span></div>';
+    html+='<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:#666;font-size:13px">在职月数</span><span style="font-weight:600">'+(G.monthsAtJob||0)+' 个月</span></div>';
+    if(nextJob){
+      html+='<div style="height:1px;background:#f0f0f0;margin:8px 0"></div>';
+      html+='<div style="font-size:13px;font-weight:600;margin-bottom:6px">下一级：'+nextJob.name+'</div>';
+      html+='<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:#666;font-size:12px">还需月数</span><span style="font-weight:600;color:#4A90D9">'+monthsNeeded+' 个月</span></div>';
+      html+='<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:#666;font-size:12px">要求IQ</span><span style="font-weight:600">'+(iqVal>=nextJob.requireIQ?'✅ ':'❌ ')+nextJob.requireIQ+'</span></div>';
+      html+='<div style="display:flex;justify-content:space-between"><span style="color:#666;font-size:12px">要求EQ</span><span style="font-weight:600">'+(eqVal>=nextJob.requireEQ?'✅ ':'❌ ')+nextJob.requireEQ+'</span></div>';
+    }else{
+      html+='<div style="font-size:12px;color:#f39c12;margin-top:6px">🏆 已达最高职位！</div>';
+    }
+  }
+  html+='</div>';
+
+  // 商业投资
+  html+='<div style="background:#fff;border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 2px 10px rgba(0,0,0,0.06)">';
+  html+='<div style="font-size:14px;font-weight:700;color:#e67e22;margin-bottom:10px">🏢 商业投资</div>';
+  html+='<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:#666;font-size:13px">投资项目</span><span style="font-weight:600">'+(G.businesses?G.businesses.length:0)+' 个</span></div>';
+  html+='<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:#666;font-size:13px">投入本金</span><span style="font-weight:600">'+f(bizTotal)+'</span></div>';
+  html+='<div style="display:flex;justify-content:space-between"><span style="color:#666;font-size:13px">本月收益</span><span style="font-weight:600;color:'+(bizMonthIncome>=0?'#27ae60':'#e74c3c')+'">'+(bizMonthIncome>=0?'+':'')+f(bizMonthIncome)+'</span></div>';
+  if(G.businesses&&G.businesses.length>0){
+    html+='<div style="height:1px;background:#f0f0f0;margin:8px 0"></div>';
+    G.businesses.forEach(b=>{
+      const info=BUSINESSES.find(x=>x.id===b.id);
+      if(info){
+        const li=b.lastMonthIncome||0;
+        html+='<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>'+info.icon+' '+info.name+'</span><span style="color:'+(li>=0?'#27ae60':'#e74c3c')+'">'+(li>=0?'+':'')+f(li)+'</span></div>';
+      }
+    });
+  }
+  html+='</div>';
+
+  // 关键指标
+  html+='<div style="background:#fff;border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 2px 10px rgba(0,0,0,0.06)">';
+  html+='<div style="font-size:14px;font-weight:700;color:#8e44ad;margin-bottom:10px">🎯 关键指标</div>';
+  html+='<div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="color:#666;font-size:13px">财富等级</span><span style="font-weight:700;color:#f39c12">'+wealthLv+'</span></div>';
+  html+='<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:#666;font-size:13px">❤️ 健康</span><span style="font-weight:600">'+hp+'/100</span></div><div style="height:8px;background:#eee;border-radius:4px;overflow:hidden"><div style="height:100%;width:'+Math.min(100,hp)+'%;background:linear-gradient(90deg,#e74c3c,#27ae60);border-radius:4px"></div></div></div>';
+  html+='<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:#666;font-size:13px">😊 心情</span><span style="font-weight:600">'+mp+'/100</span></div><div style="height:8px;background:#eee;border-radius:4px;overflow:hidden"><div style="height:100%;width:'+Math.min(100,mp)+'%;background:linear-gradient(90deg,#e67e22,#f1c40f);border-radius:4px"></div></div></div>';
+  html+='<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:#666;font-size:13px">🧠 智商</span><span style="font-weight:600">'+iqVal+'</span></div><div style="height:8px;background:#eee;border-radius:4px;overflow:hidden"><div style="height:100%;width:'+Math.min(100,iqVal)+'%;background:linear-gradient(90deg,#9b59b6,#3498db);border-radius:4px"></div></div></div>';
+  html+='<div><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:#666;font-size:13px">🤝 情商</span><span style="font-weight:600">'+eqVal+'</span></div><div style="height:8px;background:#eee;border-radius:4px;overflow:hidden"><div style="height:100%;width:'+Math.min(100,eqVal)+'%;background:linear-gradient(90deg,#e91e63,#ff5722);border-radius:4px"></div></div></div>';
+  html+='</div>';
+
+  // 房产明细
+  if(G.houses&&G.houses.length>0){
+    html+='<div style="background:#fff;border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 2px 10px rgba(0,0,0,0.06)">';
+    html+='<div style="font-size:14px;font-weight:700;color:#2980b9;margin-bottom:10px">🏠 房产明细</div>';
+    G.houses.forEach(h=>{
+      const info=HOUSES.find(x=>x.id===h.id);
+      if(info){
+        html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f5f5f5">';
+        html+='<div><div style="font-size:13px;font-weight:600">'+info.name+'</div>';
+        html+='<div style="font-size:11px;color:#999">估值 '+f(h.marketValue||0)+(h.loan?' | 月供 '+f(h.loanMonthly||0):'')+'</div></div>';
+        html+='<div style="font-weight:700;color:#27ae60;font-size:13px">'+f((h.marketValue||0)-(h.loanBalance||0))+'</div>';
+        html+='</div>';
+      }
+    });
+    html+='</div>';
+  }
+
+  html+='<div style="text-align:center;font-size:11px;color:#bbb;margin-top:16px">数据每月自动更新</div>';
+  html+='</div>';
+  el.innerHTML=html;
+}
+
 function refreshPhone(){renderPhoneList();renderContacts();renderSchedule();renderMoments();renderNotifications();updatePhoneBadge();updateNotifBadge();updatePhoneHint();}
 function updatePhoneBadge(){
   const badge=document.getElementById('phoneBadge');if(!badge)return;
@@ -10033,6 +10214,19 @@ function _v4_debug(){return (typeof V4_FLAGS!=='undefined'&&V4_FLAGS.debug);}
 // === _v4_clamp ===
 function _v4_clamp(v,lo,hi){return Math.max(lo,Math.min(hi,v));}
 
+
+// === TUTORIAL_STEPS ===
+const TUTORIAL_STEPS = [
+  {id:'welcome', title:'欢迎来到人生首富模拟器', desc:'在这里，你将体验从零开始的人生旅程。\n通过经营事业、建立人际关系、管理财富，最终成为人生首富！\n让我们先了解一下界面吧。', trigger:null},
+  {id:'month_advance', title:'推进时间', desc:'点击右下角的「结束本月」按钮来推进时间。\n每个月都会发生各种事件，记得查看手机消息哦！', trigger:null, target:'btnNextMonth'},
+  {id:'assets', title:'查看资产', desc:'在这里查看你的总资产、收入和支出情况。\n做明智的财务决策是成为首富的关键！', trigger:null, target:'assetPanel'},
+  {id:'jobs', title:'求职晋升', desc:'从实习生开始，通过提升IQ和EQ来晋升。\n更高的职位意味着更高的薪水和更多的机会！', trigger:null, target:'jobPanel'},
+  {id:'social', title:'社交关系', desc:'与NPC建立关系，结交朋友、寻找伴侣。\n良好的人际关系能带来意想不到的机会！', trigger:null, target:'socialPanel'},
+  {id:'phone', title:'手机消息', desc:'随时查看手机，了解最新事件和NPC动态。\n有些机会稍纵即逝，及时回复很重要！', trigger:'has_unread', target:'btnPhone'},
+  {id:'done', title:'准备就绪！', desc:'你已经了解了基本玩法。\n记住：平衡事业、财富和人际关系，才能成为真正的人生首富！', trigger:'month1'}
+];
+var _tut_state = {currentIdx: 0};
+
 // === _tut_shouldShow ===
 function _tut_shouldShow(stepId){
   if(!G.tutorialCompleted) G.tutorialCompleted=[];
@@ -10066,15 +10260,25 @@ function _tut_showOverlay(idx){
   const overlay = document.createElement('div');
   overlay.id = 'tutOverlay';
   overlay.className = 'tut-overlay';
+  // Generate progress dots
+  let progressHtml = '<div class="tut-progress">';
+  for(let i=0;i<TUTORIAL_STEPS.length;i++){
+    const w = i===idx ? '22px' : '8px';
+    const bg = i<=idx ? '#4A90D9' : '#ddd';
+    progressHtml += '<div class="tut-progress-dot" style="width:'+w+';background:'+bg+'"></div>';
+  }
+  progressHtml += '</div>';
   overlay.innerHTML = '<div class="tut-card">'+
-    '<div class="tut-step-num">'+(idx+1)+'/'+TUTORIAL_STEPS.length+'</div>'+
+    progressHtml+
+    '<button class="tut-skip-btn" onclick="_tut_skipAll()">跳过引导</button>'+
+    '<div class="tut-step-num">步骤 '+(idx+1)+'/'+TUTORIAL_STEPS.length+'</div>'+
     '<div class="tut-title">'+step.title+'</div>'+
     '<div class="tut-desc">'+step.desc.replace(/\n/g,'<br>')+'</div>'+
     '<div class="tut-actions">'+
     (idx>0?'<button class="btn btn-outline btn-sm" onclick="_tut_prev()">上一步</button>':'')+
     '<button class="btn btn-primary btn-sm" onclick="_tut_next()">'+(idx===TUTORIAL_STEPS.length-1?'开始游戏!':'下一步')+'</button>'+
     '</div>'+
-    '<div class="tut-skip" onclick="_tut_skipAll()">跳过教程</div>'+
+    '<div class="tut-skip" onclick="_tut_skipAll()">跳过全部教程</div>'+
     '</div>';
   document.body.appendChild(overlay);
   if(step.target){
@@ -10102,7 +10306,15 @@ function _tut_next(){
 function _tut_prev(){const idx=_tut_state.currentIdx;const step=TUTORIAL_STEPS[idx];if(step){const el=document.getElementById(step.target);if(el)el.classList.remove('tut-highlight');}document.getElementById('tutOverlay').remove();_tut_showOverlay(Math.max(0,idx-1));}
 
 // === _tut_skipAll ===
-function _tut_skipAll(){TUTORIAL_STEPS.forEach(s=>{if(!G.tutorialCompleted.includes(s.id))G.tutorialCompleted.push(s.id);});document.getElementById('tutOverlay').remove();saveGame();showToast('已跳过教程');}
+function _tut_skipAll(){
+  TUTORIAL_STEPS.forEach(s=>{if(!G.tutorialCompleted.includes(s.id))G.tutorialCompleted.push(s.id);});
+  const ov = document.getElementById('tutOverlay');
+  if(ov) ov.remove();
+  // Remove all highlights
+  TUTORIAL_STEPS.forEach(s=>{if(s.target){const el=document.getElementById(s.target);if(el)el.classList.remove('tut-highlight');}});
+  saveGame();
+  showToast('已跳过教程，随时可以在设置中重新开启');
+}
 
 // === _tut_checkAutoAdvance ===
 function _tut_checkAutoAdvance(){
@@ -10444,7 +10656,7 @@ function _drawRelationNetwork(canvasId){
 }
 
 // === _v4_postLoadHook ===
-function _v4_postLoadHook(){if(!G.tutorialCompleted)G.tutorialCompleted=[];if(!G._assetHistory)G._assetHistory=[];}
+function _v4_postLoadHook(){if(!G.tutorialCompleted)G.tutorialCompleted=[];if(!G._assetHistory)G._assetHistory=[];_tut_state={currentIdx:0};}
 
 // === showV4QuickMenu ===
 function showV4QuickMenu(){
