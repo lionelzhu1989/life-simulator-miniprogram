@@ -4929,6 +4929,35 @@ async function openProactiveChat(npcId){
 }
 
 // ===== 开始对话（选择开场白后） =====
+async // Helper: 生成NPC AI回复
+async function _generateNPCAIReply(npcId, playerMsg, chatHist){
+  const p=NPC_PERSONALITIES[npcId];if(!p)return'[AI暂时无法连接]';
+  const rel=getRelationship(npcId)||0;
+  const aff=(G.romance&&G.romance.npcId===npcId)?(G.romance.affection||0):0;
+  const stage=(G.romance&&G.romance.npcId===npcId)?(G.romance.stage||'none'):'none';
+  let relHint='';
+  if(stage==='dating'){relHint='你们是热恋中的情侣，可以撒娇调情。';}
+  else if(stage==='close'||aff>=40){relHint='你们在暧昧升温中，可以适当调情。';}
+  else if(rel>=30){relHint='你们关系很好，像老朋友一样。';}
+  else if(rel<=-10){relHint='你们关系不太好，说话带刺。';}
+  const prompt='你是"'+p.name+'"，性格：'+p.traits.join('、')+'。背景：'+p.background+'。'+relHint+
+    '\n玩家对你说："'+playerMsg+'"\n请用你的性格回复，不超过3句话，像真人一样自然。';
+  try{
+    const resp=await fetch('https://token-plan-cn.xiaomimimo.com/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','api-key':'tp-chy2q7xt8dofqyzdqb4bzbcz5g9bmmxyhzm7dcp65wl2vn0'},
+      body:JSON.stringify({model:'mimo-v2.5',messages:[{role:'user',content:prompt}],temperature:0.92,max_tokens:500})
+    });
+    if(resp.ok){
+      const data=await resp.json();
+      if(data.choices&&data.choices[0]&&data.choices[0].message){
+        return data.choices[0].message.content.trim();
+      }
+    }
+  }catch(e){console.error('NPC AI error:',e);}
+  return getTemplateReply(npcId,playerMsg);
+}
+
 async function startProactiveChatWith(npcId,greetingIdx){
   const p=NPC_PERSONALITIES[npcId];if(!p)return;
   const greeting=p.greetings[greetingIdx];
@@ -4984,26 +5013,13 @@ async function continueProactiveChat(npcId,followupIdx){
   const followup=chat.followups[followupIdx];
   if(!followup)return;
   chat.followups.splice(followupIdx,1);
-  // v4.1.0: AI生成回应（移除硬编码traitMap）
+  // Append player message
   const body=document.getElementById('chatBody');
   body.insertAdjacentHTML('beforeend','<div class="chat-bub player">'+followup+'</div>');
-  // v4.1.0: AI生成NPC回应，使用聊天历史
-  const history=G.phone.chatHistory&&G.phone.chatHistory[npcId]?G.phone.chatHistory[npcId]:[];
-  showTypingIndicator();
-  let aiReply;
-  try{
-    aiReply=await generateNPCReply(npcId,followup,history);
-  }catch(e){
-    console.error('AI continue reply failed:',e);
-    aiReply=getTemplateReply(npcId,followup);
-    showToast('网络恢复中...');
-  }
-  removeTypingIndicator();
-  if(aiReply&&aiReply!=='...'){
-    body.insertAdjacentHTML('beforeend','<div class="chat-bub npc">'+aiReply+'</div>');
-  }else{
-    body.insertAdjacentHTML('beforeend','<div class="chat-bub npc">嗯嗯</div>');
-  }
+  body.scrollTop=body.scrollHeight;
+  // AI生成NPC回复
+  const npcReply=await _generateNPCAIReply(npcId,followup,chat);
+  body.insertAdjacentHTML('beforeend','<div class="chat-bub npc">'+npcReply+'</div>');
   body.scrollTop=body.scrollHeight;
   // Update options
   const opts=document.getElementById('chatOpts');
@@ -5482,11 +5498,13 @@ function renderPhoneList(){
   updatePhoneHint();
 }
 
-function openThread(id){
+async function openThread(id){
   if(!G.phone)return;
   const thread=G.phone.threads.find(t=>t.id===id);if(!thread)return;
   if(thread.status==='unread'){thread.status='reading';thread.readMonth=G.totalMonths;}
   G._openThreadId=id;
+  // AI替换硬编码NPC消息
+  await _aiFillThread(thread);
   renderChat();
   // v3.12.0: 显示模板选项，隐藏AI输入框
   const opts=document.getElementById('chatOpts');
@@ -5495,6 +5513,32 @@ function openThread(id){
   if(area)area.style.display='none';
   document.getElementById('chatOverlay').classList.add('show');
   updatePhoneBadge();
+}
+
+// AI填充线程NPC回复
+async function _aiFillThread(thread){
+  if(!thread||!thread.rounds)return;
+  const p=NPC_PERSONALITIES[thread.npc];if(!p)return;
+  for(const round of thread.rounds){
+    if(!round.npcMsgs||round._aiFilled)continue;
+    const origMsg=round.npcMsgs[0];
+    const prompt='你是"'+p.name+'"，性格：'+p.traits.join('、')+'。背景：'+p.background+
+      '\n对玩家说："'+origMsg+'"\n请用你的性格重新表达这个意思，不超过2句话，像真人一样自然。';
+    try{
+      const resp=await fetch('https://token-plan-cn.xiaomimimo.com/v1/chat/completions',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','api-key':'tp-chy2q7xt8dofqyzdqb4bzbcz5g9bmmxyhzm7dcp65wl2vn0'},
+        body:JSON.stringify({model:'mimo-v2.5',messages:[{role:'user',content:prompt}],temperature:0.92,max_tokens:300})
+      });
+      if(resp.ok){
+        const data=await resp.json();
+        if(data.choices&&data.choices[0]&&data.choices[0].message){
+          round.npcMsgs=[data.choices[0].message.content.trim()];
+          round._aiFilled=true;
+        }
+      }
+    }catch(e){console.error('Thread AI fill error:',e);}
+  }
 }
 
 function renderChat(){
@@ -5681,7 +5725,7 @@ const AI_CHAT_CONFIG={
   _fallbackCount:0,
   _retried:false,
   _retryDelay:2000,
-  maxFallback:3
+  maxFallback:9999
 };
 
 // Relationship mapping for NPC
@@ -5968,8 +6012,7 @@ ${p.name}的家人/朋友是${relation}。玩家${gameState.age}岁，${gameStat
 
 // Template fallback reply
 function getTemplateReply(npcId,playerMsg){
-  const p=NPC_PERSONALITIES[npcId];
-  if(!p)return'...';
+  return '[AI暂时无法连接，请稍后再试]';
   // Try to match player message to a tag
   let matchedTag=null;
   const msgLower=playerMsg.toLowerCase();
@@ -7068,7 +7111,7 @@ const AI_ENGINE={
   lastCall:0,
   minInterval:2000,// 2s between calls
   _fallbackCount:0,
-  maxFallback:3,// after 3 consecutive fails, disable until restart
+  maxFallback:9999,// after 3 consecutive fails, disable until restart
 };
 
 function getGameStateContext(){
