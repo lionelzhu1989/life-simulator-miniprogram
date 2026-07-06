@@ -1919,7 +1919,7 @@ function closeForbes(){
 }
 
 // ========== 核心：度过一月 ==========
-function nextMonth(){
+async function nextMonth(){
   if(G.gameOver)return;
   if(G._autoChainActive)return;
   
@@ -1972,7 +1972,7 @@ function nextMonth(){
   // No pending items, advance directly
   _doAdvanceMonth();
 }
-function advanceMonth(){
+async function advanceMonth(){
   G.totalMonths++;G.monthsAtJob++;G.events=[];
   G._encounterActive=false; // 重置月度场景标记
   if(!G._recentEvents)G._recentEvents=[]; // 连锁反应记忆（最近事件记录）
@@ -2171,7 +2171,7 @@ function advanceMonth(){
   else if(getAge()>=80&&Math.random()<0.3){G.gameOver=true;G.gameOverReason='安享晚年，人生圆满结束';}
 }
 
-function fastForward(years){
+async function fastForward(years){
   G.events=[];
   for(let i=0;i<years*12;i++){if(G.gameOver)break;await advanceMonth();}
   saveGame();refreshAll();checkAchievements();
@@ -4247,7 +4247,7 @@ function saveNote(npcId,val){
 }
 
 // ===== 打开主动聊天（AI驱动） =====
-function openProactiveChat(npcId){
+async function openProactiveChat(npcId){
   initChatHistory();
   injectDynamicContacts();
   const p=NPC_PERSONALITIES[npcId];if(!p)return;
@@ -4318,7 +4318,7 @@ function openProactiveChat(npcId){
 }
 
 // ===== 开始对话（选择开场白后） =====
-function startProactiveChatWith(npcId,greetingIdx){
+async function startProactiveChatWith(npcId,greetingIdx){
   const p=NPC_PERSONALITIES[npcId];if(!p)return;
   const greeting=p.greetings[greetingIdx];
   // v4.1.0: 移除硬编码respArr，AI生成回应
@@ -4366,7 +4366,7 @@ function startProactiveChatWith(npcId,greetingIdx){
 }
 
 // ===== 继续对话 =====
-function continueProactiveChat(npcId,followupIdx){
+async function continueProactiveChat(npcId,followupIdx){
   const p=NPC_PERSONALITIES[npcId];if(!p)return;
   const chat=G.phone.activeChats.find(c=>c.npcId===npcId&&c.status==='active');
   if(!chat)return;
@@ -4927,7 +4927,7 @@ function renderChat(){
   }
 }
 
-function selectPhoneOption(optIdx){
+async function selectPhoneOption(optIdx){
   const thread=G.phone.threads.find(t=>t.id===G._openThreadId);if(!thread||thread.status==='replied')return;
   const round=thread.rounds[thread.currentRound];if(!round||!round.opts)return;
   const opt=round.opts[optIdx];
@@ -8411,7 +8411,7 @@ function _showMonthlySummary(before,after){
 }
 
 // === _doAdvanceMonth ===
-function _doAdvanceMonth(){
+async function _doAdvanceMonth(){
   // v3.17.6: Ensure auto-chain flag is cleared when entering direct advance
   G._autoChainActive=false;
   var btn=document.getElementById('nextMonthBtn');
@@ -8665,7 +8665,7 @@ function showAIChat(){
 }
 
 // === sendAIChat ===
-function sendAIChat(){
+async function sendAIChat(){
   const input=document.getElementById('aiChatInput');
   const msgs=document.getElementById('aiChatMsgs');
   const text=input.value.trim();
@@ -8773,7 +8773,7 @@ function _getNotificationsHTML(){
 }
 
 // === generateThreadAIReply ===
-function generateThreadAIReply(npcId,context,playerChoice,thread){
+async function generateThreadAIReply(npcId,context,playerChoice,thread){
   const p=NPC_PERSONALITIES[npcId];
   if(!p)return null;
   
@@ -9067,7 +9067,7 @@ function submitMomentComment(id){
 }
 
 // === _triggerMomentNPCComments ===
-function _triggerMomentNPCComments(momentId){
+async function _triggerMomentNPCComments(momentId){
   if(!G.phone)return;
   // 先查AI朋友圈，再查模板朋友圈
   let m=G.phone.aiMoments?G.phone.aiMoments.find(x=>x.id===momentId):null;
@@ -9237,7 +9237,7 @@ function renderSchedule(){
 }
 
 // === processScheduledDates ===
-function processScheduledDates(){
+async function processScheduledDates(){
   if(!G.scheduledDates)return;
   // 清理超过6个月的过期日程，避免数组无限增长
   G.scheduledDates=G.scheduledDates.filter(e=>{
@@ -9258,7 +9258,7 @@ function processScheduledDates(){
 }
 
 // === triggerScheduleEvent ===
-function triggerScheduleEvent(event){
+async function triggerScheduleEvent(event){
   if(!event||event.status!=='upcoming')return;
   // 费用由createScheduleThread的选项扣除，这里不再重复扣
   // Deduct annual leave
@@ -9322,7 +9322,7 @@ function _getRelationshipType(npcId){
 }
 
 // === generateScheduleSceneAI ===
-function generateScheduleSceneAI(event,npcId,npcName,npcTraits,relType,activityName){
+async function generateScheduleSceneAI(event,npcId,npcName,npcTraits,relType,activityName){
   let relLabels={romance:'恋人/暧昧对象',family:'家人',friend:'好友/同学',colleague:'同事/上司',acquaintance:'刚认识的朋友'};
   // v3.15.7: 根据关系深度调整场景提示
   let relNote='';
@@ -9381,7 +9381,7 @@ function generateScheduleSceneAI(event,npcId,npcName,npcTraits,relType,activityN
 }
 
 // === createScheduleThread ===
-function createScheduleThread(event){
+async function createScheduleThread(event){
   const p=NPC_PERSONALITIES[event.npcId]||{name:event.npcName||'朋友',avatar:event.npcAvatar||'👤'};
   const name=p.name;const avatar=p.avatar;
   const isRomance=(event.npcId==='campusGirl');
@@ -9880,7 +9880,7 @@ ${chosen.map(n=>`·${n.id}(${n.name}): ${n.traits.join('、')}，常发${n.topic
 }
 
 // === _doCallAI ===
-function _doCallAI(promptBuilder,eventType){
+async function _doCallAI(promptBuilder,eventType){
   if(!AI_ENGINE.enabled||AI_ENGINE._fallbackCount>=AI_ENGINE.maxFallback)return null;
   const ctx=getGameStateContext();
   const messages=promptBuilder(ctx);
@@ -9914,7 +9914,7 @@ function _doCallAI(promptBuilder,eventType){
 }
 
 // === triggerAIMoments ===
-function triggerAIMoments(){
+async function triggerAIMoments(){
   if(!G.phone||!AI_ENGINE.enabled)return;
   // 30% chance per month, or 50% if EQ>120
   const chance=G.EQ>120?0.5:0.3;
