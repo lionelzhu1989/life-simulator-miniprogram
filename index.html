@@ -1855,6 +1855,8 @@ function advanceMonth(){
     tryTriggerEncounter();
   }
   checkStudyProgress();triggerProjectEvents();
+  // ===== AI底座：系统联动引擎 =====
+  processSystemLinkages();
   // Guide
   advanceGuide();
   // Game over check
@@ -6702,6 +6704,160 @@ function updatePetBadge(){
   if(alert&&G.pets.length>0){b.style.display='';b.textContent=msg;}
   else if(G.pets.length===0){b.style.display='none';}
   else{b.style.display='none';}
+}
+
+// ========== AI底座：系统联动引擎 ==========
+function evaluateLifeState(){
+  var cash=G.cash||0,totalAsset=cash+calcStockValue();
+  var wealthTier=totalAsset>=10000000?'tycoon':totalAsset>=1000000?'rich':totalAsset>=100000?'middle':'broke';
+  var healthStatus=G.health<25?'critical':G.health<50?'poor':G.health<80?'good':'great';
+  var moodStatus=G.mood<25?'critical':G.mood<50?'low':G.mood<75?'okay':'happy';
+  var job=JOBS[G.jobIndex]||{},careerStage=G.monthsAtJob>=60?'veteran':G.monthsAtJob>=24?'mid':'entry';
+  var familyStage=!G.spouse?'single':(G.childAges||[]).filter(function(a){return a<18;}).length>0?'parent':(G.childAges||[]).length>0?'emptyNester':'married';
+  var techActive=(G.techInvestments||[]).length>0;
+  var totalStockVal=calcStockValue();
+  var stockHealth='none';
+  if(totalStockVal>0){
+    var totalCost=0;for(var code in G.stockHoldings){totalCost+=G.stockHoldings[code]*(G.stockPrices[code]||0)*0.7;}
+    stockHealth=totalStockVal>totalCost*1.1?'profit':totalStockVal>totalCost*0.9?'even':'loss';
+  }
+  var petCount=(G.pets||[]).length,highIntimacy=(G.pets||[]).filter(function(p){return p.intimacy>=60;}).length;
+  return {wealthTier:wealthTier,totalAsset:totalAsset,healthStatus:healthStatus,moodStatus:moodStatus,
+    careerStage:careerStage,monthsAtJob:G.monthsAtJob,familyStage:familyStage,jobTier:job.tier||1,
+    techActive:techActive,stockHealth:stockHealth,petCount:petCount,highIntimacy:highIntimacy,
+    age:getAge(),totalMonths:G.totalMonths};
+}
+
+function processSystemLinkages(){
+  var LS=evaluateLifeState();
+  var evts=[];
+  // ① 宠物→心情 深度联动
+  if(LS.petCount>0&&LS.highIntimacy>0&&LS.moodStatus==='critical'){
+    var mHeal=Math.floor(LS.highIntimacy*1.5);
+    G.mood=clamp(G.mood+mHeal,0,200);
+    evts.push({text:'🐾 '+G.pets[0].name+'静静地陪着你，心情+'+mHeal,type:'good',source:'ai-link'});
+  }
+  if(LS.petCount>0&&LS.moodStatus==='happy'&&Math.random()<0.15){
+    var bestPet=G.pets.reduce(function(a,b){return(a.intimacy||0)>=(b.intimacy||0)?a:b;});
+    bestPet.intimacy=Math.min(100,bestPet.intimacy+3);
+    evts.push({text:'💕 宠物羁绊加深了，'+bestPet.name+'亲密度+3',type:'good',source:'ai-link'});
+  }
+  // ② 投资大亏→社交消息
+  if(LS.stockHealth==='loss'&&LS.totalAsset>50000&&Math.random()<0.25){
+    var lossAmt=Math.floor(LS.totalAsset*0.05);
+    if((G.socialContacts||[]).length>0){
+      var c=G.socialContacts[Math.floor(Math.random()*G.socialContacts.length)];
+      if(c&&NPC_PERSONALITIES[c.id]){
+        if(!G.phone.threads)G.phone.threads=[];
+        var msgText=c.friendLevel>=2?'兄弟，投资总有起伏，加油！💪':'最近行情不好，保重~';
+        G.phone.threads.push({id:c.id,name:c.name,avatar:c.avatar||'🤝',
+          msgs:[{npcMsgs:[msgText]}],lastMonth:G.totalMonths,unread:true});
+        if(!G.phone.notifications)G.phone.notifications=[];
+        G.phone.notifications.push({text:c.name+'听说了你的投资情况',month:G.totalMonths});
+      }
+    }
+    G.cash=Math.max(0,G.cash-lossAmt);
+    G.events.push({text:'📉 投资账面浮亏'+fmt(lossAmt)+'，朋友纷纷来问候',type:'neutral',source:'ai-link'});
+  }
+  // ③ 职业晋升→配偶/家庭联动
+  if(LS.careerStage==='veteran'&&LS.familyStage==='parent'&&Math.random()<0.08){
+    G.family.prestige=(G.family.prestige||0)+1;
+    G.mood=clamp(G.mood+5,0,200);
+    evts.push({text:'🏆 事业有成！家庭声望+1，心情+5',type:'good',source:'ai-link'});
+  }
+  // ④ 健康危机→家人担忧
+  if(LS.healthStatus==='critical'&&G.spouse&&Math.random()<0.20){
+    var sp=SPOUSES.find(function(s){return s.id===G.spouse;});
+    if(sp&&G.phone){
+      if(!G.phone.threads)G.phone.threads=[];
+      var existT=G.phone.threads.find(function(t){return t.id==='spouse_thread';});
+      if(!existT){G.phone.threads.push({id:'spouse_thread',name:sp.name||'伴侣',avatar:sp.avatar||'❤️',
+        msgs:[{npcMsgs:['亲爱的，你最近太累了，注意身体啊...🥺']}],lastMonth:G.totalMonths,unread:true});}
+    }
+    G.mood=clamp(G.mood-3,0,200);
+    evts.push({text:'😟 健康状况堪忧，'+((sp&&sp.name)||'伴侣')+'很担心你',type:'bad',source:'ai-link'});
+  }
+  // ⑤ 子女高考里程碑
+  (G.childAges||[]).forEach(function(age,idx){
+    if(Math.abs(age-18)<0.1&&!((G._milestones||(G._milestones={})).childGaokao>=idx)){
+      if(!G._milestones)G._milestones={};G._milestones.childGaokao=(G._milestones.childGaokao||0)+1;
+      var gaokaoResult=Math.random();
+      if(gaokaoResult>0.6){
+        var bonus=200000;G.cash+=bonus;
+        evts.push({text:'🎓 子女考上大学！双喜临门，资金+'+fmt(bonus),type:'good',source:'ai-link'});
+        G.family.prestige=(G.family.prestige||0)+2;
+        if((G.socialContacts||[]).length>0){
+          var sc=G.socialContacts[Math.floor(Math.random()*Math.min(3,G.socialContacts.length))];
+          if(sc&&NPC_PERSONALITIES[sc.id]){
+            G.phone.threads.push({id:sc.id+'_'+G.totalMonths,name:sc.name,avatar:sc.avatar||'🤝',
+              msgs:[{npcMsgs:['恭喜恭喜！考上什么大学？']}],lastMonth:G.totalMonths,unread:true});
+          }
+        }
+      }else{
+        evts.push({text:'📋 子女高考未达预期，家庭气氛有些沉重',type:'bad',source:'ai-link'});
+        G.mood=clamp(G.mood-3,0,200);
+      }
+    }
+  });
+  // ⑥ 财富层级跃迁
+  if(!G._wealthTier)G._wealthTier='broke';
+  if(G._wealthTier!==LS.wealthTier){
+    var tierUp=LS.wealthTier==='rich'||LS.wealthTier==='tycoon';
+    if(tierUp&&LS.wealthTier==='tycoon'){
+      evts.push({text:'👑 恭喜跻身顶级富豪之列！',type:'good',source:'ai-link'});
+      G.family.prestige=(G.family.prestige||0)+3;
+    }else if(tierUp&&LS.wealthTier==='rich'){
+      evts.push({text:'💰 财富进阶！迈入中产阶层',type:'good',source:'ai-link'});
+      G.family.prestige=(G.family.prestige||0)+1;
+    }
+    G._wealthTier=LS.wealthTier;
+  }
+  // ⑦ 创业风险传染
+  if((G.businesses||[]).length>0&&LS.stockHealth==='loss'&&Math.random()<0.08){
+    var biz=G.businesses[Math.floor(Math.random()*G.businesses.length)];
+    var bizInfo=BUSINESSES.find(function(b){return b.id===biz.id;});
+    if(bizInfo){
+      G.cash=Math.max(0,G.cash-bizInfo.price*0.2);
+      evts.push({text:'⚠️ '+bizInfo.name+'行业动荡，紧急注资'+fmt(bizInfo.price*0.2),type:'bad',source:'ai-link'});
+    }
+  }
+  // ⑧ 社交倦怠：低心情时朋友约你出去
+  if((LS.moodStatus==='critical'||LS.moodStatus==='low')&&(G.socialContacts||[]).length>0&&Math.random()<0.15){
+    var buddy=G.socialContacts[Math.floor(Math.random()*G.socialContacts.length)];
+    if(buddy&&buddy.friendLevel>=2){
+      evts.push({text:'🍻 '+buddy.name+'约你出去散心，心情+8',type:'neutral',source:'ai-link'});
+      G.mood=clamp(G.mood+8,0,200);
+      G.cash=Math.max(0,G.cash-500);
+    }
+  }
+  // Push all events
+  evts.forEach(function(e){G.events.push(e);});
+  // AI月度叙事摘要（追加到最后一条）
+  generateMonthlyNarrative(LS);
+}
+
+function generateMonthlyNarrative(LS){
+  var parts=[];
+  if(LS.age<=25)parts.push('青春正茂');else if(LS.age<=40)parts.push('年富力强');else if(LS.age<=55)parts.push('阅历渐深');else parts.push('岁月沉淀');
+  if(LS.wealthTier==='tycoon')parts.push('财务自由指日可待');else if(LS.wealthTier==='rich')parts.push('小有成就');else if(LS.wealthTier==='broke')parts.push('仍需努力');
+  if(LS.familyStage==='parent')parts.push('家庭责任日重');else if(LS.familyStage==='single')parts.push('单身的自由');
+  if(LS.petCount>0)parts.push(LS.highIntimacy>0?'宠物忠心陪伴':'宠物需要更多关爱');
+  if(LS.healthStatus==='critical')parts.push('健康⚠️');else if(LS.healthStatus==='great')parts.push('精力充沛');
+  G.events.push({text:'📝 '+getAge()+'岁·'+getMonth()+'月 · '+parts.join(' · '),type:'neutral',source:'ai-narrative'});
+}
+
+// ========== AI增强：NPC智能提示注入 ==========
+function getAILifeContextHint(){
+  var LS=evaluateLifeState();
+  var hints=[];
+  if(LS.healthStatus==='critical')hints.push('玩家健康极差，你的对话要关心其身体');
+  if(LS.moodStatus==='critical')hints.push('玩家心情很糟，需要安慰或鼓励');
+  if(LS.wealthTier==='tycoon')hints.push('玩家已是富豪，可以聊投资或高端生活方式');
+  if(LS.wealthTier==='broke')hints.push('玩家手头紧，避免高消费话题');
+  if(LS.petCount>0&&LS.highIntimacy>0)hints.push('玩家可以聊聊宠物');
+  if(LS.familyStage==='parent')hints.push('玩家有家庭责任，可以聊子女教育');
+  if(LS.techActive)hints.push('玩家在关注科技领域');
+  return hints.join('；');
 }
 
 
