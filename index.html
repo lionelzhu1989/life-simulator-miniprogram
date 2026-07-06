@@ -3804,6 +3804,346 @@ function _sendNPCMessage(npcId,eventTag,text){
 
 
 
+// ========== V4.2: 工作剧情与职业支线系统 ==========
+const WORK_EVENTS = {
+  // 新手期 (0-12月)
+  early: [
+    {
+      id: 'we_first_mistake',
+      title: '🏷️ 第一次犯错',
+      trigger: function(){ return G.totalMonths <= 12 && G.monthsAtJob >= 3; },
+      weight: 3,
+      text: '你犯了个低级错误，被leader当众批评了。同事的目光让你恨不得找个地缝钻进去...',
+      options: [
+        { text: '主动承认并补救', fx: { mood: -5, skill_gain: 2, job_perf: 3 } },
+        { text: '默默改正不声张', fx: { mood: -3, skill_gain: 1 } },
+        { text: '甩锅给离职同事', fx: { mood: 5, job_perf: -5 } }
+      ]
+    },
+    {
+      id: 'we_overtime_crisis',
+      title: '🌙 深夜加班危机',
+      trigger: function(){ return G.totalMonths <= 24; },
+      weight: 4,
+      text: '项目deadline突然提前，leader宣布整个团队本周要通宵赶工。你的健身计划和约会全泡汤了...',
+      options: [
+        { text: '带头冲锋通宵达旦', fx: { mood: -10, health: -8, job_perf: 5, promotion_chance: 15 } },
+        { text: '准时下班保持边界', fx: { mood: 3, job_perf: -3 } },
+        { text: '请假不去', fx: { mood: 8, job_perf: -8 } }
+      ]
+    },
+    {
+      id: 'we_coffee_mentor',
+      title: '☕ 前辈的咖啡邀请',
+      trigger: function(){ return G.totalMonths <= 18 && G.monthsAtJob >= 2; },
+      weight: 3,
+      text: '公司里的一位资深前辈突然约你喝咖啡，似乎想和你聊聊...',
+      options: [
+        { text: '欣然赴约，认真请教', fx: { mood: 5, skill_gain: 2, job_perf: 2 } },
+        { text: '去但保持警惕', fx: { mood: 2, skill_gain: 1 } },
+        { text: '婉拒，专注手头工作', fx: { mood: -2 } }
+      ]
+    },
+    {
+      id: 'we_newbie_presentation',
+      title: '📊 新人汇报机会',
+      trigger: function(){ return G.totalMonths >= 6 && G.totalMonths <= 18; },
+      weight: 4,
+      text: 'leader让你在下周部门会议上做一个小汇报。表现好可能提前转正，表现差就难堪了...',
+      options: [
+        { text: '精心准备ppt和讲稿', fx: { mood: -5, skill_gain: 3, job_perf: 5, promotion_chance: 10 } },
+        { text: '随便做做应付了事', fx: { mood: -2, job_perf: -2 } }
+      ]
+    }
+  ],
+  // 成长期 (13-48月)
+  growth: [
+    {
+      id: 'we_office_politics',
+      title: '⚔️ 办公室站队',
+      trigger: function(){ return G.totalMonths > 12 && G.totalMonths <= 48; },
+      weight: 4,
+      text: '总监和经理在争一个重点项目的主导权，两人都私下暗示你站队。选边站很危险，不选更危险...',
+      options: [
+        { text: '跟资历深的总监', fx: { mood: -5, promotion_chance: 20, job_perf: 5 } },
+        { text: '跟上升快的经理', fx: { mood: -3, promotion_chance: 35, job_perf: 3 } },
+        { text: '保持中立，两边不得罪', fx: { mood: -8, promotion_chance: 10, job_perf: -2 } }
+      ]
+    },
+    {
+      id: 'we_promotion_pitch',
+      title: '🎤 晋升答辩',
+      trigger: function(){ return G.monthsAtJob >= 12 && G.totalMonths > 18; },
+      weight: 5,
+      text: '终于有机会申请晋升了！你需要准备答辩材料，但业绩在候选人中不算突出...',
+      options: [
+        { text: '精心准备PPT和成果展示', fx: { mood: -5, skill_gain: 3, promotion_chance: 50, job_perf: 5 } },
+        { text: '靠日常积累和平时关系', fx: { mood: -2, promotion_chance: 20 } },
+        { text: '放弃这次机会', fx: { mood: -5, promotion_chance: -10 } }
+      ]
+    },
+    {
+      id: 'we_cert_chance',
+      title: '📜 考证机会',
+      trigger: function(){ return G.totalMonths >= 12; },
+      weight: 3,
+      text: '公司资助考PMP/CPA证书，报销学费1万元，但要签3年服务期合同。跳槽就须赔偿...',
+      options: [
+        { text: '签约备考', fx: { skill_gain: 5, job_perf: 5, promotion_chance: 20, cash: -5000 } },
+        { text: '放弃，保持自由身', fx: { mood: -3 } }
+      ]
+    },
+    {
+      id: 'we_salary_negotiate',
+      title: '💰 年度调薪谈判',
+      trigger: function(){ return G.totalMonths >= 12 && G.monthsAtJob >= 12 && G.totalMonths <= 60; },
+      weight: 4,
+      text: '到了年度调薪的时间，HR通知你去谈。你的表现和市场行情都支持涨薪，但公司预算紧张...',
+      options: [
+        { text: '据理力争要20%', fx: { mood: -3, promotion_chance: 5 } },
+        { text: '温和协商10%', fx: { mood: 3, job_perf: 2 } },
+        { text: '不谈等公司决定', fx: { mood: -5 } }
+      ]
+    },
+    {
+      id: 'we_cross_team_project',
+      title: '🤝 跨部门协作危机',
+      trigger: function(){ return G.totalMonths > 18 && G.totalMonths <= 60; },
+      weight: 3,
+      text: '你被抽调到一个跨部门项目组，但对方leader不配合，项目卡住了...',
+      options: [
+        { text: '主动出击搞定关系', fx: { mood: -5, EQ: 2, skill_gain: 2, job_perf: 5 } },
+        { text: '找自己领导出面', fx: { mood: -2, skill_gain: 1 } },
+        { text: '摆烂等其他人解决', fx: { job_perf: -5, mood: 3 } }
+      ]
+    }
+  ],
+  // 成熟期 (49-120月)
+  mature: [
+    {
+      id: 'we_layoff_wave',
+      title: '✂️ 裁员风波',
+      trigger: function(){ return G.totalMonths > 48 && G.totalMonths <= 120; },
+      weight: 5,
+      text: '公司开始裁员，已经走了好几个人了。HR找你谈话，意思是你也在名单边缘...',
+      options: [
+        { text: '主动争取N+1走人', fx: { mood: -15, quit_free: true } },
+        { text: '低调苟住，减少存在感', fx: { mood: -10, job_security: 5 } },
+        { text: '站出来保护团队成员', fx: { mood: 5, job_perf: 10, promotion_chance: 10 } }
+      ]
+    },
+    {
+      id: 'we_startup_offer',
+      title: '🚀 创业邀约',
+      trigger: function(){ return G.totalMonths >= 36 && G.cash >= 100000; },
+      weight: 4,
+      text: '前同事拉你创业合伙，出让15%股份。方向不错但风险很大，需要你all in...',
+      options: [
+        { text: '辞职All in合伙创业', fx: { selfEmployed: true, cash: -100000, mood: 10, job_perf: 100 } },
+        { text: '投资5万但不参与经营', fx: { cash: -50000, mood: 3 } },
+        { text: '婉拒，安心打工', fx: { mood: -3 } }
+      ]
+    },
+    {
+      id: 'we_mentor_request',
+      title: '🧑‍🏫 带新人',
+      trigger: function(){ return G.totalMonths >= 36 && G.monthsAtJob >= 24; },
+      weight: 3,
+      text: '领导让你带一个校招生当徒弟。带好是你的功劳，带砸了影响你的评价...',
+      options: [
+        { text: '认真培养，分担工作中活', fx: { mood: 5, skill_gain: 2, job_perf: 3 } },
+        { text: '放养，抓自己业绩', fx: { mood: 2 } },
+        { text: '把累活全甩给他', fx: { mood: 3, job_perf: -3 } }
+      ]
+    },
+    {
+      id: 'we_lead_project',
+      title: '📋 首次带队做项目',
+      trigger: function(){ return G.totalMonths >= 36 && G.monthsAtJob >= 18; },
+      weight: 4,
+      text: '领导第一次让你独立负责一个项目，3人小团队。管人比做事难多了...',
+      options: [
+        { text: '边学边做，定期请教领导', fx: { mood: -5, skill_gain: 3, job_perf: 8, promotion_chance: 15 } },
+        { text: '沿用老方法硬推', fx: { mood: -8, job_perf: 2 } },
+        { text: '推给更有经验的同事', fx: { mood: 3, job_perf: -5 } }
+      ]
+    },
+    {
+      id: 'we_department_restructure',
+      title: '🏢 部门重组',
+      trigger: function(){ return G.totalMonths > 48 && G.totalMonths <= 120; },
+      weight: 4,
+      text: '公司调整组织架构，你所在的部门可能被合并或拆分。未来充满不确定性...',
+      options: [
+        { text: '主动拥抱变化争取好位置', fx: { mood: -5, job_perf: 5, promotion_chance: 15 } },
+        { text: '观望风头等大局已定', fx: { mood: -8 } },
+        { text: '趁乱看看外部机会', fx: { mood: -3 } }
+      ]
+    }
+  ],
+  // 后期（120月+）
+  late: [
+    {
+      id: 'we_burnout',
+      title: '🔥 职业倦怠',
+      trigger: function(){ return G.totalMonths > 120 && G.mood < 40; },
+      weight: 6,
+      text: '日复一日的工作让你身心俱疲。你开始怀疑这些年的拼搏到底有什么意义...',
+      options: [
+        { text: '申请gap一段时间再回来', fx: { mood: 30, cash: -30000 } },
+        { text: '申请内部转岗换个环境', fx: { mood: 15, skill_gain: 2 } },
+        { text: '咬牙继续硬撑', fx: { mood: -10, health: -5 } }
+      ]
+    },
+    {
+      id: 'we_ipo_bonus',
+      title: '💰 上市分红',
+      trigger: function(){ return G.totalMonths > 120 && G.job_perf >= 80; },
+      weight: 3,
+      text: '公司筹备IPO，内部员工有股票认购资格！这是改变命运的机会，但也要承担风险...',
+      options: [
+        { text: '全部认购，赌一把', fx: { mood: 10, cash: -50000 } },
+        { text: '观望一下再说', fx: { mood: 3 } }
+      ]
+    },
+    {
+      id: 'we_gold_helmet',
+      title: '👑 职场天花板',
+      trigger: function(){ return G.totalMonths > 180; },
+      weight: 4,
+      text: '你发现自己已经碰到了职场天花板。继续上升很难，维持现状又不甘心...',
+      options: [
+        { text: '转型管理，走管理路线', fx: { mood: 5, skill_gain: 5, job_perf: 5 } },
+        { text: '深耕技术，成为专家', fx: { mood: 8, skill_gain: 8 } },
+        { text: '开始认真考虑创业', fx: { mood: 10 } }
+      ]
+    },
+    {
+      id: 'we_midlife_crisis',
+      title: '🌊 中年危机',
+      trigger: function(){ return G.totalMonths > 180 && G.totalMonths <= 300; },
+      weight: 5,
+      text: '年轻一代在快速崛起，你感到前所未有的压力。每天通勤路上都在想：我还能在这个行业待多久？',
+      options: [
+        { text: '充电学习追赶年轻人', fx: { mood: -5, skill_gain: 5, job_perf: 5 } },
+        { text: '发挥经验优势走顾问路线', fx: { mood: 8 } },
+        { text: '早做打算寻找第二曲线', fx: { mood: 10, promotion_chance: 10 } }
+      ]
+    }
+  ]
+};
+
+function checkWorkEvents(){
+  if(G.selfEmployed) return;
+  if(!G.workEventCooldown) G.workEventCooldown = 0;
+
+  // 冷却期：每次工作事件后至少3个月不再触发
+  if(G.workEventCooldown > 0){ G.workEventCooldown--; return; }
+
+  // 根据职业阶段确定触发概率
+  var triggerProb = 0;
+  if(G.totalMonths <= 12) triggerProb = 0.33;
+  else if(G.totalMonths <= 48) triggerProb = 0.25;
+  else if(G.totalMonths <= 120) triggerProb = 0.20;
+  else triggerProb = 0.15;
+
+  if(Math.random() >= triggerProb) return;
+
+  // 根据职业阶段选择事件池
+  var pool = [];
+  if(G.totalMonths <= 12) pool = WORK_EVENTS.early.slice();
+  else if(G.totalMonths <= 48) pool = WORK_EVENTS.early.concat(WORK_EVENTS.growth);
+  else if(G.totalMonths <= 120) pool = WORK_EVENTS.growth.concat(WORK_EVENTS.mature);
+  else pool = WORK_EVENTS.mature.concat(WORK_EVENTS.late);
+
+  // 筛选符合条件的事件
+  var eligible = pool.filter(function(e){
+    try { return e.trigger(); } catch(err) { return false; }
+  });
+
+  if(eligible.length === 0) return;
+
+  // 加权随机选择
+  var totalWeight = 0;
+  for(var i = 0; i < eligible.length; i++){ totalWeight += eligible[i].weight; }
+  var r = Math.random() * totalWeight;
+  var chosen = eligible[0];
+  for(var j = 0; j < eligible.length; j++){
+    r -= eligible[j].weight;
+    if(r <= 0){ chosen = eligible[j]; break; }
+  }
+
+  // 触发事件
+  triggerWorkEvent(chosen);
+}
+
+function triggerWorkEvent(event){
+  var thread = {
+    id: 'work_' + event.id + '_' + G.totalMonths + '_' + randInt(0, 999),
+    npcName: event.title,
+    npcAvatar: '💼',
+    npcId: 'work_event_' + event.id,
+    tplId: 'work_event_' + event.id,
+    type: 'work_event',
+    rounds: [{ npcMsgs: [event.text], opts: event.options.map(function(o){ return {text: o.text, fx: o.fx}; }) }],
+    currentRound: 0,
+    status: 'unread',
+    receivedMonth: G.totalMonths,
+    readMonth: null,
+    followUp: null,
+    flagClear: null
+  };
+
+  G.phone.threads.unshift(thread);
+  updatePhoneBadge();
+
+  // 设置冷却期 (3-5个月)
+  G.workEventCooldown = 3 + Math.floor(Math.random() * 3);
+
+  // 记录连锁记忆
+  if(!G._recentEvents) G._recentEvents = [];
+  var clean = event.title.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, '').substring(0, 25);
+  G._recentEvents.push('💼' + clean);
+  if(G._recentEvents.length > 5) G._recentEvents.shift();
+}
+
+function applyWorkEffect(fx){
+  if(!fx) return;
+
+  if(fx.mood) G.mood = clamp(G.mood + (fx.mood || 0), 0, 200);
+  if(fx.health) G.health = clamp(G.health + (fx.health || 0), 0, 200);
+  if(fx.skill_gain){
+    G.job_perf = (G.job_perf || 50) + (fx.skill_gain * 3);
+    if(G.job_perf > 100) G.job_perf = 100;
+  }
+  if(fx.promotion_chance){
+    G._promotionBoost = (G._promotionBoost || 0) + fx.promotion_chance;
+  }
+  if(fx.job_perf){
+    G.job_perf = (G.job_perf || 50) + fx.job_perf;
+    if(G.job_perf > 100) G.job_perf = 100;
+    if(G.job_perf < 0) G.job_perf = 0;
+  }
+  if(fx.job_security){
+    G._jobSecurity = (G._jobSecurity || 0) + fx.job_security;
+  }
+  if(fx.selfEmployed === true) G.selfEmployed = true;
+  if(fx.quit_free === true) G._quitFree = true;
+  if(fx.EQ) G.EQ = clamp(G.EQ + fx.EQ, 0, 200);
+
+  // 显示效果摘要
+  var effects = [];
+  if(fx.mood) effects.push('心情 ' + (fx.mood > 0 ? '+' : '') + fx.mood);
+  if(fx.health) effects.push('健康 ' + (fx.health > 0 ? '+' : '') + fx.health);
+  if(fx.skill_gain) effects.push('能力+' + fx.skill_gain);
+  if(fx.promotion_chance) effects.push((fx.promotion_chance > 0 ? '+' : '') + fx.promotion_chance + '%晋升');
+  if(fx.job_perf) effects.push('绩效' + (fx.job_perf > 0 ? '+' : '') + fx.job_perf);
+  if(fx.selfEmployed) effects.push('🚀');
+
+  if(effects.length > 0) showToast('💼 ' + effects.join(' '));
+}
+
+
 // ===== 可遇到的NPC模板池（社交拓展系统）=====
 const MEETABLE_NPCS = {
   courseTeacher: {
@@ -5208,6 +5548,10 @@ async function selectPhoneOption(optIdx){
   round._playerChoice=opt.text;
   // Apply effects (pass npcId for relationship effects)
   applyPhoneFx(opt.fx, thread.npc);
+  // v4.2.0: 工作剧情特效处理
+  if(thread.type === 'work_event' && typeof applyWorkEffect === 'function'){
+    applyWorkEffect(opt.fx);
+  }
   // Set flags
   if(opt.flag){for(const k in opt.flag)G.phone.flags[k]=opt.flag[k];}
   // Handle special game integrations
