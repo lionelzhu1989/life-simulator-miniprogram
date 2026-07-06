@@ -3982,18 +3982,26 @@ function injectDynamicContacts(){
 
 // ===== 好友分组系统 =====
 function initFriendGroups(){
-  if(!G.friendGroups || G.friendGroups.length===0){
-    G.friendGroups=[
-      {id:'close_friends',name:'亲密好友',color:'#e74c3c',icon:'❤️',isDefault:true},
-      {id:'friends',name:'普通朋友',color:'#27ae60',icon:'👥',isDefault:true},
-      {id:'business',name:'商业伙伴',color:'#3498db',icon:'💼',isDefault:true},
-      {id:'acquaintance',name:'点头之交',color:'#95a5a6',icon:'👋',isDefault:true}
-    ];
-    // Add custom group feature examples (empty)
-    saveGame();
-  }
+  if(!G.friendGroups) G.friendGroups=[];
+  // 确保4个默认分组始终存在（兼容旧存档）
+  const defaults=[
+    {id:'family',name:'亲人',color:'#e91e63',icon:'👨‍👩‍👧',isDefault:true},
+    {id:'close_friends',name:'亲密好友',color:'#e74c3c',icon:'❤️',isDefault:true},
+    {id:'friends',name:'普通朋友',color:'#27ae60',icon:'👥',isDefault:true},
+    {id:'business',name:'商业伙伴',color:'#3498db',icon:'💼',isDefault:true},
+    {id:'acquaintance',name:'点头之交',color:'#95a5a6',icon:'👋',isDefault:true}
+  ];
+  defaults.forEach(d=>{
+    if(!G.friendGroups.find(g=>g.id===d.id)) G.friendGroups.push(d);
+  });
   if(!G.friendGroupings) G.friendGroupings={};
-}
+  // 自动将核心家人归入「亲人」分组
+  const familyNpcs=['mom','dad','spouse','child'];
+  familyNpcs.forEach(npcId=>{
+    if(NPC_PERSONALITIES[npcId] && !G.friendGroupings[npcId]){
+      G.friendGroupings[npcId]='family';
+    }
+  });
 
 function getFriendGroup(groupId){
   return (G.friendGroups||[]).find(g=>g.id===groupId);
@@ -4177,7 +4185,7 @@ function renderContacts(){
   // Group NPC ids
   const groupNpcMap={};
   if(!G.friendGroupings)G.friendGroupings={};
-  const groupOrder=['close_friends','friends','business','acquaintance'];
+  const groupOrder=['family','close_friends','friends','business','acquaintance'];
   // Add custom group ids
   (G.friendGroups||[]).forEach(g=>{if(!groupOrder.includes(g.id))groupOrder.push(g.id);});
   groupOrder.forEach(gid=>{groupNpcMap[gid]=[];});
