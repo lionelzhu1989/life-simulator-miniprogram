@@ -4945,7 +4945,7 @@ async function _generateNPCAIReply(npcId, playerMsg, chatHist){
   try{
     const resp=await fetch('https://token-plan-cn.xiaomimimo.com/v1/chat/completions',{
       method:'POST',
-      headers:{'Content-Type':'application/json','api-key':'tp-chy2q7xt8dofqyzdqb4bzbcz5g9bmmxyhzm7dcp65wl2vn0'},
+      headers:{'Content-Type':'application/json','api-key':'tp-chy2q7xt8dofqyzdqb4bzbcz5g9bmmxyhzm7dcp665wl2vn0'},
       body:JSON.stringify({model:'mimo-v2.5',messages:[{role:'user',content:prompt}],temperature:0.92,max_tokens:500})
     });
     if(resp.ok){
@@ -5527,7 +5527,7 @@ async function _aiFillThread(thread){
     try{
       const resp=await fetch('https://token-plan-cn.xiaomimimo.com/v1/chat/completions',{
         method:'POST',
-        headers:{'Content-Type':'application/json','api-key':'tp-chy2q7xt8dofqyzdqb4bzbcz5g9bmmxyhzm7dcp65wl2vn0'},
+        headers:{'Content-Type':'application/json','api-key':'tp-chy2q7xt8dofqyzdqb4bzbcz5g9bmmxyhzm7dcp665wl2vn0'},
         body:JSON.stringify({model:'mimo-v2.5',messages:[{role:'user',content:prompt}],temperature:0.92,max_tokens:300})
       });
       if(resp.ok){
@@ -5719,7 +5719,7 @@ function showChatProfile(){
 // ===== AI Chat System (via CORS Proxy) =====
 const AI_CHAT_CONFIG={
   apiUrl:'https://token-plan-cn.xiaomimimo.com/v1/chat/completions',
-  apiKey:'tp-chy2q7xt8dofqyzdqb4bzbcz5g9bmmxyhzm7dcp65wl2vn0', // proxy adds api-key header
+  apiKey:'tp-chy2q7xt8dofqyzdqb4bzbcz5g9bmmxyhzm7dcp665wl2vn0', // proxy adds api-key header
   model:'xiaomi/mimo-v2.5',
   enabled:true,
   _fallbackCount:0,
@@ -5969,7 +5969,7 @@ ${p.name}的家人/朋友是${relation}。玩家${gameState.age}岁，${gameStat
       const resp=await fetch(AI_CHAT_CONFIG.apiUrl,{
         method:'POST',
         headers:{
-          'api-key':'tp-chy2q7xt8dofqyzdqb4bzbcz5g9bmmxyhzm7dcp65wl2vn0',
+          'api-key':'tp-chy2q7xt8dofqyzdqb4bzbcz5g9bmmxyhzm7dcp665wl2vn0',
           'Content-Type':'application/json'
         },
         body:JSON.stringify({
@@ -7103,7 +7103,7 @@ const AI_ENGINE={
   enabled:true,
   proxyUrl:'https://token-plan-cn.xiaomimimo.com/v1/chat/completions',
   directUrl:'https://token-plan-cn.xiaomimimo.com/v1/chat/completions',
-  apiKey:'tp-chy2q7xt8dofqyzdqb4bzbcz5g9bmmxyhzm7dcp65wl2vn0',
+  apiKey:'tp-chy2q7xt8dofqyzdqb4bzbcz5g9bmmxyhzm7dcp665wl2vn0',
   model:'xiaomi/mimo-v2.5',
   useProxy:false,
   cache:{},// prompt hash → response
@@ -9093,7 +9093,7 @@ async function generateEncounterAIResponse(sceneKey, npcName, choiceText, choice
       var resp = await fetch(AI_CHAT_CONFIG.endpoint, {
         method:'POST',
         headers:{
-          'api-key':'tp-chy2q7xt8dofqyzdqb4bzbcz5g9bmmxyhzm7dcp65wl2vn0','Content-Type':'application/json'},
+          'api-key':'tp-chy2q7xt8dofqyzdqb4bzbcz5g9bmmxyhzm7dcp665wl2vn0','Content-Type':'application/json'},
         body:JSON.stringify({
           model: AI_CHAT_CONFIG.model,
           messages:[
@@ -9551,7 +9551,7 @@ async function sendAIChat(){
     const resp=await fetch(AI_CHAT_CONFIG.apiUrl,{
       method:'POST',
       headers:{
-          'api-key':'tp-chy2q7xt8dofqyzdqb4bzbcz5g9bmmxyhzm7dcp65wl2vn0',
+          'api-key':'tp-chy2q7xt8dofqyzdqb4bzbcz5g9bmmxyhzm7dcp665wl2vn0',
         'Content-Type':'application/json'
       },
       body:JSON.stringify({
@@ -9748,7 +9748,7 @@ ${threadContext}${historyText?'\n历史消息：\n'+historyText:''}
       const resp=await fetch(AI_CHAT_CONFIG.apiUrl,{
         method:'POST',
         headers:{
-          'api-key':'tp-chy2q7xt8dofqyzdqb4bzbcz5g9bmmxyhzm7dcp65wl2vn0','Content-Type':'application/json'},
+          'api-key':'tp-chy2q7xt8dofqyzdqb4bzbcz5g9bmmxyhzm7dcp665wl2vn0','Content-Type':'application/json'},
         body:JSON.stringify({
           model:AI_CHAT_CONFIG.model,
           messages:[{role:'system',content:systemPrompt},{role:'user',content:'## 玩家选择\n'+playerChoice+'\n\n（请根据上面的历史消息记忆，给出像真人一样的自然回复。）'}],
@@ -10232,7 +10232,7 @@ async function generateScheduleSceneAI(event,npcId,npcName,npcTraits,relType,act
     const resp=await fetch(AI_ENGINE.useProxy?AI_ENGINE.proxyUrl:AI_ENGINE.directUrl,{
       method:'POST',
       headers:{
-          'api-key':'tp-chy2q7xt8dofqyzdqb4bzbcz5g9bmmxyhzm7dcp65wl2vn0','Content-Type':'application/json'},
+          'api-key':'tp-chy2q7xt8dofqyzdqb4bzbcz5g9bmmxyhzm7dcp665wl2vn0','Content-Type':'application/json'},
       body:JSON.stringify({model:AI_ENGINE.model,messages:[{role:'user',content:prompt}],temperature:0.92,max_tokens:500}),
       signal:_scAbort.signal
     });
