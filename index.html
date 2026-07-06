@@ -4539,7 +4539,9 @@ async function openProactiveChat(npcId){
   body.innerHTML='';
   // Load chat history if exists
   const history=G.phone.chatHistory[npcId]||[];
-  if(history.length>0){
+  // 修复：判断是否只有预置系统消息（无真实对话）
+  const hasRealConversation = history.some(h => h.player || (h.npc && !h.npc.includes('通过微信添加了你')));
+  if(hasRealConversation){
     // Show both player and NPC messages for full context
     const recent=history.slice(-15);
     recent.forEach(h=>{
