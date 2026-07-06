@@ -747,12 +747,26 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
     <div class="card">
       <div class="card-title"><span class="icon">💰</span>资产概览</div>
       <div class="money-big" id="totalAsset">¥0</div>
-      <div class="money-label">总资产</div>
+      <div class="money-label">总资产 <span id="wealthBadge" style="font-size:11px;font-weight:500;padding:2px 8px;border-radius:10px;background:rgba(241,196,15,0.15);color:#f39c12;margin-left:6px;">草根</span></div>
+      <div style="display:flex;gap:6px;margin:8px 0 4px;font-size:10px;color:#888;align-items:center;flex-wrap:nowrap;overflow-x:auto;">
+        <span style="display:inline-flex;align-items:center;gap:2px;flex-shrink:0;">❤️<span id="miniHealth" style="font-weight:600;color:#333;">100</span></span>
+        <span style="display:inline-flex;align-items:center;gap:2px;flex-shrink:0;">😊<span id="miniMood" style="font-weight:600;color:#333;">100</span></span>
+        <span style="display:inline-flex;align-items:center;gap:2px;flex-shrink:0;">🧠<span id="miniIQ" style="font-weight:600;color:#333;">100</span></span>
+        <span style="display:inline-flex;align-items:center;gap:2px;flex-shrink:0;">💬<span id="miniEQ" style="font-weight:600;color:#333;">100</span></span>
+      </div>
       <div class="stat-grid">
         <div class="stat-item"><div class="num" id="cashDisplay">¥0</div><div class="label">现金</div></div>
         <div class="stat-item"><div class="num" id="stockValueDisplay">¥0</div><div class="label">股票市值</div></div>
         <div class="stat-item"><div class="num" id="houseValueDisplay">¥0</div><div class="label">房产估值</div></div>
         <div class="stat-item"><div class="num" id="bizIncomeDisplay">¥0</div><div class="label">月被动收入</div></div>
+      </div>
+      <div style="margin-top:10px;padding-top:10px;border-top:1px solid #f0f0f0;">
+        <div style="font-size:11px;color:#999;margin-bottom:6px;">💵 月度现金流</div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;">
+          <span style="color:#27ae60;">收 <span id="monthlyIncomeDisplay">¥0</span></span>
+          <span style="color:#e74c3c;">支 <span id="monthlyExpenseDisplay">¥0</span></span>
+          <span id="netCashflowLabel" style="font-weight:600;color:#27ae60;">净 <span id="netCashflowDisplay">¥0</span></span>
+        </div>
       </div>
     </div>
     <div class="card">
@@ -881,8 +895,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
       <div class="phone-tab active" onclick="switchPhoneTab('messages')">💬 消息</div>
       <div class="phone-tab" onclick="switchPhoneTab('contacts')">📒 通讯录</div>
       <div class="phone-tab" onclick="switchPhoneTab('moments')">📷 朋友圈</div>
-      <div class="phone-tab" onclick="switchPhoneTab('dashboard')">📊 仪表盘</div>
-      <div class="phone-tab" onclick="switchPhoneTab('notifications')">🔔 通知</div>
+            <div class="phone-tab" onclick="switchPhoneTab('notifications')">🔔 通知</div>
     </div>
     <div id="phone-messages" class="phone-content active"></div>
     <div id="phone-contacts" class="phone-content"></div>
@@ -1758,7 +1771,40 @@ function refreshLife(){
   let houseVal=0;G.houses.forEach(h=>houseVal+=h.marketValue);
   document.getElementById('houseValueDisplay').textContent=fmt(houseVal);
   document.getElementById('bizIncomeDisplay').textContent=fmt(calcPassiveIncome())+'/月';
+  // 月度现金流
+  var job=JOBS[G.jobIndex];
+  var mnIncome=G.selfEmployed?0:(job?Math.round(job.salary/12):0);
+  var passiveIn=calcPassiveIncome();
+  var childCost=(G.children||0)*20000/12;
+  var loanPay=0;if(G.houses)G.houses.forEach(function(h){if(h.loan&&h.loanBalance>0)loanPay+=Math.min(h.loanMonthly||0,h.loanBalance);});
+  var mnExpense=Math.round(childCost+loanPay);
+  var netCf=mnIncome+passiveIn-mnExpense;
+  var mnIncEl=document.getElementById('monthlyIncomeDisplay');
+  var mnExpEl=document.getElementById('monthlyExpenseDisplay');
+  var netCfEl=document.getElementById('netCashflowDisplay');
+  var netCfLbl=document.getElementById('netCashflowLabel');
+  if(mnIncEl)mnIncEl.textContent=fmt(mnIncome);
+  if(mnExpEl)mnExpEl.textContent=fmt(mnExpense);
+  if(netCfEl)netCfEl.textContent=(netCf>=0?'+':'')+fmt(netCf);
+  if(netCfLbl)netCfLbl.style.color=netCf>=0?'#27ae60':'#e74c3c';
   setAttrBar('Health',G.health);setAttrBar('Mood',G.mood);setAttrBar('IQ',G.IQ);setAttrBar('EQ',G.EQ);
+  // 迷你属性值
+  var _mHp=document.getElementById('miniHealth');if(_mHp)_mHp.textContent=Math.round(G.health);
+  var _mMp=document.getElementById('miniMood');if(_mMp)_mMp.textContent=Math.round(G.mood);
+  var _mIq=document.getElementById('miniIQ');if(_mIq)_mIq.textContent=Math.round(G.IQ);
+  var _mEq=document.getElementById('miniEQ');if(_mEq)_mEq.textContent=Math.round(G.EQ);
+  // 财富等级徽章
+  var _wb=document.getElementById('wealthBadge');if(_wb){
+    var _ta=calcTotalAsset();
+    var _lv='草根',_clr='#999',_bg='rgba(0,0,0,0.05)';
+    if(_ta>=100000000){_lv='亿万富翁';_clr='#8e44ad';_bg='rgba(155,89,182,0.15)';}
+    else if(_ta>=10000000){_lv='千万富豪';_clr='#e74c3c';_bg='rgba(231,76,60,0.12)';}
+    else if(_ta>=1000000){_lv='百万富翁';_clr='#f39c12';_bg='rgba(243,156,18,0.12)';}
+    else if(_ta>=500000){_lv='小有积蓄';_clr='#27ae60';_bg='rgba(39,174,96,0.12)';}
+    else if(_ta>=100000){_lv='温饱';_clr='#3498db';_bg='rgba(52,152,219,0.12)';}
+    else if(_ta<0){_lv='负债累累';_clr='#e74c3c';_bg='rgba(231,76,60,0.12)';}
+    _wb.textContent=_lv;_wb.style.color=_clr;_wb.style.background=_bg;
+  }
   renderEvents();
   renderTierBanner();
   renderLifeEvents();
@@ -3627,7 +3673,26 @@ function getRelationshipStage(npcId){
 function getStagePromptInjection(npcId){
   const stage = getRelationshipStage(npcId);
   const rel = getRelationship(npcId);
-  return '\n\n## 你与玩家的关系阶段\n当前阶段：'+stage.name+'（亲密度：'+(rel?rel.intimacy:0)+'/100）\n阶段特征：'+stage.desc+'\n你的行为边界：请根据当前阶段调整对话深度和语气';
+  var intimacy = rel ? rel.intimacy : 0;
+  var options = [];
+  // 根据阶段解锁对话选项
+  if(stage.key === 'stranger') options = ['寒暄','自我介绍','基础问答'];
+  else if(stage.key === 'acquaintance') options = ['工作话题','分享日常','兴趣爱好'];
+  else if(stage.key === 'friend') options = ['倾诉烦恼','寻求建议','调侃玩笑'];
+  else if(stage.key === 'close') options = ['深夜话题','暧昧暗示','个人秘密','人生理想'];
+  else if(stage.key === 'lover') options = ['表白剧情','重大事件','婚后未来规划'];
+  var hint = '\n\n## 你与玩家的关系阶段';
+  hint += '\n当前阶段：' + stage.name + '（亲密度：' + intimacy + '/100）';
+  hint += '\n阶段特征：' + stage.desc;
+  hint += '\n可聊话题：' + options.join('、');
+  hint += '\n行为边界：请根据当前阶段调整对话深度和语气';
+  if(stage.key === 'close' || stage.key === 'lover') {
+    hint += '\n请适当使用暧昧、撒娇的语气，增添情趣';
+  }
+  if(stage.key !== 'stranger') {
+    hint += '\n可在回复末尾提供2-3个回复选项，格式：[OPT:选项1|选项2|选项3]';
+  }
+  return hint;
 }
 
 // ===== NPC事件驱动剧情 =====
@@ -3665,16 +3730,72 @@ function triggerNPCStageEvent(npcId, newStage, oldStage){
 }
 
 function checkNPCEvents(){
-  if(!G.phone||!G.phone.chatHistory) return;
-  Object.keys(NPC_PERSONALITIES).forEach(npcId=>{
-    const stage = getRelationshipStage(npcId);
-    const lastStage = G._npcLastStage && G._npcLastStage[npcId];
-    if(stage.key !== lastStage){
-      triggerNPCStageEvent(npcId, stage, lastStage);
-      if(!G._npcLastStage) G._npcLastStage={};
-      G._npcLastStage[npcId]=stage.key;
+  if(G.gameOver||!G.phone) return;
+  var nm=getMonth();
+  Object.keys(G.relationships||{}).forEach(function(id){
+    var rel=G.relationships[id];
+    if(!rel||!NPC_PERSONALITIES[id])return;
+    if(id==='system'||id==='scammer')return;
+    var st=getRelationshipStage(id);
+    var lastStage=G._npcLastStage&&G._npcLastStage[id];
+    // 阶段跃迁通知
+    if(st.key!==lastStage){
+      triggerNPCStageEvent(id,st,lastStage);
+      if(!G._npcLastStage)G._npcLastStage={};
+      G._npcLastStage[id]=st.key;
+    }
+    // 事件冷却
+    if(!G._npcEventCooldown)G._npcEventCooldown={};
+    var ec=G._npcEventCooldown[id]||0;
+    if(ec>0&&G.totalMonths<ec)return;
+    // 节日事件
+    if((nm===1||nm===2||nm===9)&&rel.intimacy>20&&Math.random()<0.25){
+      var fest=(nm===1?'新春':nm===2?'情人节':'中秋');
+      _sendNPCMessage(id,fest+'祝福',fest+'快乐！🎊');
+      G._npcEventCooldown[id]=G.totalMonths+1;
+      return;
+    }
+    // 危机关怀
+    if(G.mood<20&&rel.intimacy>40&&Math.random()<0.15){
+      _sendNPCMessage(id,'关怀','你最近怎么了？有事跟我说。');
+      G._npcEventCooldown[id]=G.totalMonths+2;
+      return;
+    }
+    // 生日
+    if(rel.metMonth>0&&rel.intimacy>30&&(G.totalMonths-rel.metMonth)%12===0&&Math.random()<0.1){
+      _sendNPCMessage(id,'生日','今天是我的生日诶，你记得吗？🎂');
+      G._npcEventCooldown[id]=G.totalMonths+12;
+      return;
+    }
+    // NPC专属事件链（boss/mentor/gymCoach）
+    if(NPC_EVENT_CHAINS[id]&&Math.random()<0.12){
+      var chain=NPC_EVENT_CHAINS[id];
+      var done=G._npcChainDone&&G._npcChainDone[id]||[];
+      for(var ci=0;ci<chain.length;ci++){
+        var step=chain[ci];
+        if(done.indexOf(step.id)<0&&rel.intimacy>=step.trigger.min){
+          _sendNPCMessage(id,step.id,step.msg);
+          if(!G._npcChainDone)G._npcChainDone={};
+          if(!G._npcChainDone[id])G._npcChainDone[id]=[];
+          G._npcChainDone[id].push(step.id);
+          G._npcEventCooldown[id]=G.totalMonths+2;
+          return;
+        }
+      }
     }
   });
+}
+
+function _sendNPCMessage(npcId,eventTag,text){
+  var npc=NPC_PERSONALITIES[npcId];
+  if(!npc)return;
+  var thread={id:G.phone.nextId++,npcId:npcId,npcName:npc.name,npcAvatar:npc.avatar,
+    tplId:'sys_evt_'+eventTag+'_'+npcId+'_'+G.totalMonths,type:'wechat',
+    rounds:[{npcMsgs:[text],opts:[{text:'好的知道了',fx:{affection:2},next:-1}]}],
+    currentRound:0,status:'unread',receivedMonth:G.totalMonths,
+    readMonth:null,followUp:null,flagClear:null};
+  pushPhoneThread(thread);
+  updatePhoneBadge();
 }
 
 
@@ -6016,8 +6137,26 @@ async function _doSendMessage(msg,npcId){
     console.error('processChatEffects error:',e);
     cleanReply=reply.replace(/\[\w+:.*?\]/g,'');
   }
+  // Parse OPT tags from AI reply
+  var _parsed=_parseOptTags(cleanReply);
+  cleanReply=_parsed.reply;
+  var _optChoices=_parsed.options;
   // Add NPC bubble with cleaned reply
   addChatBubble('npc',cleanReply);
+  // Render OPT choices as buttons if present
+  if(_optChoices&&_optChoices.length>0){
+    G._currentOptChoices=_optChoices;
+    var _optsEl=document.getElementById('chatOpts');
+    if(_optsEl){
+      _optsEl.style.display='flex';
+      var _ohtml='';
+      _optChoices.forEach(function(_opt,_idx){
+        _ohtml+='<div class="chat-opt" onclick="_optSendByIdx('+_idx+')">\u2708 '+_opt+'</div>';
+      });
+      _ohtml+='<div class="chat-opt" style="color:#999;border-style:dashed;" onclick="document.getElementById(\'chatInputField\').focus()">\u2328 \u81ea\u5df1\u8f93\u5165</div>';
+      _optsEl.innerHTML=_ohtml;
+    }
+  }
   // Save to history
   saveChatHistory(npcId,msg,reply);
   // Mark as read (player just replied)
@@ -6050,6 +6189,19 @@ async function _doSendMessage(msg,npcId){
   sendBtn.disabled=false;
   // Focus input
   if(input)input.focus();
+}
+
+
+// 通过OPT选项快速发送消息
+function _optSend(msg){
+  var input=document.getElementById('chatInputField');
+  if(input){input.value=msg;}
+  sendPlayerMessage();
+}
+
+function _optSendByIdx(idx){
+  var choices=G._currentOptChoices||[];
+  if(idx>=0&&idx<choices.length)_optSend(choices[idx]);
 }
 
 // Handle Enter key in input
@@ -6316,7 +6468,7 @@ function renderNotifications(){
 function switchPhoneTab(tab){
   document.querySelectorAll('.phone-tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.phone-content').forEach(c=>c.classList.remove('active'));
-  const tabNames=['messages','contacts','schedule','moments','dashboard','notifications'];
+  const tabNames=['messages','contacts','schedule','moments','notifications'];
   const idx=tabNames.indexOf(tab);
   if(idx>=0){const allTabs=document.querySelectorAll('.phone-tab');if(allTabs[idx])allTabs[idx].classList.add('active');}
   const el=document.getElementById('phone-'+tab);
@@ -6325,7 +6477,6 @@ function switchPhoneTab(tab){
   else if(tab==='contacts')renderContacts();
   else if(tab==='schedule')renderSchedule();
   else if(tab==='moments')renderMoments();
-  else if(tab==='dashboard')renderDashboard();
   else if(tab==='notifications')renderNotifications();
 }
 
@@ -7515,6 +7666,7 @@ advanceMonth=function(){
   if(Math.random()<0.10){
     triggerChoiceEvent();
   }
+  // checkNPCEvents已在advanceMonth内部调用
 };
 
 
@@ -9165,6 +9317,7 @@ ${style}${relHint}
 
 ## 你们的关系
 ${NPC_RELATIONS[npcId]||'朋友'}，亲密${rel.intimacy} 信任${rel.trust}
+${getStagePromptInjection(npcId)}
 
 ## 玩家状态（简要参考）
 玩家${gameState.age}岁，${gameState.job||'无业'}，存款${fmt(gameState.cash)}元。
@@ -10184,6 +10337,17 @@ ${chosen.map(n=>`·${n.id}(${n.name}): ${n.traits.join('、')}，常发${n.topic
     content:`玩家：${ctx.age}岁，${ctx.jobLevel||'待业'}，资产${ctx.totalAsset}，心情${ctx.mood}，已婚${ctx.married}，子女${ctx.children}人
 随机选一个NPC发朋友圈，内容要真实、有趣、有生活气息。像刷朋友圈时看到的那种。`
   }];
+}
+
+
+// 解析OPT标签，返回 {text, options}
+function _parseOptTags(reply){
+  if(!reply)return{reply:reply,options:[]};
+  var m=reply.match(/\[OPT:([^\]]+)\]/);
+  if(!m)return{reply:reply,options:[]};
+  var opts=m[1].split('|');
+  var cleanReply=reply.replace(/\[OPT:[^\]]+\]/g,'').trim();
+  return{reply:cleanReply,options:opts};
 }
 
 // === _doCallAI ===
