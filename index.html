@@ -4929,7 +4929,7 @@ async function openProactiveChat(npcId){
 }
 
 // ===== 开始对话（选择开场白后） =====
-async // Helper: 生成NPC AI回复
+// Helper: 生成NPC AI回复
 async function _generateNPCAIReply(npcId, playerMsg, chatHist){
   const p=NPC_PERSONALITIES[npcId];if(!p)return'[AI暂时无法连接]';
   const rel=getRelationship(npcId)||0;
