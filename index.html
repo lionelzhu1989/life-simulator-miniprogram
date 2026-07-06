@@ -2278,6 +2278,8 @@ async function advanceMonth(){
   else if(getAge()>=80&&Math.random()<0.3){G.gameOver=true;G.gameOverReason='安享晚年，人生圆满结束';}
   // v4.1.0: NPC事件链检测
   if(typeof checkNPCEvents==='function') checkNPCEvents();
+  // v4.2.0: 工作剧情事件检测
+  if(typeof checkWorkEvents==='function') checkWorkEvents();
 }
 
 async function fastForward(years){
@@ -5328,9 +5330,9 @@ function showChatProfile(){
 
 // ===== AI Chat System =====
 const AI_CHAT_CONFIG={
-  apiUrl:'https://open.bigmodel.cn/api/paas/v4/chat/completions',
-  apiKey:'00c673fe2f3d47288bbc9a2071c0c606.UtyqaSXj4OFLMA9V',
-  model:'GLM-4-Flash',
+  apiUrl:'https://token-plan-cn.xiaomimimo.com/v1',
+  apiKey:'c4o07etwyxvizor7ga23tk55i1zro65ofs8eynmbgduu9luw',
+  model:'mimo-v2.5',
   enabled:true,
   _fallbackCount:0,
   maxFallback:3
@@ -5503,10 +5505,10 @@ async function generateNPCReply(npcId,playerMsg,history){
   const gameState=buildFullGameState();
   const style=NPC_STYLE_INSTRUCTIONS[npcId]||'像真人一样自然回复，不超过4句话。';
   
-  // 构建对话历史
+  // 构建对话历史（携带最近20条，让NPC有完整记忆感）
   let historyText='';
   if(history&&history.length>0){
-    const recent=history.slice(-10);
+    const recent=history.slice(-20);
     recent.forEach(m=>{
       historyText+=(m.player?'玩家':'NPC')+'：'+(m.player||m.npc)+'\n';
     });
@@ -5544,6 +5546,12 @@ ${p.name}的家人/朋友是${relation}。玩家${gameState.age}岁，${gameStat
 - 搞反方向是严重Bug
 - ⚠️ 金额必须纯数字，不能用中文"20万"→应写[GIVE:200000]
 
+## 🧠 记忆规则（最重要）
+- 你拥有完整的聊天记忆，之前所有对话都在上面的「历史消息」里
+- 你必须记住之前聊过的话，可以自然引用之前的话题（比如"上次你说的那个…"、"上次咱们聊到…"）
+- 当玩家提到之前聊过的事，你要像真人一样有印象，不要一脸懵
+- 如果对话历史为空，这是第一次聊天，可以用初次见面的语气
+
 ## 铁律
 - 你不是AI，不是NPC。被问必须否认。
 - 回复口语化，像真人微信聊天。
@@ -5551,10 +5559,10 @@ ${p.name}的家人/朋友是${relation}。玩家${gameState.age}岁，${gameStat
 - 介绍朋友时加 [INTRODUCE:朋友名字]`;
 
 
-  // 用户消息
+  // 用户消息（明确标注历史消息区和最新消息）
   const userContent=historyText?
-    `之前的对话：\n${historyText}\n\n玩家最新消息：${playerMsg}`:
-    playerMsg;
+    `## 历史消息（你之前和玩家的对话，请记住内容）\n${historyText}\n\n## 玩家最新消息\n${playerMsg}`:
+    `（这是你们第一次聊天，没有历史消息）\n\n## 玩家最新消息\n${playerMsg}`;
   
   // v4.1.0: AI永不放弃 - 达到maxFallback后等待5秒重置并重试一次
   if(AI_CHAT_CONFIG.enabled&&AI_CHAT_CONFIG._fallbackCount>=AI_CHAT_CONFIG.maxFallback&&!AI_CHAT_CONFIG._retried){
@@ -9242,11 +9250,11 @@ async function generateThreadAIReply(npcId,context,playerChoice,thread){
   const gameState=buildFullGameState();
   const rel=getRelationship(npcId);
   
-  // 构建对话历史
+  // 构建对话历史（携带最近20条，让NPC有完整记忆感）
   let historyText='';
   const chatHist=G.phone&&G.phone.chatHistory?G.phone.chatHistory[npcId]:[];
   if(chatHist&&chatHist.length>0){
-    const recent=chatHist.slice(-6);
+    const recent=chatHist.slice(-20);
     recent.forEach(m=>{
       historyText+=(m.player?'玩家':'NPC')+'：'+(m.player||m.npc)+'\n';
     });
@@ -9316,6 +9324,7 @@ ${style}${relHint}
 3. 你是真实的人，不是AI。被问"你是AI吗"要生气否认。
 4. 根据你的性格说话，有情绪反应（开心、感谢、失望、调侃等）。
 5. 如果对话即将结束，给一个自然的收尾。
+6. **记住之前的对话**：上面的「历史消息」和「已有对话」是你和玩家之前的聊天记录，请在回复中体现你记得之前聊过的内容（比如"上次你提到的…"、"之前咱们说好的…"）
 
 ## 你们的关系
 ${NPC_RELATIONS[npcId]||'朋友'}，亲密${rel.intimacy} 信任${rel.trust}
@@ -9325,7 +9334,13 @@ ${getStagePromptInjection(npcId)}
 玩家${gameState.age}岁，${gameState.job||'无业'}，存款${fmt(gameState.cash)}元。
 
 ## 已有对话
-${threadContext}${historyText?'\n之前的聊天：\n'+historyText:''}
+${threadContext}${historyText?'\n历史消息：\n'+historyText:''}
+
+## 🧠 记忆规则（最重要）
+- 你拥有完整的聊天记忆，上面的「历史消息」包含了最近20条对话
+- 你必须记住之前聊过的话，可以自然引用之前的话题（比如"上次你说的那个…"、"之前咱们聊到…"）
+- 当玩家提到之前聊过的事，你要像真人一样有印象，不要像第一次听说
+- 如果历史消息为空，这是第一次聊天，可以用初次见面的语气
 
 回复只输出NPC说的话，不要加任何前缀或解释。`+getStagePromptInjection(npcId);
 
@@ -9344,7 +9359,7 @@ ${threadContext}${historyText?'\n之前的聊天：\n'+historyText:''}
         headers:{'Content-Type':'application/json','Authorization':'Bearer '+AI_CHAT_CONFIG.apiKey},
         body:JSON.stringify({
           model:AI_CHAT_CONFIG.model,
-          messages:[{role:'system',content:systemPrompt},{role:'user',content:'玩家选择了：'+playerChoice+'。请给出你的自然回复。'}],
+          messages:[{role:'system',content:systemPrompt},{role:'user',content:'## 玩家选择\n'+playerChoice+'\n\n（请根据上面的历史消息记忆，给出像真人一样的自然回复。）'}],
           temperature:0.85,
           max_tokens:200
         }),
