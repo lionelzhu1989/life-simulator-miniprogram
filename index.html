@@ -1652,11 +1652,15 @@ function startGame(){
     migrateSave();
     document.getElementById('welcomePage').style.display='none';
     document.getElementById('gameApp').style.display='flex';
+    var go=document.getElementById('guideOverlay');if(go)go.style.display='none';
+    var ob=document.getElementById('obOverlay');if(ob)ob.style.display='none';
     initStockPrices();initPhoneState();refreshAll();return;
   }
   G=defaultState();initStockPrices();initPhoneState();saveGame();
   document.getElementById('welcomePage').style.display='none';
   document.getElementById('gameApp').style.display='flex';
+  var go=document.getElementById('guideOverlay');if(go)go.style.display='none';
+  var ob=document.getElementById('obOverlay');if(ob)ob.style.display='none';
   refreshAll();
 }
 function initStockPrices(){STOCKS.forEach(s=>{if(!G.stockPrices[s.code])G.stockPrices[s.code]=s.basePrice;});}
@@ -4003,6 +4007,7 @@ function initFriendGroups(){
       G.friendGroupings[npcId]='family';
     }
   });
+}
 
 function getFriendGroup(groupId){
   return (G.friendGroups||[]).find(g=>g.id===groupId);
