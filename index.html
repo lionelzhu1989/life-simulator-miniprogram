@@ -1632,7 +1632,7 @@ function showFloatText(text,positive){
 function switchTab(name){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
-  const tabs=['life','work','invest','more','task','phone'];
+  const tabs=['life','work','invest','pet','more','task','phone'];
   document.querySelectorAll('.tab-item').forEach((t,i)=>t.classList.toggle('active',tabs[i]===name));
   refreshPage(name);
   _tut_checkAutoAdvance();
@@ -1825,6 +1825,7 @@ function setAttrBar(name,val){val=clamp(Math.round(val),0,200);const pct=Math.mi
 function refreshPage(name){
   if(name==='work')refreshWork();
   else if(name==='invest'){refreshInvest('stock');refreshInvest('house');refreshInvest('business');refreshInvest('tech');}
+  else if(name==='pet')renderPetPage();
   else if(name==='task'){refreshTasks();refreshAchievements();refreshFiveDim();renderRanking();}
   else if(name==='more')refreshLearning();
   else if(name==='phone')refreshPhone();
