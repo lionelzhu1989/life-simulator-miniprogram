@@ -4622,7 +4622,7 @@ function setNpcGroup(npcId,groupId){
 
 function createFriendGroup(name,color,icon){
   if(!G.friendGroups) G.friendGroups=[];
-  gid='custom_'+Date.now();
+  const gid='custom_'+Date.now();
   // Check for duplicate names
   if((G.friendGroups||[]).find(g=>g.name===name)){
     showToast('分组名称已存在');
@@ -5498,13 +5498,13 @@ function renderPhoneList(){
   updatePhoneHint();
 }
 
-async function openThread(id){
+function openThread(id){
   if(!G.phone)return;
   const thread=G.phone.threads.find(t=>t.id===id);if(!thread)return;
   if(thread.status==='unread'){thread.status='reading';thread.readMonth=G.totalMonths;}
   G._openThreadId=id;
-  // AI替换硬编码NPC消息
-  await _aiFillThread(thread);
+  // AI替换硬编码NPC消息（异步，不阻塞UI）
+  _aiFillThread(thread);
   renderChat();
   // v3.12.0: 显示模板选项，隐藏AI输入框
   const opts=document.getElementById('chatOpts');
