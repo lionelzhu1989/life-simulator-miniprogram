@@ -711,6 +711,40 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 .tut-skip-btn:hover{background:#f5f5f5;color:#666;border-color:#ccc;}
 .tut-highlight{box-shadow:0 0 0 3px rgba(74,144,217,.5),0 0 12px rgba(74,144,217,.3) !important;position:relative;z-index:10002;border-radius:8px;transition:box-shadow .3s;}
 
+/* ===== V5: 职业选择界面 ===== */
+.career-selection-page{position:fixed;top:0;left:0;right:0;bottom:0;z-index:999;background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.career-select-container{max-width:480px;margin:0 auto;padding:20px 16px 40px;}
+.career-select-header{text-align:center;margin-bottom:24px;padding-top:20px;}
+.career-select-header h2{font-size:22px;font-weight:700;color:var(--text);margin-bottom:8px;}
+.career-subtitle{font-size:13px;color:var(--text-light);line-height:1.5;}
+.career-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.career-card{background:var(--card-bg);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px 12px;cursor:pointer;transition:all .2s;text-align:center;border:2px solid transparent;}
+.career-card:active{transform:scale(0.96);border-color:var(--primary);}
+.career-card-icon{font-size:36px;margin-bottom:8px;}
+.career-card-name{font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px;}
+.career-card-desc{font-size:11px;color:var(--text-light);margin-bottom:8px;line-height:1.4;min-height:32px;}
+.career-card-salary{font-size:13px;font-weight:700;color:var(--warning);margin-bottom:8px;}
+.career-card-traits{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin-bottom:8px;min-height:24px;}
+.career-trait-tag{display:inline-block;padding:2px 6px;border-radius:4px;font-size:10px;background:#f0f2f5;color:var(--text-light);}
+.career-card-mult{font-size:11px;color:var(--primary);font-weight:500;}
+/* ===== V5: 工作情景弹窗 ===== */
+.work-scenario-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:1100;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s;}
+.work-scenario-overlay.show{opacity:1;pointer-events:auto;}
+.work-scenario-box{background:#fff;border-radius:16px;width:88%;max-width:380px;padding:24px 20px;transform:scale(0.85);transition:transform .3s;max-height:80vh;overflow-y:auto;}
+.work-scenario-overlay.show .work-scenario-box{transform:scale(1);}
+.ws-career-icon{font-size:32px;margin-bottom:4px;}
+.ws-career-label{font-size:12px;color:var(--text-light);margin-bottom:8px;}
+.ws-title{font-size:17px;font-weight:700;color:var(--text);margin-bottom:10px;line-height:1.4;}
+.ws-scene{font-size:13px;color:#555;line-height:1.7;margin-bottom:16px;text-align:left;}
+.ws-options{display:flex;flex-direction:column;gap:10px;}
+.ws-option{text-align:left;padding:12px 14px;border:1.5px solid #e8e8e8;border-radius:10px;cursor:pointer;transition:all .15s;background:#fafafa;}
+.ws-option:active{background:#e8f4fd;border-color:var(--primary);transform:scale(0.98);}
+.ws-option-text{font-size:14px;font-weight:500;color:var(--text);margin-bottom:4px;}
+.ws-option-effect{font-size:11px;color:var(--text-light);}
+.ws-result{margin-top:16px;padding:12px;background:#f0f9eb;border-radius:8px;font-size:13px;color:#333;line-height:1.6;text-align:left;display:none;}
+.ws-result.show{display:block;}
+.ws-close-btn{display:block;width:100%;margin-top:12px;padding:10px;background:#f5f5f5;border:none;border-radius:8px;font-size:14px;color:#666;cursor:pointer;}
+
 </style>
 </head>
 <body>
@@ -1032,6 +1066,89 @@ const JOBS=[
   {id:'manager',name:'部门经理',salary:300000,requireIQ:115,requireEQ:110,level:4,requireMonths:36},
   {id:'director',name:'总监',salary:500000,requireIQ:120,requireEQ:120,level:5,requireMonths:60}
 ];
+
+// ===== V5: 职业选择系统 =====
+const CAREERS=[
+  {id:'tech',name:'互联网/科技',icon:'💻',desc:'高薪高压，技术驱动',salaryMult:1.2,startJob:'初级员工',startSalary:90000,traits:['技术导向','快速迭代','加班文化']},
+  {id:'finance',name:'金融/投资',icon:'📊',desc:'高薪高风险，业绩为王',salaryMult:1.3,startJob:'分析师',startSalary:100000,traits:['数据敏感','高压','奖金丰厚']},
+  {id:'medical',name:'医疗/健康',icon:'🏥',desc:'稳定体面，越老越吃香',salaryMult:1.0,startJob:'住院医师',startSalary:72000,traits:['稳定','高门槛','社会地位']},
+  {id:'education',name:'教育/学术',icon:'📚',desc:'稳定清闲，精神富足',salaryMult:0.8,startJob:'助教',startSalary:60000,traits:['稳定','假期多','成就感']},
+  {id:'creative',name:'创意/设计',icon:'🎨',desc:'自由有趣，收入波动',salaryMult:0.9,startJob:'设计助理',startSalary:66000,traits:['创意驱动','项目制','自由']},
+  {id:'gov',name:'公务员/体制内',icon:'🏛️',desc:'铁饭碗，稳定压倒一切',salaryMult:0.85,startJob:'科员',startSalary:65000,traits:['稳定','晋升慢','福利好']},
+  {id:'sales',name:'销售/市场',icon:'📈',desc:'多劳多得，看业绩说话',salaryMult:1.1,startJob:'销售代表',startSalary:54000,traits:['提成高','压力大','人脉广']},
+  {id:'legal',name:'法律/合规',icon:'⚖️',desc:'专业壁垒高，经验值钱',salaryMult:1.05,startJob:'律师助理',startSalary:78000,traits:['专业','严谨','经验积累']}
+];
+const JOBS_CAREERS={
+  tech:[
+    {id:'t1',name:'初级员工',salary:90000,requireIQ:90,requireEQ:70,level:0,requireMonths:0},
+    {id:'t2',name:'中级工程师',salary:144000,requireIQ:100,requireEQ:80,level:1,requireMonths:18},
+    {id:'t3',name:'高级工程师',salary:216000,requireIQ:110,requireEQ:90,level:2,requireMonths:30},
+    {id:'t4',name:'架构师',salary:360000,requireIQ:120,requireEQ:100,level:3,requireMonths:36},
+    {id:'t5',name:'技术总监',salary:540000,requireIQ:125,requireEQ:115,level:4,requireMonths:48},
+    {id:'t6',name:'CTO',salary:800000,requireIQ:130,requireEQ:120,level:5,requireMonths:60}
+  ],
+  finance:[
+    {id:'f1',name:'分析师',salary:100000,requireIQ:95,requireEQ:75,level:0,requireMonths:0},
+    {id:'f2',name:'高级分析师',salary:156000,requireIQ:105,requireEQ:85,level:1,requireMonths:18},
+    {id:'f3',name:'投资经理',salary:234000,requireIQ:115,requireEQ:95,level:2,requireMonths:30},
+    {id:'f4',name:'总监',salary:390000,requireIQ:120,requireEQ:110,level:3,requireMonths:36},
+    {id:'f5',name:'MD',salary:600000,requireIQ:125,requireEQ:120,level:4,requireMonths:48},
+    {id:'f6',name:'合伙人',salary:1000000,requireIQ:130,requireEQ:125,level:5,requireMonths:60}
+  ],
+  medical:[
+    {id:'m1',name:'住院医师',salary:72000,requireIQ:100,requireEQ:80,level:0,requireMonths:0},
+    {id:'m2',name:'主治医师',salary:120000,requireIQ:105,requireEQ:85,level:1,requireMonths:24},
+    {id:'m3',name:'副主任医师',salary:180000,requireIQ:110,requireEQ:95,level:2,requireMonths:36},
+    {id:'m4',name:'主任医师',salary:270000,requireIQ:115,requireEQ:105,level:3,requireMonths:48},
+    {id:'m5',name:'科室主任',salary:400000,requireIQ:120,requireEQ:115,level:4,requireMonths:60},
+    {id:'m6',name:'副院长',salary:600000,requireIQ:125,requireEQ:120,level:5,requireMonths:72}
+  ],
+  education:[
+    {id:'e1',name:'助教',salary:60000,requireIQ:90,requireEQ:80,level:0,requireMonths:0},
+    {id:'e2',name:'讲师',salary:90000,requireIQ:100,requireEQ:85,level:1,requireMonths:24},
+    {id:'e3',name:'副教授',salary:132000,requireIQ:110,requireEQ:95,level:2,requireMonths:48},
+    {id:'e4',name:'教授',salary:192000,requireIQ:120,requireEQ:105,level:3,requireMonths:60},
+    {id:'e5',name:'系主任',salary:270000,requireIQ:115,requireEQ:115,level:4,requireMonths:48},
+    {id:'e6',name:'院长',salary:400000,requireIQ:120,requireEQ:120,level:5,requireMonths:60}
+  ],
+  creative:[
+    {id:'c1',name:'设计助理',salary:66000,requireIQ:85,requireEQ:75,level:0,requireMonths:0},
+    {id:'c2',name:'设计师',salary:108000,requireIQ:95,requireEQ:85,level:1,requireMonths:18},
+    {id:'c3',name:'高级设计师',salary:162000,requireIQ:105,requireEQ:95,level:2,requireMonths:30},
+    {id:'c4',name:'设计总监',salary:252000,requireIQ:110,requireEQ:105,level:3,requireMonths:36},
+    {id:'c5',name:'创意总监',salary:360000,requireIQ:115,requireEQ:115,level:4,requireMonths:48},
+    {id:'c6',name:'首席创意官',salary:540000,requireIQ:120,requireEQ:120,level:5,requireMonths:60}
+  ],
+  gov:[
+    {id:'g1',name:'科员',salary:65000,requireIQ:85,requireEQ:80,level:0,requireMonths:0},
+    {id:'g2',name:'副科',salary:85000,requireIQ:90,requireEQ:90,level:1,requireMonths:36},
+    {id:'g3',name:'正科',salary:110000,requireIQ:95,requireEQ:100,level:2,requireMonths:48},
+    {id:'g4',name:'副处',salary:145000,requireIQ:100,requireEQ:110,level:3,requireMonths:60},
+    {id:'g5',name:'正处',salary:195000,requireIQ:105,requireEQ:115,level:4,requireMonths:72},
+    {id:'g6',name:'副厅',salary:265000,requireIQ:110,requireEQ:120,level:5,requireMonths:84}
+  ],
+  sales:[
+    {id:'s1',name:'销售代表',salary:54000,requireIQ:80,requireEQ:85,level:0,requireMonths:0},
+    {id:'s2',name:'高级销售',salary:90000,requireIQ:85,requireEQ:95,level:1,requireMonths:18},
+    {id:'s3',name:'销售主管',salary:138000,requireIQ:90,requireEQ:105,level:2,requireMonths:30},
+    {id:'s4',name:'销售经理',salary:210000,requireIQ:95,requireEQ:115,level:3,requireMonths:36},
+    {id:'s5',name:'销售总监',salary:330000,requireIQ:100,requireEQ:120,level:4,requireMonths:48},
+    {id:'s6',name:'VP',salary:500000,requireIQ:105,requireEQ:125,level:5,requireMonths:60}
+  ],
+  legal:[
+    {id:'l1',name:'律师助理',salary:78000,requireIQ:95,requireEQ:75,level:0,requireMonths:0},
+    {id:'l2',name:'执业律师',salary:126000,requireIQ:105,requireEQ:85,level:1,requireMonths:24},
+    {id:'l3',name:'资深律师',salary:198000,requireIQ:115,requireEQ:95,level:2,requireMonths:36},
+    {id:'l4',name:'合伙人',salary:330000,requireIQ:120,requireEQ:105,level:3,requireMonths:48},
+    {id:'l5',name:'高级合伙人',salary:510000,requireIQ:125,requireEQ:115,level:4,requireMonths:60},
+    {id:'l6',name:'管理合伙人',salary:750000,requireIQ:130,requireEQ:120,level:5,requireMonths:72}
+  ]
+};
+// 获取当前职业路径的JOBS数组
+function getCareerJobs(){
+  if(!G.career||!JOBS_CAREERS[G.career])return JOBS;
+  return JOBS_CAREERS[G.career];
+}
 const STOCKS=[
   {code:'TECH001',name:'互联网科技',basePrice:100,volatility:0.3,sector:'tech',expectedReturn:18,risk:'中高',riskDesc:'波动大收益高'},
   {code:'HOUSE001',name:'地产龙头',basePrice:50,volatility:0.2,sector:'house',expectedReturn:8,risk:'中',riskDesc:'稳健型'},
@@ -1600,6 +1717,7 @@ function defaultState(){
   return{
     totalMonths:0,cash,health:hp,mood,IQ:iq,EQ:eq,
     jobIndex:0,monthsAtJob:0,selfEmployed:false,
+    career:null,
     stockHoldings:{},stockPrices:{},
     houses:[],businesses:[],techInvestments:[],
     spouse:null,children:0,childAges:[],
@@ -1680,7 +1798,6 @@ function switchInvestTab(name){
 
 // ========== 初始化 ==========
 function startGame(){
-  
   if(loadGame()&&!G.gameOver){
     migrateSave();
     document.getElementById('welcomePage').style.display='none';
@@ -1689,12 +1806,74 @@ function startGame(){
     var ob=document.getElementById('obOverlay');if(ob)ob.style.display='none';
     initStockPrices();initPhoneState();refreshAll();return;
   }
-  G=defaultState();initStockPrices();initPhoneState();saveGame();
+  // V5: 新游戏显示职业选择界面
+  showCareerSelection();
+}
+// V5: 显示职业选择界面
+function showCareerSelection(){
   document.getElementById('welcomePage').style.display='none';
+  var el=document.getElementById('careerSelectionPage');
+  if(!el){
+    var div=document.createElement('div');
+    div.id='careerSelectionPage';
+    div.className='career-selection-page';
+    div.innerHTML=buildCareerSelectionHTML();
+    document.body.appendChild(div);
+  }else{el.style.display='block';}
+  renderCareerCards();
+}
+function buildCareerSelectionHTML(){
+  return`<div class="career-select-container">
+    <div class="career-select-header">
+      <div style="font-size:48px;margin-bottom:12px;">🎯</div>
+      <h2>选择你的职业方向</h2>
+      <p class="career-subtitle">不同职业有不同的人生轨迹，选择适合你的道路</p>
+    </div>
+    <div class="career-cards" id="careerCards"></div>
+  </div>`;
+}
+function renderCareerCards(){
+  var el=document.getElementById('careerCards');if(!el)return;
+  var html='';
+  CAREERS.forEach(function(c){
+    html+='<div class="career-card" onclick="selectCareer(\''+c.id+'\')">';
+    html+='<div class="career-card-icon">'+c.icon+'</div>';
+    html+='<div class="career-card-name">'+c.name+'</div>';
+    html+='<div class="career-card-desc">'+c.desc+'</div>';
+    html+='<div class="career-card-salary">起薪 ¥'+(c.startSalary/10000).toFixed(1)+'万/年</div>';
+    html+='<div class="career-card-traits">';
+    c.traits.forEach(function(t){html+='<span class="career-trait-tag">'+t+'</span>';});
+    html+='</div>';
+    html+='<div class="career-card-mult">薪资系数 ×'+c.salaryMult+'</div>';
+    html+='</div>';
+  });
+  el.innerHTML=html;
+}
+function selectCareer(careerId){
+  var c=CAREERS.find(function(x){return x.id===careerId;});
+  if(!c)return;
+  G=defaultState();
+  G.career=careerId;
+  // 根据职业设置初始属性
+  var jobs=JOBS_CAREERS[careerId]||JOBS;
+  G.jobIndex=0;
+  G.monthsAtJob=0;
+  // 不同职业初始属性微调
+  if(careerId==='finance'){G.IQ=clamp(G.IQ+5,0,200);G.EQ=clamp(G.EQ+3,0,200);}
+  else if(careerId==='sales'){G.EQ=clamp(G.EQ+8,0,200);}
+  else if(careerId==='medical'){G.IQ=clamp(G.IQ+8,0,200);G.health=clamp(G.health+5,0,200);}
+  else if(careerId==='education'){G.IQ=clamp(G.IQ+5,0,200);G.mood=clamp(G.mood+5,0,200);}
+  else if(careerId==='gov'){G.mood=clamp(G.mood+10,0,200);G.EQ=clamp(G.EQ+5,0,200);}
+  else if(careerId==='creative'){G.mood=clamp(G.mood+8,0,200);}
+  else if(careerId==='legal'){G.IQ=clamp(G.IQ+7,0,200);}
+  initStockPrices();initPhoneState();saveGame();
+  var selPage=document.getElementById('careerSelectionPage');
+  if(selPage)selPage.style.display='none';
   document.getElementById('gameApp').style.display='flex';
   var go=document.getElementById('guideOverlay');if(go)go.style.display='none';
   var ob=document.getElementById('obOverlay');if(ob)ob.style.display='none';
   refreshAll();
+  showToast('🎯 你选择了【'+c.name+'】，人生新篇章开启！');
 }
 function initStockPrices(){STOCKS.forEach(s=>{if(!G.stockPrices[s.code])G.stockPrices[s.code]=s.basePrice;});}
 
@@ -1750,8 +1929,14 @@ function refreshLearning(){
   el.innerHTML=html;
 }
 function refreshHeader(){
-  const job=JOBS[G.jobIndex];
-  const careerLabel=G.selfEmployed?'🚀 创业者':job.name;
+  const _hj=getCareerJobs();
+  const job=_hj[G.jobIndex]||_hj[0];
+  let careerLabel=G.selfEmployed?'🚀 创业者':job.name;
+  // V5: 显示职业图标
+  if(G.career&&!G.selfEmployed){
+    const _hc=CAREERS.find(c=>c.id===G.career);
+    if(_hc)careerLabel=_hc.icon+' '+job.name;
+  }
   const yr=Math.floor(G.totalMonths/12);
   const mo=(G.totalMonths%12)+1;
   const el=document.getElementById('headerSub');
@@ -1772,7 +1957,8 @@ function refreshLife(){
   document.getElementById('houseValueDisplay').textContent=fmt(houseVal);
   document.getElementById('bizIncomeDisplay').textContent=fmt(calcPassiveIncome())+'/月';
   // 月度现金流
-  var job=JOBS[G.jobIndex];
+  var _rlJobs=getCareerJobs();
+  var job=_rlJobs[G.jobIndex]||_rlJobs[0];
   var mnIncome=G.selfEmployed?0:(job?Math.round(job.salary/12):0);
   var passiveIn=calcPassiveIncome();
   var childCost=(G.children||0)*20000/12;
@@ -2082,8 +2268,10 @@ async function nextMonth(){
 async function advanceMonth(){
   G.totalMonths++;G.monthsAtJob++;G.events=[];
   G._encounterActive=false; // 重置月度场景标记
+  G._workScenarioThisMonth=false; // V5: 重置工作情景标记
   if(!G._recentEvents)G._recentEvents=[]; // 连锁反应记忆（最近事件记录）
-  const job=JOBS[G.jobIndex];
+  const _careerJobs=getCareerJobs();
+  const job=_careerJobs[G.jobIndex]||_careerJobs[0];
   // 创业者没有工资收入，只有副业/房租/配偶收入
   let income=G.selfEmployed?0:job.salary/12;
   // V2: Early income slightly lower (first 24 months penalty)
@@ -2280,6 +2468,11 @@ async function advanceMonth(){
   if(typeof checkNPCEvents==='function') checkNPCEvents();
   // v4.2.0: 工作剧情事件检测
   if(typeof checkWorkEvents==='function') checkWorkEvents();
+  // V5: AI工作情景生成（25%概率，6个月后触发，每月最多1次）
+  if(!G.selfEmployed&&G.totalMonths>=6&&!G._workScenarioThisMonth&&Math.random()<0.25){
+    G._workScenarioThisMonth=true;
+    generateWorkScenario();
+  }
 }
 
 async function fastForward(years){
@@ -2309,6 +2502,161 @@ function applySmallEvent(evt){
     G._recentEvents.push(clean);
     if(G._recentEvents.length>5)G._recentEvents.shift();
   }
+}
+
+// ========== V5: AI工作情景生成 ==========
+async function generateWorkScenario(){
+  if(!G.career||!CAREERS.find(c=>c.id===G.career))return;
+  const career=CAREERS.find(c=>c.id===G.career);
+  const jobs=getCareerJobs();
+  const job=jobs[G.jobIndex]||jobs[0];
+  const age=getAge();
+  const prompt=`你是一个职场剧情生成器。根据以下信息生成一个职场情景：
+- 职业：${career.name}
+- 当前职位：${job.name}
+- 在岗时间：${G.monthsAtJob}个月
+- 年龄：${age}岁
+- 性格特质：${career.traits.join(', ')}
+
+生成一个职场中可能遇到的场景（100-150字），然后给出2-3个选择。每个选择有：
+- 选项文字（一句话）
+- 效果（影响cash/mood/IQ/EQ/health/salaryBonus/monthsAtJob等）
+- 结果描述（执行后的反馈文字）
+
+以JSON格式返回（不要markdown代码块）：
+{"title":"场景标题","scene":"场景描述","options":[{"text":"选项1","effect":{"mood":5},"result":"结果描述1"},{"text":"选项2","effect":{"EQ":-5},"result":"结果描述2"}]}`;
+  try{
+    const resp=await fetch('https://token-plan-cn.xiaomimimo.com/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','api-key':'tp-chy2q7xt8dofqyzdqb4bzbcz5g9bmmxyhzm7dcp665wl2vn0'},
+      body:JSON.stringify({model:'xiaomi/mimo-v2.5',messages:[{role:'user',content:prompt}],temperature:0.9,max_tokens:500})
+    });
+    if(resp.ok){
+      const data=await resp.json();
+      if(data.choices&&data.choices[0]&&data.choices[0].message){
+        let content=data.choices[0].message.content.trim();
+        // 去除可能的markdown代码块
+        content=content.replace(/```json\s*/g,'').replace(/```\s*$/g,'').trim();
+        const parsed=JSON.parse(content);
+        if(parsed&&parsed.title&&parsed.scene&&parsed.options){
+          showWorkScenarioModal(parsed,career);
+          return;
+        }
+      }
+    }
+  }catch(e){console.error('Work scenario AI error:',e);}
+  // 兜底：使用模板情景
+  showWorkScenarioModal(getFallbackWorkScenario(career,job),career);
+}
+function getFallbackWorkScenario(career,job){
+  const scenarios={
+    tech:[
+      {title:'💻 紧急Bug修复',scene:'线上系统突然崩溃，客户投诉不断。技术总监要求你带领团队紧急修复，但这意味着连续加班一周。',options:[{text:'全力以赴带队修复',effect:{mood:-10,health:-5,EQ:5},result:'你带领团队连续奋战，终于修复了Bug。虽然累但获得了领导的认可。'},{text:'按正常节奏处理',effect:{mood:5,IQ:3},result:'你按正常节奏处理，虽然慢了一些但保证了代码质量。'}]},
+      {title:'🚀 新技术选型',scene:'公司要启动新项目，需要选择技术栈。团队内部对用新技术还是稳定技术争论不休。',options:[{text:'力推新技术',effect:{IQ:8,mood:5},result:'你力推新技术并成功说服团队，项目采用了前沿技术栈。'},{text:'选择稳定方案',effect:{EQ:5,mood:3},result:'你选择了稳定方案，项目平稳推进，领导很满意。'}]}
+    ],
+    finance:[
+      {title:'📊 大客户路演',scene:'公司最大的客户要来听年度投资报告，你被选中做主讲人。这是表现的好机会，但压力也很大。',options:[{text:'精心准备全力表现',effect:{mood:-5,IQ:5,EQ:5},result:'你精心准备的演讲打动了客户，领导对你刮目相看。'},{text:'让资深同事主讲',effect:{mood:5},result:'你选择了让资深同事主讲，自己旁听学习，也学到了很多。'}]},
+      {title:'⚖️ 内幕信息诱惑',scene:'你无意中听到一个内幕消息，如果操作可以获得巨额收益，但这是违规的。',options:[{text:'坚决不碰',effect:{EQ:8,mood:-3},result:'你坚守职业操守，虽然错过了收益但内心坦然。'},{text:'小试牛刀',effect:{mood:10,cash:50000},result:'你小赚了一笔，但每天提心吊胆。'}]}
+    ],
+    medical:[
+      {title:'🏥 疑难病例讨论',scene:'科室来了一个疑难病例，主任让你准备病例讨论。这是展示能力的好机会。',options:[{text:'查阅大量文献认真准备',effect:{IQ:8,mood:-3},result:'你的讨论准备充分，提出了有价值的诊疗方案，获得主任赞赏。'},{text:'按常规流程处理',effect:{mood:3},result:'你按常规流程处理，虽然没有亮点但也没出错。'}]},
+      {title:'😊 患者家属感谢',scene:'一位康复的患者家属送来锦旗和红包，你该如何处理？',options:[{text:'收下红包增进关系',effect:{mood:5,cash:2000},result:'你收下了红包，家属很高兴，但心里有些不安。'},{text:'只收锦旗退回红包',effect:{EQ:8,mood:5},result:'你只收下锦旗，退回红包，家属更加敬佩你的医德。'}]}
+    ],
+    education:[
+      {title:'📚 教学评估',scene:'学校要进行教学评估，评估结果影响职称评定。你需要在创新和稳妥之间做选择。',options:[{text:'大胆创新教学方式',effect:{mood:8,IQ:5},result:'你的创新课堂让学生眼前一亮，评估组也给予了好评。'},{text:'按部就班稳扎稳打',effect:{mood:3,EQ:3},result:'你按部就班完成了教学评估，虽然没有惊喜但也没问题。'}]},
+      {title:'🎓 学生问题',scene:'一个学生因为家庭原因成绩下滑严重，你发现后需要决定如何帮助TA。',options:[{text:'课后额外辅导',effect:{mood:5,EQ:5},result:'你利用课余时间辅导学生，学生成绩慢慢回升，很感激你。'},{text:'联系家长沟通',effect:{EQ:3,mood:3},result:'你联系了家长，共同制定了帮助计划。'}]}
+    ],
+    creative:[
+      {title:'🎨 客户改稿',scene:'客户对设计方案不满意，要求大改。但你觉得原方案更好，怎么办？',options:[{text:'坚持自己的设计',effect:{mood:5,IQ:3},result:'你坚持了自己的设计，用专业说服了客户，最终客户接受了。'},{text:'按客户要求修改',effect:{EQ:5,mood:-3},result:'你按客户要求修改了，客户满意了，但你有些遗憾。'}]},
+      {title:'💡 创意瓶颈',scene:'你遇到了创意瓶颈，怎么都想不出好方案。截稿日期越来越近。',options:[{text:'出去走走寻找灵感',effect:{mood:8,health:3},result:'你出去散步放松，回来时灵感涌现，做出了好方案。'},{text:'熬夜硬憋',effect:{mood:-10,health:-8,IQ:3},result:'你熬夜做出了方案，但质量一般，身体也很疲惫。'}]}
+    ],
+    gov:[
+      {title:'📋 上级检查',scene:'上级要来检查，但你们部门的材料还没准备好。领导让你加班赶工。',options:[{text:'加班认真准备',effect:{mood:-5,EQ:5},result:'你加班准备好了材料，检查顺利通过，领导很满意。'},{text:'按正常节奏',effect:{mood:5},result:'你按正常节奏准备，虽然有些匆忙但也应付过去了。'}]},
+      {title:'🤝 同事求助',scene:'一个同事想让你帮他承担一部分工作，但这不是你的职责范围。',options:[{text:'热心帮忙',effect:{EQ:8,mood:3},result:'你热心帮忙，同事很感激，你们关系更好了。'},{text:'委婉拒绝',effect:{mood:3},result:'你委婉拒绝了，同事理解但关系有些微妙变化。'}]}
+    ],
+    sales:[
+      {title:'📈 业绩压力',scene:'这个月的业绩目标还差30%，时间只剩一周。你需要想办法冲刺。',options:[{text:'全力冲刺加班跑客户',effect:{mood:-5,EQ:5,cash:10000},result:'你拼命冲刺，终于完成了目标，还拿到了一笔提成。'},{text:'保持节奏不焦虑',effect:{mood:5},result:'你保持节奏虽然没有完成目标，但心态很好。'}]},
+      {title:'🤝 抢单风波',scene:'你发现一个同事在抢你的客户，这个客户你跟了很久了。',options:[{text:'正面沟通解决',effect:{EQ:8,mood:-3},result:'你找同事沟通，最终和平解决了问题，客户还是你的。'},{text:'向领导反映',effect:{mood:-5,EQ:-3},result:'你向领导反映了，虽然保住了客户但和同事关系变僵了。'}]}
+    ],
+    legal:[
+      {title:'⚖️ 案件压力',scene:'你手上有几个案件同时到了关键阶段，时间非常紧张。',options:[{text:'加班加点处理',effect:{mood:-8,health:-5,IQ:5},result:'你加班处理完了所有案件，虽然累但客户很满意。'},{text:'优先处理重要案件',effect:{EQ:5,mood:3},result:'你优先处理了重要案件，其他案件申请了延期。'}]},
+      {title:'📜 职业道德困境',scene:'你发现客户隐瞒了重要信息，这可能影响案件结果。',options:[{text:'坚持要求客户坦白',effect:{EQ:8,mood:-3},result:'你坚持职业操守，要求客户坦白，虽然过程艰难但维护了正义。'},{text:'继续代理不深究',effect:{mood:3,cash:5000},result:'你选择继续代理，案件顺利结束，但心里有些不安。'}]}
+    ]
+  };
+  const list=scenarios[career.id]||scenarios.tech;
+  return list[randInt(0,list.length-1)];
+}
+function showWorkScenarioModal(data,career){
+  var overlay=document.getElementById('workScenarioOverlay');
+  if(!overlay){
+    overlay=document.createElement('div');
+    overlay.id='workScenarioOverlay';
+    overlay.className='work-scenario-overlay';
+    overlay.innerHTML='<div class="work-scenario-box" id="workScenarioBox"></div>';
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click',function(e){if(e.target===overlay)hideWorkScenario();});
+  }
+  var box=document.getElementById('workScenarioBox');
+  var optsHtml='';
+  data.options.forEach(function(opt,idx){
+    var effectStr=formatEffectStr(opt.effect);
+    optsHtml+='<div class="ws-option" onclick="chooseWorkOption('+idx+')">';
+    optsHtml+='<div class="ws-option-text">'+opt.text+'</div>';
+    if(effectStr)optsHtml+='<div class="ws-option-effect">'+effectStr+'</div>';
+    optsHtml+='</div>';
+  });
+  box.innerHTML='<div class="ws-career-icon">'+career.icon+'</div>';
+  box.innerHTML+='<div class="ws-career-label">'+career.name+' · 职场情景</div>';
+  box.innerHTML+='<div class="ws-title">'+data.title+'</div>';
+  box.innerHTML+='<div class="ws-scene">'+data.scene+'</div>';
+  box.innerHTML+='<div class="ws-options" id="wsOptions">'+optsHtml+'</div>';
+  box.innerHTML+='<div class="ws-result" id="wsResult"></div>';
+  box.innerHTML+='<button class="ws-close-btn" onclick="hideWorkScenario()">关闭</button>';
+  // 存储当前情景数据
+  G._currentWorkScenario=data;
+  overlay.classList.add('show');
+}
+function chooseWorkOption(idx){
+  var data=G._currentWorkScenario;if(!data)return;
+  var opt=data.options[idx];if(!opt)return;
+  var eff=opt.effect||{};
+  // 应用效果
+  if(eff.cash)G.cash+=eff.cash;
+  if(eff.health)G.health=clamp(G.health+eff.health,0,200);
+  if(eff.mood)G.mood=clamp(G.mood+eff.mood,0,200);
+  if(eff.IQ)G.IQ=clamp(G.IQ+eff.IQ,0,200);
+  if(eff.EQ)G.EQ=clamp(G.EQ+eff.EQ,0,200);
+  if(eff.salaryBonus)G.salaryBonus=(G.salaryBonus||0)+eff.salaryBonus;
+  if(eff.monthsAtJob)G.monthsAtJob=Math.max(0,G.monthsAtJob+eff.monthsAtJob);
+  // 显示结果
+  var resultEl=document.getElementById('wsResult');
+  if(resultEl){
+    var resultText=opt.result||'你做出了选择。';
+    var effectStr=formatEffectStr(eff);
+    resultEl.textContent=resultText+(effectStr?' （'+effectStr+'）':'');
+    resultEl.classList.add('show');
+  }
+  // 禁用选项
+  var optsEl=document.getElementById('wsOptions');
+  if(optsEl)optsEl.style.pointerEvents='none';
+  saveGame();
+}
+function hideWorkScenario(){
+  var overlay=document.getElementById('workScenarioOverlay');
+  if(overlay)overlay.classList.remove('show');
+  G._currentWorkScenario=null;
+}
+function formatEffectStr(eff){
+  if(!eff)return '';
+  var parts=[];
+  if(eff.cash)parts.push('💰'+(eff.cash>0?'+':'')+fmtShort(eff.cash));
+  if(eff.health)parts.push('❤️'+(eff.health>0?'+':'')+eff.health);
+  if(eff.mood)parts.push('😊'+(eff.mood>0?'+':'')+eff.mood);
+  if(eff.IQ)parts.push('🧠'+(eff.IQ>0?'+':'')+eff.IQ);
+  if(eff.EQ)parts.push('💬'+(eff.EQ>0?'+':'')+eff.EQ);
+  if(eff.salaryBonus)parts.push('📈薪资+'+(eff.salaryBonus*100).toFixed(0)+'%');
+  if(eff.monthsAtJob)parts.push('⏱️'+(eff.monthsAtJob>0?'+':'')+eff.monthsAtJob+'月');
+  return parts.join(' ');
 }
 
 // ========== V2: Decision Event System ==========
@@ -2599,15 +2947,28 @@ function triggerGatherEvent(type){
 
 // ========== 工作页面 ==========
 function refreshWork(){
-  const job=JOBS[G.jobIndex];
+  const jobs=getCareerJobs();
+  const job=jobs[G.jobIndex]||jobs[0];
   let html,jobHtml='';
+  // V5: 职业信息卡片
+  if(G.career){
+    const career=CAREERS.find(c=>c.id===G.career);
+    if(career){
+      html='<div class="list-item" style="background:linear-gradient(135deg,#e8f4fd,#d6eaf8);border-radius:8px;margin-bottom:8px;">';
+      html+='<div class="list-info"><div class="name">'+career.icon+' '+career.name+'</div>';
+      html+='<div class="desc">'+career.desc+'</div>';
+      html+='<div style="margin-top:6px;">';
+      career.traits.forEach(function(t){html+='<span class="career-trait-tag" style="margin-right:4px;">'+t+'</span>';});
+      html+='</div></div></div>';
+    }
+  }
   if(G.selfEmployed){
     // 创业者状态：不显示职场晋升路径
-    html='<div class="list-item"><div class="list-info"><div class="name">🚀 创业者</div><div class="desc">已辞职创业 | 收入来源：副业/房租/投资</div></div><span class="tag tag-golden">创业中</span></div>';
+    html=(html||'')+'<div class="list-item"><div class="list-info"><div class="name">🚀 创业者</div><div class="desc">已辞职创业 | 收入来源：副业/房租/投资</div></div><span class="tag tag-golden">创业中</span></div>';
     jobHtml='<div class="list-item" style="text-align:center;color:#888;"><div class="list-info"><div class="desc">你已经离开了职场，正在创业路上拼搏。<br>收入取决于你的生意和投资，而不是工资。</div></div></div>';
   }else{
-    html='<div class="list-item"><div class="list-info"><div class="name">'+job.name+'</div><div class="desc">月薪：'+fmt(job.salary/12)+' | 在岗：'+G.monthsAtJob+'个月</div></div><span class="tag tag-green">当前</span></div>';
-    JOBS.forEach((j,i)=>{
+    html=(html||'')+'<div class="list-item"><div class="list-info"><div class="name">'+job.name+'</div><div class="desc">月薪：'+fmt(job.salary/12)+' | 在岗：'+G.monthsAtJob+'个月</div></div><span class="tag tag-green">当前</span></div>';
+    jobs.forEach((j,i)=>{
       const isCurrent=i===G.jobIndex;
       const isNext=i===G.jobIndex+1;
       const canPromote=isNext&&G.IQ>=j.requireIQ&&G.EQ>=j.requireEQ&&G.monthsAtJob>=j.requireMonths;
@@ -2627,10 +2988,15 @@ function refreshWork(){
     });
   }
   document.getElementById('jobList').innerHTML=jobHtml;
+  // V5: 更新当前职业卡片
+  var cjEl=document.getElementById('currentJob');
+  if(cjEl)cjEl.innerHTML=html||'';
   refreshFamily();
 }
 function tryPromote(jobIndex){
-  var j=JOBS[jobIndex];
+  var jobs=getCareerJobs();
+  var j=jobs[jobIndex];
+  if(!j){showToast('已到最高职位！');return;}
   if(G.IQ<j.requireIQ||G.EQ<j.requireEQ||G.monthsAtJob<j.requireMonths){showToast('条件不足！');return;}
   var iqR=G.IQ/j.requireIQ,eqR=G.EQ/j.requireEQ;
   // v4.0.0: Attribute threshold modifiers
@@ -2641,7 +3007,7 @@ function tryPromote(jobIndex){
   if(Math.random()<chance){
     G.jobIndex=jobIndex;G.monthsAtJob=0;G.mood=clamp(G.mood+10,0,200);
     if(!G.lifeEvents)G.lifeEvents=[];
-    G.lifeEvents.push({month:G.totalMonths,icon:'🎉',title:'升职为'+JOBS[jobIndex].name,detail:'升职了！月薪涨到'+fmt(JOBS[jobIndex].salary),type:'career'});
+    G.lifeEvents.push({month:G.totalMonths,icon:'🎉',title:'升职为'+j.name,detail:'升职了！月薪涨到'+fmt(j.salary),type:'career'});
     saveGame();refreshAll();refreshWork();
     showPromotionAnimation(j);
   }else{
@@ -3190,13 +3556,15 @@ function refreshFiveDim(){
   // V2: Charity boost for relationship
   if(G.luxuryItems&&G.luxuryItems.includes('charity_fund'))relScore=Math.min(100,relScore+30);
   let careerScore;
+  var _csJobs=getCareerJobs();
   if(G.selfEmployed){
     // 创业者：事业分=生意数量*20+资产对数分，上限100
     careerScore=Math.min(100,G.businesses.length*20+Math.min(40,Math.round(Math.log10(Math.max(1,totalAsset))*5)));
   }else{
-    careerScore=Math.round((G.jobIndex/(JOBS.length-1))*100);
+    careerScore=Math.round((G.jobIndex/Math.max(1,_csJobs.length-1))*100);
   }
-  const passive=calcPassiveIncome();const active=G.selfEmployed?passive*0.5:JOBS[G.jobIndex].salary/12;
+  var _csJob=_csJobs[G.jobIndex]||_csJobs[0];
+  const passive=calcPassiveIncome();const active=G.selfEmployed?passive*0.5:(_csJob?_csJob.salary/12:0);
   const freedomScore=Math.min(100,Math.round((passive/Math.max(1,active+passive))*100));
   const total=Math.round((healthScore+wealthScore+relScore+careerScore+freedomScore)/5);
   const dims=[
@@ -3276,7 +3644,9 @@ function doRebirth(){
   showModal({title:'确定重生？',content:'当前人生将结束，已购买的升级将在下一轮生效。\n\n当前LP：'+(G.legacyPoints||0),success(res){
     if(res.confirm){
       const total=calcTotalAsset();
-      const careerLP=G.selfEmployed?G.businesses.length*15:JOBS[G.jobIndex].level*10;
+      var _rbJobs=getCareerJobs();
+      var _rbJob=_rbJobs[G.jobIndex]||_rbJobs[0];
+      const careerLP=G.selfEmployed?G.businesses.length*15:(_rbJob?_rbJob.level*10:0);
       const earnedLP=Math.floor(total/100000)+G.achievements.length*5+careerLP;
       G.legacyPoints=(G.legacyPoints||0)+earnedLP;
       saveLegacy();
@@ -3307,8 +3677,9 @@ function generateSharePoster(){
   ctx.fillText('我的财富人生',375,240);
   ctx.strokeStyle='rgba(241,196,15,0.5)';ctx.lineWidth=2;
   ctx.beginPath();ctx.moveTo(100,280);ctx.lineTo(650,280);ctx.stroke();
-  const age=getAge();const job=JOBS[G.jobIndex];const total=calcTotalAsset();
-  const careerLabel=G.selfEmployed?'🚀 创业者':job.name;
+  var _shJobs=getCareerJobs();var _shJob=_shJobs[G.jobIndex]||_shJobs[0];
+  const age=getAge();const total=calcTotalAsset();
+  const careerLabel=G.selfEmployed?'🚀 创业者':(_shJob?_shJob.name:'未知');
   ctx.fillStyle='#fff';ctx.font='32px sans-serif';
   const stats=['🎂 年龄：'+age+'岁','💼 职业：'+careerLabel,'📅 时长：'+(age-22)+'年'+getMonth()+'个月','💰 总资产：'+fmt(total),'📈 股票市值：'+fmt(calcStockValue()),'🏠 房产数量：'+G.houses.length+'套','📖 人生抉择：'+(G.decisionCount||0)+'次'];
   stats.forEach((t,i)=>{ctx.fillText(t,375,340+i*50);});
@@ -3316,11 +3687,12 @@ function generateSharePoster(){
   const wealthScore=Math.min(100,Math.round(Math.log10(Math.max(1,total))*10));
   let relScore=0;if(G.spouse)relScore+=40;relScore+=Math.min(60,G.children*20);
   if(G.luxuryItems&&G.luxuryItems.includes('charity_fund'))relScore=Math.min(100,relScore+30);
+  var _cvJobs=getCareerJobs();
   let careerScore;
   if(G.selfEmployed){
     careerScore=Math.min(100,G.businesses.length*20+Math.min(40,Math.round(Math.log10(Math.max(1,total))*5)));
   }else{
-    careerScore=Math.round((G.jobIndex/(JOBS.length-1))*100);
+    careerScore=Math.round((G.jobIndex/Math.max(1,_cvJobs.length-1))*100);
   }
   const totalScore=Math.round((healthScore+wealthScore+relScore+careerScore)/4);
   ctx.fillStyle='#f1c40f';ctx.font='bold 36px sans-serif';
@@ -3397,16 +3769,18 @@ function closeAIFloat(){document.getElementById('aiFloatBtn').style.display='non
 
 // ========== 游戏结束 ==========
 function showGameOver(){
-  const total=calcTotalAsset();const job=JOBS[G.jobIndex];
-  const careerLabel=G.selfEmployed?'🚀 创业者':job.name;
+  var _goJobs=getCareerJobs();var _goJob=_goJobs[G.jobIndex]||_goJobs[0];
+  const total=calcTotalAsset();
+  const careerLabel=G.selfEmployed?'🚀 创业者':(_goJob?_goJob.name:'未知');
   let emoji='💀';
   if(total>10000000)emoji='🏆';else if(total>1000000)emoji='🎉';else if(total>100000)emoji='😊';else if(G.gameOverReason.includes('圆满'))emoji='🌅';
-  const careerLP=G.selfEmployed?G.businesses.length*15:JOBS[G.jobIndex].level*10;
+  const careerLP=G.selfEmployed?G.businesses.length*15:(_goJob?_goJob.level*10:0);
   const earnedLP=Math.floor(total/100000)+G.achievements.length*5+careerLP;
   const content=emoji+'\n'+G.gameOverReason+'\n\n活到 '+getAge()+' 岁\n最终职业：'+careerLabel+'\n最终总资产：'+fmt(total)+'\n人生抉择：'+(G.decisionCount||0)+'次\n成就：'+G.achievements.length+'个\n\n获得轮回点：+'+earnedLP+' LP\n\n想找到最适合你的工作？让AI帮你匹配 👉\nhttps://your-recruitment-ai.com';
   showModal({title:'🎊 人生结束',content,showCancel:false,confirmText:'重新开始/重生',success(){
+    var _rb2Jobs=getCareerJobs();var _rb2Job=_rb2Jobs[G.jobIndex]||_rb2Jobs[0];
     const total2=calcTotalAsset();
-    const careerLP2=G.selfEmployed?G.businesses.length*15:JOBS[G.jobIndex].level*10;
+    const careerLP2=G.selfEmployed?G.businesses.length*15:(_rb2Job?_rb2Job.level*10:0);
     const lp=Math.floor(total2/100000)+G.achievements.length*5+careerLP2;
     G.legacyPoints=(G.legacyPoints||0)+lp;
     saveLegacy();
@@ -5743,7 +6117,7 @@ function initChatHistory(){
 
 // Build full game state for AI context
 function buildFullGameState(){
-  const job=JOBS[G.jobIndex];
+  var _aiJobs=getCareerJobs();var _aiJob=_aiJobs[G.jobIndex]||_aiJobs[0];
   const totalAssets=calcTotalAsset();
   // Calculate total debt
   let totalDebt=0;
@@ -5837,8 +6211,8 @@ function buildFullGameState(){
   }
   return{
     name:'朱成龙',
-    job:G.selfEmployed?'🚀 创业者（已辞职创业）':(job?job.name:'未知'),
-    salary:G.selfEmployed?'无固定工资，收入来自生意和投资':(job?fmt(job.salary)+'/年':'未知'),
+    job:G.selfEmployed?'🚀 创业者（已辞职创业）':(_aiJob?_aiJob.name:'未知'),
+    salary:G.selfEmployed?'无固定工资，收入来自生意和投资':(_aiJob?fmt(_aiJob.salary)+'/年':'未知'),
     monthsAtJob:G.monthsAtJob||0,
     cash:fmt(G.cash),
     totalAssets:fmt(totalAssets),
@@ -6897,8 +7271,8 @@ function renderDashboard(){
   // 总资产
   const totalAssets=cash+investValue+stockValue+techValue-totalLoan;
   // 月度收支
-  const job=JOBS[G.jobIndex];
-  const monthlyIncome=G.selfEmployed?0:(job?Math.round(job.salary/12):0);
+  var _taJobs=getCareerJobs();var _taJob=_taJobs[G.jobIndex]||_taJobs[0];
+  const monthlyIncome=G.selfEmployed?0:(_taJob?Math.round(_taJob.salary/12):0);
   const passiveIncome=calcPassiveIncome&&typeof calcPassiveIncome==='function'?calcPassiveIncome():0;
   const childCost=(G.children||0)*20000/12;
   let loanPay=0;
@@ -6915,10 +7289,11 @@ function renderDashboard(){
     }
   });
   // 职业晋升
-  const currentJob=JOBS[G.jobIndex];
+  var _cpJobs=getCareerJobs();
+  const currentJob=_cpJobs[G.jobIndex]||_cpJobs[0];
   let nextJob=null,monthsNeeded=0;
   if(currentJob){
-    nextJob=JOBS[G.jobIndex+1];
+    nextJob=_cpJobs[G.jobIndex+1];
     if(nextJob){
       monthsNeeded=Math.max(0,nextJob.requireMonths-(G.monthsAtJob||0));
     }
@@ -7117,20 +7492,20 @@ const AI_ENGINE={
 function getGameStateContext(){
   const age=getAge();
   const total=calcTotalAsset();
-  const job=JOBS[G.jobIndex];
+  var _gscJobs=getCareerJobs();var _gscJob=_gscJobs[G.jobIndex]||_gscJobs[0];
   const portfolio=[];
   for(const code in G.stockHoldings){const s=STOCKS.find(x=>x.code===code);if(s)portfolio.push(s.name+' '+G.stockHoldings[code].shares+'股(现价'+fmt(G.stockPrices[code])+')');}
   const houseList=G.houses.map(h=>{const info=HOUSES.find(x=>x.id===h.id);return info?info.name:'房产';});
   return{
     age,
-    jobLevel:G.selfEmployed?'创业者':(job?job.title:'未知'),
-    jobSalary:G.selfEmployed?'无固定工资':(job?fmt(job.salary)+'/年':'未知'),
+    jobLevel:G.selfEmployed?'创业者':(_gscJob?_gscJob.name:'未知'),
+    jobSalary:G.selfEmployed?'无固定工资':(_gscJob?fmt(_gscJob.salary)+'/年':'未知'),
     totalAsset:fmt(total),cash:fmt(G.cash),
     health:Math.round(G.health),mood:Math.round(G.mood),IQ:Math.round(G.IQ),EQ:Math.round(G.EQ),
     spouse:G.spouse?true:false,children:G.children,
     stocks:portfolio.slice(0,3),houses:houseList,
     month:G.totalMonths,
-    jobTitle:G.selfEmployed?'创业者':(job?job.title:'未知'),
+    jobTitle:G.selfEmployed?'创业者':(_gscJob?_gscJob.name:'未知'),
     selfEmployed:G.selfEmployed?true:false
   };
 }
@@ -7704,7 +8079,8 @@ function genJobOffers(){
   if(age<23)return [];
   var offers=[];
   var numOffers=randInt(1,3);
-  var currentSalary=JOBS[G.jobIndex]?JOBS[G.jobIndex].salary:72000;
+  var _joJobs=getCareerJobs();var _joJob=_joJobs[G.jobIndex]||_joJobs[0];
+  var currentSalary=_joJob?_joJob.salary:72000;
   for(var i=0;i<numOffers;i++){
     var tpl=JOB_OFFER_TEMPLATES[randInt(0,JOB_OFFER_TEMPLATES.length-1)];
     var salMult=tpl.salaryMult[0]+Math.random()*(tpl.salaryMult[1]-tpl.salaryMult[0]);
@@ -7732,11 +8108,13 @@ function applyJobOffer(offerIdx){
   if(!offer)return;
   if(G.IQ<offer.requirement.IQ){showToast('智商不足，无法接受此Offer');return;}
   if(G.EQ<offer.requirement.EQ){showToast('情商不足，无法接受此Offer');return;}
-  var oldJob=JOBS[G.jobIndex]?JOBS[G.jobIndex].name:'无';
+  var _ajoJobs=getCareerJobs();var _ajoJob=_ajoJobs[G.jobIndex]||_ajoJobs[0];
+  var oldJob=_ajoJob?_ajoJob.name:'无';
   G._startup=null;
   var matchingJob=null;
-  for(var i=0;i<JOBS.length;i++){
-    if(JOBS[i].level===offer.level){matchingJob=JOBS[i];G.jobIndex=i;break;}
+  var _ajoCareerJobs=getCareerJobs();
+  for(var i=0;i<_ajoCareerJobs.length;i++){
+    if(_ajoCareerJobs[i].level===offer.level){matchingJob=_ajoCareerJobs[i];G.jobIndex=i;break;}
   }
   G.monthsAtJob=0;
   var refSalary=matchingJob?matchingJob.salary:offer.salary;
@@ -8889,7 +9267,8 @@ function evaluateLifeState(){
   var wealthTier=totalAsset>=10000000?'tycoon':totalAsset>=1000000?'rich':totalAsset>=100000?'middle':'broke';
   var healthStatus=G.health<25?'critical':G.health<50?'poor':G.health<80?'good':'great';
   var moodStatus=G.mood<25?'critical':G.mood<50?'low':G.mood<75?'okay':'happy';
-  var job=JOBS[G.jobIndex]||{},careerStage=G.monthsAtJob>=60?'veteran':G.monthsAtJob>=24?'mid':'entry';
+  var _elsJobs=getCareerJobs();var _elsJob=_elsJobs[G.jobIndex]||_elsJobs[0];
+  var careerStage=G.monthsAtJob>=60?'veteran':G.monthsAtJob>=24?'mid':'entry';
   var familyStage=!G.spouse?'single':(G.childAges||[]).filter(function(a){return a<18;}).length>0?'parent':(G.childAges||[]).length>0?'emptyNester':'married';
   var techActive=(G.techInvestments||[]).length>0;
   var totalStockVal=calcStockValue();
@@ -9158,6 +9537,9 @@ function migrateSave(){
   if(G.salaryBonus===undefined)G.salaryBonus=0;
   if(G.children===undefined)G.children=0;
   if(G.spouse===undefined)G.spouse=null;
+  // V5: 职业系统迁移
+  if(!G.career)G.career='tech';
+  if(G._currentWorkScenario===undefined)G._currentWorkScenario=null;
 }
 
 // === _buildAutoChainQueue ===
@@ -9321,7 +9703,7 @@ async function _doAdvanceMonth(){
 // === checkCareerBranch ===
 function checkCareerBranch(){
   if(G.selfEmployed)return;
-  var currentJob=JOBS[G.jobIndex];
+  var _cbJobs=getCareerJobs();var currentJob=_cbJobs[G.jobIndex]||_cbJobs[0];
   var available=CAREER_BRANCHES.filter(function(b){
     if(G.careerBranches&&G.careerBranches.indexOf(b.id)>=0)return false;
     if(currentJob.id!==b.fromJob)return false;
@@ -11102,12 +11484,14 @@ function showRadarModal(){
 
 // === _v4_getRadarData ===
 function _v4_getRadarData(){
+  var _rdJobs=getCareerJobs();
   const healthScore=Math.round((G.health+G.mood)/2);
   const totalAsset=calcTotalAsset();
   const wealthScore=Math.min(100,Math.round(Math.log10(Math.max(1,totalAsset))*10));
   let relScore=0;if(G.spouse)relScore+=40;relScore+=Math.min(60,G.children*20);
-  const careerScore=G.selfEmployed?Math.min(100,G.businesses.length*20+40):Math.round((G.jobIndex/(JOBS.length-1))*100);
-  const passive=calcPassiveIncome();const active=G.selfEmployed?passive*0.5:JOBS[G.jobIndex].salary/12;
+  const careerScore=G.selfEmployed?Math.min(100,G.businesses.length*20+40):Math.round((G.jobIndex/Math.max(1,_rdJobs.length-1))*100);
+  var _rdJob=_rdJobs[G.jobIndex]||_rdJobs[0];
+  const passive=calcPassiveIncome();const active=G.selfEmployed?passive*0.5:(_rdJob?_rdJob.salary/12:0);
   const freedomScore=Math.min(100,Math.round((passive/Math.max(1,active+passive))*100));
   return [{name:'身心',score:healthScore},{name:'物质',score:wealthScore},{name:'关系',score:relScore},{name:'事业',score:careerScore},{name:'自由',score:freedomScore}];
 }
@@ -11129,7 +11513,8 @@ function checkLifeReview(){
 function showLifeReport(){
   const age = getAge();
   const total = calcTotalAsset();
-  const job = G.selfEmployed ? '创业者' : JOBS[G.jobIndex].name;
+  var _lrJobs=getCareerJobs();var _lrJob=_lrJobs[G.jobIndex]||_lrJobs[0];
+  const job = G.selfEmployed ? '创业者' : (_lrJob?_lrJob.name:'未知');
   var html = '<canvas id="lifeChart" width="340" height="220" style="display:block;margin:0 auto 12px;border-radius:8px;background:#fafafa;"></canvas>';
   html += '<div class="report-stats">';
   html += '<div class="report-stat"><span class="report-label">总资产</span><span class="report-val">'+fmt(total)+'</span></div>';
