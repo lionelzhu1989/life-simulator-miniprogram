@@ -2230,6 +2230,8 @@ async function advanceMonth(){
   // Game over check
   if(G.health<=0){G.gameOver=true;G.gameOverReason='健康归零，人生结束';}
   else if(getAge()>=80&&Math.random()<0.3){G.gameOver=true;G.gameOverReason='安享晚年，人生圆满结束';}
+  // v4.1.0: NPC事件链检测
+  if(typeof checkNPCEvents==='function') checkNPCEvents();
 }
 
 async function fastForward(years){
@@ -3602,6 +3604,80 @@ const NPC_PERSONALITIES={
     responses:{温情:['你回来啦！','你也是，别太累了','有你在真好'],谈心:['怎么了？','你说，我听着','我们确实该好好聊聊'],日常:['你想吃什么？我做','出去吃吧，我请客','冰箱里有菜，随便做点'],倾诉:['怎么了？跟我说说','不管怎样我都在','别太累了，身体要紧']},
     followups:['你最近回来就玩手机，也不陪我说话','我们能不能换个大点的房子？','你记不记得今天是什么日子？','我妈说让我们周末回去吃饭','有你在真好，不管怎样']},
 };
+// ===== NPC好感度阶段系统 =====
+const RELATIONSHIP_STAGES = {
+  stranger:    { min:0,  max:20, name:'陌生', desc:'点头之交，仅限于礼貌寒暄' },
+  acquaintance:{ min:21, max:40, name:'相识', desc:'知道彼此名字和基本情况' },
+  friend:      { min:41, max:60, name:'朋友', desc:'可以闲聊、开玩笑、分享日常' },
+  close:       { min:61, max:80, name:'亲密', desc:'无话不谈、有暧昧和默契' },
+  lover:       { min:81, max:100,name:'挚爱', desc:'灵魂伴侣、可触发婚姻剧情' }
+};
+
+function getRelationshipStage(npcId){
+  const rel = getRelationship(npcId);
+  if(!rel) return { ...RELATIONSHIP_STAGES.stranger, key:'stranger' };
+  const intimacy = rel.intimacy || 0;
+  for(const key of ['lover','close','friend','acquaintance','stranger']){
+    const s=RELATIONSHIP_STAGES[key];
+    if(intimacy>=s.min&&intimacy<=s.max) return { ...s, key };
+  }
+  return { ...RELATIONSHIP_STAGES.stranger, key:'stranger' };
+}
+
+function getStagePromptInjection(npcId){
+  const stage = getRelationshipStage(npcId);
+  const rel = getRelationship(npcId);
+  return '\n\n## 你与玩家的关系阶段\n当前阶段：'+stage.name+'（亲密度：'+(rel?rel.intimacy:0)+'/100）\n阶段特征：'+stage.desc+'\n你的行为边界：请根据当前阶段调整对话深度和语气';
+}
+
+// ===== NPC事件驱动剧情 =====
+const NPC_EVENT_CHAINS = {
+  boss: [
+    { id:'bp_intro', trigger:{type:'intimacy',min:25}, msg:'最近公司有个内部投资机会，你有兴趣了解一下吗？' },
+    { id:'bp_coop', trigger:{type:'intimacy',min:50}, msg:'那个项目回报不错，要不要一起投那个项目？利润六四开。' },
+    { id:'bp_risk', trigger:{type:'intimacy',min:75}, msg:'这个项目风险很大，但回报惊人...我只跟你说。' }
+  ],
+  mentor: [
+    { id:'mt_intro', trigger:{type:'intimacy',min:30}, msg:'我最近有个研究课题，需要人手，你有兴趣来帮忙吗？' },
+    { id:'mt_coop', trigger:{type:'intimacy',min:60}, msg:'你的研究能力不错，我有个国家级项目正在申报，你愿意加入吗？' }
+  ],
+  gymCoach: [
+    { id:'gc_intro', trigger:{type:'intimacy',min:35}, msg:'兄弟，我打算自己出来开个健身房，你要不要入股？' },
+    { id:'gc_coop', trigger:{type:'intimacy',min:65}, msg:'健身房运营得不错，准备开第二家分店，你来做合伙人怎么样？' }
+  ]
+};
+
+function triggerNPCStageEvent(npcId, newStage, oldStage){
+  if(!G.phone||!G.phone.chatHistory) return;
+  const p=NPC_PERSONALITIES[npcId];
+  if(!p) return;
+  // 向玩家发送NPC的阶段跃迁通知
+  const stageMessages = {
+    stranger: '['+p.name+'对你们的关系没有特别感觉]',
+    acquaintance: p.name+'开始记住你了，你们算认识了！',
+    friend: p.name+'把你当成了朋友，聊天更自在了！',
+    close: p.name+'对你有特别的亲密感，你们之间有了默契...',
+    lover: p.name+'已经深深爱上了你们之间的羁绊！'
+  };
+  if(stageMessages[newStage.key]){
+    addNotification('system','💕 '+stageMessages[newStage.key]);
+  }
+}
+
+function checkNPCEvents(){
+  if(!G.phone||!G.phone.chatHistory) return;
+  Object.keys(NPC_PERSONALITIES).forEach(npcId=>{
+    const stage = getRelationshipStage(npcId);
+    const lastStage = G._npcLastStage && G._npcLastStage[npcId];
+    if(stage.key !== lastStage){
+      triggerNPCStageEvent(npcId, stage, lastStage);
+      if(!G._npcLastStage) G._npcLastStage={};
+      G._npcLastStage[npcId]=stage.key;
+    }
+  });
+}
+
+
 
 
 
@@ -9096,7 +9172,7 @@ ${NPC_RELATIONS[npcId]||'朋友'}，亲密${rel.intimacy} 信任${rel.trust}
 ## 已有对话
 ${threadContext}${historyText?'\n之前的聊天：\n'+historyText:''}
 
-回复只输出NPC说的话，不要加任何前缀或解释。`;
+回复只输出NPC说的话，不要加任何前缀或解释。`+getStagePromptInjection(npcId);
 
   // v4.1.0: AI永不放弃 - 达到maxFallback后等待5秒重置并重试一次
   if(AI_CHAT_CONFIG.enabled&&AI_CHAT_CONFIG._fallbackCount>=AI_CHAT_CONFIG.maxFallback&&!AI_CHAT_CONFIG._retried){
