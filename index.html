@@ -713,6 +713,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 
 /* ===== V5: 职业选择界面 ===== */
 .career-selection-page{position:fixed;top:0;left:0;right:0;bottom:0;z-index:999;background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.career-card.current-career-dim{opacity:.5;pointer-events:none;}
 .career-select-container{max-width:480px;margin:0 auto;padding:20px 16px 40px;}
 .career-select-header{text-align:center;margin-bottom:24px;padding-top:20px;}
 .career-select-header h2{font-size:22px;font-weight:700;color:var(--text);margin-bottom:8px;}
@@ -1719,6 +1720,11 @@ function defaultState(){
     totalMonths:0,cash,health:hp,mood,IQ:iq,EQ:eq,
     jobIndex:0,monthsAtJob:0,selfEmployed:false,
     career:null,
+    internshipMonths:0,        // 实习月数计数器
+    hasChosenCareer:false,     // 是否已选择行业
+    canChangeCareer:false,     // 是否可以跳槽
+    careerChangeCooldown:0,    // 跳槽冷却月数
+    isInternship:true,         // 是否在实习期
     stockHoldings:{},stockPrices:{},
     houses:[],businesses:[],techInvestments:[],
     spouse:null,children:0,childAges:[],
@@ -1733,7 +1739,11 @@ function defaultState(){
     lifeEvents:[],socialContacts:[],relationships:{},friendGroups:[],friendGroupings:{},
     savings:0,careerBranches:[],
     romance:{npcId:null,stage:'none',affection:0,metMonth:0,lastInteraction:0},
-    scheduledDates:[]
+    scheduledDates:[],
+// 绩效系统字段
+    performance:0,           // 绩效积分 (-∞~∞, 负值表示表现差)
+    lastPerfChange:0,        // 上次绩效变动值（弹窗用）
+    tradedStocks:0,recentTrades:[],watchlist:[],_perfLog:[],_perfAwardedThisMonth:false,
   };
 }
 
@@ -1801,10 +1811,18 @@ function switchInvestTab(name){
 function startGame(){
   if(loadGame()&&!G.gameOver){
     migrateSave();
-    // V5: 旧存档没有职业信息，强制选择
+    // V6: 新字段迁移（旧存档兼容）
+    if(G.isInternship===undefined) G.isInternship=false;
+    if(G.internshipMonths===undefined) G.internshipMonths=0;
+    if(G.hasChosenCareer===undefined) G.hasChosenCareer=!!G.career;
+    if(G.canChangeCareer===undefined) G.canChangeCareer=false;
+    if(G.careerChangeCooldown===undefined) G.careerChangeCooldown=0;
+    
+    // V6: 旧存档没有职业信息，直接进入游戏实习期（保留旧存档数据）
     if(!G.career){
-      showCareerSelection();
-      return;
+      G.isInternship=true;
+      G.hasChosenCareer=false;
+      G.internshipMonths=0;
     }
     document.getElementById('welcomePage').style.display='none';
     document.getElementById('gameApp').style.display='flex';
@@ -1812,45 +1830,86 @@ function startGame(){
     var ob=document.getElementById('obOverlay');if(ob)ob.style.display='none';
     initStockPrices();initPhoneState();refreshAll();return;
   }
-  // V5: 新游戏显示职业选择界面
-  showCareerSelection();
+  // V6: 新游戏直接进入实习期，12个月后再选行业
+  G=defaultState();
+  G.isInternship=true;
+  G.hasChosenCareer=false;
+  document.getElementById('welcomePage').style.display='none';
+  document.getElementById('gameApp').style.display='flex';
+  var go=document.getElementById('guideOverlay');if(go)go.style.display='none';
+  var ob=document.getElementById('obOverlay');if(ob)ob.style.display='none';
+  initStockPrices();initPhoneState();saveGame();refreshAll();
+  showToast('🎓 以实习生身份开启人生！12个月后选择职业方向');
 }
 // V5: 新游戏（清除存档）
 function newGame(){
   if(confirm('确定要清除当前存档并开始新游戏吗？')){
     clearGame();
-    G=null;
-    showCareerSelection();
+    G=defaultState();
+    G.isInternship=true;
+    G.hasChosenCareer=false;
+    document.getElementById('welcomePage').style.display='none';
+    document.getElementById('gameApp').style.display='flex';
+    var go=document.getElementById('guideOverlay');if(go)go.style.display='none';
+    var ob=document.getElementById('obOverlay');if(ob)ob.style.display='none';
+    initStockPrices();initPhoneState();saveGame();refreshAll();
+    showToast('🎓 以实习生身份开启人生！12个月后选择职业方向');
   }
 }
 // V5: 显示职业选择界面
-function showCareerSelection(){
+// V6: 行业选择类型：'internship'=实习结束选行业, 'change'=跳槽选行业
+function showCareerSelection(selectionType){
+  selectionType = selectionType || 'internship';
   document.getElementById('welcomePage').style.display='none';
   var el=document.getElementById('careerSelectionPage');
   if(!el){
     var div=document.createElement('div');
     div.id='careerSelectionPage';
     div.className='career-selection-page';
-    div.innerHTML=buildCareerSelectionHTML();
+    div.innerHTML=buildCareerSelectionHTML(selectionType);
     document.body.appendChild(div);
-  }else{el.style.display='block';}
-  renderCareerCards();
+  }else{
+    el.style.display='block';
+    // 更新标题
+    var titleEl=el.querySelector('.career-select-header h2');
+    var subEl=el.querySelector('.career-subtitle');
+    var iconEl=el.querySelector('.career-select-header div');
+    if(selectionType==='change'){
+      if(titleEl)titleEl.textContent='选择新赛道';
+      if(subEl)subEl.textContent='跳槽有代价，三思而后行';
+      if(iconEl)iconEl.textContent='🔄';
+    }else{
+      if(titleEl)titleEl.textContent='选择你的职业方向';
+      if(subEl)subEl.textContent='不同职业有不同的人生轨迹，选择适合你的道路';
+      if(iconEl)iconEl.textContent='🎯';
+    }
+  }
+  renderCareerCards(selectionType);
 }
-function buildCareerSelectionHTML(){
+function buildCareerSelectionHTML(selectionType){
+  var headerIcon = selectionType==='change' ? '🔄' : '🎯';
+  var headerTitle = selectionType==='change' ? '选择新赛道' : '选择你的职业方向';
+  var headerSub = selectionType==='change' ? '跳槽有代价，三思而后行' : '不同职业有不同的人生轨迹，选择适合你的道路';
   return`<div class="career-select-container">
     <div class="career-select-header">
-      <div style="font-size:48px;margin-bottom:12px;">🎯</div>
-      <h2>选择你的职业方向</h2>
-      <p class="career-subtitle">不同职业有不同的人生轨迹，选择适合你的道路</p>
+      <div style="font-size:48px;margin-bottom:12px;">${headerIcon}</div>
+      <h2>${headerTitle}</h2>
+      <p class="career-subtitle">${headerSub}</p>
     </div>
     <div class="career-cards" id="careerCards"></div>
   </div>`;
 }
-function renderCareerCards(){
+function renderCareerCards(selectionType){
+  selectionType = selectionType || 'internship';
   var el=document.getElementById('careerCards');if(!el)return;
   var html='';
   CAREERS.forEach(function(c){
-    html+='<div class="career-card" onclick="selectCareer(\''+c.id+'\')">';
+    var isCurrentCareer = (G.career === c.id);
+    var clickHandler = selectionType==='change'
+      ? (isCurrentCareer ? '' : 'selectCareer(\''+c.id+'\',false)')
+      : 'selectCareer(\''+c.id+'\',true)';
+    var cardClass = isCurrentCareer && selectionType==='change' ? 'career-card current-career-dim' : 'career-card';
+    html+='<div class="'+cardClass+'" onclick="'+(clickHandler||'void(0)')+'">';
     html+='<div class="career-card-icon">'+c.icon+'</div>';
     html+='<div class="career-card-name">'+c.name+'</div>';
     html+='<div class="career-card-desc">'+c.desc+'</div>';
@@ -1858,28 +1917,55 @@ function renderCareerCards(){
     html+='<div class="career-card-traits">';
     c.traits.forEach(function(t){html+='<span class="career-trait-tag">'+t+'</span>';});
     html+='</div>';
-    html+='<div class="career-card-mult">薪资系数 ×'+c.salaryMult+'</div>';
+    if(isCurrentCareer && selectionType==='change') html+='<div style="font-size:11px;color:#999;margin-top:4px;">⬅️ 当前行业</div>';
+    else html+='<div class="career-card-mult">薪资系数 ×'+c.salaryMult+'</div>';
     html+='</div>';
   });
   el.innerHTML=html;
 }
-function selectCareer(careerId){
+// V6: isInternship=true: 实习结束选择行业; isInternship=false: 跳槽选择行业
+function selectCareer(careerId,isInternship){
   var c=CAREERS.find(function(x){return x.id===careerId;});
   if(!c)return;
-  G=defaultState();
-  G.career=careerId;
-  // 根据职业设置初始属性
-  var jobs=JOBS_CAREERS[careerId]||JOBS;
-  G.jobIndex=0;
-  G.monthsAtJob=0;
-  // 不同职业初始属性微调
-  if(careerId==='finance'){G.IQ=clamp(G.IQ+5,0,200);G.EQ=clamp(G.EQ+3,0,200);}
-  else if(careerId==='sales'){G.EQ=clamp(G.EQ+8,0,200);}
-  else if(careerId==='medical'){G.IQ=clamp(G.IQ+8,0,200);G.health=clamp(G.health+5,0,200);}
-  else if(careerId==='education'){G.IQ=clamp(G.IQ+5,0,200);G.mood=clamp(G.mood+5,0,200);}
-  else if(careerId==='gov'){G.mood=clamp(G.mood+10,0,200);G.EQ=clamp(G.EQ+5,0,200);}
-  else if(careerId==='creative'){G.mood=clamp(G.mood+8,0,200);}
-  else if(careerId==='legal'){G.IQ=clamp(G.IQ+7,0,200);}
+  
+  if(isInternship===false){
+    // === 跳槽逻辑 ===
+    // 扣减跳槽代价
+    G.mood=clamp(G.mood-15,0,200);
+    G.EQ=clamp(G.EQ-5,0,200);
+    G.career=careerId;
+    G.jobIndex=0;
+    G.monthsAtJob=0;
+    G.performance=0;          // V5.1: 跳槽清空绩效
+    G._promotionOffered=false;
+    G._promotionMonth=0;
+    G.careerChangeCooldown=12; // V5.1: 12个月冷却
+    G._recentEvents=(G._recentEvents||[]);
+    G._recentEvents.push('跳槽到'+c.name);
+    if(G._recentEvents.length>5)G._recentEvents.shift();
+    showToast('🔄 跳槽到【'+c.name+'】，mood-15, EQ-5, 绩效归零');
+  } else {
+    // === 实习结束选择行业逻辑 ===
+    G=defaultState();
+    G.career=careerId;
+    G.jobIndex=0;
+    G.monthsAtJob=0;
+    // 不同职业初始属性微调
+    if(careerId==='finance'){G.IQ=clamp(G.IQ+5,0,200);G.EQ=clamp(G.EQ+3,0,200);}
+    else if(careerId==='sales'){G.EQ=clamp(G.EQ+8,0,200);}
+    else if(careerId==='medical'){G.IQ=clamp(G.IQ+8,0,200);G.health=clamp(G.health+5,0,200);}
+    else if(careerId==='education'){G.IQ=clamp(G.IQ+5,0,200);G.mood=clamp(G.mood+5,0,200);}
+    else if(careerId==='gov'){G.mood=clamp(G.mood+10,0,200);G.EQ=clamp(G.EQ+5,0,200);}
+    else if(careerId==='creative'){G.mood=clamp(G.mood+8,0,200);}
+    else if(careerId==='legal'){G.IQ=clamp(G.IQ+7,0,200);}
+    showToast('🎯 你选择了【'+c.name+'】，人生新篇章开启！');
+  }
+  
+  // 标记实习结束，正式工作开始
+  G.isInternship=false;
+  G.hasChosenCareer=true;
+  G._careerSelectPending=false; // V6: 解锁月份推进;
+  
   initStockPrices();initPhoneState();saveGame();
   var selPage=document.getElementById('careerSelectionPage');
   if(selPage)selPage.style.display='none';
@@ -1887,7 +1973,6 @@ function selectCareer(careerId){
   var go=document.getElementById('guideOverlay');if(go)go.style.display='none';
   var ob=document.getElementById('obOverlay');if(ob)ob.style.display='none';
   refreshAll();
-  showToast('🎯 你选择了【'+c.name+'】，人生新篇章开启！');
 }
 function initStockPrices(){STOCKS.forEach(s=>{if(!G.stockPrices[s.code])G.stockPrices[s.code]=s.basePrice;});}
 
@@ -1945,11 +2030,17 @@ function refreshLearning(){
 function refreshHeader(){
   const _hj=getCareerJobs();
   const job=_hj[G.jobIndex]||_hj[0];
-  let careerLabel=G.selfEmployed?'🚀 创业者':job.name;
-  // V5: 显示职业图标
-  if(G.career&&!G.selfEmployed){
-    const _hc=CAREERS.find(c=>c.id===G.career);
-    if(_hc)careerLabel=_hc.icon+' '+job.name;
+  // V6: 实习期显示实习生
+  let careerLabel;
+  if(G.isInternship && !G.hasChosenCareer){
+    careerLabel='🎓 实习生 ('+Math.min(12,G.internshipMonths||0)+'/12月)';
+  } else {
+    careerLabel=G.selfEmployed?'🚀 创业者':job.name;
+    // V5: 显示职业图标
+    if(G.career&&!G.selfEmployed){
+      const _hc=CAREERS.find(c=>c.id===G.career);
+      if(_hc)careerLabel=_hc.icon+' '+job.name;
+    }
   }
   const yr=Math.floor(G.totalMonths/12);
   const mo=(G.totalMonths%12)+1;
@@ -2280,16 +2371,53 @@ async function nextMonth(){
   _doAdvanceMonth();
 }
 async function advanceMonth(){
+  // V6: 等待选择行业时不推进
+  if(G._careerSelectPending) return;
   G.totalMonths++;G.monthsAtJob++;G.events=[];
   G._encounterActive=false; // 重置月度场景标记
   G._workScenarioThisMonth=false; // V5: 重置工作情景标记
+  G._perfAwardedThisMonth=false;   // V5.1: 重置绩效情景标记
   if(!G._recentEvents)G._recentEvents=[]; // 连锁反应记忆（最近事件记录）
+  
+  // V6: 实习期逻辑
+  if(G.isInternship){
+    G.internshipMonths++;
+    // 实习期里程碑事件
+    if(G.internshipMonths===1){
+      G.events.unshift({text:'🎓 你以实习生身份开始了新的人生！实习期为12个月',type:'good'});
+    } else if(G.internshipMonths===6){
+      G.events.unshift({text:'💪 实习已过一半，你已经适应了工作节奏',type:'neutral'});
+    } else if(G.internshipMonths===10){
+      G.events.unshift({text:'⏰ 实习即将结束，两个月后需要选择职业方向',type:'neutral'});
+    } else if(G.internshipMonths===11){
+      G.events.unshift({text:'🚨 最后一个月！下个月必须选择你的职业道路',type:'bad'});
+    }
+    // 实习期还没选行业，不给工资（或者给象征性的实习补贴）
+    if(G.career && !G.hasChosenCareer){
+      // 实习期还没选行业，不给工资（或者给象征性的实习补贴）
+    }
+  }
+  
+  // V6: 跳槽冷却递减
+  if(G.careerChangeCooldown>0) G.careerChangeCooldown--;
+  
+  // V6: 工作满24个月解锁跳槽
+  if(!G.selfEmployed && G.monthsAtJob>=24 && G.careerChangeCooldown<=0){
+    G.canChangeCareer=true;
+  } else {
+    G.canChangeCareer=false;
+  }
+  
   const _careerJobs=getCareerJobs();
   const job=_careerJobs[G.jobIndex]||_careerJobs[0];
   // 创业者没有工资收入，只有副业/房租/配偶收入
   let income=G.selfEmployed?0:job.salary/12;
+  // V6: 实习期工资只有正常的40%
+  if(G.isInternship && !G.hasChosenCareer){
+    income = job.salary * 0.4 / 12; // 实习补贴
+  }
   // V2: Early income slightly lower (first 24 months penalty)
-  if(!G.selfEmployed&&G.totalMonths<=24)income*=0.85;
+  else if(!G.selfEmployed&&G.totalMonths<=24)income*=0.85;
   // V2: Mid-late income boost (after 120 months)
   if(!G.selfEmployed&&G.totalMonths>120)income*=1.15;
   if(!G.selfEmployed&&G.salaryBonus>0)income*=(1+G.salaryBonus);
@@ -2475,6 +2603,15 @@ async function advanceMonth(){
   checkStudyProgress();triggerProjectEvents();
   // Guide
   advanceGuide();
+  // V6: 实习期结束（第12个月），弹出行业选择
+  if(G.isInternship && G.internshipMonths>=12 && !G.hasChosenCareer){
+    G.isInternship=false;
+    G._careerSelectPending=true; // V6: 阻止fastForward继续推进
+    saveGame();
+    showCareerSelection('internship');
+    return; // 中断本月，等用户选择行业
+  }
+  
   // Game over check
   if(G.health<=0){G.gameOver=true;G.gameOverReason='健康归零，人生结束';}
   else if(getAge()>=80&&Math.random()<0.3){G.gameOver=true;G.gameOverReason='安享晚年，人生圆满结束';}
@@ -2482,16 +2619,17 @@ async function advanceMonth(){
   if(typeof checkNPCEvents==='function') checkNPCEvents();
   // v4.2.0: 工作剧情事件检测
   if(typeof checkWorkEvents==='function') checkWorkEvents();
-  // V5: AI工作情景生成（25%概率，6个月后触发，每月最多1次）
-  if(!G.selfEmployed&&G.totalMonths>=6&&!G._workScenarioThisMonth&&Math.random()<0.25){
+  // V6: AI工作情景标记（100%触发，移到advanceMonth后触发）
+  if(!G.selfEmployed && G.hasChosenCareer && !G.isInternship && G.totalMonths>12){
     G._workScenarioThisMonth=true;
-    generateWorkScenario();
   }
 }
 
 async function fastForward(years){
   G.events=[];
+  G.__fastForwarding=true;
   for(let i=0;i<years*12;i++){if(G.gameOver)break;await advanceMonth();}
+  G.__fastForwarding=false;
   saveGame();refreshAll();checkAchievements();
   if(G.gameOver)setTimeout(()=>showGameOver(),500);
   else showToast('⏩ 快进了'+years+'年！');
@@ -2526,19 +2664,22 @@ async function generateWorkScenario(){
   const job=jobs[G.jobIndex]||jobs[0];
   const age=getAge();
   const prompt=`你是一个职场剧情生成器。根据以下信息生成一个职场情景：
-- 职业：${career.name}
+- 行业：${career.name}（${career.traits ? career.traits.join(', ') : ''}）
 - 当前职位：${job.name}
 - 在岗时间：${G.monthsAtJob}个月
 - 年龄：${age}岁
-- 性格特质：${career.traits.join(', ')}
+- 当前绩效积分：${G.performance}
+- 月薪：${fmt(job.salary/12)}
 
-生成一个职场中可能遇到的场景（100-150字），然后给出2-3个选择。每个选择有：
+生成一个职场中可能遇到的场景（100-150字），然后给出3个选择。每个选择有：
 - 选项文字（一句话）
+- perf值（-20到+30之间，好选择正绩效，差选择负绩效）
 - 效果（影响cash/mood/IQ/EQ/health/salaryBonus/monthsAtJob等）
 - 结果描述（执行后的反馈文字）
+- feeback（1-2句说明为何得此绩效）
 
 以JSON格式返回（不要markdown代码块）：
-{"title":"场景标题","scene":"场景描述","options":[{"text":"选项1","effect":{"mood":5},"result":"结果描述1"},{"text":"选项2","effect":{"EQ":-5},"result":"结果描述2"}]}`;
+{"title":"场景标题","scene":"场景描述","options":[{"text":"选项1","perf":15,"effect":{"mood":5},"result":"结果描述1","feedback":"说明"},{"text":"选项2","perf":-10,"effect":{"EQ":-5},"result":"结果描述2","feedback":"说明"}]}`;
   try{
     const resp=await fetch('https://token-plan-cn.xiaomimimo.com/v1/chat/completions',{
       method:'POST',
@@ -2565,36 +2706,36 @@ async function generateWorkScenario(){
 function getFallbackWorkScenario(career,job){
   const scenarios={
     tech:[
-      {title:'💻 紧急Bug修复',scene:'线上系统突然崩溃，客户投诉不断。技术总监要求你带领团队紧急修复，但这意味着连续加班一周。',options:[{text:'全力以赴带队修复',effect:{mood:-10,health:-5,EQ:5},result:'你带领团队连续奋战，终于修复了Bug。虽然累但获得了领导的认可。'},{text:'按正常节奏处理',effect:{mood:5,IQ:3},result:'你按正常节奏处理，虽然慢了一些但保证了代码质量。'}]},
-      {title:'🚀 新技术选型',scene:'公司要启动新项目，需要选择技术栈。团队内部对用新技术还是稳定技术争论不休。',options:[{text:'力推新技术',effect:{IQ:8,mood:5},result:'你力推新技术并成功说服团队，项目采用了前沿技术栈。'},{text:'选择稳定方案',effect:{EQ:5,mood:3},result:'你选择了稳定方案，项目平稳推进，领导很满意。'}]}
+      {title:'💻 紧急Bug修复',scene:'线上系统突然崩溃，客户投诉不断。技术总监要求你带领团队紧急修复，但这意味着连续加班一周。',options:[{text:'全力以赴带队修复',effect:{mood:-10,health:-5,EQ:5},result:'你带领团队连续奋战，终于修复了Bug。虽然累但获得了领导的认可。',perf:15,feedback:'表现出色，获得领导认可'},{text:'按正常节奏处理',effect:{mood:5,IQ:3},result:'你按正常节奏处理，虽然慢了一些但保证了代码质量。',perf:5,feedback:'稳扎稳打，无功无过'},{text:'推给其他同事',effect:{EQ:-5,mood:3},result:'你把锅甩给了同事，领导后来知道了对你印象变差。',perf:-15,feedback:'推卸责任，职场大忌'}]},
+      {title:'🚀 新技术选型',scene:'公司要启动新项目，需要选择技术栈。团队内部对用新技术还是稳定技术争论不休。',options:[{text:'力推新技术',effect:{IQ:8,mood:5},result:'你力推新技术并成功说服团队，项目采用了前沿技术栈。',perf:20,feedback:'技术创新，推动团队进步'},{text:'选择稳定方案',effect:{EQ:5,mood:3},result:'你选择了稳定方案，项目平稳推进，领导很满意。',perf:10,feedback:'稳健选择，风险控制到位'},{text:'不表态不参与',effect:{mood:-3},result:'你选择了沉默，错过了表现机会。',perf:-5,feedback:'沉默就是错过机会'}]}
     ],
     finance:[
-      {title:'📊 大客户路演',scene:'公司最大的客户要来听年度投资报告，你被选中做主讲人。这是表现的好机会，但压力也很大。',options:[{text:'精心准备全力表现',effect:{mood:-5,IQ:5,EQ:5},result:'你精心准备的演讲打动了客户，领导对你刮目相看。'},{text:'让资深同事主讲',effect:{mood:5},result:'你选择了让资深同事主讲，自己旁听学习，也学到了很多。'}]},
-      {title:'⚖️ 内幕信息诱惑',scene:'你无意中听到一个内幕消息，如果操作可以获得巨额收益，但这是违规的。',options:[{text:'坚决不碰',effect:{EQ:8,mood:-3},result:'你坚守职业操守，虽然错过了收益但内心坦然。'},{text:'小试牛刀',effect:{mood:10,cash:50000},result:'你小赚了一笔，但每天提心吊胆。'}]}
+      {title:'📊 大客户路演',scene:'公司最大的客户要来听年度投资报告，你被选中做主讲人。这是表现的好机会，但压力也很大。',options:[{text:'精心准备全力表现',effect:{mood:-5,IQ:5,EQ:5},result:'你精心准备的演讲打动了客户，领导对你刮目相看。',perf:25,feedback:'抓住机会，展示实力'},{text:'让资深同事主讲',effect:{mood:5},result:'你选择了让资深同事主讲，自己旁听学习，也学到了很多。',perf:0,feedback:'谨慎选择，但未展现实力'},{text:'临阵脱逃称病',effect:{mood:-3,EQ:-5},result:'你借口生病躲过了，但领导知道后在心里给你打了低分。',perf:-20,feedback:'临阵脱逃，失去信任'}]},
+      {title:'⚖️ 内幕信息诱惑',scene:'你无意中听到一个内幕消息，如果操作可以获得巨额收益，但这是违规的。',options:[{text:'坚决不碰',effect:{EQ:8,mood:-3},result:'你坚守职业操守，虽然错过了收益但内心坦然。',perf:15,feedback:'职业操守满分'},{text:'小试牛刀',effect:{mood:10,cash:50000},result:'你小赚了一笔，但每天提心吊胆。',perf:-10,feedback:'贪图利益，风险极高'}]}
     ],
     medical:[
-      {title:'🏥 疑难病例讨论',scene:'科室来了一个疑难病例，主任让你准备病例讨论。这是展示能力的好机会。',options:[{text:'查阅大量文献认真准备',effect:{IQ:8,mood:-3},result:'你的讨论准备充分，提出了有价值的诊疗方案，获得主任赞赏。'},{text:'按常规流程处理',effect:{mood:3},result:'你按常规流程处理，虽然没有亮点但也没出错。'}]},
-      {title:'😊 患者家属感谢',scene:'一位康复的患者家属送来锦旗和红包，你该如何处理？',options:[{text:'收下红包增进关系',effect:{mood:5,cash:2000},result:'你收下了红包，家属很高兴，但心里有些不安。'},{text:'只收锦旗退回红包',effect:{EQ:8,mood:5},result:'你只收下锦旗，退回红包，家属更加敬佩你的医德。'}]}
+      {title:'🏥 疑难病例讨论',scene:'科室来了一个疑难病例，主任让你准备病例讨论。这是展示能力的好机会。',options:[{text:'查阅大量文献认真准备',effect:{IQ:8,mood:-3},result:'你的讨论准备充分，提出了有价值的诊疗方案，获得主任赞赏。',perf:20,feedback:'专业认真，获得认可'},{text:'按常规流程处理',effect:{mood:3},result:'你按常规流程处理，虽然没有亮点但也没出错。',perf:0,feedback:'中规中矩，不求有功'},{text:'让实习生代写',effect:{EQ:-5},result:'被主任发现后很生气，对你的印象大打折扣。',perf:-15,feedback:'敷衍了事，不负责任'}]},
+      {title:'😊 患者家属感谢',scene:'一位康复的患者家属送来锦旗和红包，你该如何处理？',options:[{text:'收下红包增进关系',effect:{mood:5,cash:2000},result:'你收下了红包，家属很高兴，但心里有些不安。',perf:-5,feedback:'医德有瑕'},{text:'只收锦旗退回红包',effect:{EQ:8,mood:5},result:'你只收下锦旗，退回红包，家属更加敬佩你的医德。',perf:15,feedback:'医德高尚'}]}
     ],
     education:[
-      {title:'📚 教学评估',scene:'学校要进行教学评估，评估结果影响职称评定。你需要在创新和稳妥之间做选择。',options:[{text:'大胆创新教学方式',effect:{mood:8,IQ:5},result:'你的创新课堂让学生眼前一亮，评估组也给予了好评。'},{text:'按部就班稳扎稳打',effect:{mood:3,EQ:3},result:'你按部就班完成了教学评估，虽然没有惊喜但也没问题。'}]},
-      {title:'🎓 学生问题',scene:'一个学生因为家庭原因成绩下滑严重，你发现后需要决定如何帮助TA。',options:[{text:'课后额外辅导',effect:{mood:5,EQ:5},result:'你利用课余时间辅导学生，学生成绩慢慢回升，很感激你。'},{text:'联系家长沟通',effect:{EQ:3,mood:3},result:'你联系了家长，共同制定了帮助计划。'}]}
+      {title:'📚 教学评估',scene:'学校要进行教学评估，评估结果影响职称评定。你需要在创新和稳妥之间做选择。',options:[{text:'大胆创新教学方式',effect:{mood:8,IQ:5},result:'你的创新课堂让学生眼前一亮，评估组也给予了好评。',perf:20,feedback:'勇于创新，获得好评'},{text:'按部就班稳扎稳打',effect:{mood:3,EQ:3},result:'你按部就班完成了教学评估，虽然没有惊喜但也没问题。',perf:5,feedback:'稳妥为主'},{text:'完全不管随它去',effect:{mood:0},result:'你完全没准备，评估结果很不理想。',perf:-20,feedback:'散漫不负责任'}]},
+      {title:'🎓 学生问题',scene:'一个学生因为家庭原因成绩下滑严重，你发现后需要决定如何帮助TA。',options:[{text:'课后额外辅导',effect:{mood:5,EQ:5},result:'你利用课余时间辅导学生，学生成绩慢慢回升，很感激你。',perf:15,feedback:'关爱学生，师德可敬'},{text:'联系家长沟通',effect:{EQ:3,mood:3},result:'你联系了家长，共同制定了帮助计划。',perf:8,feedback:'善于沟通协作'},{text:'告诉学生自生自灭',effect:{mood:0,EQ:-5},result:'你冷漠的态度让学生很失望。',perf:-20,feedback:'毫无师德'}]}
     ],
     creative:[
-      {title:'🎨 客户改稿',scene:'客户对设计方案不满意，要求大改。但你觉得原方案更好，怎么办？',options:[{text:'坚持自己的设计',effect:{mood:5,IQ:3},result:'你坚持了自己的设计，用专业说服了客户，最终客户接受了。'},{text:'按客户要求修改',effect:{EQ:5,mood:-3},result:'你按客户要求修改了，客户满意了，但你有些遗憾。'}]},
-      {title:'💡 创意瓶颈',scene:'你遇到了创意瓶颈，怎么都想不出好方案。截稿日期越来越近。',options:[{text:'出去走走寻找灵感',effect:{mood:8,health:3},result:'你出去散步放松，回来时灵感涌现，做出了好方案。'},{text:'熬夜硬憋',effect:{mood:-10,health:-8,IQ:3},result:'你熬夜做出了方案，但质量一般，身体也很疲惫。'}]}
+      {title:'🎨 客户改稿',scene:'客户对设计方案不满意，要求大改。但你觉得原方案更好，怎么办？',options:[{text:'坚持自己的设计',effect:{mood:5,IQ:3},result:'你坚持了自己的设计，用专业说服了客户，最终客户接受了。',perf:10,feedback:'专业坚持，赢得尊重'},{text:'按客户要求修改',effect:{EQ:5,mood:-3},result:'你按客户要求修改了，客户满意了，但你有些遗憾。',perf:5,feedback:'顺应客户但失去原则'},{text:'直接撂挑子不干了',effect:{mood:10,EQ:-8},result:'你一气之下说不干了，留下了很不专业的印象。',perf:-25,feedback:'极不专业'}]},
+      {title:'💡 创意瓶颈',scene:'你遇到了创意瓶颈，怎么都想不出好方案。截稿日期越来越近。',options:[{text:'出去走走寻找灵感',effect:{mood:8,health:3},result:'你出去散步放松，回来时灵感涌现，做出了好方案。',perf:15,feedback:'调整状态，高效产出'},{text:'熬夜硬憋',effect:{mood:-10,health:-8,IQ:3},result:'你熬夜做出了方案，但质量一般，身体也很疲惫。',perf:-5,feedback:'效率低下，伤身'},{text:'抄袭竞争对手',effect:{mood:-5},result:'你抄了竞品的设计，被发现后丢尽了脸。',perf:-30,feedback:'严重职业道德问题'}]}
     ],
     gov:[
-      {title:'📋 上级检查',scene:'上级要来检查，但你们部门的材料还没准备好。领导让你加班赶工。',options:[{text:'加班认真准备',effect:{mood:-5,EQ:5},result:'你加班准备好了材料，检查顺利通过，领导很满意。'},{text:'按正常节奏',effect:{mood:5},result:'你按正常节奏准备，虽然有些匆忙但也应付过去了。'}]},
-      {title:'🤝 同事求助',scene:'一个同事想让你帮他承担一部分工作，但这不是你的职责范围。',options:[{text:'热心帮忙',effect:{EQ:8,mood:3},result:'你热心帮忙，同事很感激，你们关系更好了。'},{text:'委婉拒绝',effect:{mood:3},result:'你委婉拒绝了，同事理解但关系有些微妙变化。'}]}
+      {title:'📋 上级检查',scene:'上级要来检查，但你们部门的材料还没准备好。领导让你加班赶工。',options:[{text:'加班认真准备',effect:{mood:-5,EQ:5},result:'你加班准备好了材料，检查顺利通过，领导很满意。',perf:15,feedback:'服从安排，执行力强'},{text:'按正常节奏',effect:{mood:5},result:'你按正常节奏准备，虽然有些匆忙但也应付过去了。',perf:0,feedback:'基本及格'},{text:'直接拒绝说不是我的活',effect:{EQ:-8,mood:5},result:'领导很不高兴，给你穿小鞋了。',perf:-25,feedback:'不服安排，职场大忌'}]},
+      {title:'🤝 同事求助',scene:'一个同事想让你帮他承担一部分工作，但这不是你的职责范围。',options:[{text:'热心帮忙',effect:{EQ:8,mood:3},result:'你热心帮忙，同事很感激，你们关系更好了。',perf:10,feedback:'团队合作精神好'},{text:'委婉拒绝',effect:{mood:3},result:'你委婉拒绝了，同事理解但关系有些微妙变化。',perf:0,feedback:'保持了距离'},{text:'当面怼回去让你找领导',effect:{EQ:-3,mood:8},result:'同事很下不来台，传出去说你不好相处。',perf:-10,feedback:'情商过低'}]}
     ],
     sales:[
-      {title:'📈 业绩压力',scene:'这个月的业绩目标还差30%，时间只剩一周。你需要想办法冲刺。',options:[{text:'全力冲刺加班跑客户',effect:{mood:-5,EQ:5,cash:10000},result:'你拼命冲刺，终于完成了目标，还拿到了一笔提成。'},{text:'保持节奏不焦虑',effect:{mood:5},result:'你保持节奏虽然没有完成目标，但心态很好。'}]},
-      {title:'🤝 抢单风波',scene:'你发现一个同事在抢你的客户，这个客户你跟了很久了。',options:[{text:'正面沟通解决',effect:{EQ:8,mood:-3},result:'你找同事沟通，最终和平解决了问题，客户还是你的。'},{text:'向领导反映',effect:{mood:-5,EQ:-3},result:'你向领导反映了，虽然保住了客户但和同事关系变僵了。'}]}
+      {title:'📈 业绩压力',scene:'这个月的业绩目标还差30%，时间只剩一周。你需要想办法冲刺。',options:[{text:'全力冲刺加班跑客户',effect:{mood:-5,EQ:5,cash:10000},result:'你拼命冲刺，终于完成了目标，还拿到了一笔提成。',perf:20,feedback:'全力以赴，结果导向'},{text:'保持节奏不焦虑',effect:{mood:5},result:'你保持节奏虽然没有完成目标，但心态很好。',perf:-5,feedback:'缺乏紧迫感'},{text:'伪造客户意向冲数据',effect:{mood:-3},result:'你做了假数据被领导发现，差点被开除。',perf:-30,feedback:'诚信问题，严重违规'}]},
+      {title:'🤝 抢单风波',scene:'你发现一个同事在抢你的客户，这个客户你跟了很久了。',options:[{text:'正面沟通解决',effect:{EQ:8,mood:-3},result:'你找同事沟通，最终和平解决了问题，客户还是你的。',perf:15,feedback:'沟通解决问题'},{text:'向领导反映',effect:{mood:-5,EQ:-3},result:'你向领导反映了，虽然保住了客户但和同事关系变僵了。',perf:5,feedback:'方法欠妥'},{text:'也去抢他的客户',effect:{mood:0,EQ:-10},result:'恶性循环开始了，团队氛围越来越差。',perf:-15,feedback:'制造内耗'}]}
     ],
     legal:[
-      {title:'⚖️ 案件压力',scene:'你手上有几个案件同时到了关键阶段，时间非常紧张。',options:[{text:'加班加点处理',effect:{mood:-8,health:-5,IQ:5},result:'你加班处理完了所有案件，虽然累但客户很满意。'},{text:'优先处理重要案件',effect:{EQ:5,mood:3},result:'你优先处理了重要案件，其他案件申请了延期。'}]},
-      {title:'📜 职业道德困境',scene:'你发现客户隐瞒了重要信息，这可能影响案件结果。',options:[{text:'坚持要求客户坦白',effect:{EQ:8,mood:-3},result:'你坚持职业操守，要求客户坦白，虽然过程艰难但维护了正义。'},{text:'继续代理不深究',effect:{mood:3,cash:5000},result:'你选择继续代理，案件顺利结束，但心里有些不安。'}]}
+      {title:'⚖️ 案件压力',scene:'你手上有几个案件同时到了关键阶段，时间非常紧张。',options:[{text:'加班加点处理',effect:{mood:-8,health:-5,IQ:5},result:'你加班处理完了所有案件，虽然累但客户很满意。',perf:15,feedback:'责任心强'},{text:'优先处理重要案件',effect:{EQ:5,mood:3},result:'你优先处理了重要案件，其他案件申请了延期。',perf:8,feedback:'抓重点能力强'},{text:'全部拖延装死',effect:{mood:0,health:3},result:'当事人投诉到了律所，你被合伙人约谈。',perf:-25,feedback:'严重失职'}]},
+      {title:'📜 职业道德困境',scene:'你发现客户隐瞒了重要信息，这可能影响案件结果。',options:[{text:'坚持要求客户坦白',effect:{EQ:8,mood:-3},result:'你坚持职业操守，要求客户坦白，虽然过程艰难但维护了正义。',perf:20,feedback:'职业操守满分'},{text:'继续代理不深究',effect:{mood:3,cash:5000},result:'你选择继续代理，案件顺利结束，但心里有些不安。',perf:-5,feedback:'职业道德有瑕疵'},{text:'私下和客户串通隐瞒',effect:{mood:-5},result:'如果被发现，可能面临吊销执照的风险。',perf:-30,feedback:'严重违法行为'}]}
     ]
   };
   const list=scenarios[career.id]||scenarios.tech;
@@ -2611,16 +2752,24 @@ function showWorkScenarioModal(data,career){
     overlay.addEventListener('click',function(e){if(e.target===overlay)hideWorkScenario();});
   }
   var box=document.getElementById('workScenarioBox');
+  var perfThreshold=80;
+  var perfBarPct=Math.max(0,Math.min(100,G.performance/perfThreshold*100));
+  var perfBarColor=G.performance<0?'#e74c3c':G.performance<50?'#f39c12':G.performance<80?'#27ae60':'#f1c40f';
+  var perfBar='<div style="background:#f0f0f0;border-radius:4px;height:8px;overflow:hidden;margin-bottom:4px;">';
+  perfBar+='<div style="height:100%;background:'+perfBarColor+';border-radius:4px;width:'+perfBarPct+'%;transition:width .5s;"></div></div>';
+  perfBar+='<div style="font-size:11px;color:#666;margin-bottom:10px;">绩效: <b style="color:'+perfBarColor+'">'+G.performance+'</b>/'+perfThreshold+' (晋升线)</div>';
   var optsHtml='';
   data.options.forEach(function(opt,idx){
     var effectStr=formatEffectStr(opt.effect);
-    optsHtml+='<div class="ws-option" onclick="chooseWorkOption('+idx+')">';
-    optsHtml+='<div class="ws-option-text">'+opt.text+'</div>';
+    var perfStr=opt.perf!==undefined?(' <span style="font-size:11px;color:'+(opt.perf>=0?'#27ae60':'#e74c3c')+'">(绩效'+(opt.perf>=0?'+':'')+opt.perf+')</span>'):'';
+    optsHtml+='<div class="ws-option" onclick="handleWorkScenarioChoice('+idx+')">';
+    optsHtml+='<div class="ws-option-text">'+opt.text+perfStr+'</div>';
     if(effectStr)optsHtml+='<div class="ws-option-effect">'+effectStr+'</div>';
     optsHtml+='</div>';
   });
   box.innerHTML='<div class="ws-career-icon">'+career.icon+'</div>';
-  box.innerHTML+='<div class="ws-career-label">'+career.name+' · 职场情景</div>';
+  box.innerHTML+='<div class="ws-career-label">'+career.name+' · 月度职场情景</div>';
+  box.innerHTML+=perfBar;
   box.innerHTML+='<div class="ws-title">'+data.title+'</div>';
   box.innerHTML+='<div class="ws-scene">'+data.scene+'</div>';
   box.innerHTML+='<div class="ws-options" id="wsOptions">'+optsHtml+'</div>';
@@ -2630,7 +2779,7 @@ function showWorkScenarioModal(data,career){
   G._currentWorkScenario=data;
   overlay.classList.add('show');
 }
-function chooseWorkOption(idx){
+function handleWorkScenarioChoice(idx){
   var data=G._currentWorkScenario;if(!data)return;
   var opt=data.options[idx];if(!opt)return;
   var eff=opt.effect||{};
@@ -2642,23 +2791,96 @@ function chooseWorkOption(idx){
   if(eff.EQ)G.EQ=clamp(G.EQ+eff.EQ,0,200);
   if(eff.salaryBonus)G.salaryBonus=(G.salaryBonus||0)+eff.salaryBonus;
   if(eff.monthsAtJob)G.monthsAtJob=Math.max(0,G.monthsAtJob+eff.monthsAtJob);
+  // 绩效结算
+  var perf=opt.perf||0;
+  G.performance+=perf;
+  G.lastPerfChange=perf;
+  G._perfLog=G._perfLog||[];
+  G._perfLog.push({month:G.totalMonths,perfChange:perf,title:data.title});
+  if(G._perfLog.length>24)G._perfLog=G._perfLog.slice(-24);
   // 显示结果
   var resultEl=document.getElementById('wsResult');
   if(resultEl){
     var resultText=opt.result||'你做出了选择。';
+    var perfText=' <b style="color:'+(perf>=0?'#27ae60':'#e74c3c')+'">('+(perf>=0?'+':'')+perf+'绩效)</b>';
+    var feedbackText=opt.feedback?('<br><span style="font-size:11px;color:#999;">'+opt.feedback+'</span>'):'';
     var effectStr=formatEffectStr(eff);
-    resultEl.textContent=resultText+(effectStr?' （'+effectStr+'）':'');
+    resultEl.innerHTML=resultText+perfText+feedbackText+(effectStr?'<br><span style="font-size:11px;color:#666;">'+effectStr+'</span>':'');
     resultEl.classList.add('show');
   }
   // 禁用选项
   var optsEl=document.getElementById('wsOptions');
   if(optsEl)optsEl.style.pointerEvents='none';
+  // 检查晋升
+  checkPromotion();
   saveGame();
 }
 function hideWorkScenario(){
   var overlay=document.getElementById('workScenarioOverlay');
   if(overlay)overlay.classList.remove('show');
   G._currentWorkScenario=null;
+}
+
+// ===== V5.1: 绩效晋升系统 =====
+var PERF_THRESHOLD=80;
+
+function checkPromotion(){
+  if(!G.hasChosenCareer||G.selfEmployed||G.isInternship) return;
+  if(G.monthsAtJob<12) return;
+  if(G.performance<PERF_THRESHOLD) return;
+  var jobs=getCareerJobs();
+  var nextJob=jobs[G.jobIndex+1];
+  if(!nextJob) return;
+  if(G._promotionOffered&&G._promotionMonth===G.totalMonths) return;
+  G._promotionOffered=true;
+  G._promotionMonth=G.totalMonths;
+  showPromotionOffer();
+}
+
+function showPromotionOffer(){
+  var jobs=getCareerJobs();
+  var nextJob=jobs[G.jobIndex+1];
+  if(!nextJob) return;
+  var career=CAREERS.find(function(c){return c.id===G.career;});
+  var salaryDiff=nextJob.salary-((jobs[G.jobIndex]||jobs[0]).salary);
+  var html='<div style="text-align:center;margin-bottom:16px;">';
+  html+='<div style="font-size:48px;">🎉</div>';
+  html+='<div style="font-size:18px;font-weight:700;color:#f39c12;margin-top:8px;">获得晋升机会！</div>';
+  html+='<div style="font-size:13px;color:#666;margin-top:8px;">你的绩效已达标，公司提供了晋升职位</div>';
+  html+='</div>';
+  html+='<div style="background:#f8f9fa;border-radius:8px;padding:12px 16px;margin-bottom:12px;">';
+  html+='<div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:#999;">当前</span><span>['+(career?career.icon:'💻')+'] '+(jobs[G.jobIndex]||jobs[0]).name+'</span></div>';
+  html+='<div style="text-align:center;font-size:20px;color:#3498db;margin:4px 0;">⬇️</div>';
+  html+='<div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:#27ae60;font-weight:600;">晋升至</span><span style="font-weight:600;color:#333;">'+nextJob.name+'</span></div>';
+  html+='<div style="font-size:12px;color:#999;text-align:center;margin-top:4px;">月薪 +'+fmtShort(salaryDiff/12)+'</div>';
+  html+='</div>';
+  html+='<div style="font-size:12px;color:#999;margin-bottom:12px;">';
+  html+='📊 绩效积分: <b style="color:#27ae60">'+G.performance+'</b>/'+PERF_THRESHOLD+' ✅<br>';
+  html+='⏱️ 在岗时长: <b>'+G.monthsAtJob+'</b>个月 ✅<br>';
+  html+='💡 晋升后performance清零，重新积累';
+  html+='</div>';
+  showModal({title:'晋升通知',content:html,cancelText:'再等等',confirmText:'申请晋升',success:function(res){
+    if(res.confirm) executePromotion();
+  }});
+}
+
+function executePromotion(){
+  var jobs=getCareerJobs();
+  var nextJob=jobs[G.jobIndex+1];
+  if(!nextJob) return;
+  G.jobIndex++;
+  G.monthsAtJob=0;
+  G.performance=0;
+  G._promotionOffered=false;
+  G._promotionMonth=0;
+  G.mood=clamp(G.mood+15,0,200);
+  if(!G.lifeEvents)G.lifeEvents=[];
+  G.lifeEvents.push({month:G.totalMonths,icon:'🏆',title:'晋升为'+nextJob.name,detail:'绩效达标晋升！月薪提升'+fmt(nextJob.salary/12),type:'career'});
+  saveGame();
+  showPromotionAnimation(nextJob);
+  refreshAll();
+  refreshWork();
+  showToast('🎉 恭喜晋升！mood+15，绩效已清零重新计算');
 }
 function formatEffectStr(eff){
   if(!eff)return '';
@@ -2964,8 +3186,26 @@ function refreshWork(){
   const jobs=getCareerJobs();
   const job=jobs[G.jobIndex]||jobs[0];
   let html,jobHtml='';
-  // V5: 职业信息卡片
-  if(G.career){
+  
+  // V6: 实习期状态（还没选行业）
+  if(G.isInternship && !G.hasChosenCareer){
+    var internProgress=Math.min(12,G.internshipMonths||0);
+    var internProgressPct=Math.round(internProgress/12*100);
+    html='<div class="list-item" style="background:linear-gradient(135deg,#fef9e7,#fdebd0);border-radius:8px;margin-bottom:8px;border:1px solid #f9e79f;">';
+    html+='<div class="list-info"><div class="name">🎓 实习生</div>';
+    html+='<div class="desc">实习期第 '+internProgress+'/12 个月</div>';
+    html+='<div style="margin-top:8px;height:8px;background:#f5d76e;border-radius:4px;overflow:hidden;">';
+    html+='<div style="height:100%;background:#f39c12;border-radius:4px;width:'+internProgressPct+'%;transition:width .3s;"></div>';
+    html+='</div>';
+    if(internProgress>=10) html+='<div style="margin-top:6px;font-size:11px;color:#e67e22;">⏰ 实习即将结束，准备好选择你的职业方向！</div>';
+    else if(internProgress>=6) html+='<div style="margin-top:6px;font-size:11px;color:#666;">💡 适应期已过一半，继续保持！</div>';
+    else html+='<div style="margin-top:6px;font-size:11px;color:#996633;">📚 熟悉工作环境，积累经验</div>';
+    html+='</div>';
+    html+='<span class="tag tag-orange">实习中</span></div>';
+    jobHtml='<div class="list-item" style="text-align:center;color:#888;"><div class="list-info"><div class="desc">实习期不显示具体岗位晋升路径。<br>实习结束后（第12个月）将弹出职业选择。<br>选择行业后开启<b style="color:#3498db;">绩效晋升系统</b>。</div></div></div>';
+  }
+  // V5: 职业信息卡片（已选行业）
+  else if(G.career){
     const career=CAREERS.find(c=>c.id===G.career);
     if(career){
       html='<div class="list-item" style="background:linear-gradient(135deg,#e8f4fd,#d6eaf8);border-radius:8px;margin-bottom:8px;">';
@@ -2974,38 +3214,79 @@ function refreshWork(){
       html+='<div style="margin-top:6px;">';
       career.traits.forEach(function(t){html+='<span class="career-trait-tag" style="margin-right:4px;">'+t+'</span>';});
       html+='</div></div></div>';
-    }
-  }
-  if(G.selfEmployed){
-    // 创业者状态：不显示职场晋升路径
-    html=(html||'')+'<div class="list-item"><div class="list-info"><div class="name">🚀 创业者</div><div class="desc">已辞职创业 | 收入来源：副业/房租/投资</div></div><span class="tag tag-golden">创业中</span></div>';
-    jobHtml='<div class="list-item" style="text-align:center;color:#888;"><div class="list-info"><div class="desc">你已经离开了职场，正在创业路上拼搏。<br>收入取决于你的生意和投资，而不是工资。</div></div></div>';
-  }else{
-    html=(html||'')+'<div class="list-item"><div class="list-info"><div class="name">'+job.name+'</div><div class="desc">月薪：'+fmt(job.salary/12)+' | 在岗：'+G.monthsAtJob+'个月</div></div><span class="tag tag-green">当前</span></div>';
-    jobs.forEach((j,i)=>{
-      const isCurrent=i===G.jobIndex;
-      const isNext=i===G.jobIndex+1;
-      const canPromote=isNext&&G.IQ>=j.requireIQ&&G.EQ>=j.requireEQ&&G.monthsAtJob>=j.requireMonths;
-      const locked=isNext&&!canPromote;
-      let action='';
-      if(isCurrent)action='<span class="tag tag-blue">在职</span>';
-      else if(canPromote)action='<button class="btn btn-primary btn-sm" onclick="tryPromote('+i+')">晋升</button>';
-      else if(i<G.jobIndex)action='<span class="text-sm text-muted">已过</span>';
-      else if(locked){
-        const reasons=[];
-        if(G.IQ<j.requireIQ)reasons.push('IQ≥'+j.requireIQ);
-        if(G.EQ<j.requireEQ)reasons.push('EQ≥'+j.requireEQ);
-        if(G.monthsAtJob<j.requireMonths)reasons.push('经验'+Math.ceil(j.requireMonths/12)+'年');
-        action='<span class="text-sm text-muted">'+reasons.join(' ')+'</span>';
+      
+      // V6: 跳槽按钮（工作满24个月解锁）
+      if(G.canChangeCareer){
+        html+='<div style="text-align:center;margin-top:8px;">';
+        html+='<button class="btn btn-warning btn-sm" onclick="changeCareer()">🔄 跳槽换行业</button>';
+        html+='<div style="font-size:10px;color:#999;margin-top:4px;">代价：mood-15, EQ-5 | 冷却12个月 | 绩效归零</div>';
+        html+='</div>';
+      } else if(G.careerChangeCooldown>0){
+        html+='<div style="text-align:center;margin-top:8px;font-size:11px;color:#999;">🔒 跳槽冷却中（剩余'+G.careerChangeCooldown+'个月）</div>';
+      } else if(!G.selfEmployed && G.monthsAtJob<24){
+        html+='<div style="text-align:center;margin-top:8px;font-size:11px;color:#999;">🔒 工作满24个月后可跳槽（当前'+G.monthsAtJob+'个月）</div>';
       }
-      jobHtml+='<div class="list-item"><div class="list-info"><div class="name">'+(isCurrent?'▶ ':'')+j.name+' <span class="text-sm text-muted">月薪'+fmtShort(j.salary/12)+'</span></div><div class="desc">要求：IQ≥'+j.requireIQ+' EQ≥'+j.requireEQ+(j.requireMonths?' 经验'+Math.ceil(j.requireMonths/12)+'年':'')+'</div></div><div class="list-action">'+action+'</div></div>';
-    });
+    }
+    
+    if(G.selfEmployed){
+      // 创业者状态：不显示职场晋升路径
+      html=(html||'')+'<div class="list-item"><div class="list-info"><div class="name">🚀 创业者</div><div class="desc">已辞职创业 | 收入来源：副业/房租/投资</div></div><span class="tag tag-golden">创业中</span></div>';
+      jobHtml='<div class="list-item" style="text-align:center;color:#888;"><div class="list-info"><div class="desc">你已经离开了职场，正在创业路上拼搏。<br>收入取决于你的生意和投资，而不是工资。</div></div></div>';
+    }else{
+      html=(html||'')+'<div class="list-item"><div class="list-info"><div class="name">'+job.name+'</div><div class="desc">月薪：'+fmt(job.salary/12)+' | 在岗：'+G.monthsAtJob+'个月</div></div><span class="tag tag-green">当前</span></div>';
+      
+      // V5.1: 绩效进度条
+      var perfThreshold=80;
+      var perfVal=G.performance||0;
+      var perfPct=Math.max(0,Math.min(100,perfVal/perfThreshold*100));
+      var perfColor=perfVal<0?'#e74c3c':perfVal<50?'#f39c12':perfVal<80?'#27ae60':'#f1c40f';
+      html+='<div style="background:#f8f9fa;border-radius:8px;padding:10px 14px;margin-top:8px;">';
+      html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">';
+      html+='<span style="font-size:12px;color:#666;">📊 月度绩效</span>';
+      html+='<span style="font-size:13px;font-weight:700;color:'+perfColor+'">'+perfVal+'/'+perfThreshold+'</span>';
+      html+='</div>';
+      html+='<div style="height:10px;background:#e0e0e0;border-radius:5px;overflow:hidden;">';
+      html+='<div style="height:100%;background:'+perfColor+';border-radius:5px;width:'+perfPct+'%;transition:width .5s;"></div>';
+      html+='</div>';
+      html+='<div style="font-size:10px;color:#999;margin-top:4px;">💡 每月在职场情景中做选择积累绩效，满'+perfThreshold+'可在满12个月后晋升</div>';
+      html+='</div>';
+      
+      jobs.forEach((j,i)=>{
+        const isCurrent=i===G.jobIndex;
+        const isNext=i===G.jobIndex+1;
+        const canPromote=isNext&&G.IQ>=j.requireIQ&&G.EQ>=j.requireEQ&&G.monthsAtJob>=j.requireMonths;
+        const locked=isNext&&!canPromote;
+        let action='';
+        if(isCurrent)action='<span class="tag tag-blue">在职</span>';
+        else if(canPromote)action='<button class="btn btn-primary btn-sm" onclick="tryPromote('+i+')">晋升</button>';
+        else if(i<G.jobIndex)action='<span class="text-sm text-muted">已过</span>';
+        else if(locked){
+          const reasons=[];
+          if(G.IQ<j.requireIQ)reasons.push('IQ≥'+j.requireIQ);
+          if(G.EQ<j.requireEQ)reasons.push('EQ≥'+j.requireEQ);
+          if(G.monthsAtJob<j.requireMonths)reasons.push('经验'+Math.ceil(j.requireMonths/12)+'年');
+          action='<span class="text-sm text-muted">'+reasons.join(' ')+'</span>';
+        }
+        jobHtml+='<div class="list-item"><div class="list-info"><div class="name">'+(isCurrent?'▶ ':'')+j.name+' <span class="text-sm text-muted">月薪'+fmtShort(j.salary/12)+'</span></div><div class="desc">要求：IQ≥'+j.requireIQ+' EQ≥'+j.requireEQ+(j.requireMonths?' 经验'+Math.ceil(j.requireMonths/12)+'年':'')+'</div></div><div class="list-action">'+action+'</div></div>';
+      });
+    }
   }
   document.getElementById('jobList').innerHTML=jobHtml;
   // V5: 更新当前职业卡片
   var cjEl=document.getElementById('currentJob');
   if(cjEl)cjEl.innerHTML=html||'';
   refreshFamily();
+}
+
+// V6: 跳槽功能（更新代价：mood-15, EQ-5）
+function changeCareer(){
+  // 确认弹窗
+  if(!confirm('确定要跳槽换行业吗？\n代价：mood-15, EQ-5\n冷却：12个月\nperformance归零，monthsAtJob归0')){
+    return;
+  }
+  // 弹出行业选择（跳槽模式）
+  document.getElementById('gameApp').style.display='none';
+  showCareerSelection('change');
 }
 function tryPromote(jobIndex){
   var jobs=getCareerJobs();
@@ -8457,6 +8738,16 @@ advanceMonth=function(){
   }
   if(Math.random()<0.10){
     triggerChoiceEvent();
+  }
+  // V5.1: 绩效月度工作情景（10进100%触发，在advanceMonth之后）
+  if(G._workScenarioThisMonth && !G.__fastForwarding && !G._perfAwardedThisMonth && !G.selfEmployed && G.hasChosenCareer && !G.isInternship){
+    G._perfAwardedThisMonth=true;
+    generateWorkScenario();
+  }
+  // 快进模式：随机积累绩效
+  if(G._workScenarioThisMonth && G.__fastForwarding && !G.selfEmployed && G.hasChosenCareer && !G.isInternship){
+    G._perfAwardedThisMonth=true;
+    G.performance += Math.floor(Math.random() * 20) - 5; // -5~+14随机积累
   }
   // checkNPCEvents已在advanceMonth内部调用
 };
