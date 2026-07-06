@@ -4257,6 +4257,15 @@ function openProactiveChat(npcId){
     const hist=G.phone.chatHistory[npcId];
     if(hist.length>0)hist[hist.length-1]._playerRead=true;
   }
+  // Mark any phone threads from this NPC as read (修复红点不消)
+  if(G.phone&&G.phone.threads){
+    G.phone.threads.forEach(t=>{
+      if(t.npcId===npcId && t.status==='unread'){
+        t.status='reading';
+        t.readMonth=G.totalMonths;
+      }
+    });
+  }
   // Set header
   document.getElementById('chatName').textContent=p.avatar+' '+p.name;
   const body=document.getElementById('chatBody');
