@@ -1444,7 +1444,7 @@ const LUXURY_ITEMS=[
 const FORBES_NAMES=['马化腾','马云','钟睒睒','张一鸣','黄峥','李嘉诚','刘强东','雷军','王健林','李彦宏'];
 
 // ===== NPC System =====
-const NPCS={mom:{name:'妈妈',avatar:'👩'},dad:{name:'爸爸',avatar:'👨'},boss:{name:'张总',avatar:'👨‍💼'},colleague:{name:'小李',avatar:'👩‍💻'},hr:{name:'HR王姐',avatar:'👩‍💼'},bestie:{name:'老王',avatar:'🍻'},classmate:{name:'小张',avatar:'🎓'},mysterious:{name:'神秘人',avatar:'🎭'},banker:{name:'刘经理',avatar:'🏦'},realtor:{name:'小陈',avatar:'🏠'},spouse:{name:'配偶',avatar:'💑'},child:{name:'孩子',avatar:'👦'},delivery:{name:'快递',avatar:'📦'},system:{name:'系统',avatar:'📱'},wife:{name:'老婆',avatar:'👩'},husband:{name:'老公',avatar:'👨'},gymCoach:{name:'健身教练',avatar:'🏋️'},neighbor:{name:'邻居老赵',avatar:'🧑‍🦳'},exColleague:{name:'前同事小周',avatar:'👨‍🔬'},mentor:{name:'导师李教授',avatar:'🧑‍🏫'},scammer:{name:'神秘号码',avatar:'📱'}};
+const NPCS={mom:{name:'妈妈',avatar:'👩'},dad:{name:'爸爸',avatar:'👨'},boss:{name:'张总',avatar:'👨‍💼'},colleague:{name:'小李',avatar:'👩‍💻'},hr:{name:'HR王姐',avatar:'👩‍💼'},bestie:{name:'老王',avatar:'🍻'},classmate:{name:'小张',avatar:'🎓'},mysterious:{name:'神秘人',avatar:'🎭'},banker:{name:'刘经理',avatar:'🏦'},realtor:{name:'小陈',avatar:'🏠'},spouse:{name:'小徐',avatar:'💑'},child:{name:'孩子',avatar:'👦'},delivery:{name:'快递',avatar:'📦'},system:{name:'系统',avatar:'📱'},wife:{name:'小徐',avatar:'👩'},husband:{name:'小徐',avatar:'👨'},gymCoach:{name:'健身教练',avatar:'🏋️'},neighbor:{name:'邻居老赵',avatar:'🧑‍🦳'},exColleague:{name:'前同事小周',avatar:'👨‍🔬'},mentor:{name:'导师李教授',avatar:'🧑‍🏫'},scammer:{name:'神秘号码',avatar:'📱'}};
 const PHONE_MESSAGES=[
 // ====== FAMILY ======
 {id:'mom_nag',npc:'mom',type:'wechat',ageMin:23,ageMax:35,chance:0.12,cooldown:24,rounds:[
@@ -4360,14 +4360,14 @@ const CHAT_TOPICS=[
     {npc:['投资型产品，50万一套，签15年租约，稳赚不赔。好多客户都买了'],opts:[{text:'我看看',fx:{mood:3}},{text:'风险太大了',fx:{mood:2,IQ:3}}]},
   ]},
 ]},
-// ---- 配偶/老婆 ----
-{npc:'spouse',label:'配偶',topics:[
+// ---- 小徐 ----
+{npc:'spouse',label:'小徐',topics:[
   {title:'💬 今晚吃什么',cond(){return G.spouse;},rounds:[
     {npc:['你回来啦！今晚想吃什么？'],opts:[{text:'随便，你做什么我吃什么',fx:{mood:8}},{text:'出去吃吧，我请客',fx:{cash:-500,mood:10}}]},
     {npc:['那我做个红烧肉吧，你最爱吃的'],opts:[{text:'好嘞！',fx:{mood:10}},{text:'又吃这个...',fx:{mood:-3}}]},
   ]},
   {title:'聊聊未来',cond(){return G.spouse&&G.totalMonths>24;},rounds:[
-    {npc:['老公/老婆，你觉得我们要不要换个大点的房子？'],opts:[{text:'好啊，我也有这想法',fx:{mood:5}},{text:'现在这样挺好的',fx:{mood:2}},{text:'等攒够钱再说',fx:{mood:3}}]},
+    {npc:['小徐，你觉得我们要不要换个大点的房子？'],opts:[{text:'好啊，我也有这想法',fx:{mood:5}},{text:'现在这样挺好的',fx:{mood:2}},{text:'等攒够钱再说',fx:{mood:3}}]},
     {npc:['嗯，不管怎样，有你在就好'],opts:[{text:'我也是',fx:{mood:15,EQ:5}}]},
   ]},
   {title:'吵架了',cond(){return G.spouse;},rounds:[
@@ -4432,7 +4432,7 @@ const NPC_PERSONALITIES={
     greetings:[{text:'你好？谁啊？',tag:'接电话'}],
     responses:{接电话:['您好，这里是XX银行，您的账户存在异常','恭喜您中奖100万！请先缴纳手续费','您的快递丢失了，需要理赔']},
     followups:['请按1转接人工客服...','请把资金转入安全账户...','需先缴纳手续费5000元...']},
-  spouse:{name:'配偶',avatar:'💑',traits:['亲密','唠叨','需要陪伴','偶尔吵架'],
+  spouse:{name:'小徐',avatar:'💑',traits:['亲密','唠叨','需要陪伴','偶尔吵架'],
     greetings:[{text:'亲爱的，今天辛苦了',tag:'温情'},{text:'我们聊聊吧',tag:'谈心'},{text:'今晚吃什么？',tag:'日常'},{text:'最近压力好大',tag:'倾诉'}],
     responses:{温情:['你回来啦！','你也是，别太累了','有你在真好'],谈心:['怎么了？','你说，我听着','我们确实该好好聊聊'],日常:['你想吃什么？我做','出去吃吧，我请客','冰箱里有菜，随便做点'],倾诉:['怎么了？跟我说说','不管怎样我都在','别太累了，身体要紧']},
     followups:['你最近回来就玩手机，也不陪我说话','我们能不能换个大点的房子？','你记不记得今天是什么日子？','我妈说让我们周末回去吃饭','有你在真好，不管怎样']},
@@ -6519,7 +6519,7 @@ const AI_CHAT_CONFIG={
 const NPC_RELATIONS={
   mom:'妈妈',dad:'爸爸',bestie:'好兄弟/闺蜜',colleague:'同事',boss:'领导',
   classmate:'同学',banker:'银行理财经理',realtor:'房产中介',neighbor:'邻居',
-  exColleague:'前同事',mentor:'人生导师',gymCoach:'健身教练',scammer:'骗子（用套路话术）',spouse:'配偶'
+  exColleague:'前同事',mentor:'人生导师',gymCoach:'健身教练',scammer:'骗子（用套路话术）',spouse:'小徐'
 };
 
 // Initialize chatHistory if not exists
@@ -7987,7 +7987,7 @@ function buildPhonePrompt(ctx){
     exColleague: {name:'前同事小周',traits:['怀旧','感慨','信息量大','爱比较'],topics:['以前公司','跳槽','近况','行业变化']},
     mentor: {name:'李教授',traits:['睿智','温和','惜字如金','有深度'],topics:['人生建议','职业规划','深度思考']},
     gymCoach: {name:'健身教练',traits:['热情','直率','爱劝人健身','八卦体质'],topics:['训练计划','健身房八卦','减脂增肌']},
-    spouse: {name:'配偶',traits:['亲密','唠叨','需要陪伴','偶尔吵架'],topics:['日常','陪伴','生活琐事','情感']},
+    spouse: {name:'小徐',traits:['亲密','唠叨','需要陪伴','偶尔吵架'],topics:['日常','陪伴','生活琐事','情感']},
     child: {name:'孩子',traits:['天真','依赖','成长','叛逆'],topics:['学校','成绩','要钱','叛逆']},
     mysterious: {name:'神秘人',traits:['神秘','信息量大','偶尔有用'],topics:['行业内幕','赚钱机会','警告']},
     campusGirl: {name:'小雨',traits:['活泼','可爱','有点小脾气','会撒娇','直率'],topics:['日常','学习','约会','校园生活','情感','八卦','生气']}
@@ -10451,7 +10451,7 @@ function showContactDetail(friendId){
     exColleague: {name: 'tag-blue', label: '前同事'},
     mentor: {name: 'tag-education', label: '导师'},
     gymCoach: {name: 'tag-green', label: '健身'},
-    spouse: {name: 'tag-orange', label: '配偶'},
+    spouse: {name: 'tag-orange', label: '小徐'},
     child: {name: 'tag-green', label: '子女'}
   };
   
