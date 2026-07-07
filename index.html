@@ -1790,6 +1790,12 @@ function defaultState(){
     performance:0,           // 绩效积分 (-∞~∞, 负值表示表现差)
     lastPerfChange:0,        // 上次绩效变动值（弹窗用）
     tradedStocks:0,recentTrades:[],watchlist:[],_perfLog:[],_perfAwardedThisMonth:false,
+    // V6.2: Offer系统
+    reputation:100,          // 职场信誉 (0-100)
+    offers:[],               // 收到的offer列表
+    breachCount:0,           // 违约次数
+    lastJobChangeMonth:-999, // 上次跳槽月份
+    offerCooldown:0,         // offer触发冷却
   };
 }
 
@@ -2741,6 +2747,181 @@ function triggerInternshipEvent(){
   }
 }
 
+// ===== V6.2: Offer系统 =====
+// 公司名池
+const OFFER_COMPANIES=['腾讯','阿里巴巴','字节跳动','美团','京东','拼多多','百度','网易','小米','华为','快手','滴滴','小红书','B站','特斯拉','苹果','微软','谷歌','Meta','英伟达','商汤','旷视','依图','云从','科大讯飞','大疆','比亚迪','宁德时代','恒瑞医药','药明康德','迈瑞医疗','好未来','新东方','猿辅导','作业帮','得到','喜马拉雅','蜻蜓FM','芒果TV','爱奇艺','优酷','腾讯视频','万达','融创','万科','碧桂园','链家','贝壳','招商','中信','中金','华泰','高瓴','红杉','IDG','经纬','启明','源码','高榕','DCM','光速','软银'];
+const OFFER_TITLES=['高级工程师','技术专家','架构师','产品总监','运营总监','市场总监','数据分析师','算法工程师','前端开发','后端开发','全栈开发','移动端开发','测试开发','运维开发','安全工程师','数据库管理员','项目经理','技术经理','研发总监','CTO助理'];
+
+// 尝试生成offer
+function tryGenerateOffer(){
+  if(!G.career) return;
+  const career=CAREERS.find(c=>c.id===G.career);
+  if(!career) return;
+  // 信誉越低，offer概率和薪资都越低
+  const repFactor=G.reputation/100;
+  const perfBonus=G.performance>=80?1.15:G.performance>=50?1.05:1.0;
+  const baseSalary=career.startSalary*(0.8+Math.random()*0.8)*perfBonus*(0.7+repFactor*0.3);
+  const salary=Math.round(baseSalary/10000)*10000;
+  const company=OFFER_COMPANIES[randInt(0,OFFER_COMPANIES.length-1)];
+  const title=OFFER_TITLES[randInt(0,OFFER_TITLES.length-1)];
+  const offer={
+    id:'offer_'+G.totalMonths+'_'+Math.random().toString(36).substr(2,5),
+    company:company,
+    title:title,
+    salary:salary,
+    career:G.career,
+    level:G.jobIndex+1,
+    receivedMonth:G.totalMonths,
+    expireMonth:G.totalMonths+3, // 3个月内有效
+    bonus:Math.round(salary*0.15*(0.5+Math.random()*0.5)), // 签字费
+    stock:Math.round(salary*0.2*(0+Math.random()*1)), // 股票期权
+  };
+  G.offers.push(offer);
+  // 通知
+  notifyAsMessage('system','📨 你收到了一份来自【'+company+'】的Offer：'+title+'，年薪¥'+fmt(salary));
+  saveGame();
+  // 刷新work tab
+  if(typeof refreshWork==='function') refreshWork();
+}
+
+// 更新offer状态（过期清理）
+function updateOfferState(){
+  if(!G.offers||!G.offers.length) return;
+  const before=G.offers.length;
+  G.offers=G.offers.filter(o=>{
+    if(G.totalMonths>o.expireMonth) return false;
+    return true;
+  });
+  if(G.offers.length!==before) saveGame();
+}
+
+// 计算毁约/跳槽惩罚
+function calculateBreachPenalty(monthsAtJob){
+  // 工作不满12个月：重罚
+  // 12-24个月：中罚
+  // 24-72个月：轻罚
+  // 72个月以上：免罚
+  let repPenalty=0;
+  let fine=0;
+  let desc='';
+  if(monthsAtJob<12){
+    repPenalty=Math.round(20+Math.random()*10); // 扣20-30信誉
+    fine=Math.round((monthsAtJob<6?3:2)*getMonthlySalary()); // 3个月或2个月工资罚款
+    desc='入职不足1年毁约，信誉重罚+高额罚款';
+  } else if(monthsAtJob<24){
+    repPenalty=Math.round(10+Math.random()*5); // 扣10-15信誉
+    fine=Math.round(1*getMonthlySalary()); // 1个月工资罚款
+    desc='入职1-2年跳槽，信誉中罚+罚款';
+  } else if(monthsAtJob<72){
+    repPenalty=Math.round(3+Math.random()*4); // 扣3-7信誉
+    fine=0;
+    desc='入职2-6年跳槽，信誉轻罚无罚款';
+  } else {
+    repPenalty=0;
+    fine=0;
+    desc='入职6年以上，信誉无损（资深社招）';
+  }
+  return {repPenalty,fine,desc};
+}
+
+// 获取当前月薪
+function getMonthlySalary(){
+  if(!G.career) return 5000;
+  const jobs=getCareerJobs();
+  const job=jobs[G.jobIndex]||jobs[0];
+  return job.salary/12;
+}
+
+// 接受offer
+function acceptOffer(offerId){
+  const idx=G.offers.findIndex(o=>o.id===offerId);
+  if(idx<0) return;
+  const offer=G.offers[idx];
+  const monthsAtJob=G.monthsAtJob;
+  // 计算惩罚
+  const penalty=calculateBreachPenalty(monthsAtJob);
+  // 执行惩罚
+  G.reputation=clamp(G.reputation-penalty.repPenalty,0,100);
+  if(penalty.fine>0){
+    G.cash-=penalty.fine;
+  }
+  G.breachCount++;
+  G.lastJobChangeMonth=G.totalMonths;
+  // 切换工作
+  G.career=offer.career;
+  G.jobIndex=offer.level-1;
+  if(G.jobIndex<0) G.jobIndex=0;
+  G.monthsAtJob=0;
+  G.performance=0;
+  G.salaryBonus=0;
+  G._promotionOffered=false;
+  G._promotionMonth=0;
+  G._perfAwardedThisMonth=false;
+  // 签字费
+  if(offer.bonus>0) G.cash+=offer.bonus;
+  // 移除已接受的offer
+  G.offers.splice(idx,1);
+  // 记录
+  if(!G.lifeEvents) G.lifeEvents=[];
+  G.lifeEvents.push({month:G.totalMonths,icon:'📨',title:'接受Offer加入'+offer.company,detail:offer.title+' · ¥'+fmt(offer.salary)+'/年'+(penalty.repPenalty>0?' · 信誉-'+penalty.repPenalty:'')+(penalty.fine>0?' · 罚款¥'+fmt(penalty.fine):''),type:'neutral'});
+  // 通知
+  let msg='📨 你加入了【'+offer.company+'】担任'+offer.title+'！';
+  if(offer.bonus>0) msg+=' 签字费¥'+fmt(offer.bonus);
+  if(penalty.repPenalty>0) msg+=' | 信誉-'+penalty.repPenalty;
+  if(penalty.fine>0) msg+=' | 违约金¥'+fmt(penalty.fine);
+  showToast(msg);
+  saveGame();
+  if(typeof refreshWork==='function') refreshWork();
+  if(typeof refreshAll==='function') refreshAll();
+}
+
+// 拒绝offer（正常选择，不扣信誉）
+function declineOffer(offerId){
+  const idx=G.offers.findIndex(o=>o.id===offerId);
+  if(idx<0) return;
+  const offer=G.offers[idx];
+  G.offers.splice(idx,1);
+  showToast('📨 你拒绝了【'+offer.company+'】的Offer');
+  saveGame();
+  if(typeof refreshWork==='function') refreshWork();
+}
+
+// 显示offer详情弹窗
+function showOfferDetail(offerId){
+  const offer=G.offers.find(o=>o.id===offerId);
+  if(!offer) return;
+  const penalty=calculateBreachPenalty(G.monthsAtJob);
+  const career=CAREERS.find(c=>c.id===offer.career);
+  let content='<div style="text-align:center;margin-bottom:16px;">';
+  content+='<div style="font-size:36px;margin-bottom:8px;">📨</div>';
+  content+='<div style="font-size:18px;font-weight:bold;color:#333;">'+offer.company+'</div>';
+  content+='<div style="font-size:14px;color:#666;margin-top:4px;">'+offer.title+'</div>';
+  content+='</div>';
+  content+='<div style="background:#f8f9fa;border-radius:8px;padding:12px;margin-bottom:12px;">';
+  content+='<div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span>💰 年薪</span><b style="color:#27ae60;">¥'+fmt(offer.salary)+'</b></div>';
+  content+='<div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span>💰 月薪</span><b>¥'+fmt(Math.round(offer.salary/12))+'</b></div>';
+  if(offer.bonus>0) content+='<div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span>🎁 签字费</span><b style="color:#27ae60;">¥'+fmt(offer.bonus)+'</b></div>';
+  if(offer.stock>0) content+='<div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span>📈 股票期权</span><b>¥'+fmt(offer.stock)+'/年</b></div>';
+  content+='<div style="display:flex;justify-content:space-between;"><span>🏷️ 行业</span><b>'+(career?career.name:'未知')+'</b></div>';
+  content+='</div>';
+  // 信誉影响预览
+  content+='<div style="background:#fff3e0;border-radius:8px;padding:12px;margin-bottom:12px;border:1px solid #ffe0b2;">';
+  content+='<div style="font-size:13px;font-weight:bold;color:#e65100;margin-bottom:6px;">⚠️ 跳槽影响预测</div>';
+  content+='<div style="font-size:12px;color:#666;line-height:1.6;">';
+  content+='当前在岗时间：<b>'+G.monthsAtJob+'个月</b><br>';
+  content+='信誉分：<b>'+G.reputation+'</b> → <b style="color:'+(penalty.repPenalty>10?'#e74c3c':penalty.repPenalty>0?'#f39c12':'#27ae60')+'">'+(G.reputation-penalty.repPenalty)+'</b>'+(penalty.repPenalty>0?' (-'+penalty.repPenalty+')':'')+'<br>';
+  if(penalty.fine>0) content+='违约金：<b style="color:#e74c3c;">¥'+fmt(penalty.fine)+'</b><br>';
+  content+='<span style="color:#999;font-size:11px;">'+penalty.desc+'</span>';
+  content+='</div></div>';
+  // 过期时间
+  const remain=offer.expireMonth-G.totalMonths;
+  content+='<div style="font-size:11px;color:#999;text-align:center;margin-bottom:12px;">⏰ 剩余'+remain+'个月有效期</div>';
+  showModal({title:'Offer详情',content:content,showCancel:true,confirmText:'✅ 接受Offer',cancelText:'❌ 拒绝',success(res){
+    if(res.confirm) acceptOffer(offerId);
+    else declineOffer(offerId);
+  }});
+}
+
 async function fastForward(years){
   G.events=[];
   G.__fastForwarding=true;
@@ -3366,6 +3547,38 @@ function refreshWork(){
       html+='</div>';
       html+='<div style="font-size:10px;color:#999;margin-top:4px;">💡 每月在职场情景中做选择积累绩效，满'+perfThreshold+'可在满12个月后晋升</div>';
       html+='</div>';
+      
+      // V6.2: Offer收件箱
+      if(G.offers&&G.offers.length>0){
+        html+='<div style="background:#fff8e1;border-radius:8px;padding:12px 14px;margin-top:8px;border:1px solid #ffe082;">';
+        html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">';
+        html+='<span style="font-size:13px;font-weight:700;color:#f57f17;">📨 Offer收件箱 <span style="background:#ff6f00;color:#fff;font-size:10px;padding:1px 6px;border-radius:8px;">'+G.offers.length+'</span></span>';
+        html+='<span style="font-size:10px;color:#999;">信誉: '+G.reputation+'/100</span>';
+        html+='</div>';
+        G.offers.forEach(function(o){
+          var remain=o.expireMonth-G.totalMonths;
+          var salaryDiff=o.salary-job.salary;
+          var diffColor=salaryDiff>0?'#27ae60':salaryDiff<0?'#e74c3c':'#666';
+          var diffIcon=salaryDiff>0?'📈':salaryDiff<0?'📉':'➡️';
+          html+='<div style="background:#fff;border-radius:6px;padding:8px 10px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="showOfferDetail(\''+o.id+'\')">';
+          html+='<div>';
+          html+='<div style="font-size:12px;font-weight:600;color:#333;">'+o.company+' · '+o.title+'</div>';
+          html+='<div style="font-size:11px;color:#666;margin-top:2px;">💰 ¥'+fmt(o.salary)+'/年 <span style="color:'+diffColor+'">'+diffIcon+''+(salaryDiff>0?'+':'')+fmt(salaryDiff)+'</span> · ⏰ '+remain+'个月</div>';
+          html+='</div>';
+          html+='<span style="font-size:11px;color:#ff6f00;font-weight:600;">查看 ›</span>';
+          html+='</div>';
+        });
+        html+='</div>';
+      } else {
+        // 显示信誉状态
+        html+='<div style="background:#f8f9fa;border-radius:8px;padding:10px 14px;margin-top:8px;">';
+        html+='<div style="display:flex;justify-content:space-between;align-items:center;">';
+        html+='<span style="font-size:12px;color:#666;">📨 Offer收件箱</span>';
+        html+='<span style="font-size:11px;color:#999;">信誉: <b style="color:'+(G.reputation>=80?'#27ae60':G.reputation>=50?'#f39c12':'#e74c3c')+'">'+G.reputation+'</b>/100 · 暂无offer</span>';
+        html+='</div>';
+        html+='<div style="font-size:10px;color:#999;margin-top:4px;">💡 高绩效+高信誉=更多好offer</div>';
+        html+='</div>';
+      }
       
       jobs.forEach((j,i)=>{
         const isCurrent=i===G.jobIndex;
@@ -8869,6 +9082,18 @@ advanceMonth=function(){
   }
   // 更新实习倒计时提示
   if(typeof updateInternshipHint==='function') updateInternshipHint();
+  // V6.2: Offer系统 - 每月触发（在advanceMonth hook中调用）
+  if(!G.__fastForwarding && !G.selfEmployed && G.hasChosenCareer && !G.isInternship && G.offerCooldown<=0){
+    if(Math.random()<0.20 + (G.reputation>=80?0.10:0) + (G.performance>=50?0.05:0)){
+      tryGenerateOffer();
+    }
+  }
+  // V6.2: 更新offer冷却和过期
+  updateOfferState();
+  // V6.2: 信誉自然恢复（每月+0.5，上限100）
+  if(G.reputation<100){
+    G.reputation=Math.min(100,G.reputation+0.5);
+  }
   // checkNPCEvents已在advanceMonth内部调用
 };
 
