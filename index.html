@@ -746,6 +746,52 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 .ws-result.show{display:block;}
 .ws-close-btn{display:block;width:100%;margin-top:12px;padding:10px;background:#f5f5f5;border:none;border-radius:8px;font-size:14px;color:#666;cursor:pointer;}
 
+
+/* ====== Social System: Friend Detail ====== */
+.friend-detail-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.75);z-index:6500;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s;}
+.friend-detail-overlay.show{opacity:1;pointer-events:auto;}
+.friend-detail-card{background:#fff;border-radius:20px;width:90%;max-width:380px;max-height:85vh;overflow-y:auto;transform:translateY(30px);transition:transform .35s cubic-bezier(.34,1.56,.64,1);}
+.friend-detail-overlay.show .friend-detail-card{transform:translateY(0);}
+.fd-header{text-align:center;padding:24px 20px 16px;background:linear-gradient(135deg,#667eea,#764ba2);border-radius:20px 20px 0 0;color:#fff;}
+.fd-avatar{width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 10px;border:3px solid rgba(255,255,255,.4);}
+.fd-name{font-size:20px;font-weight:700;}
+.fd-company{font-size:13px;opacity:.8;margin-top:4px;}
+.fd-body{padding:16px 20px;}
+.fd-stat-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f5f5f5;font-size:13px;}
+.fd-stat-label{color:#999;}
+.fd-stat-value{font-weight:600;color:#333;}
+.fd-rel-bar-wrap{padding:10px 0;}
+.fd-rel-label{display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;}
+.fd-rel-name{color:#666;}
+.fd-rel-val{font-weight:600;}
+.fd-bar{height:10px;background:#f0f0f0;border-radius:5px;overflow:hidden;}
+.fd-bar-fill{height:100%;border-radius:5px;transition:width .5s;}
+.rel-red{background:linear-gradient(90deg,#e74c3c,#ff6b6b);}
+.rel-yellow{background:linear-gradient(90deg,#f39c12,#f1c40f);}
+.rel-green{background:linear-gradient(90deg,#27ae60,#2ecc71);}
+.rel-purple{background:linear-gradient(90deg,#9b59b6,#c39bd3);}
+.fd-tags{display:flex;flex-wrap:wrap;gap:6px;padding:10px 0;}
+.fd-tag{padding:4px 10px;border-radius:12px;font-size:11px;font-weight:500;}
+.tag-tech{background:#d6eaf8;color:#1a5276;}
+.tag-finance{background:#fef9e7;color:#7d6608;}
+.tag-education{background:#fadbd8;color:#922b21;}
+.tag-creative{background:#fdebd0;color:#935116;}
+.tag-gov{background:#d4efdf;color:#1e8449;}
+.tag-sales{background:#d6eaf8;color:#1a5276;}
+.tag-legal{background:#f5eef8;color:#6c3483;}
+.tag-manager{background:#fadbd8;color:#922b21;}
+.tag-investor{background:#fef9e7;color:#7d6608;}
+.tag-orange{background:#fdebd0;color:#935116;}
+.tag-golden{background:#fef9e7;color:#7d6608;}
+.tag-red{background:#fadbd8;color:#922b21;}
+.tag-blue{background:#d6eaf8;color:#1a5276;}
+.tag-green{background:#d5f5e3;color:#1e8449;}
+.fd-notes{margin-top:10px;padding:10px;background:#f8f9fa;border-radius:8px;font-size:13px;color:#555;line-height:1.5;min-height:40px;}
+.fd-actions{display:flex;gap:10px;padding:12px 20px 20px;}
+.fd-actions .btn{flex:1;}
+.contact-detail-btn{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:14px;transition:background .15s;flex-shrink:0;}
+.contact-detail-btn:active{background:#e8f4fd;}
+
 </style>
 </head>
 <body>
@@ -1736,7 +1782,7 @@ function defaultState(){
     activeNews:[],decisionCount:0,
     unlockedTiers:{},luxuryItems:[],
     forbesShown:false,shortPositions:{},phone:{threads:[],moments:[],aiMoments:[],notifications:[],flags:{},lastTriggerMonth:0,nextId:1,chatHistory:{}},
-    lifeEvents:[],socialContacts:[],relationships:{},friendGroups:[],friendGroupings:{},
+    lifeEvents:[],socialContacts:[],relationships:{},friendGroups:[],friendGroupings:{},lastSocialCheck:0,
     savings:0,careerBranches:[],
     romance:{npcId:null,stage:'none',affection:0,metMonth:0,lastInteraction:0},
     scheduledDates:[],
@@ -2587,6 +2633,8 @@ async function advanceMonth(){
   }
   // Phone triggers
   if(!G.gameOver){initPhoneState();triggerFollowUps();triggerPhoneMessages();processScheduledDates().catch(e=>console.error("scheduledDates error:",e));triggerParentHelp();if(Math.random()<0.50)triggerAIMoments().catch(()=>{});if(Math.random()<0.40)triggerMoments();generateNotifications();generateGossipEvent();triggerGathering();}
+  // Social system: monthly trigger
+  if(!G.gameOver && G.totalMonths >= G.lastSocialCheck + 1){ triggerMonthlySocial(); G.lastSocialCheck = G.totalMonths; }
   // 社交拓展：每月有概率触发偶遇场景
   if(!G.gameOver && !G._encounter && !G._pendingDecision){
     tryTriggerEncounter();
@@ -4940,7 +4988,7 @@ function initSocialContacts(){
 // ===== 场景触发逻辑 =====
 function tryTriggerEncounter(){
   initSocialContacts();
-  if(G.socialContacts.length >= 8) return;
+  if(G.socialContacts.length >= 200) return;
   if(G._encounterActive) return;
   if(G._pendingDecision) return;
   var triggers = [
@@ -5206,19 +5254,19 @@ function injectDynamicContacts(){
       NPC_PERSONALITIES[c.id] = {
         name: c.name,
         avatar: c.avatar,
-        traits: c.traits,
+        traits: c.traits || ['友善'],
         greetings: [{text:'嘿，最近怎么样？',tag:'日常'},{text:'有空聊聊？',tag:'叙旧'},{text:'最近忙什么？',tag:'近况'}],
         responses: {
-          '日常': c.responses.slice(),
-          '叙旧': c.followups.slice(),
-          '近况': c.followups.slice()
+          '日常': (c.responses || ['嗯...','是吗？','这样啊']).slice(),
+          '叙旧': (c.followups || ['哈哈！','真的吗？','有意思']).slice(),
+          '近况': (c.followups || ['还行','忙工作','老样子']).slice()
         },
-        followups: c.followups
+        followups: c.followups || ['嗯','哦','这样啊']
       };
       NPC_STYLE_INSTRUCTIONS[c.id] = 
         '你是玩家的'+relDef.label+'，'+c.name+'。'+
-        '你们在第'+c.metMonth+'个月'+c.metWhere+'。'+
-        '你的性格是'+c.traits.join('、')+'。'+
+        '你们在第'+(c.metMonth||0)+'个月'+(c.metWhere||'认识')+'。'+
+        '你的性格是'+((c.traits&&c.traits.length)?c.traits.join('、'):'友善')+'。'+
         '关系类型：'+relDef.label+'。'+
         '亲密值：'+rel.intimacy+'/100，信任值：'+rel.trust+'/100，好感度：'+rel.affection+'/100。'+
         '已聊天'+(rel.chatCount||0)+'次，约会'+(rel.dateCount||0)+'次。'+
@@ -5231,8 +5279,8 @@ function injectDynamicContacts(){
       const relDef=RELATION_TYPES[rel.type]||RELATION_TYPES.stranger;
       NPC_STYLE_INSTRUCTIONS[c.id] = 
         '你是玩家的'+relDef.label+'，'+c.name+'。'+
-        '你们在第'+c.metMonth+'个月'+c.metWhere+'。'+
-        '你的性格是'+c.traits.join('、')+'。'+
+        '你们在第'+(c.metMonth||0)+'个月'+(c.metWhere||'认识')+'。'+
+        '你的性格是'+((c.traits&&c.traits.length)?c.traits.join('、'):'友善')+'。'+
         '关系类型：'+relDef.label+'。'+
         '亲密值：'+rel.intimacy+'/100，信任值：'+rel.trust+'/100，好感度：'+rel.affection+'/100。'+
         '已聊天'+(rel.chatCount||0)+'次，约会'+(rel.dateCount||0)+'次。'+
@@ -5428,6 +5476,7 @@ function renderContacts(){
   const el=document.getElementById('phone-contacts');if(!el)return;
   if(!G.phone)G.phone={threads:[],moments:[],notifications:[],flags:{},lastTriggerMonth:0,nextId:1,activeChats:[]};
   if(!G.phone.activeChats)G.phone.activeChats=[];
+  if(G.lastSocialCheck===undefined)G.lastSocialCheck=0;
   initSocialContacts();
   
   // Build manage bar
@@ -5507,7 +5556,7 @@ function renderContacts(){
       html+='<div class="contact-info"><div class="contact-name">'+p.name+' <span style="font-size:11px;color:'+relDef.color+';">'+relDef.icon+' '+relDef.label+'</span></div>';
       html+='<div class="contact-status">亲密度 '+rel.intimacy+' · 信任 '+rel.trust+' · 好感 '+(rel.affection||0)+' <span class="contact-group-badge" onclick="event.stopPropagation();showGroupSelector(\''+npcId+'\')" style="background:'+(curGrp?curGrp.color:'#95a5a6')+'22;color:'+(curGrp?curGrp.color:'#95a5a6')+';margin-left:4px;">'+(curGrp?curGrp.icon:'')+' '+(curGrp?curGrp.name:'点头之交')+'</span></div></div>';
       if(hasNew)html+='<div style="width:8px;height:8px;border-radius:50%;background:#27ae60;flex-shrink:0;"></div>';
-      html+='<div class="contact-arrow">›</div></div>';
+      html+='<div class="contact-detail-btn" onclick="event.stopPropagation();showContactDetail(\''+npcId+'\')" style="font-size:14px;padding:2px 6px;cursor:pointer;color:#3498db;font-weight:700;">ℹ️</div>';html+='<div class="contact-arrow">›</div></div>';
     });
     html+='</div>';
   });
@@ -6010,6 +6059,7 @@ function addPhoneThread(tpl){
 function scheduleContactGreeting(contact){
   if(!G.phone)return;
   if(!G.phone.activeChats)G.phone.activeChats=[];
+  if(G.lastSocialCheck===undefined)G.lastSocialCheck=0;
   // 防止重复
   if(G.phone.activeChats.some(c=>c.npcId===contact.id&&c.status==='active'))return;
   // 多样化打招呼模板
@@ -9806,6 +9856,635 @@ async function generateEncounterAIResponse(sceneKey, npcName, choiceText, choice
 
 
 
+// ================================================================
+// Social System Module for Life Simulator
+// Monthly triggers, AI interactions, network monetization
+// ================================================================
+
+// ========== Monthly Social Trigger Engine ==========
+function triggerMonthlySocial(){
+  if(G.gameOver) return;
+  initSocialContacts();
+  var month = getMonth();
+  var contacts = G.socialContacts || [];
+  
+  // Large gathering in Jan/Jul (if 3+ friends)
+  if((month === 1 || month === 7) && contacts.length >= 3){
+    triggerLargeGathering(month);
+    return;
+  }
+  
+  // Normal month: 60% chance
+  if(Math.random() < 0.60){
+    var eligible = contacts.filter(function(c){ return (c.friendLevel || 0) >= 2; });
+    if(eligible.length === 0){
+      if(contacts.length < 200){
+        tryTriggerEncounter();
+      }
+      return;
+    }
+    var friend = eligible[randInt(0, eligible.length - 1)];
+    triggerFriendInteraction(friend);
+  } else if(contacts.length < 200 && Math.random() < 0.30){
+    tryTriggerEncounter();
+  }
+}
+
+// ========== Large Gathering (Jan/Jul) ==========
+function triggerLargeGathering(month){
+  if(G._pendingDecision || G._encounterActive || G._socialModalActive) return;
+  var contacts = G.socialContacts || [];
+  if(contacts.length < 3) return;
+  
+  var season = month === 1 ? '新年聚会' : '年中聚会';
+  var scene = month === 1 ?
+    '大家围坐在一起，回顾过去一年的精彩。觥筹交错间，有人带来了新朋友...' :
+    '午后的阳光洒在庭院里，大家从各地赶来。欢声笑语中，几个新面孔也加入了...';
+  
+  var newCount = randInt(1, 3);
+  var newContacts = [];
+  for(var i = 0; i < newCount; i++){
+    var templateKeys = ['colleague', 'partyFriend', 'classmate', 'gymBuddy'];
+    var key = templateKeys[randInt(0, templateKeys.length - 1)];
+    var template = MEETABLE_NPCS[key] || {};
+    var names = {
+      colleague: ['赵工', '钱工', '孙工', '李工', '周工'],
+      partyFriend: ['小美', '小帅', '小文', '小强', '小莉'],
+      classmate: ['王明', '刘涛', '陈亮', '杨帆', '黄娟'],
+      gymBuddy: ['阿杰', '小磊', '大壮', '阿坤', '小健']
+    }[key] || ['某人'];
+    var npcName = names[randInt(0, names.length - 1)];
+    
+    if(contacts.find(function(c){ return c.name === npcName; })) continue;
+    
+    var newContact = {
+      id: 'contact_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+      templateId: key,
+      name: npcName,
+      avatar: template.avatar || '👤',
+      category: key,
+      relation: getMetRelationText(key),
+      traits: (template.traits || []).slice(),
+      responses: (template.responses || []).slice(),
+      followups: (template.followups || []).slice(),
+      metMonth: G.totalMonths,
+      metWhere: season + '认识',
+      friendLevel: 1,
+      chatCount: 0,
+      lastChatMonth: G.totalMonths
+    };
+    G.socialContacts.push(newContact);
+    newContacts.push(newContact);
+    
+    if(!G.phone.chatHistory) G.phone.chatHistory = {};
+    G.phone.chatHistory[newContact.id] = [{
+      player: '',
+      npc: npcName + '：我是刚通过朋友认识你的，你好！',
+      timestamp: Date.now()
+    }];
+  }
+  
+  if(newContacts.length > 0){
+    saveGame();
+    showGatheringModal(season, scene, newContacts);
+  }
+}
+
+function showGatheringModal(season, scene, newContacts){
+  G._socialModalActive = true;
+  var html = '<div style="text-align:center;font-size:36px;margin-bottom:8px;">🎉</div>';
+  html += '<div style="text-align:center;font-size:18px;font-weight:700;margin-bottom:8px;">' + season + '</div>';
+  html += '<div style="font-size:14px;color:#666;line-height:1.6;margin-bottom:16px;">' + scene + '</div>';
+  html += '<div style="text-align:center;font-size:15px;font-weight:600;color:#3498db;margin-bottom:12px;">你认识了 ' + newContacts.length + ' 位新朋友！</div>';
+  
+  newContacts.forEach(function(c){
+    html += '<div style="display:flex;align-items:center;gap:10px;padding:10px;margin-bottom:8px;background:#f8f9fa;border-radius:10px;">';
+    html += '<span style="font-size:28px;">' + c.avatar + '</span>';
+    html += '<div><div style="font-weight:600;font-size:14px;">' + c.name + '</div>';
+    html += '<div style="font-size:12px;color:#999;">' + c.metWhere + '</div></div>';
+    html += '</div>';
+  });
+  
+  showModal({
+    title: season,
+    content: html,
+    showCancel: false,
+    confirmText: '太棒了！',
+    success: function(res){
+      G._socialModalActive = false;
+      refreshContacts();
+      saveGame();
+    }
+  });
+}
+
+// ========== Friend Interaction System ==========
+function triggerFriendInteraction(friend){
+  if(G._pendingDecision || G._encounterActive || G._socialModalActive) return;
+  if(!friend) return;
+  
+  G._socialModalActive = true;
+  
+  generateFriendInteraction(friend).then(function(result){
+    showFriendInteractionModal(friend, result);
+  }).catch(function(){
+    showFriendInteractionModal(friend, getPresetInteraction(friend));
+  });
+}
+
+async function generateFriendInteraction(friend){
+  var career = CAREERS.find(function(c){ return c.id === G.career; });
+  var careerName = career ? career.name : '未知行业';
+  var monthsKnown = G.totalMonths - (friend.metMonth || G.totalMonths);
+  var yearsKnown = Math.floor(monthsKnown / 12);
+  var monthsRemainder = monthsKnown % 12;
+  
+  var prompt = '你是一个社交互动生成器。根据以下信息生成一个简短的社交互动场景：\n' +
+    '- 好友姓名：' + friend.name + '\n' +
+    '- 认识场景：' + (friend.metWhere || '不详') + '\n' +
+    '- 认识时间：' + yearsKnown + '年' + monthsRemainder + '个月前\n' +
+    '- 亲密度：' + (friend.friendLevel || 0) + '/10\n' +
+    '- 好友特征：' + (friend.traits || []).join('、') + ' 暂无\n' +
+    '- 玩家年龄：' + getAge() + '岁\n' +
+    '- 玩家职业：' + careerName + '\n\n' +
+    '生成一个简短的社交互动场景（2-3句话），包含：\n' +
+    '1. 好友主动联系的内容（吃饭/聚会/求助/分享信息）\n' +
+    '2. 两个选择选项\n\n' +
+    '以JSON格式返回（不要markdown代码块）：\n' +
+    '{"text": "场景描述", "optionA": "选项A", "optionB": "选项B", "type": "dinner|party|help|info|business"}';
+  
+  try {
+    var resp = await fetch('https://token-plan-cn.xiaomimimo.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'api-key': 'tp-chy2q7xt8dofqyzdqb4bzbcz5g9bmmxyhzm7dcp665wl2vn0'
+      },
+      body: JSON.stringify({
+        model: 'xiaomi/mimo-v2.5',
+        messages: [{role: 'user', content: prompt}],
+        temperature: 0.9,
+        max_tokens: 500
+      })
+    });
+    
+    if(resp.ok){
+      var data = await resp.json();
+      if(data.choices && data.choices[0] && data.choices[0].message){
+        var text = data.choices[0].message.content.trim();
+        text = text.replace(/```json\s*/g, '').replace(/```\s*$/g, '').trim();
+        var parsed = JSON.parse(text);
+        if(parsed && parsed.text && parsed.optionA && parsed.optionB){
+          return parsed;
+        }
+      }
+    }
+  } catch(e) {
+    console.warn('AI friend interaction failed:', e);
+  }
+  
+  return getPresetInteraction(friend);
+}
+
+// ========== Preset Interaction Templates ==========
+var PRESET_INTERACTIONS = [
+  {text: '{name}约你周末一起吃饭，说好久没见了，想叙叙旧。', optionA: '欣然赴约', optionB: '推说有事，改天吧', type: 'dinner'},
+  {text: '{name}打电话说最近工作压力很大，想找你倾诉一下。', optionA: '耐心倾听，给建议', optionB: '敷衍几句，赶紧挂电话', type: 'help'},
+  {text: '{name}告诉你一个行业内部消息——有家公司正在秘密招聘高管。', optionA: '详细询问具体情况', optionB: '听听就算了', type: 'info'},
+  {text: '{name}邀请你一起合伙开个小店，说回报率不错。', optionA: '认真了解项目详情', optionB: '婉言谢绝', type: 'business'},
+  {text: '{name}说最近学会了一道家菜，想请你到家里尝尝。', optionA: '带上礼物去蹭饭', optionB: '说最近减肥，下次吧', type: 'dinner'},
+  {text: '{name}约你去打羽毛球/爬山，说运动有助于减压。', optionA: '换上装备就出发', optionB: '太累了，想在家躺平', type: 'party'},
+  {text: '{name}说最近遇到了困难，想找你借一些钱周转。', optionA: '问清楚情况后借出', optionB: '说自己最近也紧张', type: 'help'},
+  {text: '{name}转发了一篇文章给你，说"这个对我启发很大，分享给你"。', optionA: '认真阅读并讨论', optionB: '已读不回', type: 'info'},
+  {text: '{name}说认识一个投资人，想介绍给你认识，可能对事业有帮助。', optionA: '非常感兴趣，约定见面', optionB: '说自己暂时不需要', type: 'business'},
+  {text: '{name}约你去新开的网红餐厅打卡，据说要排两小时队。', optionA: '美味值得等待！', optionB: '两小时？不如回家煮面', type: 'dinner'},
+  {text: '{name}说最近在考虑跳槽，想听听你的建议。', optionA: '认真帮他分析利弊', optionB: '说"这要看你自己"', type: 'help'},
+  {text: '{name}分享了一个开源项目链接，说"这可能对你有用"。', optionA: '仔细研究并表示感谢', optionB: '收藏了但再也没看过', type: 'info'}
+];
+
+function getPresetInteraction(friend){
+  var preset = PRESET_INTERACTIONS[randInt(0, PRESET_INTERACTIONS.length - 1)];
+  return {
+    text: (preset.text || '').replace('{name}', friend.name || '朋友'),
+    optionA: preset.optionA || '好的',
+    optionB: preset.optionB || '不了',
+    type: preset.type || 'dinner'
+  };
+}
+
+function showFriendInteractionModal(friend, interaction){
+  var html = '<div style="text-align:center;font-size:36px;margin-bottom:8px;">' + (friend.avatar || '👤') + '</div>';
+  html += '<div style="text-align:center;font-size:16px;font-weight:600;margin-bottom:4px;">' + (friend.name || '朋友') + '</div>';
+  html += '<div style="text-align:center;font-size:12px;color:#999;margin-bottom:16px;">亲密度 Lv.' + (friend.friendLevel || 0) + '</div>';
+  html += '<div style="background:#f8f9fa;border-radius:12px;padding:14px;font-size:14px;line-height:1.7;color:#333;margin-bottom:8px;">';
+  html += (interaction.text || '朋友联系了你...');
+  html += '</div>';
+  
+  var effectMap = {
+    dinner: { agree: {mood: 8, friendLevel: 2}, disagree: {friendLevel: -1} },
+    party: { agree: {mood: 6, health: 5, friendLevel: 1}, disagree: {friendLevel: -1} },
+    help: { agree: {EQ: 3, friendLevel: 3, cash: -randInt(1, 5) * 1000}, disagree: {mood: 2, friendLevel: -2} },
+    info: { agree: {IQ: 3, friendLevel: 1}, disagree: {friendLevel: 0} },
+    business: { agree: {mood: 5, IQ: 2, friendLevel: 1}, disagree: {friendLevel: -1} }
+  };
+  
+  var eff = effectMap[interaction.type] || effectMap.dinner;
+  
+  html += '<div id="socialInteractionBtns" style="display:flex;flex-direction:column;gap:10px;">';
+  html += '<button class="btn btn-primary" onclick="resolveFriendInteraction(0)" style="width:100%;">✅ ' + (interaction.optionA || '同意') + '</button>';
+  html += '<button class="btn btn-outline" onclick="resolveFriendInteraction(1)" style="width:100%;">❌ ' + (interaction.optionB || '拒绝') + '</button>';
+  html += '</div>';
+  
+  html += '<div id="socialInteractionResult" style="display:none;text-align:center;padding:16px 0;"></div>';
+  
+  showModal({
+    title: '💬 好友互动',
+    content: html,
+    showCancel: false,
+    confirmText: ' ',
+    cancelText: '',
+    success: function(){}
+  });
+  
+  window._currentSocialInteraction = {
+    friend: friend,
+    interaction: interaction,
+    effect: eff
+  };
+  
+  setTimeout(function(){
+    var mb = document.getElementById('modalBtns');
+    if(mb) mb.style.display = 'none';
+  }, 50);
+}
+
+function resolveFriendInteraction(choice){
+  var data = window._currentSocialInteraction;
+  if(!data) return;
+  
+  var friend = data.friend;
+  var eff = choice === 0 ? data.effect.agree : data.effect.disagree;
+  var interaction = data.interaction;
+  
+  // Apply effects
+  var effectText = '';
+  if(eff.mood){ G.mood = clamp(G.mood + eff.mood, 0, 200); effectText += '心情' + (eff.mood > 0 ? '+' : '') + eff.mood + ' '; }
+  if(eff.health){ G.health = clamp(G.health + eff.health, 0, 200); effectText += '健康' + (eff.health > 0 ? '+' : '') + eff.health + ' '; }
+  if(eff.IQ){ G.IQ = clamp(G.IQ + eff.IQ, 0, 200); effectText += 'IQ' + (eff.IQ > 0 ? '+' : '') + eff.IQ + ' '; }
+  if(eff.EQ){ G.EQ = clamp(G.EQ + eff.EQ, 0, 200); effectText += 'EQ' + (eff.EQ > 0 ? '+' : '') + eff.EQ + ' '; }
+  if(eff.cash){ G.cash += eff.cash; effectText += '存款' + (eff.cash > 0 ? '+' : '') + fmt(eff.cash) + ' '; }
+  
+  // Update friend
+  if(eff.friendLevel){
+    friend.friendLevel = Math.max(0, Math.min(10, (friend.friendLevel || 0) + eff.friendLevel));
+  }
+  friend.lastChatMonth = G.totalMonths;
+  friend.chatCount = (friend.chatCount || 0) + 1;
+  
+  // Add to chat history
+  if(friend && G.phone.chatHistory){
+    if(!G.phone.chatHistory[friend.id]) G.phone.chatHistory[friend.id] = [];
+    G.phone.chatHistory[friend.id].push({
+      player: choice === 0 ? (data.interaction.optionA || '同意') : (data.interaction.optionB || '拒绝'),
+      npc: choice === 0 ? '好的，就这么说定了！' : '行吧，理解你。',
+      timestamp: Date.now()
+    });
+  }
+  
+  // Update life events
+  if(!G.lifeEvents) G.lifeEvents = [];
+  var choiceText = choice === 0 ? data.interaction.optionA : data.interaction.optionB;
+  G.lifeEvents.push({
+    month: G.totalMonths,
+    icon: '💬',
+    title: '与' + friend.name + '的互动',
+    detail: data.interaction.text.substring(0, 30) + '... → ' + choiceText,
+    type: 'social'
+  });
+  
+  // Show result
+  var btnsEl = document.getElementById('socialInteractionBtns');
+  var resultEl = document.getElementById('socialInteractionResult');
+  if(btnsEl) btnsEl.style.display = 'none';
+  if(resultEl){
+    resultEl.style.display = 'block';
+    var resHtml = '<div style="font-size:14px;color:#333;margin-bottom:8px;">';
+    resHtml += choice === 0 ? '✅ ' + (data.interaction.optionA || '同意') : '❌ ' + (data.interaction.optionB || '拒绝');
+    resHtml += '</div>';
+    if(effectText){
+      resHtml += '<div style="font-size:13px;color:#3498db;">' + effectText.trim() + '</div>';
+    }
+    resHtml += '<div style="margin-top:12px;font-size:12px;color:#999;">亲密度 Lv.' + (friend.friendLevel || 0) + '/10</div>';
+    resHtml += '<button class="btn btn-primary" onclick="closeSocialModal()" style="width:100%;margin-top:16px;">确定</button>';
+    resultEl.innerHTML = resHtml;
+  }
+  
+  saveGame();
+  refreshAll();
+}
+
+function closeSocialModal(){
+  G._socialModalActive = false;
+  window._currentSocialInteraction = null;
+  hideModal();
+  refreshContacts();
+  refreshPhone();
+}
+
+// ========== Network Monetization: Job Hop Help ==========
+function getJobHopHelp(targetCareer){
+  var contacts = G.socialContacts || [];
+  var helpers = contacts.filter(function(c){
+    if((c.friendLevel || 0) < 4) return false;
+    var cat = c.category || '';
+    if(targetCareer && cat.indexOf(targetCareer.substring(0, 3)) >= 0) return true;
+    return ['colleague', 'mentor', 'boss', 'exColleague'].indexOf(cat) >= 0;
+  });
+  
+  if(helpers.length === 0) return null;
+  helpers.sort(function(a, b){ return (b.friendLevel || 0) - (a.friendLevel || 0); });
+  return helpers[0];
+}
+
+function applyJobHopBonus(targetCareer){
+  var helper = getJobHopHelp(targetCareer);
+  if(!helper) return {success: 0, perfBonus: 0, friend: null};
+  
+  helper.friendLevel = Math.max(0, (helper.friendLevel || 0) - 2);
+  helper.lastChatMonth = G.totalMonths;
+  
+  var bonus = {
+    successBonus: 30,
+    perfBonus: 10,
+    friend: helper.name,
+    message: helper.name + '帮你内推了，跳槽成功率+30%！绩效起始+10'
+  };
+  
+  if(!G.lifeEvents) G.lifeEvents = [];
+  G.lifeEvents.push({
+    month: G.totalMonths,
+    icon: '🤝',
+    title: helper.name + '帮助跳槽',
+    detail: '通过' + helper.name + '的人脉，成功获得内推机会！亲密度-2',
+    type: 'career'
+  });
+  
+  saveGame();
+  return bonus;
+}
+
+// ========== Network Monetization: Friend Investors ==========
+function getFriendInvestors(startupCost){
+  var contacts = G.socialContacts || [];
+  var investors = contacts.filter(function(c){
+    if((c.friendLevel || 0) < 6) return false;
+    var cat = c.category || '';
+    return ['partyFriend', 'colleague', 'exColleague'].indexOf(cat) >= 0;
+  });
+  
+  if(investors.length === 0) return [];
+  
+  var results = [];
+  investors.forEach(function(inv){
+    var level = inv.friendLevel || 6;
+    var minAmt = level * 100;
+    var maxAmt = level * 500;
+    var amount = randInt(minAmt, maxAmt);
+    var equity = Math.max(5, Math.min(15, 20 - level));
+    
+    results.push({
+      friend: inv,
+      amount: amount,
+      equity: equity,
+      name: inv.name,
+      avatar: inv.avatar || '👤'
+    });
+  });
+  
+  results.sort(function(a, b){ return b.amount - a.amount; });
+  return results.slice(0, 3);
+}
+
+function applyFriendInvestment(investor){
+  if(!investor) return;
+  G.cash += investor.amount;
+  if(investor.friend){
+    investor.friend.friendLevel = Math.max(0, (investor.friend.friendLevel || 0) - 1);
+  }
+  
+  if(!G.lifeEvents) G.lifeEvents = [];
+  G.lifeEvents.push({
+    month: G.totalMonths,
+    icon: '💰',
+    title: investor.name + '投资了你',
+    detail: investor.name + '投资了' + fmt(investor.amount) + '，获得' + investor.equity + '%股份',
+    type: 'career'
+  });
+  
+  saveGame();
+}
+
+// ========== Network Monetization: Hire Friend ==========
+function canHireFriend(friend){
+  if(!friend) return false;
+  if((friend.friendLevel || 0) < 5) return false;
+  if(!G.selfEmployed && (!G.businesses || G.businesses.length === 0)) return false;
+  return true;
+}
+
+function hireFriend(friend){
+  if(!canHireFriend(friend)) return false;
+  
+  var salary = 30000 + (friend.friendLevel || 0) * 5000;
+  if(G.cash < salary) return false;
+  
+  G.cash -= salary;
+  friend.friendLevel = Math.max(0, (friend.friendLevel || 0) - 1);
+  
+  if(!G._hiredFriends) G._hiredFriends = [];
+  G._hiredFriends.push({
+    friendId: friend.id,
+    name: friend.name,
+    avatar: friend.avatar || '👤',
+    salary: salary,
+    perfBoost: Math.round((friend.friendLevel || 0) * 0.5),
+    hiredMonth: G.totalMonths
+  });
+  
+  if(!G.lifeEvents) G.lifeEvents = [];
+  G.lifeEvents.push({
+    month: G.totalMonths,
+    icon: '🏢',
+    title: friend.name + '加入你的公司',
+    detail: friend.name + '正式入职，每年带来绩效加成+' + Math.round((friend.friendLevel || 0) * 0.5),
+    type: 'career'
+  });
+  
+  saveGame();
+  return true;
+}
+
+// ========== Contact Detail UI ==========
+function showContactDetail(friendId){
+  if(!friendId) return;
+  var friend = null;
+  var isCoreNpc = false;
+  
+  var contacts = G.socialContacts || [];
+  friend = contacts.find(function(c){ return c.id === friendId; });
+  
+  // If not found in social contacts, try core NPCs
+  if(!friend && NPC_PERSONALITIES[friendId]){
+    isCoreNpc = true;
+    var p = NPC_PERSONALITIES[friendId];
+    var rel = getRelationship(friendId);
+    friend = {
+      id: friendId,
+      name: p.name,
+      avatar: p.avatar,
+      category: friendId,
+      templateId: friendId,
+      metWhere: '系统人物',
+      metMonth: G.totalMonths,
+      friendLevel: Math.round((rel.intimacy || 0) / 10),
+      chatCount: 0,
+      traits: p.traits || []
+    };
+  }
+  
+  if(!friend) return;
+  
+  var level = friend.friendLevel || 0;
+  var relColor = 'rel-red';
+  if(level >= 8) relColor = 'rel-purple';
+  else if(level >= 6) relColor = 'rel-green';
+  else if(level >= 3) relColor = 'rel-yellow';
+  
+  var relLabel = level >= 8 ? '莫逆之交' : level >= 6 ? '好友' : level >= 3 ? '相识' : '陌生';
+  var metYears = friend.metMonth ? Math.floor((G.totalMonths - friend.metMonth) / 12) : 0;
+  var metMonths2 = friend.metMonth ? (G.totalMonths - friend.metMonth) % 12 : 0;
+  
+  var tagsHtml = '';
+  var categoryMap = {
+    courseTeacher: {name: 'tag-education', label: '教育'},
+    classmate: {name: 'tag-education', label: '同学'},
+    partyFriend: {name: 'tag-orange', label: '社交'},
+    colleague: {name: 'tag-blue', label: '同事'},
+    gymBuddy: {name: 'tag-green', label: '运动'},
+    neighbor: {name: 'tag-orange', label: '邻居'},
+    mom: {name: 'tag-orange', label: '母亲'},
+    dad: {name: 'tag-orange', label: '父亲'},
+    bestie: {name: 'tag-orange', label: '死党'},
+    boss: {name: 'tag-red', label: '上司'},
+    banker: {name: 'tag-golden', label: '金融'},
+    realtor: {name: 'tag-red', label: '中介'},
+    exColleague: {name: 'tag-blue', label: '前同事'},
+    mentor: {name: 'tag-education', label: '导师'},
+    gymCoach: {name: 'tag-green', label: '健身'},
+    spouse: {name: 'tag-orange', label: '配偶'},
+    child: {name: 'tag-green', label: '子女'}
+  };
+  
+  var cat = categoryMap[friend.category] || categoryMap[friend.templateId] || {name: 'tag-orange', label: '社交'};
+  tagsHtml = '<span class="fd-tag ' + cat.name + '">' + cat.label + '</span>';
+  
+  if(friend.traits){
+    friend.traits.slice(0, 3).forEach(function(t){
+      tagsHtml += '<span class="fd-tag ' + cat.name + '">' + t + '</span>';
+    });
+  }
+  
+  var canHelp = level >= 4 && !isCoreNpc;
+  var canInvest = level >= 6 && !isCoreNpc;
+  var canHire2 = level >= 5 && !isCoreNpc && (G.selfEmployed || (G.businesses && G.businesses.length > 0));
+  
+  var html = '<div class="friend-detail-overlay show" id="friendDetailOverlay" onclick="closeFriendDetail(event)">';
+  html += '<div class="friend-detail-card" onclick="event.stopPropagation()">';
+  
+  html += '<div class="fd-header">';
+  html += '<div class="fd-avatar">' + (friend.avatar || '👤') + '</div>';
+  html += '<div class="fd-name">' + (friend.name || '未知') + '</div>';
+  html += '<div class="fd-company">' + (friend.metWhere || '朋友') + '</div>';
+  html += '</div>';
+  
+  html += '<div class="fd-body">';
+  
+  html += '<div class="fd-rel-bar-wrap">';
+  html += '<div class="fd-rel-label"><span class="fd-rel-name">🤝 亲密度</span><span class="fd-rel-val">' + relLabel + ' (' + level + '/10)</span></div>';
+  html += '<div class="fd-bar"><div class="fd-bar-fill ' + relColor + '" style="width:' + (level * 10) + '%"></div></div>';
+  html += '</div>';
+  
+  html += '<div class="fd-stat-row"><span class="fd-stat-label">相识时间</span><span class="fd-stat-value">' + (metYears > 0 ? metYears + '年' : '') + metMonths2 + '个月前</span></div>';
+  html += '<div class="fd-stat-row"><span class="fd-stat-label">互动次数</span><span class="fd-stat-value">' + (friend.chatCount || 0) + '次</span></div>';
+  html += '<div class="fd-stat-row"><span class="fd-stat-label">认识场景</span><span class="fd-stat-value">' + (friend.metWhere || '未知') + '</span></div>';
+  
+  if(tagsHtml){
+    html += '<div class="fd-tags">' + tagsHtml + '</div>';
+  }
+  
+  if(!isCoreNpc){
+    html += '<div class="fd-stat-row"><span class="fd-stat-label">🤝 跳槽帮助</span><span class="fd-stat-value" style="color:' + (canHelp ? '#27ae60' : '#ccc') + '">' + (canHelp ? '✅ 可用' : '🔒 亲密度不足') + '</span></div>';
+    html += '<div class="fd-stat-row"><span class="fd-stat-label">💰 投资能力</span><span class="fd-stat-value" style="color:' + (canInvest ? '#27ae60' : '#ccc') + '">' + (canInvest ? '✅ 可用' : '🔒 亲密度不足') + '</span></div>';
+    html += '<div class="fd-stat-row"><span class="fd-stat-label">🏢 可被招聘</span><span class="fd-stat-value" style="color:' + (canHire2 ? '#27ae60' : '#ccc') + '">' + (canHire2 ? '✅ 可用' : '🔒 条件不足') + '</span></div>';
+  }
+  
+  html += '</div>';
+  
+  html += '<div class="fd-actions">';
+  html += '<button class="btn btn-primary" onclick="startChatWithFriend(\'' + friend.id + '\')">💬 聊天</button>';
+  if(canHire2){
+    html += '<button class="btn btn-success" onclick="tryHireFriend(\'' + friend.id + '\')">🏢 邀请入职</button>';
+  }
+  html += '<button class="btn btn-outline" onclick="closeFriendDetail()">关闭</button>';
+  html += '</div>';
+  
+  html += '</div></div>';
+  
+  var div = document.createElement('div');
+  div.innerHTML = html;
+  document.body.appendChild(div);
+}
+
+function closeFriendDetail(e){
+  if(e && e.target !== document.getElementById('friendDetailOverlay')) return;
+  var el = document.getElementById('friendDetailOverlay');
+  if(el) el.remove();
+}
+
+function startChatWithFriend(friendId){
+  closeFriendDetail();
+  openProactiveChat(friendId);
+}
+
+function tryHireFriend(friendId){
+  var contacts = G.socialContacts || [];
+  var friend = contacts.find(function(c){ return c.id === friendId; });
+  if(!friend) return;
+  
+  closeFriendDetail();
+  
+  var salary = 30000 + (friend.friendLevel || 0) * 5000;
+  
+  showModal({
+    title: '🏢 邀请入职',
+    content: '邀请 ' + friend.name + ' 加入你的公司，需要支付签约费 ' + fmt(salary) + '。\n\n' + friend.name + ' 入职后每月会带来绩效加成 +' + Math.round((friend.friendLevel || 0) * 0.5),
+    confirmText: '确认邀请',
+    showCancel: true,
+    success: function(res){
+      if(res.confirm){
+        var ok = hireFriend(friend);
+        if(ok){
+          showToast('🎉 ' + friend.name + ' 加入了你的公司！');
+          refreshAll();
+        } else {
+          showToast('💸 现金不足，无法邀请');
+        }
+      }
+    }
+  });
+}
+
+
 // === migrateSave ===
 function migrateSave(){
   if(!G.houses)G.houses=[];
@@ -9830,6 +10509,7 @@ function migrateSave(){
   if(!G.phone.moments)G.phone.moments=[];
   if(!G.phone.chatHistory)G.phone.chatHistory={};
   if(!G.phone.activeChats)G.phone.activeChats=[];
+  if(G.lastSocialCheck===undefined)G.lastSocialCheck=0;
   if(!G.stockHoldings)G.stockHoldings={};
   if(!G.stockPrices)G.stockPrices={};
   if(!G.monthlyTasks)G.monthlyTasks={};
