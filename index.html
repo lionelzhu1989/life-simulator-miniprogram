@@ -1126,6 +1126,279 @@ const CAREERS=[
   {id:'sales',name:'销售/市场',icon:'📈',desc:'多劳多得，看业绩说话',salaryMult:1.1,startJob:'销售代表',startSalary:54000,traits:['提成高','压力大','人脉广']},
   {id:'legal',name:'法律/合规',icon:'⚖️',desc:'专业壁垒高，经验值钱',salaryMult:1.05,startJob:'律师助理',startSalary:78000,traits:['专业','严谨','经验积累']}
 ];
+// ===== V6.3: 月度事件系统（每月100%触发）=====
+
+// 职业专属工作事件（按职业id + 职级分层，共6级）
+const CAREER_WORK_EVENTS = {
+  tech: {
+    0: [
+      {title:'💻 代码Review被批',text:'你的PR被Senior连续提了20条comment，有一条写着"这逻辑谁教你的？"',effect:{mood:-3,EQ:2},type:'neutral'},
+      {title:'🐛 线上Bug',text:'你写的代码导致线上小故障，好在10分钟修复了。leader拍拍肩："下次注意"',effect:{mood:-2,health:-1},type:'bad'},
+      {title:'📚 技术分享会',text:'组内分享讲到了新框架原理，你感觉打开了新世界的大门',effect:{IQ:3,mood:2},type:'good'},
+      {title:'☕ 和导师对谈',text:'入职导师请你喝咖啡，聊了聊技术路线该怎么走',effect:{mood:3,IQ:2},type:'good'},
+    ],
+    1: [
+      {title:'🔧 技术债爆发',text:'半年前赶进度写的坑现在炸了。你改到凌晨，旁边工位的人走了3批',effect:{mood:-5,health:-3,IQ:2},type:'bad'},
+      {title:'👀 被架构师注意',text:'你在群里回答的技术问题被架构师看到，私聊你"思路不错，要不要参与重构？"',effect:{mood:5,IQ:2},type:'good'},
+      {title:'🤖 担心被AI替代',text:'Copilot更新让你焦虑——你现在写的代码AI都能生成了。刷了一晚上帖子更睡不着',effect:{mood:-4},type:'bad'},
+      {title:'📈 独立负责模块',text:'leader让你独立负责一个模块设计，你连续3天画架构图到深夜',effect:{mood:-3,IQ:4},type:'neutral'},
+    ],
+    2: [
+      {title:'🎤 晋升答辩',text:'你站在台上讲过去一年的技术成果，评委问了一个你没准备的刁钻问题...',effect:{IQ:2,EQ:3},type:'neutral'},
+      {title:'👥 下属离职',text:'你带的小伙子提了离职，原因是"想去大厂"。你心里不是滋味',effect:{mood:-3},type:'bad'},
+      {title:'📈 技术突破',text:'你主导的优化方案落地，性能提升40%，CTO在群里@你表扬',effect:{mood:6,IQ:3},type:'good'},
+      {title:'🔀 技术栈迁移',text:'公司决定把老系统从Java迁到Go，你作为主力连续加班1个月',effect:{mood:-6,health:-4,IQ:3},type:'bad'},
+    ],
+    3: [
+      {title:'🏗️ 架构之争',text:'你在方案评审会上和另一个架构师吵了起来。会后你们在茶水间又聊了一小时',effect:{EQ:3,mood:-2},type:'neutral'},
+      {title:'💼 猎头骚扰',text:'猎头又加你微信，开出50%涨幅package。你犹豫了一下，点了"忽略"',effect:{mood:2},type:'neutral'},
+      {title:'📉 35岁焦虑',text:'你刷到一篇文章《互联网35岁危机》，对着镜子看了看自己的发际线',effect:{mood:-5},type:'bad'},
+    ],
+    4: [
+      {title:'🗓️ 团队氛围',text:'你发现团队有个同学连续一周没来加班，犹豫要不要找他聊聊',effect:{mood:-2},type:'bad'},
+      {title:'🎯 OKR对齐',text:'OKR alignment会开了3小时，两个团队还在争资源。你喝了4杯咖啡',effect:{health:-3,mood:-3},type:'bad'},
+      {title:'📊 裁员风声',text:'HR开始盘人力成本，你拿到的headcount冻结通知',effect:{mood:-4},type:'bad'},
+    ],
+    5: [
+      {title:'👑 融资压力',text:'董事会问你Q3技术ROI怎么量化。你讲了一小时PPT，他们只问"能裁30%吗"',effect:{mood:-6,health:-2},type:'bad'},
+      {title:'🏆 技术影响力',text:'你在行业技术大会上做了分享，台下坐了500人',effect:{mood:8,EQ:3},type:'good'},
+    ]
+  },
+  finance: {
+    0: [
+      {title:'📊 研报数据出错',text:'你的研报里有个数据标错了小数点，被senior一眼看到，当着全组纠正你',effect:{mood:-4,EQ:2},type:'bad'},
+      {title:'☕ 凌晨的咖啡',text:'投行部的通宵是常态。凌晨3点，你看着窗外的陆家嘴，怀疑人生',effect:{mood:-4,health:-3},type:'bad'},
+      {title:'📈 第一次路演',text:'你跟老板去给客户路演，全程紧张得手心出汗，客户最后问了一个很好的问题',effect:{EQ:3,mood:2},type:'good'},
+      {title:'📚 财务建模',text:'你花了一晚上搭的DCF模型终于跑通了，虽然结果和预期差了3倍',effect:{IQ:3,mood:-2},type:'neutral'},
+    ],
+    1: [
+      {title:'💰 年终奖缩水',text:'去年公司业绩一般，年终奖比去年少了30%。你看了看房贷账单',effect:{mood:-5},type:'bad'},
+      {title:'🎓 考CFA/CPA',text:'你决定考一个证书镀金，接下来6个月每周40小时学习',effect:{IQ:5,mood:-2},type:'neutral'},
+      {title:'🤝 客户请吃饭',text:'客户在酒桌上夸你专业，你喝了一斤白酒，第二天在厕所反思人生',effect:{health:-5,mood:-4,EQ:1},type:'bad'},
+      {title:'📉 项目黄了',text:'跟了3个月的IPO项目突然被叫停，原因是"政策变化"',effect:{mood:-6},type:'bad'},
+    ],
+    2: [
+      {title:'📉 监管新规',text:'一条新规直接影响了你负责的产品线。合规部来了3趟，你在会议室如坐针毡',effect:{mood:-5,IQ:2},type:'bad'},
+      {title:'🏆 业绩第一',text:'你的投资建议帮客户赚了不少，季度会上老板当场发了奖金',effect:{mood:8,cash:10000},type:'good'},
+      {title:'💼 跳槽诱惑',text:'同行开出double薪资挖你，你看着手里的项目犹豫了很久',effect:{mood:-2},type:'neutral'},
+    ],
+    3: [
+      {title:'⚔️ 抢项目',text:'另一个团队也在争同一个IPO项目，你在卫生间听到了对手打电话，内容对你不利',effect:{mood:-3,EQ:2},type:'neutral'},
+      {title:'📊 团队KPI',text:'你带的团队这个季度KPI没完成，年终会上被点名',effect:{mood:-5},type:'bad'},
+    ],
+    4: [
+      {title:'👔 MD晋升年',text:'今年MD名额只有2个，符合条件的有5个。你知道这意味着什么',effect:{mood:-6,health:-2},type:'bad'},
+      {title:'🏦 大客户',text:'你谈下了公司今年最大的一个机构客户，MD在电梯里主动跟你握手',effect:{mood:7,EQ:2},type:'good'},
+    ],
+    5: [
+      {title:'🏦 LP质问',text:'LP质问为什么今年回报率低于行业平均，你需要在电话里解释一小时',effect:{mood:-5},type:'bad'},
+      {title:'💎 行业地位',text:'你在行业论坛上作为圆桌嘉宾发言，台下坐着各大机构的一把手',effect:{mood:6,EQ:3},type:'good'},
+    ]
+  },
+  medical: {
+    0: [
+      {title:'🩺 第一个夜班',text:'你值了人生中第一个独立夜班，凌晨2点来了个急诊手忙脚乱，好在导师及时赶到',effect:{mood:-4,health:-3,IQ:2},type:'bad'},
+      {title:'😷 患者投诉',text:'患者投诉你"态度不好"，其实你只是太累不想说话。护士长让你写检查',effect:{mood:-3},type:'bad'},
+      {title:'📚 背病例',text:'你背了一晚上病例，第二天查房被主任提问，答不上来',effect:{mood:-3,IQ:2},type:'bad'},
+      {title:'💊 第一次坐诊',text:'你第一次独立坐诊，看了15个病人，大部分是开药',effect:{mood:2,IQ:1},type:'good'},
+    ],
+    1: [
+      {title:'📜 规培考试',text:'规培结业考试挂了明年要重考，你下班后在值班室背书到凌晨',effect:{mood:-4,IQ:3},type:'neutral'},
+      {title:'❤️ 第一次救人',text:'你独立判断出夹层动脉瘤，紧急手术挽回了患者。家属握着你的手哭，你觉得一切都值了',effect:{mood:10,EQ:3},type:'good'},
+      {title:'😤 医患矛盾',text:'患者家属在走廊里大声质问"你们是不是耽误了病情"，你百口莫辩',effect:{mood:-6},type:'bad'},
+    ],
+    2: [
+      {title:'📋 论文压力',text:'升职称要发SCI，你连续3个月每天下班后去实验室养细胞',effect:{mood:-5,IQ:3},type:'bad'},
+      {title:'🏥 科室评比',text:'你所在科室在全市评比中拿了第一，主任请全科室吃饭',effect:{mood:5},type:'good'},
+    ],
+    3: [],
+    4: [],
+    5: []
+  },
+  education: {
+    0: [
+      {title:'📚 备课到深夜',text:'第一次备课，P了50页课件，上课只用了15页，剩下的全被紧张跳过了',effect:{mood:-3,EQ:2},type:'bad'},
+      {title:'🎓 学生的问题',text:'下课后学生追着你问了一个超纲问题，你答不上来。回去查了一晚上资料',effect:{IQ:3,mood:-1},type:'neutral'},
+      {title:'☕ 办公室闲聊',text:'办公室里老教师们在聊职称评审的"潜规则"，你听得一愣一愣的',effect:{EQ:2},type:'neutral'},
+    ],
+    1: [
+      {title:'📝 评职称材料',text:'评职称要交10年的教案和5篇论文，你整理材料整理到崩溃',effect:{mood:-4,IQ:2},type:'bad'},
+      {title:'🎓 学生获奖',text:'你带的学生拿了市里的奖，家长特意来学校感谢你',effect:{mood:6,EQ:2},type:'good'},
+    ],
+    2: [],
+    3: [],
+    4: [],
+    5: []
+  },
+  creative: {
+    0: [
+      {title:'🎨 甲方说"再大气一点"',text:'客户要"大气一点"的设计，你改了8版，最后用了第一版',effect:{mood:-5,EQ:1},type:'bad'},
+      {title:'📱 刷Behance',text:'下班后刷了一晚上别人的作品，焦虑得觉得自己一辈子做不出这种水平',effect:{mood:-3,IQ:1},type:'bad'},
+      {title:'💡 灵感爆发',text:'洗澡时突然想到一个绝妙的创意，你光着身子跑出来画草图',effect:{mood:5,IQ:2},type:'good'},
+    ],
+    1: [
+      {title:'📉 比稿输了',text:'你熬了3天的方案在比稿中输了，客户选了另一家4A',effect:{mood:-5},type:'bad'},
+      {title:'🎨 作品被看见',text:'你的设计被行业大号转发，朋友圈被点赞刷爆',effect:{mood:6,EQ:2},type:'good'},
+    ],
+    2: [],
+    3: [],
+    4: [],
+    5: []
+  },
+  gov: {
+    0: [
+      {title:'📝 写材料',text:'领导让你写"关于XX的调研报告"，你上网抄了半天改得面目全非',effect:{mood:-2,IQ:1},type:'neutral'},
+      {title:'☕ 办公室闲谈',text:'同事聊起谁谁谁的背景来头，你默默记在心里',effect:{EQ:2},type:'good'},
+      {title:'🏛️ 开会',text:'今天开了4个会，每个会都说了等于没说',effect:{mood:-2},type:'bad'},
+    ],
+    1: [
+      {title:'📊 年度考核',text:'年度考核表要填10页，你发现自己一年做的事写不满',effect:{mood:-3},type:'bad'},
+      {title:'🤝 跨部门协调',text:'别的部门不配合你的工作，你找了3次对方领导才解决',effect:{mood:-3,EQ:2},type:'neutral'},
+    ],
+    2: [],
+    3: [],
+    4: [],
+    5: []
+  },
+  sales: {
+    0: [
+      {title:'📞 被挂电话',text:'你打了100个cold call，98个直接挂掉，2个骂了你',effect:{mood:-4,EQ:1},type:'bad'},
+      {title:'🎯 第一单成交',text:'磨了2周的客户终于签单了！你拿到了第一笔提成',effect:{mood:8,cash:5000},type:'good'},
+      {title:'🚗 跑客户',text:'你一天跑了5个客户，跨越了大半个城市，地铁上睡着了坐过6站',effect:{mood:-3,health:-2},type:'bad'},
+    ],
+    1: [
+      {title:'📉 业绩压力',text:'这个月KPI还差30%，你周末还在给客户发微信',effect:{mood:-5},type:'bad'},
+      {title:'🏆 拿下大单',text:'你谈下了公司今年最大的单，销售总监在群里@你',effect:{mood:8,cash:15000},type:'good'},
+    ],
+    2: [],
+    3: [],
+    4: [],
+    5: []
+  },
+  legal: {
+    0: [
+      {title:'📋 整理卷宗',text:'合伙人让你整理100个案卷，你在法院档案室蹲了3天',effect:{mood:-3,IQ:2},type:'bad'},
+      {title:'⚖️ 第一次开庭',text:'你在法庭上声音发抖，但至少把该说的话说完了',effect:{mood:-2,EQ:3},type:'neutral'},
+      {title:'📚 法律文书',text:'你写的起诉状被律师改了11遍，每一遍都是"重写"',effect:{mood:-4,IQ:2},type:'bad'},
+    ],
+    1: [
+      {title:'💼 独立办案',text:'你第一次独立接待当事人，对方用期待的眼神看着你，你压力很大',effect:{mood:-3,EQ:3},type:'neutral'},
+      {title:'🏆 胜诉判决',text:'你跟的案子赢了，当事人送了一面锦旗',effect:{mood:6,EQ:2},type:'good'},
+    ],
+    2: [],
+    3: [],
+    4: [],
+    5: []
+  }
+};
+
+// 生活类事件（含同学角色）
+const LIFE_EVENTS = [
+  {title:'📱 老同学群消息',text:'大学同学群有人发了结婚请柬，底下一串"恭喜"。你又是那个只点赞不说话的人',effect:{mood:-2},type:'neutral',category:'classmate'},
+  {title:'🎓 同学聚会',text:'同学聚会，有人开奔驰有人骑电瓶。饭后KTV你没去，说"要加班"，其实在家躺了一晚上',effect:{mood:-3},type:'neutral',category:'classmate'},
+  {title:'💬 室友突然找你',text:'许久不联系的室友突然微信"在吗？"，你心里一紧——不会是要借钱吧',effect:{mood:-2,EQ:1},type:'neutral',category:'classmate'},
+  {title:'🎊 晒娃狂魔',text:'高中同学又晒娃了，一天8条朋友圈。你默默点了"不看他的朋友圈"',effect:{mood:-1},type:'neutral',category:'classmate'},
+  {title:'💼 同学当上CEO',text:'群里有人转了一条新闻，你发现那个当年挂科的公司融了5个亿',effect:{mood:-4},type:'bad',category:'classmate'},
+  {title:'☕ 偶遇老同学',text:'公司附近咖啡厅遇到面熟的人，半天才想起是你们班的。尴尬地聊了10分钟天气',effect:{mood:-2,EQ:1},type:'neutral',category:'classmate'},
+  {title:'📩 班级群投票',text:'班级群发了一堆"帮我投一票"的链接，投完才发现要关注一个永远不会看的公众号',effect:{mood:-1},type:'neutral',category:'classmate'},
+  {title:'🎓 同学转行',text:'听说班上学霸去卖保险了，当年倒数第一的在深圳买了两套房',effect:{mood:-2},type:'neutral',category:'classmate'},
+  {title:'💍 前任结婚',text:'刷到前任结婚的照片，你盯着屏幕看了3分钟，然后点了根烟',effect:{mood:-5},type:'bad',category:'classmate'},
+  {title:'🤝 同学内推',text:'一个不太熟的同学突然问你他们公司还招不招人，你尴尬地敷衍了过去',effect:{mood:-1},type:'neutral',category:'classmate'},
+  {title:'🗣️ 公司八卦',text:'茶水间两个同事在聊老板的桃色新闻，你假装喝水听了3分钟',effect:{mood:1},type:'neutral',category:'social'},
+  {title:'🎉 朋友脱单',text:'第N个朋友结婚了，份子钱随了800。你觉得自己像一台移动提款机',effect:{money:-800,mood:-2},type:'bad',category:'social'},
+  {title:'💔 朋友离婚',text:'去年刚结婚的朋友突然发朋友圈「恢复单身」，你连恭喜的话都不知道怎么说',effect:{mood:-2},type:'neutral',category:'social'},
+  {title:'🤝 被人说坏话',text:'有人告诉你，你不在的时候有人说你"太卷了"。你表面笑笑，心里记下了这名字',effect:{mood:-4,EQ:1},type:'bad',category:'social'},
+  {title:'📱 被拉黑',text:'发现之前聊得挺好的朋友把你拉黑了。你想了一晚上到底做错了什么',effect:{mood:-4},type:'bad',category:'social'},
+  {title:'🎤 被搭讪',text:'在便利店被陌生人搭讪要微信。你礼貌拒绝，回家后有一丝小开心',effect:{mood:2},type:'good',category:'social'},
+  {title:'🎂 生日没人记得',text:'生日那天手机很安静，直到12点才收到一条银行祝福短信',effect:{mood:-3},type:'bad',category:'social'},
+  {title:'🤡 朋友圈焦虑',text:'刷了一晚上朋友圈，发现全世界都过得比你好',effect:{mood:-3},type:'bad',category:'social'},
+  {title:'🧧 意外之财',text:'在旧衣服口袋里发现200块，开心了整整一天',effect:{money:200,mood:3},type:'good',category:'life'},
+  {title:'💸 手机碎屏',text:'手机摔在地上，屏幕碎了一个角。换屏要300',effect:{money:-300,mood:-5},type:'bad',category:'life'},
+  {title:'😴 失眠夜',text:'刷手机到3点，想起明天还要上班，越想越睡不着',effect:{mood:-4,health:-2},type:'bad',category:'life'},
+  {title:'🏃 路过健身房',text:'路过健身房时犹豫了一下，最后还是没有进去',effect:{mood:-1},type:'neutral',category:'life'},
+  {title:'🍜 超好吃的外卖',text:'今天的外卖意外好吃，你专门看了店名准备下次再点',effect:{mood:3},type:'good',category:'life'},
+  {title:'🚗 堵车',text:'下班路上堵了1小时，你在车里听了3集播客',effect:{mood:-2},type:'bad',category:'life'},
+  {title:'🐱 偶遇猫',text:'路上遇到一只特别乖的猫，蹲下来撸了10分钟',effect:{mood:4},type:'good',category:'life'},
+  {title:'☔ 没带伞',text:'出门没看天气预报，下班被淋成了落汤鸡',effect:{mood:-3},type:'bad',category:'life'},
+  {title:'🔧 家里漏水',text:'回家发现厨房水管漏水，花了500叫师傅上门',effect:{money:-500,mood:-3},type:'bad',category:'life'},
+  {title:'🎰 刮刮乐',text:'摸了张刮刮乐中了50。虽然不够买一张，但开心了',effect:{mood:3,money:-10},type:'good',category:'life'},
+  {title:'🏃 体检报告',text:'体检显示脂肪肝轻度。医生说该减肥了，你回家看着跑步机沉默很久',effect:{mood:-3,health:-1},type:'bad',category:'life'},
+  {title:'📱 丢钱包',text:'发现钱包不见了，里面还有身份证和银行卡。补办花了200',effect:{money:-200,mood:-4},type:'bad',category:'life'},
+  {title:'🎁 收到礼物',text:'朋友从老家寄了一箱特产，你分了一半给同事',effect:{mood:4,EQ:1},type:'good',category:'life'},
+  {title:'💼 理发被坑',text:'去理发店被忽悠办了3000块的会员卡',effect:{money:-3000,mood:-5},type:'bad',category:'life'},
+  {title:'🌅 早起看日出',text:'难得早起一次，看到了特别美的朝霞',effect:{mood:5},type:'good',category:'life'},
+  {title:'📚 看到一句话',text:'看到一句话突然顿悟了，感觉人生通透了一些',effect:{mood:3,IQ:1},type:'good',category:'life'},
+  {title:'🐶 邻居的狗',text:'邻居家的狗又在楼道里拉屎，你拍了照片发群里没人回',effect:{mood:-2},type:'bad',category:'life'},
+  {title:'🍲 做饭翻车',text:'第一次做饭把厨房炸了，最后叫的外卖',effect:{mood:-2,money:-80},type:'bad',category:'life'},
+  {title:'💡 灵感乍现',text:'洗澡时想到一个绝妙的点子，你光着身子跑出来记到备忘录里',effect:{mood:4,IQ:1},type:'good',category:'life'},
+];
+
+// 每月必出事件触发器
+function triggerMonthlyEvent(){
+  if(!G.hasChosenCareer || G.isInternship) {
+    const evt = LIFE_EVENTS[randInt(0, LIFE_EVENTS.length - 1)];
+    showMonthlyEventCard(evt, 'life');
+    return;
+  }
+  // 70%概率工作事件，30%生活事件
+  if(Math.random() < 0.70) {
+    const careerEvents = CAREER_WORK_EVENTS[G.career];
+    const levelEvents = (careerEvents && careerEvents[G.jobIndex]) ? careerEvents[G.jobIndex] : [];
+    if(levelEvents.length > 0) {
+      const evt = levelEvents[randInt(0, levelEvents.length - 1)];
+      showMonthlyEventCard(evt, 'work');
+      return;
+    }
+    const fallbackWork = [
+      {title:'💼 平淡的一月',text:'这个月没什么大事发生，每天按时上班下班，偶尔摸鱼',effect:{mood:1},type:'neutral'},
+      {title:'☕ 茶水间闲聊',text:'你和同事在茶水间聊了半小时八卦',effect:{mood:2},type:'neutral'},
+      {title:'💻 日常工作',text:'做完了一个小需求，leader说"还行"',effect:{mood:1},type:'neutral'},
+      {title:'📋 周报时间',text:'周五下午照例写周报，你发现自己这周好像什么都没干',effect:{mood:-1},type:'neutral'},
+    ];
+    showMonthlyEventCard(fallbackWork[randInt(0, fallbackWork.length - 1)], 'work');
+    return;
+  }
+  const evt = LIFE_EVENTS[randInt(0, LIFE_EVENTS.length - 1)];
+  showMonthlyEventCard(evt, 'life');
+}
+
+// 显示月度事件卡片
+function showMonthlyEventCard(evt, category){
+  if(!evt) return;
+  if(evt.effect){
+    if(evt.effect.money) G.cash += evt.effect.money;
+    if(evt.effect.health) G.health = clamp(G.health + evt.effect.health, 0, 200);
+    if(evt.effect.mood) G.mood = clamp(G.mood + evt.effect.mood, 0, 200);
+    if(evt.effect.IQ) G.IQ = clamp(G.IQ + evt.effect.IQ, 0, 200);
+    if(evt.effect.EQ) G.EQ = clamp(G.EQ + evt.effect.EQ, 0, 200);
+  }
+  G.events.unshift({text: evt.title + '：' + evt.text, type: evt.type || 'neutral'});
+  const catTag = category === 'work' ? '💼 工作' : (evt.category === 'classmate' ? '🎓 同学' : (evt.category === 'social' ? '🗣️ 社交' : '🏠 生活'));
+  const catColor = category === 'work' ? '#e3f2fd' : (evt.category === 'classmate' ? '#fff3e0' : (evt.category === 'social' ? '#f3e5f5' : '#e8f5e9'));
+  const catBorder = category === 'work' ? '#1976d2' : (evt.category === 'classmate' ? '#e65100' : (evt.category === 'social' ? '#7b1fa2' : '#2e7d32'));
+  const effects = [];
+  if(evt.effect){
+    if(evt.effect.money) effects.push('💰' + (evt.effect.money > 0 ? '+' : '') + fmt(evt.effect.money));
+    if(evt.effect.mood) effects.push('😊' + (evt.effect.mood > 0 ? '+' : '') + evt.effect.mood);
+    if(evt.effect.health) effects.push('❤️' + (evt.effect.health > 0 ? '+' : '') + evt.effect.health);
+    if(evt.effect.IQ) effects.push('🧠+' + evt.effect.IQ);
+    if(evt.effect.EQ) effects.push('🤝+' + evt.effect.EQ);
+  }
+  const html = '<div style="text-align:left;">'
+    + '<div style="display:inline-block;padding:3px 12px;border-radius:12px;font-size:12px;font-weight:600;margin-bottom:10px;background:' + catColor + ';color:' + catBorder + ';border:1px solid ' + catBorder + '40;">' + catTag + '</div>'
+    + '<div style="font-size:17px;font-weight:700;margin-bottom:8px;color:#333;">' + evt.title + '</div>'
+    + '<div style="font-size:14px;color:#555;line-height:1.7;margin-bottom:14px;">' + evt.text + '</div>'
+    + (effects.length ? '<div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:10px;border-top:1px dashed #eee;">' + effects.map(e => '<span style="background:#f5f5f5;padding:3px 10px;border-radius:10px;font-size:12px;color:#666;">' + e + '</span>').join('') + '</div>' : '')
+    + '</div>';
+  showModal({
+    title: '📅 本月随机事件',
+    content: html,
+    showCancel: false,
+    confirmText: '知道了',
+    success: () => { saveGame(); }
+  });
+}
+
 const JOBS_CAREERS={
   tech:[
     {id:'t1',name:'初级员工',salary:90000,requireIQ:90,requireEQ:70,level:0,requireMonths:0},
@@ -2629,26 +2902,8 @@ async function advanceMonth(){
     var branch=checkCareerBranch();
     if(branch){showCareerBranch(branch);}
   }
-  // v4.0.0: Narrative events trigger
-  if(tryTriggerNarrativeEvent())return;
-  // V2: Decision events (40% chance per month, age-appropriate)
-  if(Math.random()<0.40){
-    triggerDecisionEvent();
-  }
-  // V2: Small random events (AI生成，模板仅API失败兜底)
-  if(Math.random()<0.50){
-    if(AI_ENGINE.enabled&&AI_ENGINE._fallbackCount<AI_ENGINE.maxFallback){
-      callAI(buildSmallEventPrompt,'small').then(result=>{
-        if(result&&result.text){
-          applySmallEvent({text:result.text,type:result.type||'neutral',effect:result.effect||{}});
-        }else{
-          applySmallEvent(TEMPLATE_SMALL_EVENTS[randInt(0,TEMPLATE_SMALL_EVENTS.length-1)]);
-        }
-      }).catch(()=>{applySmallEvent(TEMPLATE_SMALL_EVENTS[randInt(0,TEMPLATE_SMALL_EVENTS.length-1)]);});
-    }else{
-      applySmallEvent(TEMPLATE_SMALL_EVENTS[randInt(0,TEMPLATE_SMALL_EVENTS.length-1)]);
-    }
-  }
+  // V6.3: 每月必出随机事件卡片（100%触发，区分工作/生活/同学）
+  triggerMonthlyEvent();
   const nm=getMonth();G.events.unshift({text:'📅 '+getAge()+'年'+nm+'月 · 净收入：'+fmt(net),type:net>=0?'good':'bad'});
   // Monthly task auto-complete
   G.monthlyTasks['advance']=true;
