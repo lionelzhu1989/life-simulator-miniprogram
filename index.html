@@ -253,7 +253,8 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 .contact-arrow{color:#ccc;font-size:14px;}
 .msg-item{display:flex;align-items:center;padding:13px 0;border-bottom:1px solid #f0f0f0;cursor:pointer;transition:background .15s;}
 .msg-item:active{background:#f8f8f8;}
-.msg-av{width:46px;height:46px;border-radius:23px;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;margin-right:12px;}
+.msg-av{width:46px;height:46px;border-radius:50%;background:#f0f0f0;overflow:hidden;flex-shrink:0;margin-right:12px;}
+.msg-av img,.msg-preview-avatar img,.fd-avatar img,.contact-avatar img,.moment-av img,.mc-av img{width:100%;height:100%;border-radius:inherit;object-fit:cover;}
 .msg-bd{flex:1;min-width:0;}
 .msg-nm{font-size:15px;font-weight:500;}
 .msg-pv{font-size:12px;color:var(--text-light);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -795,6 +796,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 
 .avatar-img{width:100%;height:100%;border-radius:50%;object-fit:cover;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.15);}
 .msg-preview-avatar-img{width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid #e0e0e0;flex-shrink:0;}
+.icon-img{width:100%;height:100%;object-fit:cover;border-radius:4px;}
 .friend-avatar-img{width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid #fff;}
 
 /* ===== QQ风格视觉改造 V6.4 ===== */
@@ -1156,8 +1158,11 @@ body{background:linear-gradient(180deg,#E8F4FF 0%,#F5F0FF 100%) fixed !important
   <div class="forbes-sub" id="forbesSub"></div>
 </div>
 
+>
 <script>
-// ========== 数据定义 ==========
+function _avt(a,c){return a&&a.indexOf('img/')===0?'<img src="'+a+'" class="'+(c||'avatar-img')+'">':a||'👤'}
+function _ic(a){return a&&a.indexOf('img/')===0?'<img src="'+a+'" class="icon-img">':a||'📌'}
+ ========== 数据定义 ==========
 const JOBS=[
   {id:'intern',name:'实习生',salary:36000,requireIQ:0,requireEQ:0,level:0,requireMonths:0},
   {id:'junior',name:'初级员工',salary:72000,requireIQ:90,requireEQ:70,level:1,requireMonths:12},
@@ -2322,7 +2327,7 @@ function renderCareerCards(selectionType){
       : 'selectCareer(\''+c.id+'\',true)';
     var cardClass = isCurrentCareer && selectionType==='change' ? 'career-card current-career-dim' : 'career-card';
     html+='<div class="'+cardClass+'" onclick="'+(clickHandler||'void(0)')+'">';
-    html+='<div class="career-card-icon">'+c.icon+'</div>';
+    html+='<div class="career-card-icon">'+_ic(c.icon)+'</div>';
     html+='<div class="career-card-name">'+c.name+'</div>';
     html+='<div class="career-card-desc">'+c.desc+'</div>';
     html+='<div class="career-card-salary">起薪 ¥'+(c.startSalary/10000).toFixed(1)+'万/年</div>';
@@ -2407,7 +2412,7 @@ function refreshLearning(){
       const pct=Math.round(((total-remaining)/total)*100);
       html+='<div style="background:linear-gradient(135deg,#e8f4fd,#d6eaf8);padding:12px;border-radius:8px;margin-bottom:12px;">';
       html+='<div style="display:flex;justify-content:space-between;align-items:center;">';
-      html+='<span style="font-size:14px;font-weight:600;">📖 正在学习：'+course.icon+' '+course.name+'</span>';
+      html+='<span style="font-size:14px;font-weight:600;">📖 正在学习：'+_ic(course.icon)+' '+course.name+'</span>';
       html+='<span style="font-size:12px;color:#3498db;font-weight:600;">'+pct+'%</span></div>';
       html+='<div style="height:6px;background:#d0e8f7;border-radius:3px;margin-top:8px;"><div style="height:100%;background:#3498db;border-radius:3px;width:'+pct+'%;transition:width .3s;"></div></div>';
       html+='<div style="font-size:11px;color:#777;margin-top:6px;">剩余 '+Math.max(0,remaining)+' 个月完成</div>';
@@ -2430,7 +2435,7 @@ function refreshLearning(){
     else if(!canAfford){statusText='💸 余额不足';statusColor='#e74c3c';}
     else{statusText='💰 '+fmt(c.cost);statusColor='#e67e22';}
     html+='<div style="display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid #f0f0f0;">';
-    html+='<div style="font-size:28px;">'+c.icon+'</div>';
+    html+='<div style="font-size:28px;">'+_ic(c.icon)+'</div>';
     html+='<div style="flex:1;"><div style="font-weight:600;font-size:14px;">'+c.name+'</div>';
     html+='<div style="font-size:12px;color:#999;margin-top:2px;">'+c.desc+'</div>';
     html+='<div style="font-size:11px;color:#666;margin-top:3px;">IQ+'+c.iqBonus+' EQ+'+c.eqBonus+(c.healthBonus?' HP+'+c.healthBonus:'')+(c.moodBonus?' Mood+'+c.moodBonus:'')+' · '+c.months+'个月</div></div>';
@@ -2545,7 +2550,7 @@ function renderLifeEvents(){
   let html='';
   recent.forEach((ev,i)=>{
     html+='<div class="event-item" onclick="this.classList.toggle(\'expanded\')">';
-    html+='<div class="event-icon">'+ev.icon+'</div>';
+    html+='<div class="event-icon">'+_ic(ev.icon)+'</div>';
     html+='<div class="event-content"><div class="event-title">'+ev.title+'</div>';
     html+='<div class="event-month">第'+ev.month+'个月</div>';
     html+='<div class="event-detail">'+ev.detail+'</div>';
@@ -2561,7 +2566,7 @@ function showAllLifeEvents(){
   let html='<div style="max-height:60vh;overflow-y:auto;">';
   events.forEach(ev=>{
     html+='<div class="event-item">';
-    html+='<div class="event-icon">'+ev.icon+'</div>';
+    html+='<div class="event-icon">'+_ic(ev.icon)+'</div>';
     html+='<div class="event-content"><div class="event-title">'+ev.title+'</div>';
     html+='<div class="event-month">第'+ev.month+'个月</div>';
     html+='<div class="event-detail" style="display:block;">'+ev.detail+'</div>';
@@ -2582,7 +2587,7 @@ function renderRecentMsgs(){
     const lastRound=t.rounds[t.rounds.length-1];
     const preview=lastRound?(lastRound.text||lastRound.option||'').substring(0,30):'';
     html+='<div class="msg-preview-item" onclick="switchTab(\'phone\');setTimeout(()=>openChat(\''+t.npcId+'\'),200)">';
-    html+='<div class="msg-preview-avatar">'+npc.avatar+'</div>';
+    html+='<div class="msg-preview-avatar">'+_avt(npc.avatar)+'</div>';
     html+='<div class="msg-preview-info"><div class="msg-preview-name">'+npc.name+'</div>';
     html+='<div class="msg-preview-text">'+preview+'</div></div>';
     html+='<div class="msg-preview-arrow">›</div></div>';
@@ -3371,7 +3376,7 @@ function showWorkScenarioModal(data,career){
     if(effectStr)optsHtml+='<div class="ws-option-effect">'+effectStr+'</div>';
     optsHtml+='</div>';
   });
-  box.innerHTML='<div class="ws-career-icon">'+career.icon+'</div>';
+  box.innerHTML='<div class="ws-career-icon">'+_ic(career.icon)+'</div>';
   box.innerHTML+='<div class="ws-career-label">'+career.name+' · 月度职场情景</div>';
   box.innerHTML+=perfBar;
   box.innerHTML+='<div class="ws-title">'+data.title+'</div>';
@@ -3813,7 +3818,7 @@ function refreshWork(){
     const career=CAREERS.find(c=>c.id===G.career);
     if(career){
       html='<div class="list-item" style="background:linear-gradient(135deg,#e8f4fd,#d6eaf8);border-radius:8px;margin-bottom:8px;">';
-      html+='<div class="list-info"><div class="name">'+career.icon+' '+career.name+'</div>';
+      html+='<div class="list-info"><div class="name">'+_ic(career.icon)+' '+career.name+'</div>';
       html+='<div class="desc">'+career.desc+'</div>';
       html+='<div style="margin-top:6px;">';
       career.traits.forEach(function(t){html+='<span class="career-trait-tag" style="margin-right:4px;">'+t+'</span>';});
@@ -4197,7 +4202,7 @@ function refreshBusiness(){
     else action='<button class="btn btn-primary btn-sm" onclick="buyBusiness(\''+b.id+'\')">加盟 '+fmt(b.price)+'</button>';
     const clickAction=owned?'openBusinessDetail(\''+b.id+'\')':'';
     html+='<div class="list-item" style="'+(owned?'cursor:pointer;':'')+'" '+(clickAction?'onclick="'+clickAction+'"':'')+'>';
-    html+='<div class="list-info"><div class="name">'+b.icon+' '+b.name+'</div>';
+    html+='<div class="list-info"><div class="name">'+_ic(b.icon)+' '+b.name+'</div>';
     html+='<div class="desc">投入：'+fmt(b.price)+' | 风险：'+Math.round(b.risk*100)+'% | 月收入：'+fmt(b.monthlyIncome[0])+'~'+fmt(b.monthlyIncome[1])+'</div>';
     if(owned){
       html+='<div class="desc" style="color:#999;font-size:11px;">持有'+(owned.monthsOwned||0)+'个月 | 上月：'+(owned.lastMonthIncome>=0?'+':'')+fmt(owned.lastMonthIncome||0)+'</div>';
@@ -4210,7 +4215,7 @@ function refreshBusiness(){
     const info=BUSINESSES.find(x=>x.id===b.id);if(!info)return;
     const profit=(b.totalIncome||0)-(b.totalLoss||0);
     myHtml+='<div class="list-item" onclick="openBusinessDetail(\''+b.id+'\')" style="cursor:pointer;">';
-    myHtml+='<div class="list-info"><div class="name">'+info.icon+' '+info.name+'</div>';
+    myHtml+='<div class="list-info"><div class="name">'+_ic(info.icon)+' '+info.name+'</div>';
     myHtml+='<div class="desc">投入：'+fmt(info.price)+' | 持有'+(b.monthsOwned||0)+'个月</div>';
     myHtml+='<div class="desc" style="font-size:11px;">累计收入：'+fmt(b.totalIncome||0)+' | 累计亏损：'+fmt(b.totalLoss||0)+' | <span style="color:'+(profit>=0?'#27ae60':'#e74c3c')+';">净利润：'+fmt(profit)+'</span></div>';
     myHtml+='</div><div class="list-action"><span style="font-size:12px;color:#3498db;">详情 ›</span></div></div>';
@@ -4376,7 +4381,7 @@ function openProjectDetail(projectId){
   [{label:'团队士气',val:t.morale,icon:'💪',color:'#e74c3c'},{label:'技术进度',val:t.techProgress,icon:'🔬',color:'#3498db'},
    {label:'资金状况',val:t.funding,icon:'💰',color:'#27ae60'},{label:'市场表现',val:t.market,icon:'📈',color:'#f39c12'}].forEach(item=>{
     html+='<div style="background:#f8f9fa;padding:8px;border-radius:8px;">';
-    html+='<div style="font-size:11px;color:#666;">'+item.icon+' '+item.label+'</div>';
+    html+='<div style="font-size:11px;color:#666;">'+_ic(item.icon)+' '+item.label+'</div>';
     html+='<div style="height:4px;background:#e9ecef;border-radius:2px;margin:4px 0;"><div style="height:100%;background:'+item.color+';border-radius:2px;width:'+item.val+'%;"></div></div>';
     html+='<div style="font-size:12px;font-weight:600;">'+item.val+'</div></div>';
   });
@@ -4517,7 +4522,7 @@ function refreshTasks(){
   let html='';
   MONTHLY_TASKS.forEach(t=>{
     const done=!!G.monthlyTasks[t.id];
-    html+='<div class="task-item"><div class="task-icon">'+t.icon+'</div><div class="task-info"><div class="task-name">'+t.name+'</div><div class="task-desc">'+t.desc+'</div><div class="task-reward">奖励 '+fmt(t.reward)+'</div></div><div class="task-check '+(done?'done':'')+'">'+(done?'✓':'')+'</div></div>';
+    html+='<div class="task-item"><div class="task-icon">'+_ic(t.icon)+'</div><div class="task-info"><div class="task-name">'+t.name+'</div><div class="task-desc">'+t.desc+'</div><div class="task-reward">奖励 '+fmt(t.reward)+'</div></div><div class="task-check '+(done?'done':'')+'">'+(done?'✓':'')+'</div></div>';
   });
   const allDone=MONTHLY_TASKS.every(t=>G.monthlyTasks[t.id]);
   if(allDone){
@@ -5965,12 +5970,12 @@ function showGroupSelector(npcId){
     document.body.appendChild(overlay);
   }
   
-  let html='<div class="group-select-title">设置 '+p.avatar+' '+p.name+' 的分组</div>';
+  let html='<div class="group-select-title">设置 '+_avt(p.avatar)+' '+p.name+' 的分组</div>';
   html+='<div>';
   (G.friendGroups||[]).forEach(g=>{
     const sel=g.id===currentGroup?'selected':'';
     html+='<div class="group-select-item '+sel+'" onclick="doSetNpcGroup(\''+npcId+'\',\''+g.id+'\')">';
-    html+='<span class="gs-icon">'+g.icon+'</span>';
+    html+='<span class="gs-icon">'+_ic(g.icon)+'</span>';
     html+='<span class="gs-name" style="color:'+g.color+'">'+g.name+'</span>';
     if(g.id===currentGroup) html+='<span>✓</span>';
     html+='</div>';
@@ -6012,7 +6017,7 @@ function renderManageGroupsModal(overlay){
   (G.friendGroups||[]).forEach(g=>{
     const count=Object.values(G.friendGroupings||{}).filter(v=>v===g.id).length;
     html+='<div class="manage-group-item">';
-    html+='<span class="mg-icon">'+g.icon+'</span>';
+    html+='<span class="mg-icon">'+_ic(g.icon)+'</span>';
     html+='<span class="mg-name" style="color:'+g.color+'">'+g.name+'</span>';
     html+='<span style="font-size:11px;color:#999;">('+count+'人)</span>';
     if(!g.isDefault) html+='<span class="mg-del" onclick="doDeleteGroup(\''+g.id+'\')">删除</span>';
@@ -6113,7 +6118,7 @@ function renderContacts(){
     const toggleIcon=isCollapsed?'▶':'▼';
     html+='<div class="friend-group-header '+(isCollapsed?'collapsed':'')+'" onclick="toggleFriendGroup(\''+gid+'\')">';
     html+='<span class="friend-group-toggle">'+toggleIcon+'</span>';
-    html+='<span>'+grp.icon+' '+grp.name+'</span>';
+    html+='<span>'+_ic(grp.icon)+' '+grp.name+'</span>';
     html+='<span class="friend-group-count">'+npcIds.length+'人</span>';
     html+='</div>';
     html+='<div class="friend-group-items">';
@@ -6141,7 +6146,7 @@ function renderContacts(){
       
       html+='<div class="contact-item" onclick="openProactiveChat(\''+npcId+'\')">';
       html+='<div class="contact-avatar"><img src="'+p.avatar+'" class="friend-avatar-img"></div>';
-      html+='<div class="contact-info"><div class="contact-name">'+p.name+' <span style="font-size:11px;color:'+relDef.color+';">'+relDef.icon+' '+relDef.label+'</span></div>';
+      html+='<div class="contact-info"><div class="contact-name">'+p.name+' <span style="font-size:11px;color:'+relDef.color+';">'+_ic(relDef.icon)+' '+relDef.label+'</span></div>';
       html+='<div class="contact-status">亲密度 '+rel.intimacy+' · 信任 '+rel.trust+' · 好感 '+(rel.affection||0)+' <span class="contact-group-badge" onclick="event.stopPropagation();showGroupSelector(\''+npcId+'\')" style="background:'+(curGrp?curGrp.color:'#95a5a6')+'22;color:'+(curGrp?curGrp.color:'#95a5a6')+';margin-left:4px;">'+(curGrp?curGrp.icon:'')+' '+(curGrp?curGrp.name:'点头之交')+'</span></div></div>';
       if(hasNew)html+='<div style="width:8px;height:8px;border-radius:50%;background:#27ae60;flex-shrink:0;"></div>';
       html+='<div class="contact-detail-btn" onclick="event.stopPropagation();showContactDetail(\''+npcId+'\')" style="font-size:14px;padding:2px 6px;cursor:pointer;color:#3498db;font-weight:700;">ℹ️</div>';html+='<div class="contact-arrow">›</div></div>';
@@ -6182,7 +6187,7 @@ async function openProactiveChat(npcId){
     });
   }
   // Set header
-  document.getElementById('chatName').textContent=p.avatar+' '+p.name;
+  document.getElementById('chatName').innerHTML=_avt(p.avatar)+'&nbsp;'+p.name;
   const body=document.getElementById('chatBody');
   body.innerHTML='';
   // Load chat history if exists
@@ -6198,7 +6203,7 @@ async function openProactiveChat(npcId){
     });
   }else{
     // Show welcome message
-    body.innerHTML='<div style="text-align:center;padding:20px 0;color:#999;font-size:13px;"><div style="font-size:28px;margin-bottom:8px;">'+p.avatar+'</div>'+p.name+' · '+p.traits.join('/')+'</div>';
+    body.innerHTML='<div style="text-align:center;padding:20px 0;color:#999;font-size:13px;"><div style="font-size:28px;margin-bottom:8px;">'+_avt(p.avatar)+'</div>'+p.name+' · '+p.traits.join('/')+'</div>';
     // v4.1.0: AI生成开场白（替代硬编码npcGreetings）
     showTypingIndicator();
     let aiGreeting;
@@ -6373,7 +6378,7 @@ function showLearningPanel(){
     const course=COURSES.find(c=>c.id===G.learning.studying);
     const remaining=G.learning.studyEndMonth-G.totalMonths;
     html+='<div style="background:#e8f4fd;padding:12px;border-radius:8px;margin-bottom:12px;">';
-    html+='<div style="font-weight:600;">📖 正在学习：'+course.icon+' '+course.name+'</div>';
+    html+='<div style="font-weight:600;">📖 正在学习：'+_ic(course.icon)+' '+course.name+'</div>';
     html+='<div class="text-sm text-muted" style="margin-top:4px;">剩余 '+Math.max(0,remaining)+' 个月完成</div>';
     html+='</div>';
   }
@@ -6390,7 +6395,7 @@ function showLearningPanel(){
     else if(!canAfford){statusText='💸 余额不足';statusColor='#e74c3c';}
     else{statusText='💰 '+fmt(c.cost);statusColor='#e67e22';}
     html+='<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f0f0f0;">';
-    html+='<div style="font-size:24px;">'+c.icon+'</div>';
+    html+='<div style="font-size:24px;">'+_ic(c.icon)+'</div>';
     html+='<div style="flex:1;"><div style="font-weight:500;font-size:14px;">'+c.name+'</div>';
     html+='<div class="text-sm text-muted">'+c.desc+'</div>';
     html+='<div class="text-sm" style="margin-top:2px;">IQ+'+c.iqBonus+' EQ+'+c.eqBonus+(c.healthBonus?' HP+'+c.healthBonus:'')+' · '+c.months+'个月</div></div>';
@@ -6477,7 +6482,7 @@ function triggerGathering(){
     id:G.phone.nextId++,npcId:g.npc,npcName:npc.name,npcAvatar:npc.avatar,
     type:'gathering',tplId:g.id,
     rounds:[{
-      npcMsgs:[npc.name+'邀请你参加'+g.icon+' '+g.name+'，'+g.desc+(g.cost>0?'（预计花费'+fmt(g.cost)+'）':'')],
+      npcMsgs:[npc.name+'邀请你参加'+_ic(g.icon)+' '+g.name+'，'+g.desc+(g.cost>0?'（预计花费'+fmt(g.cost)+'）':'')],
       opts:[
         {text:'✅ 好的，我去！',fx:{mood:g.moodBonus,eq:g.eqBonus,cash:-g.cost},next:-1},
         {text:'❌ 不好意思，去不了',fx:{mood:g.declineEffects.mood,eq:g.declineEffects.eq},next:-1,
@@ -6789,7 +6794,7 @@ function renderPhoneList(){
     const cls=item.unread?'msg-item msg-unread':'msg-item msg-read';
     const pvCls=item.unread?'msg-pv msg-pv-unread':'msg-pv';
     html+='<div class="'+cls+'" onclick="'+item.onclick+'">';
-    html+='<div class="msg-av">'+item.avatar;
+    html+='<div class="msg-av">'+_avt(item.avatar)+'</div>
     if(item.unread)html+='<div class="unread-dot"></div>';
     html+='</div>';
     html+='<div class="msg-bd"><div class="msg-nm">'+item.name+'</div>';
@@ -8043,7 +8048,7 @@ function renderMoments(){
   all.forEach(m=>{
     const isAI=m._isAI;
     html+='<div class="moment-card" data-moment-id="'+m.id+'">';
-    html+='<div class="moment-hd"><div class="moment-av">'+m.npcAvatar+'</div><div class="moment-nm">'+m.npcName+'</div><div class="moment-tm">'+getTimeStr(m.month)+'</div></div>';
+    html+='<div class="moment-hd"><div class="moment-av">'+_avt(m.npcAvatar)+'</div><div class="moment-nm">'+m.npcName+'</div><div class="moment-tm">'+getTimeStr(m.month)+'</div></div>';
     html+='<div class="moment-txt">'+m.text+'</div>';
     // AI moments: show comments and likes
     if(isAI){
@@ -8053,7 +8058,7 @@ function renderMoments(){
       if(allComments.length>0){
         html+='<div class="moment-comments">';
         allComments.forEach(c=>{
-          html+='<div class="moment-comment"><div class="mc-av">'+c.npcAvatar+'</div><div><span class="mc-nm'+(c.byPlayer?' moment-player-comment':'')+'">'+c.npcName+':</span> <span class="mc-txt">'+c.text+'</span></div></div>';
+          html+='<div class="moment-comment"><div class="mc-av">'+_avt(c.npcAvatar)+'</div><div><span class="mc-nm'+(c.byPlayer?' moment-player-comment':'')+'">'+c.npcName+':</span> <span class="mc-txt">'+c.text+'</span></div></div>';
         });
         html+='</div>';
       }
@@ -8083,7 +8088,7 @@ function renderMoments(){
       if(allComments.length>0){
         html+='<div class="moment-comments">';
         allComments.forEach(c=>{
-          html+='<div class="moment-comment"><div class="mc-av">'+c.npcAvatar+'</div><div><span class="mc-nm'+(c.byPlayer?' moment-player-comment':'')+'">'+c.npcName+':</span> <span class="mc-txt">'+c.text+'</span></div></div>';
+          html+='<div class="moment-comment"><div class="mc-av">'+_avt(c.npcAvatar)+'</div><div><span class="mc-nm'+(c.byPlayer?' moment-player-comment':'')+'">'+c.npcName+':</span> <span class="mc-txt">'+c.text+'</span></div></div>';
         });
         html+='</div>';
       }
@@ -8162,7 +8167,7 @@ function renderNotifications(){
     const bgCls=n.type==='achievement'?'#fef9e7':n.type==='stock'?'#d5f5e3':n.type==='warning'?'#fadbd8':'#d6eaf8';
     const cls=n.read?'notif-item read':'notif-item unread';
     html+='<div class="'+cls+'" onclick="markNotifRead('+n.id+')">';
-    html+='<div class="notif-icon" style="background:'+bgCls+';">'+n.icon+'</div>';
+    html+='<div class="notif-icon" style="background:'+bgCls+';">'+_ic(n.icon)+'</div>';
     html+='<div class="notif-body"><div class="notif-text">'+n.text+'</div>';
     html+='<div class="notif-meta">'+getTimeStr(n.month)+'</div></div>';
     if(!n.read)html+='<div class="notif-dot"></div>';
@@ -8309,7 +8314,7 @@ function renderDashboard(){
       const info=BUSINESSES.find(x=>x.id===b.id);
       if(info){
         const li=b.lastMonthIncome||0;
-        html+='<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>'+info.icon+' '+info.name+'</span><span style="color:'+(li>=0?'#27ae60':'#e74c3c')+'">'+(li>=0?'+':'')+f(li)+'</span></div>';
+        html+='<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>'+_ic(info.icon)+' '+info.name+'</span><span style="color:'+(li>=0?'#27ae60':'#e74c3c')+'">'+(li>=0?'+':'')+f(li)+'</span></div>';
       }
     });
   }
@@ -9298,7 +9303,7 @@ function renderChoiceEvent(evt){
     optionsHtml+='<div class="choice-option'+(locked?' locked':'')+'"';
     if(!locked)optionsHtml+=' onclick="resolveChoiceEvent('+idx+')"';
     optionsHtml+='>'+
-      '<div class="choice-option-icon">'+opt.icon+'</div>'+
+      '<div class="choice-option-icon">'+_ic(opt.icon)+'</div>'+
       '<div class="choice-option-body">'+
         '<div class="choice-option-title">'+opt.title+'</div>'+
         '<div class="choice-option-desc">'+opt.desc+'</div>';
@@ -10561,7 +10566,7 @@ function showGatheringModal(season, scene, newContacts){
   
   newContacts.forEach(function(c){
     html += '<div style="display:flex;align-items:center;gap:10px;padding:10px;margin-bottom:8px;background:#f8f9fa;border-radius:10px;">';
-    html += '<span style="font-size:28px;">' + c.avatar + '</span>';
+    html += '<span style="font-size:28px;">' +_avt(c.avatar)+ '</span>';
     html += '<div><div style="font-weight:600;font-size:14px;">' + c.name + '</div>';
     html += '<div style="font-size:12px;color:#999;">' + c.metWhere + '</div></div>';
     html += '</div>';
@@ -10675,7 +10680,7 @@ function getPresetInteraction(friend){
 }
 
 function showFriendInteractionModal(friend, interaction){
-  var html = '<div style="text-align:center;font-size:36px;margin-bottom:8px;">' + (friend.avatar || '👤') + '</div>';
+  var html = '<div style="text-align:center;font-size:36px;margin-bottom:8px;">' + _avt(friend.avatar) + '</div>';
   html += '<div style="text-align:center;font-size:16px;font-weight:600;margin-bottom:4px;">' + (friend.name || '朋友') + '</div>';
   html += '<div style="text-align:center;font-size:12px;color:#999;margin-bottom:16px;">亲密度 Lv.' + (friend.friendLevel || 0) + '</div>';
   html += '<div style="background:#f8f9fa;border-radius:12px;padding:14px;font-size:14px;line-height:1.7;color:#333;margin-bottom:8px;">';
@@ -11004,7 +11009,7 @@ function showContactDetail(friendId){
   html += '<div class="friend-detail-card" onclick="event.stopPropagation()">';
   
   html += '<div class="fd-header">';
-  html += '<div class="fd-avatar">' + (friend.avatar || '👤') + '</div>';
+  html += '<div class="fd-avatar">' + _avt(friend.avatar) + '</div>';
   html += '<div class="fd-name">' + (friend.name || '未知') + '</div>';
   html += '<div class="fd-company">' + (friend.metWhere || '朋友') + '</div>';
   html += '</div>';
@@ -11361,7 +11366,7 @@ function showNarrativeEvent(evt){
     var locked=opt.reqCash&&G.cash<opt.reqCash;
     var cls=locked?'locked':'';
     html+='<div class="choice-option '+cls+'" onclick="G._naid=evt.id;G._nidx=idx;applyNarrativeChoice(G._naid,G._nidx)">';
-    html+='<div class="choice-option-icon">'+opt.icon+'</div>';
+    html+='<div class="choice-option-icon">'+_ic(opt.icon)+'</div>';
     html+='<div class="choice-option-body"><div class="choice-option-title">'+opt.title+'</div>';
     html+='<div class="choice-option-desc">'+opt.desc+'</div>';
     html+='<span class="choice-option-tag '+opt.tagCls+'">'+opt.tag+'</span>';
@@ -11429,7 +11434,7 @@ function openBusinessDetail(id){
   const avgMonthly=owned.monthsOwned>0?Math.round((owned.totalIncome||0)/owned.monthsOwned):0;
   const roi=owned.monthsOwned>0?((profit/b.price)*100).toFixed(1):'0.0';
   let content='<div style="text-align:center;margin-bottom:16px;">';
-  content+='<div style="font-size:48px;margin-bottom:8px;">'+b.icon+'</div>';
+  content+='<div style="font-size:48px;margin-bottom:8px;">'+_ic(b.icon)+'</div>';
   content+='<div style="font-size:18px;font-weight:600;">'+b.name+'</div>';
   content+='</div>';
   content+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">';
@@ -11593,7 +11598,7 @@ function _getNotificationsHTML(){
   recent.forEach(n=>{
     const bgCls=n.type==='achievement'?'#fef9e7':n.type==='stock'?'#d5f5e3':n.type==='warning'?'#fadbd8':'#d6eaf8';
     h+='<div class="msg-item" style="cursor:default;opacity:0.7;">';
-    h+='<div class="msg-av" style="background:'+bgCls+';">'+n.icon+'</div>';
+    h+='<div class="msg-av" style="background:'+bgCls+';">'+_ic(n.icon)+'</div>';
     h+='<div class="msg-bd"><div class="msg-nm" style="color:#666;">'+n.text+'</div>';
     h+='<div class="msg-pv" style="color:#999;">系统通知</div></div>';
     h+='<div class="msg-mt"><div class="msg-tm">'+getTimeStr(n.month)+'</div></div></div>';
@@ -13185,7 +13190,7 @@ function showDLCPanel(){
     var unlocked = G.dlcUnlocked && G.dlcUnlocked.includes(key);
     var progress = G.dlcProgress && G.dlcProgress[dlc.name] || 0;
     html += '<div class="dlc-card '+(unlocked?'unlocked':'locked')+'">';
-    html += '<div class="dlc-header"><span class="dlc-icon">'+dlc.icon+'</span><span class="dlc-name">'+dlc.name+'</span></div>';
+    html += '<div class="dlc-header"><span class="dlc-icon">'+_ic(dlc.icon)+'</span><span class="dlc-name">'+dlc.name+'</span></div>';
     html += '<div class="dlc-desc">'+dlc.desc+'</div>';
     if(unlocked){html += '<div class="dlc-progress">进度: '+progress+'/'+dlc.events.length+'事件</div>';}
     else{html += '<div class="dlc-locked">完成游戏一次后解锁</div>';}
@@ -13376,7 +13381,7 @@ function toggleDatePanel(){
     const leaveStr=act.annualLeave>0?'+'+act.annualLeave+'天假':'';
     const reqStr=locked?'需亲密'+act.minIntimacy+'/信任'+act.minTrust:'';
     html+='<div class="chat-date-item'+(locked?' locked':'')+'" onclick="'+(locked?'':'startPlayerDate(\''+act.id+'\')')+'">';
-    html+='<span>'+act.icon+'</span><span>'+act.name+'</span>';
+    html+='<span>'+_ic(act.icon)+'</span><span>'+act.name+'</span>';
     if(locked)html+='<span class="cost" style="color:#e74c3c;">🔒'+reqStr+'</span>';
     else html+='<span class="cost">'+costStr+(leaveStr?' +'+leaveStr:'')+'</span>';
     html+='</div>';
