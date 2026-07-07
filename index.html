@@ -1885,7 +1885,28 @@ function startGame(){
   var go=document.getElementById('guideOverlay');if(go)go.style.display='none';
   var ob=document.getElementById('obOverlay');if(ob)ob.style.display='none';
   initStockPrices();initPhoneState();saveGame();refreshAll();
-  showToast('🎓 以实习生身份开启人生！12个月后选择职业方向');
+  showToast('🎓 以实习生身份开启人生！实习12个月后选择职业');
+  // 首页提示实习倒计时
+  setTimeout(function(){
+    if(G && G.isInternship && G.hasChosenCareer===false){
+      var hint=document.getElementById('internshipHint');
+      if(!hint){
+        var div=document.createElement('div');
+        div.id='internshipHint';
+        div.style.cssText='position:fixed;top:60px;left:50%;transform:translateX(-50%);background:#fef9e7;color:#b7950b;padding:8px 16px;border-radius:20px;font-size:13px;z-index:500;box-shadow:0 2px 8px rgba(0,0,0,0.1);white-space:nowrap;';
+        document.body.appendChild(div);
+      }
+      updateInternshipHint();
+    }
+  },500);
+}
+function updateInternshipHint(){
+  var hint=document.getElementById('internshipHint');
+  if(!hint || !G) return;
+  if(!G.isInternship || G.hasChosenCareer){hint.style.display='none';return;}
+  var remaining=12-(G.internshipMonths||0);
+  hint.style.display='block';
+  hint.textContent='🎓 实习期剩余 '+remaining+' 个月 — 结束后选择职业方向';
 }
 // V5: 新游戏（清除存档）
 function newGame(){
@@ -1899,7 +1920,19 @@ function newGame(){
     var go=document.getElementById('guideOverlay');if(go)go.style.display='none';
     var ob=document.getElementById('obOverlay');if(ob)ob.style.display='none';
     initStockPrices();initPhoneState();saveGame();refreshAll();
-    showToast('🎓 以实习生身份开启人生！12个月后选择职业方向');
+    showToast('🎓 以实习生身份开启人生！实习12个月后选择职业');
+    setTimeout(function(){
+      if(G && G.isInternship && G.hasChosenCareer===false){
+        var hint=document.getElementById('internshipHint');
+        if(!hint){
+          var div=document.createElement('div');
+          div.id='internshipHint';
+          div.style.cssText='position:fixed;top:60px;left:50%;transform:translateX(-50%);background:#fef9e7;color:#b7950b;padding:8px 16px;border-radius:20px;font-size:13px;z-index:500;box-shadow:0 2px 8px rgba(0,0,0,0.1);white-space:nowrap;';
+          document.body.appendChild(div);
+        }
+        updateInternshipHint();
+      }
+    },500);
   }
 }
 // V5: 显示职业选择界面
@@ -1907,6 +1940,8 @@ function newGame(){
 function showCareerSelection(selectionType){
   selectionType = selectionType || 'internship';
   document.getElementById('welcomePage').style.display='none';
+  // 隐藏游戏主界面，强制玩家选择职业
+  var gameApp=document.getElementById('gameApp');if(gameApp)gameApp.style.display='none';
   var el=document.getElementById('careerSelectionPage');
   if(!el){
     var div=document.createElement('div');
@@ -8799,6 +8834,8 @@ advanceMonth=function(){
     G._perfAwardedThisMonth=true;
     G.performance += Math.floor(Math.random() * 20) - 5; // -5~+14随机积累
   }
+  // 更新实习倒计时提示
+  if(typeof updateInternshipHint==='function') updateInternshipHint();
   // checkNPCEvents已在advanceMonth内部调用
 };
 
