@@ -2027,10 +2027,14 @@ function selectCareer(careerId,isInternship){
     showToast('🔄 跳槽到【'+c.name+'】，mood-15, EQ-5, 绩效归零');
   } else {
     // === 实习结束选择行业逻辑 ===
-    G=defaultState();
+    // ⚠️ 不能 G=defaultState()，否则会清空现金/股票/属性！只重置职业相关字段
     G.career=careerId;
     G.jobIndex=0;
     G.monthsAtJob=0;
+    G.performance=0;
+    G._promotionOffered=false;
+    G._promotionMonth=0;
+    G._perfAwardedThisMonth=false;
     // 不同职业初始属性微调
     if(careerId==='finance'){G.IQ=clamp(G.IQ+5,0,200);G.EQ=clamp(G.EQ+3,0,200);}
     else if(careerId==='sales'){G.EQ=clamp(G.EQ+8,0,200);}
@@ -2702,9 +2706,38 @@ async function advanceMonth(){
   if(typeof checkNPCEvents==='function') checkNPCEvents();
   // v4.2.0: 工作剧情事件检测
   if(typeof checkWorkEvents==='function') checkWorkEvents();
-  // V6: AI工作情景标记（100%触发，移到advanceMonth后触发）
-  if(!G.selfEmployed && G.hasChosenCareer && !G.isInternship && G.totalMonths>12){
+  // V6: AI工作情景标记（有工作就触发，不再要求totalMonths>12）
+  if(!G.selfEmployed && G.hasChosenCareer && !G.isInternship){
     G._workScenarioThisMonth=true;
+  }
+  
+  // V6.1: 实习期特殊事件（每月30%概率触发实习内容，避免实习期无聊）
+  if(G.isInternship && !G.hasChosenCareer && Math.random()<0.30){
+    triggerInternshipEvent();
+  }
+}
+
+// V6.1: 实习期特殊事件池
+function triggerInternshipEvent(){
+  const internEvents=[
+    {text:'📚 公司安排了新人培训，你学到了新技能',type:'good',effect:{IQ:3,mood:2}},
+    {text:'☕ 同事请你喝咖啡，给你分享职场经验',type:'good',effect:{EQ:3,mood:3}},
+    {text:'📋 导师给你安排了一个小项目练手',type:'neutral',effect:{IQ:2}},
+    {text:'💼 你第一次参加部门会议，了解了公司运作',type:'neutral',effect:{EQ:2}},
+    {text:'🎯 月度实习考核：表现良好，获得导师好评',type:'good',effect:{mood:5,EQ:2}},
+    {text:'😰 月度实习考核：表现一般，需要更加努力',type:'neutral',effect:{mood:-3}},
+    {text:'🤝 和同期实习生一起吃饭，认识了新朋友',type:'good',effect:{mood:4,EQ:2}},
+    {text:'📧 你发的邮件被导师指出格式问题，学到了',type:'neutral',effect:{IQ:1}},
+    {text:'💡 你在会议上提出了一个小建议，被采纳了',type:'good',effect:{mood:6,IQ:2}},
+    {text:'⏰ 加班整理文档，虽然累但了解了业务',type:'neutral',effect:{mood:-2,health:-1,IQ:2}},
+    {text:'🎁 公司发了实习补贴，虽然不多但很开心',type:'good',effect:{mood:3}},
+    {text:'📱 你加了部门微信群，感觉融入了团队',type:'good',effect:{EQ:3,mood:2}},
+  ];
+  const evt=internEvents[randInt(0,internEvents.length-1)];
+  applySmallEvent(evt);
+  // 实习期也增加社交偶遇机会
+  if(Math.random()<0.20 && typeof tryTriggerEncounter==='function'){
+    tryTriggerEncounter();
   }
 }
 
