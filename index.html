@@ -2198,8 +2198,14 @@ function showFloatText(text,positive){
 
 // ========== Tab系统 ==========
 function switchTab(name){
+  const pageEl=document.getElementById('page-'+name);
+  if(!pageEl){
+    console.warn('[switchTab] page-'+name+' not found, reloading...');
+    location.reload();
+    return;
+  }
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById('page-'+name).classList.add('active');
+  pageEl.classList.add('active');
   const tabs=['life','work','invest','pet','more','task','phone'];
   document.querySelectorAll('.tab-item').forEach((t,i)=>t.classList.toggle('active',tabs[i]===name));
   refreshPage(name);
