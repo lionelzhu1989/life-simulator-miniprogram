@@ -1162,7 +1162,7 @@ body{background:linear-gradient(180deg,#E8F4FF 0%,#F5F0FF 100%) fixed !important
 <script>
 function _avt(a,c){return a&&a.indexOf('img/')===0?'<img src="'+a+'" class="'+(c||'avatar-img')+'">':a||'👤'}
 function _ic(a){return a&&a.indexOf('img/')===0?'<img src="'+a+'" class="icon-img">':a||'📌'}
- ========== 数据定义 ==========
+// ========== 数据定义 ==========
 const JOBS=[
   {id:'intern',name:'实习生',salary:36000,requireIQ:0,requireEQ:0,level:0,requireMonths:0},
   {id:'junior',name:'初级员工',salary:72000,requireIQ:90,requireEQ:70,level:1,requireMonths:12},
@@ -6794,7 +6794,7 @@ function renderPhoneList(){
     const cls=item.unread?'msg-item msg-unread':'msg-item msg-read';
     const pvCls=item.unread?'msg-pv msg-pv-unread':'msg-pv';
     html+='<div class="'+cls+'" onclick="'+item.onclick+'">';
-    html+='<div class="msg-av">'+_avt(item.avatar)+'</div>
+    html+='<div class="msg-av">'+_avt(item.avatar)+'</div>';
     if(item.unread)html+='<div class="unread-dot"></div>';
     html+='</div>';
     html+='<div class="msg-bd"><div class="msg-nm">'+item.name+'</div>';
