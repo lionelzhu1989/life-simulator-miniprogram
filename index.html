@@ -4626,6 +4626,21 @@ function buyLegacy(id){
   G.legacyPoints-=u.cost;G.legacyUpgrades.push(id);
   saveLegacy();showRebirthPanel();showToast('✅ 购买成功！');
 }
+// MutationObserver: 监控page-life被移除
+const __pageLifeObserver=new MutationObserver((mutations)=>{
+  mutations.forEach(m=>{
+    m.removedNodes.forEach(n=>{
+      if(n.id==='page-life'||(n.querySelector&&n.querySelector('#page-life'))){
+        console.error('[Observer] page-life removed! Stack:',new Error().stack);
+      }
+    });
+  });
+});
+setTimeout(()=>{
+  const pl=document.getElementById('page-life');
+  if(pl)__pageLifeObserver.observe(pl.parentElement||document.body,{childList:true,subtree:true});
+},2000);
+
 function doRebirth(){
   if(!document.getElementById('page-life')){
     console.error('[doRebirth] page-life missing at start! bodyHTML length:',document.body.innerHTML.length);
