@@ -4680,6 +4680,16 @@ function doRebirth(){
         console.log('[doRebirth] step6: refreshAll');
         refreshAll();
         console.log('[doRebirth] step7: switchTab, page-life exists:',!!document.getElementById('page-life'));
+        // 保险：如果page-life丢失，强制恢复gameApp显示
+        const _ga=document.getElementById('gameApp');
+        if(_ga) _ga.style.display='flex';
+        const _pl=document.getElementById('page-life');
+        if(!_pl){
+          console.warn('[doRebirth] page-life still missing, forcing reload');
+          showToast('正在恢复页面...','warning',800);
+          setTimeout(()=>{location.href=location.href.split('?')[0]+'?t='+Date.now();},800);
+          return;
+        }
         switchTab('life');
         showToast('♻️ 重生成功！获得 0 LP，继承上一轮加成');
         checkAchievements();
