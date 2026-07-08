@@ -6820,7 +6820,7 @@ function renderPhoneList(){
         _type:'thread',_id:t.id,_sortTime:t.receivedMonth*100+99,
         avatar:t.npcAvatar,name:t.npcName+(t.type==='call'?' 📞':t.type==='sms'?' 💬':t.type==='gathering'?' 🎉':t.type==='wechat'?' 💬':''),
         preview:preview,time:getTimeStr(t.receivedMonth),
-        unread:unread,unreadCount:unreadCount,onclick:'openThread('+t.id+')'
+        unread:unread,unreadCount:unreadCount,onclick:'openThread(\''+t.id+'\')'
       });
     });
   }
