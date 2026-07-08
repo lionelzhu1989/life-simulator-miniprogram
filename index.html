@@ -242,7 +242,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 .phone-tabs{display:flex;background:#fff;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);margin-bottom:12px;}
 .phone-tab{flex:1;padding:10px 4px;text-align:center;font-size:12px;font-weight:500;color:var(--text-light);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;}
 .phone-tab.active{color:var(--primary);border-bottom-color:var(--primary);background:rgba(52,152,219,.05);}
-.phone-content{display:none;}.phone-content.active{display:block;}
+.phone-content{display:none;position:relative;}.phone-content.active{display:block;}
 .contact-list{display:flex;flex-direction:column;gap:2px;}
 .contact-item{display:flex;align-items:center;gap:12px;padding:12px 16px;background:#fff;cursor:pointer;transition:background .15s;}
 .contact-item:active{background:#f0f0f0;}
@@ -870,6 +870,22 @@ img[class*="avatar"]:hover{transform:scale(1.08);}
 /* 渐变背景装饰 */
 body{background:linear-gradient(180deg,#E8F4FF 0%,#F5F0FF 100%) fixed !important;}
 .app{background:transparent !important;}
+/* 朋友圈发帖 */
+.moments-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#fff;border-bottom:1px solid #f0f0f0;}
+.moments-header span{font-size:16px;font-weight:600;color:#333;}
+.moments-post-btn{background:#07c160;color:#fff;border:none;border-radius:18px;padding:6px 16px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:4px;}
+.moments-post-btn:active{opacity:.7;}
+.moments-panel{display:none;position:absolute;top:0;left:0;width:100%;height:100%;background:#f5f5f5;z-index:200;flex-direction:column;}
+.moments-panel.show{display:flex;}
+.moments-panel-hdr{display:flex;align-items:center;padding:12px 16px;background:#fff;border-bottom:1px solid #eee;gap:12px;}
+.moments-panel-hdr button{background:none;border:none;font-size:16px;cursor:pointer;padding:4px 8px;color:#07c160;}
+.moments-panel-hdr .hdr-title{flex:1;text-align:center;font-size:16px;font-weight:600;}
+.moments-ta{width:100%;border:none;outline:none;padding:16px;font-size:15px;resize:none;flex:1;background:#fff;min-height:120px;}
+.moments-char-count{text-align:right;padding:4px 12px;font-size:12px;color:#999;background:#fff;}
+.moments-ai-bar{display:flex;gap:8px;padding:10px 16px;background:#fff;border-top:1px solid #eee;}
+.moments-ai-btn{flex:1;background:#f0f0f0;border:1px solid #ddd;border-radius:8px;padding:8px;font-size:13px;cursor:pointer;text-align:center;}
+.moments-ai-btn:active{background:#e0e0e0;}
+.moments-ai-btn .ai-icon{margin-right:4px;}
 </style>
 </head>
 <body>
@@ -8183,9 +8199,9 @@ function renderMoments(){
   const all=[...aiM.map(m=>({...m,_isAI:true})),...tplM.map(m=>({...m,_isAI:false}))];
   all.sort((a,b)=>b.month-a.month);
   if(all.length===0){
-    el.innerHTML='<div class="text-center text-sm text-muted" style="padding:40px 0;"><div style="font-size:48px;margin-bottom:12px;">📷</div>朋友圈暂时没有新动态</div>';return;
+    el.innerHTML='<div class="moments-header"><span>朋友圈</span><button class="moments-post-btn" onclick="showPostPanel()">✏️ 发朋友圈</button></div><div class="text-center text-sm text-muted" style="padding:40px 0;"><div style="font-size:48px;margin-bottom:12px;">📷</div>暂时没有动态<br><span style="font-size:12px;color:#07c160;margin-top:8px;display:inline-block;" onclick="showPostPanel()">+ 发一条朋友圈</span></div>'+_htmlPostPanel();return;
   }
-  let html='';
+  let html='<div class="moments-header"><span>朋友圈</span><button class="moments-post-btn" onclick="showPostPanel()">✏️ 发朋友圈</button></div>';
   all.forEach(m=>{
     const isAI=m._isAI;
     html+='<div class="moment-card" data-moment-id="'+m.id+'">';
@@ -8251,8 +8267,10 @@ function renderMoments(){
     }
     html+='</div>';
   });
-  el.innerHTML=html;
+  el.innerHTML=html+_htmlPostPanel();
 }
+
+function _htmlPostPanel(){return '<div class="moments-panel" id="momentsPanel"><div class="moments-panel-hdr"><button onclick="hidePostPanel()">取消</button><span class="hdr-title">发朋友圈</span><button onclick="submitMoment()" id="momentsSubmitBtn">发布</button></div><textarea class="moments-ta" id="momentsTa" placeholder="此刻的想法..." oninput="this.nextElementSibling.textContent=this.value.length+\'/200\'" maxlength="200"></textarea><div class="moments-char-count">0/200</div><div class="moments-ai-bar"><button class="moments-ai-btn" onclick="aiGenerateMoment(\'career\')"><span class="ai-icon">💼</span>职场视角</button><button class="moments-ai-btn" onclick="aiGenerateMoment(\'mood\')"><span class="ai-icon">🎭</span>当下心情</button><button class="moments-ai-btn" onclick="aiGenerateMoment(\'brag\')"><span class="ai-icon">✨</span>凡尔赛</button></div></div>';}
 
 function likeMoment(id){
   if(!G.phone)return;
@@ -13667,6 +13685,97 @@ function triggerParentHelp(){
 
 // === retryBtn.onclick ===
 retryBtn.onclick=function(){this.remove();sendPlayerMessage();};
+// === 朋友圈发帖 ===
+function showPostPanel(){var p=document.getElementById('momentsPanel');if(p)p.classList.add('show');var ta=document.getElementById('momentsTa');if(ta)ta.focus();}
+function hidePostPanel(){var p=document.getElementById('momentsPanel');if(p)p.classList.remove('show');}
+function submitMoment(){var ta=document.getElementById('momentsTa');if(!ta||!ta.value.trim()){showToast('请输入内容');return;}var text=ta.value.trim();if(!G.phone)return;var me=G.name||'我';var myAvt=G.avatar||'👤';var post={id:G.phone.nextId++,text:text,month:G.totalMonths,liked:false,likes:[],comments:[],playerComments:[],byPlayer:true,npcName:me,npcAvatar:myAvt};if(!G.phone.moments)G.phone.moments=[];G.phone.moments.unshift(post);ta.value='';hidePostPanel();renderMoments();saveGame();showToast('发布成功');}
+function aiGenerateMoment(type){
+  if(!G.phone)return;
+  var career=G.career||'';
+  var cash=G.cash||0;
+  var mood=G.mood||50;
+  var age=G.age||22;
+  var stress=G.stress||50;
+  var eq=G.EQ||50;
+  var iq=G.IQ||50;
+  var recentEvt=G._recentEvents&&G._recentEvents.length>0?G._recentEvents[G._recentEvents.length-1]:null;
+  var cands=[];
+  if(type==='career'){
+    if(career==='tech'){
+      cands.push('又是'+randPick(['凌晨','深夜','周末'])+'还在写代码，但上线那一刻真的值得');
+      cands.push(randPick(['重构了','优化','重写'])+'一个老系统，性能提升了'+randPick(['3倍','50%','200%']));
+      cands.push('技术债这种东西，就像信用卡——早还早轻松');
+      cands.push('今天Code Review被夸了，开心');
+      cands.push('程序员的浪漫：写个脚本帮你自动完成工作');
+    }else if(career==='finance'){
+      cands.push('又签了一个'+randPick(['大单','客户','合同'])+'，努力终有回报');
+      cands.push('市场波动是风险，也是机会');
+      cands.push('客户信任是最好的年终奖');
+    }else if(career==='medical'){
+      cands.push('今天又救了一个，这种成就感无可替代');
+      cands.push('夜班虽累，但生命相托不敢懈怠');
+      cands.push('病患康复出院，是最好的馈赠');
+    }else if(career==='education'){
+      cands.push('又有一批学生毕业了，看着他们成长是最好的回报');
+      cands.push('备课到深夜，但看到学生的笑容就值了');
+      cands.push('桃李满天下，是老师最大的荣耀');
+    }else if(career==='sales'){
+      cands.push('又拿下了一个'+randPick(['客户','订单','项目'])+'，努力终有回报');
+      cands.push('跑业务的第'+randPick(['365','1000','2000'])+'天，脚步不停');
+      cands.push('客户的信任是最好的年终奖');
+    }else if(career==='creative'){
+      cands.push(randPick(['新作品上线','设计稿通过','创意被采纳'])+'，每一次创作都是自我突破');
+      cands.push('灵感的迸发，往往在不经意间');
+      cands.push('让美被更多人看见');
+    }else if(career==='gov'){
+      cands.push('在基层的每一天，都是为人民服务');
+      cands.push('做出一个造福大众的决定，是最好的回报');
+      cands.push('稳定是最大的浪漫');
+    }else if(career==='legal'){
+      cands.push('为正义发声，是无上的使命');
+      cands.push('又赢了一场，法律的智慧在于细节');
+    }else{
+      cands.push('打工人打工魂，今天也在认真打工');
+      cands.push('工作是为了更好的生活，加油');
+    }
+    if(cash>10000000)cands.push('年薪百万之后，发现钱真的能解决99%的烦恼');
+    if(cash>100000000)cands.push('一个小目标达成，下一个是什么？');
+    if(stress>70)cands.push('压力大的时候，就想想为什么出发');
+  }else if(type==='mood'){
+    if(mood>70){
+      cands.push(randPick(['今天天气真好','阳光明媚','春风拂面'])+'，心情也跟着好起来');
+      cands.push('人逢喜事精神爽，最近好事连连');
+      cands.push('保持热爱，奔赴山海');
+    }else if(mood>40){
+      cands.push('平平淡淡才是真');
+      cands.push('今天也是普通但充实的一天');
+      cands.push('生活不需要每天都精彩，但需要每天都认真');
+    }else{
+      cands.push('人生总有起起落落，低谷是为了更高的飞跃');
+      cands.push('今天有点累，但明天又是新的一天');
+      cands.push('撑不住的时候，可以对自己说一声"辛苦了"');
+    }
+    if(recentEvt){
+      var t=recentEvt;if(t.length>20)t=t.substring(0,20)+'…';
+      cands.push('最近'+t+'，感慨万千');
+    }
+  }else{
+    if(cash>500000000)cands.push('财务自由之后，发现最贵的东西都是免费的——阳光、空气和爱');
+    if(cash>100000000)cands.push('一个小目标而已，下一个小目标是什么？');
+    if(cash>10000000)cands.push('银行卡余额是最好的安眠药');
+    if(iq>130)cands.push('聪明是一种天赋，善良是一种选择——我两样都占了');
+    if(eq>130)cands.push('情商高是什么体验？就是所有人都觉得我懂他们');
+    if(age<30&&cash>1000000)cands.push('年轻就是资本，努力就是利息');
+    if(stress<30)cands.push('低焦虑生活，从好好爱自己开始');
+    cands.push('凡尔赛一下：其实也没什么，只是运气好那么一点点');
+    cands.push('人生就像巧克力，你永远不知道下一颗是什么味道');
+  }
+  if(cands.length===0)cands.push('记录一下此刻的心情');
+  var text=cands[Math.floor(Math.random()*cands.length)];
+  var ta=document.getElementById('momentsTa');if(ta){ta.value=text;var cnt=document.querySelector('.moments-char-count');if(cnt)cnt.textContent=text.length+'/200';}
+}
+function randPick(arr){return arr[Math.floor(Math.random()*arr.length)];}
+
 </script>
 <div class="help-fab" id="helpFab" onclick="openGuide()">❓</div>
 <div id="v4QuickMenu" class="v4-quick-menu" style="display:none;">
