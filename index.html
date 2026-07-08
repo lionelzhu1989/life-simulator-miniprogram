@@ -6187,7 +6187,7 @@ async function openProactiveChat(npcId){
     });
   }
   // Set header
-  document.getElementById('chatName').innerHTML=_avt(p.avatar)+'&nbsp;'+p.name;
+  document.getElementById('chatName').innerHTML='<span style="display:inline-block;width:32px;height:32px;border-radius:50%;overflow:hidden;vertical-align:middle;margin-right:6px;">'+_avt(p.avatar)+'</span>'+p.name;
   const body=document.getElementById('chatBody');
   body.innerHTML='';
   // Load chat history if exists
@@ -6203,7 +6203,7 @@ async function openProactiveChat(npcId){
     });
   }else{
     // Show welcome message
-    body.innerHTML='<div style="text-align:center;padding:20px 0;color:#999;font-size:13px;"><div style="font-size:28px;margin-bottom:8px;">'+_avt(p.avatar)+'</div>'+p.name+' · '+p.traits.join('/')+'</div>';
+    body.innerHTML='<div style="text-align:center;padding:20px 0 12px;color:#999;font-size:13px;"><div style="width:64px;height:64px;margin:0 auto 8px;border-radius:50%;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.12);">'+_avt(p.avatar)+'</div><div style="font-size:15px;font-weight:600;color:#333;">'+p.name+'</div><div style="margin-top:4px;">'+p.traits.join('/')+'</div></div>';
     // v4.1.0: AI生成开场白（替代硬编码npcGreetings）
     showTypingIndicator();
     let aiGreeting;
