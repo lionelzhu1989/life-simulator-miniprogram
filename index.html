@@ -6213,73 +6213,80 @@ function saveNote(npcId,val){
 
 // ===== 打开主动聊天（AI驱动） =====
 async function openProactiveChat(npcId){
-  initChatHistory();
-  injectDynamicContacts();
-  const p=NPC_PERSONALITIES[npcId];if(!p)return;
-  G._openProactiveNpc=npcId;
-  // Mark chat history as read
-  if(G.phone.chatHistory&&G.phone.chatHistory[npcId]){
-    const hist=G.phone.chatHistory[npcId];
-    if(hist.length>0)hist[hist.length-1]._playerRead=true;
+  if(!npcId||npcId==='undefined'||npcId==='null')return;
+  try{
+    initChatHistory();
+    injectDynamicContacts();
+    const p=NPC_PERSONALITIES[npcId];if(!p)return;
+    G._openProactiveNpc=npcId;
+    // Mark chat history as read
+    if(G.phone.chatHistory&&G.phone.chatHistory[npcId]){
+      const hist=G.phone.chatHistory[npcId];
+      if(hist.length>0)hist[hist.length-1]._playerRead=true;
+    }
+    // Mark any phone threads from this NPC as read (修复红点不消)
+    if(G.phone&&G.phone.threads){
+      G.phone.threads.forEach(t=>{
+        if(t.npcId===npcId && t.status==='unread'){
+          t.status='reading';
+          t.readMonth=G.totalMonths;
+        }
+      });
+    }
+    // Set header
+    document.getElementById('chatName').innerHTML='<span style="display:inline-block;width:32px;height:32px;border-radius:50%;overflow:hidden;vertical-align:middle;margin-right:6px;">'+_avt(p.avatar)+'</span>'+p.name;
+    const body=document.getElementById('chatBody');
+    body.innerHTML='';
+    // Load chat history if exists
+    const history=G.phone.chatHistory[npcId]||[];
+    // 修复：判断是否只有预置系统消息（无真实对话）
+    const hasRealConversation = history.some(h => h.player || (h.npc && !h.npc.includes('通过微信添加了你')));
+    if(hasRealConversation){
+      // Show both player and NPC messages for full context
+      const recent=history.slice(-15);
+      recent.forEach(h=>{
+        if(h.player)addChatBubble('player',h.player);
+        if(h.npc)addChatBubble('npc',h.npc);
+      });
+    }else{
+      // Show welcome message
+      body.innerHTML='<div style="text-align:center;padding:20px 0 12px;color:#999;font-size:13px;"><div style="width:64px;height:64px;margin:0 auto 8px;border-radius:50%;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.12);">'+_avt(p.avatar)+'</div><div style="font-size:15px;font-weight:600;color:#333;">'+p.name+'</div><div style="margin-top:4px;">'+p.traits.join('/')+'</div></div>';
+    }
+    // Show chat overlay BEFORE AI greeting generation so user sees immediate response
+    showChatInputArea(true);
+    setupChatInputListener();
+    document.getElementById('chatOverlay').classList.add('show');
+    updateChatRelBar(npcId);
+    const isFamily=['dad','mom','spouse'].indexOf(npcId)>=0;
+    const dateBtn=document.getElementById('chatDateBtn');
+    if(dateBtn)dateBtn.style.display=isFamily?'none':'block';
+    // Now generate AI greeting in background (non-blocking)
+    if(!hasRealConversation){
+      showTypingIndicator();
+      generateNPCReply(npcId,'__greeting__',[]).then(aiGreeting=>{
+        removeTypingIndicator();
+        if(aiGreeting&&aiGreeting!=='...'){
+          addChatBubble('npc',aiGreeting);
+        }else{
+          addChatBubble('npc','在吗？');
+        }
+      }).catch(e=>{
+        console.error('AI greeting failed:',e);
+        removeTypingIndicator();
+        addChatBubble('npc',getTemplateReply(npcId,'__greeting__')||'在吗？');
+        showToast('网络恢复中...');
+      });
+    }
+    // Focus input
+    setTimeout(()=>{
+      const input=document.getElementById('chatInputField');
+      if(input)input.focus();
+    },100);
+  }catch(e){
+    console.error('openProactiveChat error:',e);
+    // Ensure overlay is shown even if something fails
+    try{document.getElementById('chatOverlay').classList.add('show');}catch(_){}
   }
-  // Mark any phone threads from this NPC as read (修复红点不消)
-  if(G.phone&&G.phone.threads){
-    G.phone.threads.forEach(t=>{
-      if(t.npcId===npcId && t.status==='unread'){
-        t.status='reading';
-        t.readMonth=G.totalMonths;
-      }
-    });
-  }
-  // Set header
-  document.getElementById('chatName').innerHTML='<span style="display:inline-block;width:32px;height:32px;border-radius:50%;overflow:hidden;vertical-align:middle;margin-right:6px;">'+_avt(p.avatar)+'</span>'+p.name;
-  const body=document.getElementById('chatBody');
-  body.innerHTML='';
-  // Load chat history if exists
-  const history=G.phone.chatHistory[npcId]||[];
-  // 修复：判断是否只有预置系统消息（无真实对话）
-  const hasRealConversation = history.some(h => h.player || (h.npc && !h.npc.includes('通过微信添加了你')));
-  if(hasRealConversation){
-    // Show both player and NPC messages for full context
-    const recent=history.slice(-15);
-    recent.forEach(h=>{
-      if(h.player)addChatBubble('player',h.player);
-      if(h.npc)addChatBubble('npc',h.npc);
-    });
-  }else{
-    // Show welcome message
-    body.innerHTML='<div style="text-align:center;padding:20px 0 12px;color:#999;font-size:13px;"><div style="width:64px;height:64px;margin:0 auto 8px;border-radius:50%;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.12);">'+_avt(p.avatar)+'</div><div style="font-size:15px;font-weight:600;color:#333;">'+p.name+'</div><div style="margin-top:4px;">'+p.traits.join('/')+'</div></div>';
-  }
-  // Fix: Show chat overlay BEFORE AI greeting generation so user sees immediate response
-  showChatInputArea(true);
-  setupChatInputListener();
-  document.getElementById('chatOverlay').classList.add('show');
-  updateChatRelBar(npcId);
-  const isFamily=['dad','mom','spouse'].indexOf(npcId)>=0;
-  const dateBtn=document.getElementById('chatDateBtn');
-  if(dateBtn)dateBtn.style.display=isFamily?'none':'block';
-  // Now generate AI greeting in background (non-blocking)
-  if(!hasRealConversation){
-    showTypingIndicator();
-    generateNPCReply(npcId,'__greeting__',[]).then(aiGreeting=>{
-      removeTypingIndicator();
-      if(aiGreeting&&aiGreeting!=='...'){
-        addChatBubble('npc',aiGreeting);
-      }else{
-        addChatBubble('npc','在吗？');
-      }
-    }).catch(e=>{
-      console.error('AI greeting failed:',e);
-      removeTypingIndicator();
-      addChatBubble('npc',getTemplateReply(npcId,'__greeting__')||'在吗？');
-      showToast('网络恢复中...');
-    });
-  }
-  // Focus input
-  setTimeout(()=>{
-    const input=document.getElementById('chatInputField');
-    if(input)input.focus();
-  },100);
 }
 
 // ===== 开始对话（选择开场白后） =====
@@ -6815,7 +6822,7 @@ function renderPhoneList(){
       _type:'contact',_id:c.id,_sortTime:sortTime,
       avatar:avatar,name:name,preview:preview,
       time:getTimeStr(c.metMonth||0),unread:unread,unreadCount:0,
-      onclick:'openProactiveChat(\''+c.id.replace(/'/g,"\\'")+'\')'
+      onclick:c.id?'openProactiveChat(\''+c.id.replace(/'/g,"\\'")+'\')':'void(0)'
     });
   });
   // 3. Core NPCs with chat history (not in socialContacts but have conversations)
