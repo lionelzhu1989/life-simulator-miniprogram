@@ -6249,34 +6249,32 @@ async function openProactiveChat(npcId){
   }else{
     // Show welcome message
     body.innerHTML='<div style="text-align:center;padding:20px 0 12px;color:#999;font-size:13px;"><div style="width:64px;height:64px;margin:0 auto 8px;border-radius:50%;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.12);">'+_avt(p.avatar)+'</div><div style="font-size:15px;font-weight:600;color:#333;">'+p.name+'</div><div style="margin-top:4px;">'+p.traits.join('/')+'</div></div>';
-    // v4.1.0: AI生成开场白（替代硬编码npcGreetings）
-    showTypingIndicator();
-    let aiGreeting;
-    try{
-      aiGreeting=await generateNPCReply(npcId,'__greeting__',[]);
-    }catch(e){
-      console.error('AI greeting failed:',e);
-      aiGreeting=getTemplateReply(npcId,'__greeting__');
-      showToast('网络恢复中...');
-    }
-    removeTypingIndicator();
-    if(aiGreeting&&aiGreeting!=='...'){
-      addChatBubble('npc',aiGreeting);
-    }else{
-      addChatBubble('npc','在吗？');
-    }
   }
-  // Show input area
+  // Fix: Show chat overlay BEFORE AI greeting generation so user sees immediate response
   showChatInputArea(true);
   setupChatInputListener();
-  // Show overlay
   document.getElementById('chatOverlay').classList.add('show');
-  // Show relationship bar
   updateChatRelBar(npcId);
-  // Show/hide date button (family members don't need date button)
   const isFamily=['dad','mom','spouse'].indexOf(npcId)>=0;
   const dateBtn=document.getElementById('chatDateBtn');
   if(dateBtn)dateBtn.style.display=isFamily?'none':'block';
+  // Now generate AI greeting in background (non-blocking)
+  if(!hasRealConversation){
+    showTypingIndicator();
+    generateNPCReply(npcId,'__greeting__',[]).then(aiGreeting=>{
+      removeTypingIndicator();
+      if(aiGreeting&&aiGreeting!=='...'){
+        addChatBubble('npc',aiGreeting);
+      }else{
+        addChatBubble('npc','在吗？');
+      }
+    }).catch(e=>{
+      console.error('AI greeting failed:',e);
+      removeTypingIndicator();
+      addChatBubble('npc',getTemplateReply(npcId,'__greeting__')||'在吗？');
+      showToast('网络恢复中...');
+    });
+  }
   // Focus input
   setTimeout(()=>{
     const input=document.getElementById('chatInputField');
@@ -6749,6 +6747,18 @@ function hasUnread(){
 function renderPhoneList(){
   const el=document.getElementById('phone-messages');if(!el)return;
   injectDynamicContacts();
+  // Defense: ensure every social contact has a valid NPC_PERSONALITIES entry
+  (G.socialContacts||[]).forEach(function(c){
+    if(!NPC_PERSONALITIES[c.id]){
+      NPC_PERSONALITIES[c.id]={
+        name:c.name,avatar:c.avatar||'🤝',
+        traits:c.traits||['友善'],
+        greetings:[{text:'嘿，最近怎么样？',tag:'日常'},{text:'有空聊聊？',tag:'叙旧'},{text:'最近忙什么？',tag:'近况'}],
+        responses:{'日常':['嗯...','是吗？','这样啊'],'叙旧':['哈哈！','真的吗？','有意思'],'近况':['还行','忙工作','老样子']},
+        followups:c.followups||['嗯','哦','这样啊']
+      };
+    }
+  });
   let html='';
   // Collect all items: template threads + social contacts (WeChat unified chat list)
   const allItems=[];
