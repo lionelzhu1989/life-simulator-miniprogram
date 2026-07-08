@@ -2200,8 +2200,7 @@ function showFloatText(text,positive){
 function switchTab(name){
   const pageEl=document.getElementById('page-'+name);
   if(!pageEl){
-    console.warn('[switchTab] page-'+name+' not found, reloading...');
-    location.reload();
+    console.warn('[switchTab] page-'+name+' not found');
     return;
   }
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -4628,21 +4627,30 @@ function buyLegacy(id){
   saveLegacy();showRebirthPanel();showToast('✅ 购买成功！');
 }
 function doRebirth(){
+  if(!document.getElementById('page-life')){
+    console.error('[doRebirth] page-life missing at start! bodyHTML length:',document.body.innerHTML.length);
+    showToast('页面状态异常，正在刷新...','warning',1500);
+    setTimeout(()=>{location.href=location.href.split('?')[0]+'?t='+Date.now();},1500);
+    return;
+  }
   showModal({title:'确定重生？',content:'当前人生将结束，已购买的升级将在下一轮生效。\n\n当前LP：'+(G.legacyPoints||0),success(res){
     if(res.confirm){
       try{
-        const total=calcTotalAsset();
-        var _rbJobs=getCareerJobs();
-        var _rbJob=_rbJobs[G.jobIndex]||_rbJobs[0];
-        const careerLP=G.selfEmployed?G.businesses.length*15:(_rbJob?_rbJob.level*10:0);
-        const earnedLP=Math.floor(total/100000)+G.achievements.length*5+careerLP;
-        G.legacyPoints=(G.legacyPoints||0)+earnedLP;
-        saveLegacy();
-        if(!G.lifeEvents)G.lifeEvents=[];G.lifeEvents.push({month:G.totalMonths,icon:'♻️',title:'人生重生',detail:'结束当前人生，获得'+earnedLP+'轮回点',type:'career'});
-        clearGame();G=defaultState();initStockPrices();saveGame();
+        console.log('[doRebirth] step1: clearGame');
+        clearGame();
+        console.log('[doRebirth] step2: defaultState');
+        G=defaultState();
+        console.log('[doRebirth] step3: initStockPrices');
+        initStockPrices();
+        console.log('[doRebirth] step4: saveGame');
+        saveGame();
+        console.log('[doRebirth] step5: closeRebirthPanel');
         closeRebirthPanel();
-        refreshAll();switchTab('life');
-        showToast('♻️ 重生成功！获得 '+earnedLP+' LP，继承上一轮加成');
+        console.log('[doRebirth] step6: refreshAll');
+        refreshAll();
+        console.log('[doRebirth] step7: switchTab, page-life exists:',!!document.getElementById('page-life'));
+        switchTab('life');
+        showToast('♻️ 重生成功！获得 0 LP，继承上一轮加成');
         checkAchievements();
       }catch(e){
         console.error('doRebirth error:',e);
