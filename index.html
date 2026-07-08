@@ -2428,7 +2428,7 @@ function selectCareer(careerId,isInternship){
 function initStockPrices(){STOCKS.forEach(s=>{if(!G.stockPrices[s.code])G.stockPrices[s.code]=s.basePrice;});}
 
 // ========== 刷新UI ==========
-function refreshAll(){refreshLife();refreshHeader();updatePhoneBadge();}
+function refreshAll(){refreshLife();console.log('[refreshAll] after refreshLife, page-life:',!!document.getElementById('page-life'));refreshHeader();console.log('[refreshAll] after refreshHeader, page-life:',!!document.getElementById('page-life'));updatePhoneBadge();console.log('[refreshAll] after updatePhoneBadge, page-life:',!!document.getElementById('page-life'));}
 function refreshLearning(){
   const el=document.getElementById('learningList');if(!el)return;
   if(!G.learning)G.learning={completed:[],studying:null,studyEndMonth:0};
