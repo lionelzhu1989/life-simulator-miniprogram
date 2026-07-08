@@ -251,16 +251,17 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 .contact-name{font-size:15px;font-weight:500;color:#333;}
 .contact-status{font-size:12px;color:#999;margin-top:2px;}
 .contact-arrow{color:#ccc;font-size:14px;}
-.msg-item{display:flex;align-items:center;padding:13px 0;border-bottom:1px solid #f0f0f0;cursor:pointer;transition:background .15s;}
+.msg-item{display:flex;align-items:center;padding:15px 4px;border-bottom:0.5px solid #e8e8e8;cursor:pointer;transition:background .15s;}
 .msg-item:active{background:#f8f8f8;}
-.msg-av{width:40px;height:40px;border-radius:50%;background:#f0f0f0;overflow:hidden;flex-shrink:0;margin-right:10px;}
-.msg-av img,.msg-preview-avatar img,.fd-avatar img,.contact-avatar img,.moment-av img,.mc-av img{width:100%;height:100%;border-radius:inherit;object-fit:cover;}
+.msg-av{width:44px;height:44px;border-radius:8px;background:#f0f0f0;overflow:hidden;flex-shrink:0;margin-right:12px;position:relative;}
+.msg-av img{width:100%;height:100%;border-radius:8px;object-fit:cover;}
+.msg-preview-avatar img,.fd-avatar img,.contact-avatar img,.moment-av img,.mc-av img{width:100%;height:100%;border-radius:inherit;object-fit:cover;}
 .msg-bd{flex:1;min-width:0;}
-.msg-nm{font-size:15px;font-weight:500;}
-.msg-pv{font-size:12px;color:var(--text-light);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.msg-mt{text-align:right;flex-shrink:0;margin-left:8px;}
-.msg-tm{font-size:11px;color:var(--text-light);}
-.msg-bg{background:#e74c3c;color:#fff;font-size:10px;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-top:6px;margin-left:auto;padding:0 5px;}
+.msg-nm{font-size:16px;font-weight:500;color:#191919;line-height:1.3;}
+.msg-pv{font-size:13px;color:#b0b0b0;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.msg-mt{text-align:right;flex-shrink:0;margin-left:8px;display:flex;flex-direction:column;align-items:flex-end;}
+.msg-tm{font-size:11px;color:#b0b0b0;}
+.msg-bg{background:#fa5151;color:#fff;font-size:10px;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-top:4px;padding:0 5px;}
 .phone-badge{position:absolute;top:0;right:4px;background:#e74c3c;color:#fff;font-size:9px;min-width:15px;height:15px;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 3px;z-index:10;}
 /* Trade input number spinner hide */
 #tradeInput::-webkit-inner-spin-button,#tradeInput::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
@@ -277,6 +278,28 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 .chat-bub.sys{background:rgba(0,0,0,.05);align-self:center;font-size:12px;color:#999;padding:6px 14px;border-radius:8px;}
 .chat-time{text-align:center;font-size:11px;color:#bbb;padding:8px 0;}
 .chat-opts{padding:12px 16px;background:#f7f7f7;border-top:1px solid #e5e5e5;display:flex;flex-direction:column;gap:8px;flex-shrink:0;}
+
+/* Chat Profile Popup */
+.chat-profile-overlay{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.35);z-index:1600;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;}
+.chat-profile-overlay.show{opacity:1;pointer-events:auto;}
+.chat-profile-card{background:#fff;border-radius:14px;width:78%;max-width:300px;padding:22px 16px 18px;position:relative;box-shadow:0 8px 30px rgba(0,0,0,.18);transform:scale(.9);transition:transform .2s cubic-bezier(.34,1.56,.64,1);}
+.chat-profile-overlay.show .chat-profile-card{transform:scale(1);}
+.chat-profile-close{position:absolute;top:10px;right:12px;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:20px;color:#b0b0b0;cursor:pointer;border-radius:50%;}
+.chat-profile-close:active{background:#f5f5f5;color:#666;}
+.chat-profile-body{text-align:center;}
+.chat-profile-avatar{width:56px;height:56px;border-radius:12px;overflow:hidden;margin:0 auto 10px;background:#f0f0f0;box-shadow:0 2px 8px rgba(0,0,0,.12);}
+.chat-profile-avatar img{width:100%;height:100%;object-fit:cover;}
+.chat-profile-name{font-size:18px;font-weight:600;color:#191919;margin-bottom:2px;}
+.chat-profile-traits{font-size:12px;color:#999;margin-bottom:12px;}
+.chat-profile-rel{display:flex;align-items:center;justify-content:center;gap:6px;padding:8px 12px;background:#f7f7f7;border-radius:8px;margin-bottom:12px;font-size:13px;}
+.chat-profile-rel .rel-icon{font-size:16px;}
+.chat-profile-rel .rel-label{color:#666;}
+.chat-profile-rel .rel-value{font-weight:500;color:#333;}
+.chat-profile-note{text-align:left;padding:10px 12px;background:#fafafa;border-radius:8px;font-size:13px;color:#666;margin-bottom:12px;}
+.chat-profile-note .note-label{font-size:11px;color:#999;margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px;}
+.chat-profile-badge{display:inline-block;padding:4px 10px;border-radius:10px;font-size:11px;font-weight:600;}
+.badge-green{background:#e8f5e9;color:#2e7d32;}
+.badge-gray{background:#f0f0f0;color:#999;}
 .chat-opt{background:#fff;border:1.5px solid #e0e0e0;border-radius:10px;padding:12px 14px;font-size:13px;cursor:pointer;transition:all .15s;line-height:1.4;}
 .chat-opt:active{background:#eef6ff;border-color:var(--primary);transform:scale(0.98);}
 /* AI Chat Input Area */
@@ -6358,14 +6381,14 @@ function endProactiveChat(){
 const COURSES=[
   {id:'english',name:'英语口语班',icon:'🇬🇧',cost:5000,months:3,iqBonus:5,eqBonus:2,desc:'提升英语能力，外企机会+1',cond(){return true;}},
   {id:'python',name:'Python编程',icon:'💻',cost:8000,months:4,iqBonus:8,eqBonus:0,desc:'掌握编程技能，解锁科技岗位',cond(){return true;}},
-  {id:'mba',name:'MBA研修班',icon:'img/avatars/classmate.jpg',cost:50000,months:6,iqBonus:15,eqBonus:10,desc:'系统学习管理，晋升管理层必备',cond(){return G.totalMonths>24;}},
+  {id:'mba',name:'MBA研修班',icon:'🎓',cost:50000,months:6,iqBonus:15,eqBonus:10,desc:'系统学习管理，晋升管理层必备',cond(){return G.totalMonths>24;}},
   {id:'cpa',name:'CPA考证班',icon:'📋',cost:12000,months:5,iqBonus:10,eqBonus:3,desc:'注册会计师证书，财务岗位敲门砖',cond(){return G.totalMonths>12;}},
   {id:'design',name:'UI设计课',icon:'🎨',cost:6000,months:3,iqBonus:4,eqBonus:5,desc:'掌握设计技能，副业接单赚钱',cond(){return true;}},
   {id:'fitness',name:'健身私教课',icon:'💪',cost:3000,months:2,iqBonus:0,eqBonus:3,healthBonus:15,moodBonus:5,desc:'强身健体，提升形象',cond(){return true;}},
   {id:'cooking',name:'烹饪研习班',icon:'👨‍🍳',cost:2000,months:2,iqBonus:0,eqBonus:5,moodBonus:8,desc:'学做菜，提升生活品质',cond(){return true;}},
   {id:'photo',name:'摄影大师班',icon:'📸',cost:4000,months:2,iqBonus:2,eqBonus:4,desc:'记录生活之美，副业拍照赚钱',cond(){return true;}},
   {id:'piano',name:'钢琴课程',icon:'🎹',cost:8000,months:6,iqBonus:3,eqBonus:8,moodBonus:10,desc:'陶冶情操，社交加分项',cond(){return G.totalMonths>12;}},
-  {id:'realestate',name:'房产投资课',icon:'img/avatars/colleague.jpg',cost:15000,months:3,iqBonus:8,eqBonus:2,desc:'学习房产投资策略',cond(){return G.cash>100000;}},
+  {id:'realestate',name:'房产投资课',icon:'🏠',cost:15000,months:3,iqBonus:8,eqBonus:2,desc:'学习房产投资策略',cond(){return G.cash>100000;}},
   {id:'stock_class',name:'股票进阶课',icon:'📈',cost:10000,months:3,iqBonus:10,eqBonus:0,desc:'技术分析+价值投资',cond(){return G.totalMonths>12;}},
   {id:'public_speak',name:'演讲口才班',icon:'🎤',cost:5000,months:2,iqBonus:2,eqBonus:10,desc:'提升表达能力，职场社交利器',cond(){return true;}},
 ];
@@ -7025,7 +7048,53 @@ function showChatProfile(){
   if(npcId){const existing=(G.socialContacts||[]).find(c=>c.id===npcId);if(existing){isContact=true;friendLevel=existing.friendLevel||0;}if(G.notes&&G.notes[npcId])note=G.notes[npcId];}
   const labels=['陌生人','认识','熟悉','好友'];
   const relation=isContact?labels[friendLevel]||'认识':'未加入通讯录';
-  showModal({title:'📒 联系人资料',content:'姓名：'+npcName+'\n关系：'+relation+(note?('\n备注：'+note):'')+'\n\n'+(isContact?'✅ 已加入通讯录（关系：'+labels[friendLevel]+'）':'尚未加入通讯录，多聊天可提升关系！'),confirmText:'好的',showCancel:false});
+  const p = NPC_PERSONALITIES[npcId] || {};
+  
+  let html = '<div class="chat-profile-avatar">' + _avt(p.avatar) + '</div>';
+  html += '<div class="chat-profile-name">' + npcName + '</div>';
+  if(p.traits) html += '<div class="chat-profile-traits">' + p.traits.join(' / ') + '</div>';
+  
+  const relIcons = {stranger:'😐',acquaintance:'🤝',friend:'😊',close_friend:'💕',crush:'😍',dating:'💑',engaged:'💍',married:'❤️',affair:'🔥',ex:'💔'};
+  const relDef = RELATION_TYPES[relation] || null;
+  const relIcon = relDef ? relDef.icon : (relIcons[relation] || '💬');
+  
+  html += '<div class="chat-profile-rel">';
+  html += '<span class="rel-icon">' + relIcon + '</span>';
+  html += '<span class="rel-label">关系</span>';
+  html += '<span class="rel-value">' + relation + '</span>';
+  html += '</div>';
+  
+  if(note){
+    html += '<div class="chat-profile-note">';
+    html += '<div class="note-label">备注</div>';
+    html += '<div>' + note + '</div>';
+    html += '</div>';
+  }
+  
+  html += '<div style="margin-top:8px;">';
+  if(isContact){
+    html += '<span class="chat-profile-badge badge-green">✅ 已加入通讯录</span>';
+  } else {
+    html += '<span class="chat-profile-badge badge-gray">尚未加入通讯录</span>';
+  }
+  html += '</div>';
+  
+  let overlay = document.getElementById('chatProfilePopup');
+  if(!overlay){
+    overlay = document.createElement('div');
+    overlay.id = 'chatProfilePopup';
+    overlay.className = 'chat-profile-overlay';
+    overlay.innerHTML = '<div class="chat-profile-card"><div class="chat-profile-close" onclick="closeChatProfile()">×</div><div class="chat-profile-body"></div></div>';
+    overlay.addEventListener('click', function(e){ if(e.target===overlay) closeChatProfile(); });
+    document.getElementById('chatOverlay').appendChild(overlay);
+  }
+  overlay.querySelector('.chat-profile-body').innerHTML = html;
+  requestAnimationFrame(()=> overlay.classList.add('show'));
+}
+
+function closeChatProfile(){
+  const overlay = document.getElementById('chatProfilePopup');
+  if(overlay) overlay.classList.remove('show');
 }
 
 // ===== AI Chat System (via CORS Proxy) =====
