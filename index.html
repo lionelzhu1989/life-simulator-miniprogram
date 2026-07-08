@@ -257,7 +257,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 .msg-av img{width:100%;height:100%;border-radius:8px;object-fit:cover;}
 .msg-preview-avatar img,.fd-avatar img,.contact-avatar img,.moment-av img,.mc-av img{width:100%;height:100%;border-radius:inherit;object-fit:cover;}
 .msg-bd{flex:1;min-width:0;}
-.msg-nm{font-size:16px;font-weight:500;color:#191919;line-height:1.3;}
+.msg-nm{font-size:16px;font-weight:500;color:#191919;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .msg-pv{font-size:13px;color:#b0b0b0;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .msg-mt{text-align:right;flex-shrink:0;margin-left:8px;display:flex;flex-direction:column;align-items:flex-end;}
 .msg-tm{font-size:11px;color:#b0b0b0;}
@@ -6840,7 +6840,6 @@ function renderPhoneList(){
     html+='<div class="'+cls+'" onclick="'+item.onclick+'">';
     html+='<div class="msg-av">'+_avt(item.avatar)+'</div>';
     if(item.unread)html+='<div class="unread-dot"></div>';
-    html+='</div>';
     html+='<div class="msg-bd"><div class="msg-nm">'+item.name+'</div>';
     html+='<div class="'+pvCls+'">'+item.preview+'</div></div>';
     html+='<div class="msg-mt"><div class="'+pvCls.replace('msg-pv','msg-tm')+'">'+item.time+'</div>';
