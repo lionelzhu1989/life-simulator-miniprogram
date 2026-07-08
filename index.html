@@ -1576,10 +1576,10 @@ const SPOUSES=[
 const BUSINESSES=[
   {id:'milktea',name:'奶茶店加盟',price:50000,icon:'🧋',monthlyIncome:[1500,4000],risk:0.2,unlockAsset:0},
   {id:'convenience',name:'便利店',price:100000,icon:'🏪',monthlyIncome:[3000,8000],risk:0.15,unlockAsset:0},
-  {id:'express',name:'快递驿站',price:30000,icon:'img/avatars/colleague.jpg',monthlyIncome:[800,2500],risk:0.1,unlockAsset:0},
+  {id:'express',name:'快递驿站',price:30000,icon:'📦',monthlyIncome:[800,2500],risk:0.1,unlockAsset:0},
   {id:'restaurant',name:'网红餐厅',price:200000,icon:'🍜',monthlyIncome:[5000,15000],risk:0.25,unlockAsset:0},
   {id:'chain_hotel',name:'连锁酒店',price:5000000,icon:'🏨',monthlyIncome:[80000,200000],risk:0.12,unlockAsset:50000000},
-  {id:'fitness',name:'健身俱乐部',price:2000000,icon:'img/avatars/dad.jpg',monthlyIncome:[40000,100000],risk:0.15,unlockAsset:20000000}
+  {id:'fitness',name:'健身俱乐部',price:2000000,icon:'🏋️',monthlyIncome:[40000,100000],risk:0.15,unlockAsset:20000000}
 ];
 const TECH_INVESTMENTS=[
   {id:'ai',name:'AI创业公司',icon:'🤖',minInvest:50000,returnMonths:12,outcomes:[
@@ -1684,7 +1684,7 @@ const DECISION_EVENTS=[
     options:[
       {icon:'🏫',title:'国际学校',desc:'给孩子最好的教育',tag:'投入',tagCls:'tag-risk',effect:{cash:-200000,mood:10},result:'孩子在国际学校发展很好，英语流利，视野开阔。虽然花了不少钱，但看到孩子的成长你觉得值得。'},
       {icon:'📖',title:'公立学校+课外辅导',desc:'性价比最高的选择',tag:'务实',tagCls:'tag-safe',effect:{cash:-50000,mood:5},result:'你给孩子报了几个兴趣班，配合公立学校的教育，孩子成绩一直名列前茅。'},
-      {icon:'img/avatars/colleague.jpg',title:'买学区房',desc:'一步到位，解决教育问题',tag:'投资',tagCls:'tag-golden',
+      {icon:'🏫',title:'买学区房',desc:'一步到位，解决教育问题',tag:'投资',tagCls:'tag-golden',
         reqIQ:110,effect:{cash:-500000},result:'你咬牙买了学区房，不仅孩子上了好学校，房子还在升值。'}
     ]},
   {id:'work_08',ageMin:38,ageMax:45,title:'🏖️ 中年危机',scene:'最近你经常失眠，开始怀疑自己的人生选择。工作越来越力不从心，年轻人比你更有活力。你开始思考：是不是该换个活法？',
@@ -2063,9 +2063,9 @@ const PHONE_MOMENTS=[
 
 const ACHIEVEMENTS_DEF=[
   {id:'first100k',name:'第一桶金',desc:'总资产超过10万',icon:'💰'},
-  {id:'first1m',name:'百万身家',desc:'总资产超过100万',icon:'img/avatars/banker.jpg'},
+  {id:'first1m',name:'百万身家',desc:'总资产超过100万',icon:'💎'},
   {id:'millionaire',name:'千万富翁',desc:'总资产超过1000万',icon:'🏆'},
-  {id:'houseowner',name:'买房自由',desc:'拥有一套房产',icon:'img/avatars/colleague.jpg'},
+  {id:'houseowner',name:'买房自由',desc:'拥有一套房产',icon:'🏠'},
   {id:'stockking',name:'股市大神',desc:'股票市值超过100万',icon:'📈'},
   {id:'bizowner',name:'商业大亨',desc:'拥有一家商铺',icon:'🏪'},
   {id:'promotion4',name:'职场精英',desc:'升到部门经理',icon:'👔'},
@@ -2222,6 +2222,7 @@ function startGame(){
     if(G.hasChosenCareer===undefined) G.hasChosenCareer=!!G.career;
     if(G.canChangeCareer===undefined) G.canChangeCareer=false;
     if(G.careerChangeCooldown===undefined) G.careerChangeCooldown=0;
+    if(G.reputation===undefined) G.reputation=100;
     
     // V6: 旧存档没有职业信息，直接进入游戏实习期（保留旧存档数据）
     if(!G.career){
@@ -4167,7 +4168,7 @@ function buyHouse(houseId){
   const h=HOUSES.find(x=>x.id===houseId);
   if(G.houses.find(x=>x.id===houseId)){showToast('已拥有该房产');return;}
   showModal({title:'购买 '+h.name,content:'价格：'+fmt(h.price)+'\n选择付款方式：',confirmText:'全款购买',success(res){
-    if(res.confirm){if(G.cash<h.price){showModal({title:'余额不足',content:'现金不足以全款购买！',showCancel:false});return;}G.cash-=h.price;G.houses.push({id:h.id,own:true,loan:false,loanBalance:0,loanTerm:0,loanMonthly:0,marketValue:h.price});if(!G.lifeEvents)G.lifeEvents=[];G.lifeEvents.push({month:G.totalMonths,icon:'img/avatars/colleague.jpg',title:'购买'+h.name,detail:'花'+fmt(h.price)+'购买'+h.name,type:'invest'});saveGame();refreshHouse();refreshLife();showFloatText('🏠 购入'+h.name,true);}
+    if(res.confirm){if(G.cash<h.price){showModal({title:'余额不足',content:'现金不足以全款购买！',showCancel:false});return;}G.cash-=h.price;G.houses.push({id:h.id,own:true,loan:false,loanBalance:0,loanTerm:0,loanMonthly:0,marketValue:h.price});if(!G.lifeEvents)G.lifeEvents=[];G.lifeEvents.push({month:G.totalMonths,icon:'🏠',title:'购买'+h.name,detail:'花'+fmt(h.price)+'购买'+h.name,type:'invest'});saveGame();refreshHouse();refreshLife();showFloatText('🏠 购入'+h.name,true);}
     else showLoanModal(h);
   }});
 }
@@ -4353,7 +4354,7 @@ function triggerProjectEvents(){
     t.events.push({title:evt.title,desc:evt.desc,type:evt.type,options:evt.options,month:G.totalMonths,resolved:false});
     // 推送到手机消息
     const thread={
-      id:G.phone.nextId++,npcId:'system',npcName:'项目动态',npcAvatar:'img/avatars/zhang_chief.jpg',
+      id:G.phone.nextId++,npcId:'system',npcName:'项目动态',npcAvatar:'📢',
       type:'project_event',tplId:'project_'+t.id,
       rounds:[{
         npcMsgs:['📊 '+evt.title+'\n'+evt.desc+'\n\n'+evt.options.map((o,i)=>(i+1)+'. '+o.text+(o.cost?' ('+fmt(o.cost)+')':'')).join('\n')],
@@ -6454,7 +6455,7 @@ function checkStudyProgress(){
     if(course.moodBonus)G.mood=clamp(G.mood+course.moodBonus,0,200);
     G.events.push({text:'🎓 完成学习：'+course.name+'！IQ+'+(course.iqBonus||0)+' EQ+'+(course.eqBonus||0),type:'good'});
     notifyAsMessage('system','🎓 完成学习：'+course.name+'！IQ+'+(course.iqBonus||0)+' EQ+'+(course.eqBonus||0));
-    if(!G.lifeEvents)G.lifeEvents=[];G.lifeEvents.push({month:G.totalMonths,icon:'img/avatars/classmate.jpg',title:'完成'+course.name,detail:'IQ+'+(course.iqBonus||0)+' EQ+'+(course.eqBonus||0),type:'learn'});
+    if(!G.lifeEvents)G.lifeEvents=[];G.lifeEvents.push({month:G.totalMonths,icon:'🎓',title:'完成'+course.name,detail:'IQ+'+(course.iqBonus||0)+' EQ+'+(course.eqBonus||0),type:'learn'});
     showToast('🎉 恭喜完成 '+course.name+'！');
     addNotification('achievement','🎓 完成学习：'+course.name);
     G.learning.studying=null;G.learning.studyEndMonth=0;
@@ -6479,7 +6480,7 @@ const GATHERINGS=[
   {id:'funeral',name:'参加葬礼',npc:'dad',icon:'🕯️',cost:200,moodBonus:-5,eqBonus:8,desc:'送别故人',
    declineMsgs:['这种时候都不出现，人家会记一辈子的'],
    declineEffects:{mood:-10,eq:-8}},
-  {id:'reunion',name:'老乡聚会',npc:'mom',icon:'img/avatars/colleague.jpg',cost:150,moodBonus:6,eqBonus:2,desc:'老乡见老乡',
+  {id:'reunion',name:'老乡聚会',npc:'mom',icon:'🍻',cost:150,moodBonus:6,eqBonus:2,desc:'老乡见老乡',
    declineMsgs:['你三姑特意问你来不来呢'],
    declineEffects:{mood:-3,eq:-2}},
   {id:'class_party',name:'KTV唱歌',npc:'bestie',icon:'🎤',cost:150,moodBonus:15,eqBonus:3,desc:'嗨唱一晚',
@@ -8215,8 +8216,8 @@ function commentMoment(id){
 
 function addNotification(type,text){
   if(!G.phone)return;
-  const icons={achievement:'🏅',stock:'📈',system:'img/avatars/zhang_chief.jpg',event:'⚡',warning:'⚠️'};
-  G.phone.notifications.unshift({id:G.phone.nextId++,type:type,icon:icons[type]||'img/avatars/zhang_chief.jpg',text:text,month:G.totalMonths,read:false});
+  const icons={achievement:'🏅',stock:'📈',system:'🔔',event:'⚡',warning:'⚠️'};
+  G.phone.notifications.unshift({id:G.phone.nextId++,type:type,icon:icons[type]||'🔔',text:text,month:G.totalMonths,read:false});
 }
 function generateNotifications(){
   if(!G.phone)return;
@@ -9027,7 +9028,7 @@ function childrenGrowth(){
         G.IQ=clamp(G.IQ+Math.floor(bonusIQ/2),0,200);
         G.EQ=clamp(G.EQ+Math.floor(bonusEQ/2),0,200);
         if(!G.lifeEvents)G.lifeEvents=[];
-        G.lifeEvents.push({month:G.totalMonths,icon:'img/avatars/classmate.jpg',title:'孩子'+(idx+1)+'长大成人',detail:'孩子长大成才，遗传了部分天赋（IQ+'+Math.floor(bonusIQ/2)+' EQ+'+Math.floor(bonusEQ/2)+'）',type:'family'});
+        G.lifeEvents.push({month:G.totalMonths,icon:'👨‍👩‍👧',title:'孩子'+(idx+1)+'长大成人',detail:'孩子长大成才，遗传了部分天赋（IQ+'+Math.floor(bonusIQ/2)+' EQ+'+Math.floor(bonusEQ/2)+'）',type:'family'});
         changed=true;
       }
     }
@@ -9271,7 +9272,7 @@ var CHOICE_EVENTS=[
         reqCash:500000,effect:{cash:-500000,mood:20,EQ:10},result:'你豪捐50万！全场起立鼓掌，多位大佬主动加你微信。'},
       {icon:'🤝',title:'正常参与',desc:'捐5万，得体地社交',tag:'得体',tagCls:'tag-safe',
         effect:{cash:-50000,EQ:5,mood:5},result:'你得体地参与了晚宴，认识了几位有趣的人。'},
-      {icon:'img/avatars/zhang_chief.jpg',title:'默默旁观',desc:'不捐款，只观察',tag:'观察',tagCls:'tag-safe',
+      {icon:'👁️',title:'默默旁观',desc:'不捐款，只观察',tag:'观察',tagCls:'tag-safe',
         effect:{IQ:3},result:'你默默观察了整场晚宴。虽然没有花钱，但学到了不少社交技巧。'}
     ]
   },
@@ -9307,7 +9308,7 @@ var CHOICE_EVENTS=[
     id:'real_estate_opportunity',ageMin:30,ageMax:55,weight:1,
     title:'🏠 房产投资机会',scene:'城市发展重心转移，一个新兴区域房价涨得很快。有内部消息说地铁要通到这里。',
     options:[
-      {icon:'img/avatars/colleague.jpg',title:'买一套投资',desc:'花200万买入一套',tag:'投资',tagCls:'tag-risk',
+      {icon:'🏢',title:'买一套投资',desc:'花200万买入一套',tag:'投资',tagCls:'tag-risk',
         reqCash:2000000,effect:{cash:-2000000},
         chance:0.5,success:{cash:500000,mood:15},fail:{mood:-10},
         resultWin:'地铁真的通了！半年后房子涨了50万！',resultFail:'地铁规划推迟了，房子暂时没涨。不过终归有套房在手里。'},
@@ -9321,7 +9322,7 @@ var CHOICE_EVENTS=[
     options:[
       {icon:'✈️',title:'去深造',desc:'投资自己，拓展视野',tag:'进取',tagCls:'tag-golden',
         reqCash:500000,effect:{cash:-500000,IQ:15,EQ:8,mood:10},result:'3个月的深造让你大开眼界，回来后工作如鱼得水，很快就升职了。'},
-      {icon:'img/avatars/zhang_chief.jpg',title:'线上学习',desc:'通过网课和远程项目提升',tag:'务实',tagCls:'tag-safe',
+      {icon:'💻',title:'线上学习',desc:'通过网课和远程项目提升',tag:'务实',tagCls:'tag-safe',
         effect:{cash:-10000,IQ:8,EQ:3},result:'虽然没有出国，但网上的课程质量也不错。关键是省了49万。'},
       {icon:'🙅',title:'放弃',desc:'现在的岗位更重要',tag:'稳定',tagCls:'tag-safe',
         effect:{mood:-3},result:'你放弃了这个机会。后来听说同期的同事去完后回来得到了提拔。'}
