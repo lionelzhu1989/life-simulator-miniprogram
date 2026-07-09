@@ -2706,7 +2706,7 @@ function renderRecentMsgs(){
     const npc=NPCS[t.npcId]||{name:'未知',avatar:'❓'};
     const lastRound=t.rounds[t.rounds.length-1];
     const preview=lastRound?(lastRound.text||lastRound.option||'').substring(0,30):'';
-    html+='<div class="msg-preview-item" onclick="switchTab(\'phone\');setTimeout(()=>openChat(\''+t.npcId+'\'),200)">';
+    html+='<div class="msg-preview-item" onclick="switchTab(\'phone\');setTimeout(()=>openProactiveChat(\''+t.npcId+'\'),200)">';
     html+='<div class="msg-preview-avatar">'+_avt(npc.avatar)+'</div>';
     html+='<div class="msg-preview-info"><div class="msg-preview-name">'+npc.name+'</div>';
     html+='<div class="msg-preview-text">'+preview+'</div></div>';
