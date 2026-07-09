@@ -66,7 +66,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 .input:focus{border-color:var(--primary);}
 .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:1000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;}
 .modal-overlay.show{opacity:1;pointer-events:auto;}
-.modal-box{background:#fff;border-radius:16px;width:85%;max-width:360px;padding:24px 20px;text-align:center;transform:scale(0.85);transition:transform .25s;}
+.modal-box{background:#fff;border-radius:16px;width:85%;max-width:360px;padding:24px 20px;text-align:center;transform:scale(0.85);transition:transform .25s;pointer-events:auto;}
 .modal-overlay.show .modal-box{transform:scale(1);}
 .modal-title{font-size:17px;font-weight:600;margin-bottom:10px;}
 .modal-content{font-size:14px;color:#666;margin-bottom:20px;white-space:pre-line;text-align:left;line-height:1.7;max-height:50vh;overflow-y:auto;overflow-wrap:break-word;word-break:break-word;}
@@ -2208,13 +2208,14 @@ function showModal({title,content,showCancel,confirmText,cancelText,success}){
   document.getElementById('modalTitle').textContent=title||'';
   document.getElementById('modalContent').innerHTML=(content||'').replace(/\n/g,'<br>');
   const btns=document.getElementById('modalBtns');btns.innerHTML='';btns.style.display='';
-  if(showCancel!==false){const cb=document.createElement('button');cb.className='btn btn-outline';cb.textContent=cancelText||'取消';cb.onclick=()=>{hideModal();success&&success({confirm:false,cancel:true});};btns.appendChild(cb);}
-  const cf=document.createElement('button');cf.className='btn btn-primary';cf.textContent=confirmText||'确定';cf.onclick=()=>{hideModal();success&&success({confirm:true,cancel:false});};btns.appendChild(cf);
+  if(showCancel!==false){const cb=document.createElement('button');cb.className='btn btn-outline';cb.textContent=cancelText||'取消';cb.addEventListener('click',function(e){e.stopPropagation();try{hideModal();}catch(err){console.error('[modal] cancel hide err:',err);}if(success)success({confirm:false,cancel:true});});btns.appendChild(cb);}
+  const cf=document.createElement('button');cf.className='btn btn-primary';cf.textContent=confirmText||'确定';cf.addEventListener('click',function(e){e.stopPropagation();try{hideModal();}catch(err){console.error('[modal] confirm hide err:',err);}if(success)success({confirm:true,cancel:false});});btns.appendChild(cf);
   const overlay=document.getElementById('modalOverlay');
   overlay.classList.add('show');
   overlay.style.pointerEvents='auto';
+  console.log('[modal] shown:',title,'| box display:',document.querySelector('.modal-box')?.display);
 }
-function hideModal(){document.getElementById('modalOverlay').classList.remove('show');}
+function hideModal(){var o=document.getElementById('modalOverlay');if(o){o.classList.remove('show');o.style.pointerEvents='none';console.log('[modal] hidden, classes:',o.className);}else{console.error('[modal] overlay not found!');}}
 function closeModalBg(e){if(e.target===document.getElementById('modalOverlay'))hideModal();}
 let toastTimer=null;
 function showToast(msg,dur){const el=document.getElementById('toastEl');el.textContent=msg;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),dur||1800);}
