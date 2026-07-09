@@ -2210,7 +2210,9 @@ function showModal({title,content,showCancel,confirmText,cancelText,success}){
   const btns=document.getElementById('modalBtns');btns.innerHTML='';btns.style.display='';
   if(showCancel!==false){const cb=document.createElement('button');cb.className='btn btn-outline';cb.textContent=cancelText||'取消';cb.onclick=()=>{hideModal();success&&success({confirm:false,cancel:true});};btns.appendChild(cb);}
   const cf=document.createElement('button');cf.className='btn btn-primary';cf.textContent=confirmText||'确定';cf.onclick=()=>{hideModal();success&&success({confirm:true,cancel:false});};btns.appendChild(cf);
-  document.getElementById('modalOverlay').classList.add('show');
+  const overlay=document.getElementById('modalOverlay');
+  overlay.classList.add('show');
+  overlay.style.pointerEvents='auto';
 }
 function hideModal(){document.getElementById('modalOverlay').classList.remove('show');}
 function closeModalBg(e){if(e.target===document.getElementById('modalOverlay'))hideModal();}
@@ -12157,7 +12159,12 @@ function askAboutMoment(id){
 // === markNotifRead ===
 function markNotifRead(id){
   if(!G.phone||!G.phone.notifications)return;
-  const n=G.phone.notifications.find(x=>x.id===id);
+  let n;
+  if(id!==undefined&&id!==null){
+    n=G.phone.notifications.find(x=>x.id===id);
+  }else{
+    n=G.phone.notifications.find(x=>!x.read);
+  }
   if(n){n.read=true;saveGame();}
   renderNotifications();
   updatePhoneBadge();
