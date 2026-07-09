@@ -7505,27 +7505,6 @@ ${p.name}的家人/朋友是${relation}。玩家${gameState.age}岁，${gameStat
 // Template fallback reply
 function getTemplateReply(npcId,playerMsg){
   return '[AI暂时无法连接，请稍后再试]';
-  // Try to match player message to a tag
-  let matchedTag=null;
-  const msgLower=playerMsg.toLowerCase();
-  for(const tag in p.responses){
-    if(msgLower.includes(tag)||tag.split('').some(c=>msgLower.includes(c))){
-      matchedTag=tag;
-      break;
-    }
-  }
-  // If no match, use first tag or random
-  if(!matchedTag){
-    const tags=Object.keys(p.responses);
-    matchedTag=tags[randInt(0,tags.length-1)];
-  }
-  const respArr=p.responses[matchedTag];
-  if(respArr&&respArr.length>0){
-    return respArr[randInt(0,respArr.length-1)];
-  }
-  // Ultimate fallback
-  const allTraits=Object.values(p.responses).flat();
-  return allTraits[randInt(0,allTraits.length-1)]||'嗯嗯';
 }
 
 // Judge NPC mood from reply
