@@ -66,12 +66,12 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 .input:focus{border-color:var(--primary);}
 .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:1000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;}
 .modal-overlay.show{opacity:1;pointer-events:auto;}
-.modal-box{background:#fff;border-radius:16px;width:85%;max-width:360px;padding:24px 20px;text-align:center;transform:scale(0.85);transition:transform .25s;pointer-events:auto;}
+.modal-box{background:#fff;border-radius:16px;width:85%;max-width:360px;max-height:85vh;padding:24px 20px;text-align:center;transform:scale(0.85);transition:transform .25s;pointer-events:auto;overflow:hidden;display:flex;flex-direction:column;}
 .modal-overlay.show .modal-box{transform:scale(1);}
-.modal-title{font-size:17px;font-weight:600;margin-bottom:10px;}
-.modal-content{font-size:14px;color:#666;margin-bottom:20px;white-space:pre-line;text-align:left;line-height:1.7;max-height:50vh;overflow-y:auto;overflow-wrap:break-word;word-break:break-word;}
-.modal-btns{display:flex;gap:10px;justify-content:center;}
-.modal-btns .btn{flex:1;}
+.modal-title{font-size:17px;font-weight:600;margin-bottom:10px;flex-shrink:0;}
+.modal-content{font-size:14px;color:#666;margin-bottom:20px;white-space:pre-line;text-align:left;line-height:1.7;max-height:50vh;overflow-y:auto;overflow-wrap:break-word;word-break:break-word;flex:1;}
+.modal-btns{display:flex;gap:10px;justify-content:center;position:relative;z-index:10;flex-shrink:0;}
+.modal-btns .btn{flex:1;position:relative;z-index:11;}
 .toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.8);background:rgba(0,0,0,.75);color:#fff;padding:14px 24px;border-radius:10px;font-size:14px;z-index:2000;opacity:0;pointer-events:none;transition:all .3s;text-align:center;max-width:260px;}
 .toast.show{opacity:1;transform:translate(-50%,-50%) scale(1);}
 .event-banner{padding:14px 16px;border-radius:10px;margin-bottom:12px;font-size:13px;line-height:1.6;animation:slideDown .3s ease;}
@@ -2205,7 +2205,6 @@ function getGameYear(){return Math.floor(G.totalMonths/12)+1;}
 
 // ========== UI函数 ==========
 function showModal({title,content,showCancel,confirmText,cancelText,success}){
-  console.log('[DIAG] showModal called, title:', title, 'content length:', (content||'').length);
   document.getElementById('modalTitle').textContent=title||'';
   document.getElementById('modalContent').innerHTML=(content||'').replace(/\n/g,'<br>');
   const btns=document.getElementById('modalBtns');
@@ -2244,7 +2243,15 @@ function hideModal(){
     console.error('[modal] overlay not found!');
   }
 }
-function closeModalBg(e){if(e.target===document.getElementById('modalOverlay'))hideModal();}
+function closeModalBg(e){
+  var overlay=document.getElementById('modalOverlay');
+  if(!overlay) return;
+  // 点击背景或modal-box空白区域都关闭弹窗（按钮除外）
+  if(e.target===overlay || e.target.closest('.modal-box')){
+    if(e.target.closest('button')||e.target.closest('a')||e.target.closest('[data-modal-action]')||e.target.closest('input')) return;
+    hideModal();
+  }
+}
 
 // modal按钮事件委托（捕获阶段，确保最高优先级，不受其他handler影响）
 document.addEventListener('click', function(e){
@@ -2268,52 +2275,6 @@ document.addEventListener('click', function(e){
   console.log('[modal] delegation fired:', action);
 }, true);
 
-// === 诊断日志：记录所有按钮点击（帮助定位弹窗按钮点不了的问题）===
-document.addEventListener('click', function(e){
-  var t = e.target;
-  // 只记录点击button或带click handler的元素
-  if(t.tagName === 'BUTTON' || t.getAttribute('onclick') || t.closest('[onclick]') || t.classList.contains('btn') || t.closest('.btn')){
-    var info = {
-      tag: t.tagName,
-      class: t.className,
-      text: t.textContent.trim().substring(0, 50),
-      id: t.id || '',
-      onclick: t.getAttribute('onclick') || '',
-      hasDataAction: !!t.getAttribute('data-modal-action'),
-      pointerEvents: getComputedStyle(t).pointerEvents,
-      visibility: getComputedStyle(t).visibility,
-      display: getComputedStyle(t).display,
-      disabled: t.disabled || false
-    };
-    console.log('[DIAG] button click:', JSON.stringify(info));
-    
-    // 检查是否有覆盖层遮挡
-    var rect = t.getBoundingClientRect();
-    var topElem = document.elementFromPoint(rect.left + rect.width/2, rect.top + rect.height/2);
-    if(topElem && topElem !== t && !t.contains(topElem)){
-      console.error('[DIAG] COVERED! Button is covered by:', topElem.tagName, topElem.className, topElem.id);
-    }
-  }
-}, true);
-
-// === 诊断日志：监听DOM变化，检测弹窗创建===
-var _diagObs = new MutationObserver(function(mutations){
-  mutations.forEach(function(m){
-    m.addedNodes.forEach(function(n){
-      if(n.nodeType === 1 && n.classList){
-        if(n.classList.contains('modal-overlay') || n.classList.contains('work-scenario-overlay') || 
-           n.classList.contains('choice-overlay') || n.classList.contains('guide-overlay') ||
-           n.classList.contains('forbes-overlay') || n.classList.contains('group-select-modal-overlay')){
-          console.log('[DIAG] overlay created:', n.tagName, n.className, n.id);
-        }
-        if(n.classList.contains('modal-box') || n.querySelector && n.querySelector('.modal-box')){
-          console.log('[DIAG] modal-box added, title:', n.querySelector('#modalTitle') ? n.querySelector('#modalTitle').textContent : 'N/A');
-        }
-      }
-    });
-  });
-});
-_diagObs.observe(document.body, {childList: true, subtree: true});
 let toastTimer=null;
 function showToast(msg,dur){const el=document.getElementById('toastEl');el.textContent=msg;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),dur||1800);}
 function showFloatText(text,positive){
@@ -3512,7 +3473,6 @@ function getFallbackWorkScenario(career,job){
   return list[randInt(0,list.length-1)];
 }
 function showWorkScenarioModal(data,career){
-  console.log('[DIAG] showWorkScenarioModal called, title:', data.title);
   var overlay=document.getElementById('workScenarioOverlay');
   if(!overlay){
     overlay=document.createElement('div');
@@ -5822,7 +5782,6 @@ function tryTriggerEncounter(){
 
 // ===== 启动场景对话 =====
 function startEncounterScene(sceneKey){
-  console.log('[DIAG] startEncounterScene called, key:', sceneKey);
   var scene = ENCOUNTER_SCENES[sceneKey];
   if(!scene) return;
   var namePool = {
