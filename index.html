@@ -1212,6 +1212,19 @@ const JOBS=[
   {id:'director',name:'总监',salary:500000,requireIQ:120,requireEQ:120,level:5,requireMonths:60}
 ];
 
+// V6: 职业转型分支（满足条件后触发）
+const CAREER_BRANCHES=[
+  {id:'tech_architect',name:'架构师',desc:'从编码转型系统设计，薪资大幅提升',fromJob:'senior',requireIQ:115,requireEQ:85,durationMonths:24,salaryBoost:1.5},
+  {id:'tech_product',name:'技术产品经理',desc:'懂技术的PM，转型业务方向',fromJob:'mid',requireIQ:100,requireEQ:95,durationMonths:18,salaryBoost:1.3},
+  {id:'finance_trader',name:'交易员',desc:'用模型和直觉做投资决策',fromJob:'mid',requireIQ:110,requireEQ:90,durationMonths:24,salaryBoost:1.6},
+  {id:'finance_wealth',name:'财富管理',desc:'服务高净值客户，做资产配置',fromJob:'senior',requireIQ:105,requireEQ:110,durationMonths:18,salaryBoost:1.4},
+  {id:'medical_specialist',name:'专科医生',desc:'深耕某一医学领域',fromJob:'senior',requireIQ:110,reqCash:50000,durationMonths:36,salaryBoost:1.5},
+  {id:'education_professor',name:'教授',desc:'学术金字塔顶端，讲台上的一方天地',fromJob:'senior',requireIQ:115,requireEQ:100,durationMonths:36,salaryBoost:1.4},
+  {id:'creative_director',name:'创意总监',desc:'从执行到决策，主导品牌审美',fromJob:'mid',requireIQ:95,requireEQ:100,durationMonths:24,salaryBoost:1.4},
+  {id:'sales_director',name:'销售总监',desc:'带团队打天下，靠提成和团队奖金',fromJob:'mid',requireIQ:100,requireEQ:110,durationMonths:24,salaryBoost:1.5},
+  {id:'legal_partner',name:'合伙人',desc:'律所金字塔顶端，按小时计价',fromJob:'senior',requireIQ:110,requireEQ:105,durationMonths:36,salaryBoost:1.6}
+];
+
 // ===== V5: 职业选择系统 =====
 const CAREERS=[
   {id:'tech',name:'互联网/科技',icon:'💻',desc:'高薪高压，技术驱动',salaryMult:1.2,startJob:'初级员工',startSalary:90000,traits:['技术导向','快速迭代','加班文化']},
@@ -2153,7 +2166,7 @@ function defaultState(){
     unlockedTiers:{},luxuryItems:[],
     forbesShown:false,shortPositions:{},phone:{threads:[],moments:[],aiMoments:[],notifications:[],flags:{},lastTriggerMonth:0,nextId:1,chatHistory:{}},
     lifeEvents:[],socialContacts:[],relationships:{},friendGroups:[],friendGroupings:{},lastSocialCheck:0,
-    savings:0,careerBranches:[],
+    savings:0,careerBranches:[],tutorialCompleted:[],
     romance:{npcId:null,stage:'none',affection:0,metMonth:0,lastInteraction:0},
     scheduledDates:[],
 // 绩效系统字段
@@ -13115,6 +13128,7 @@ function _tut_skipAll(){
 // === _tut_checkAutoAdvance ===
 function _tut_checkAutoAdvance(){
   if(!_tut_state) return;
+  if(!G.tutorialCompleted) G.tutorialCompleted=[];
   const curStep = TUTORIAL_STEPS[_tut_state.currentIdx];
   if(!curStep) return;
   // Check if next step's trigger is now satisfied
