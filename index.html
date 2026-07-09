@@ -2205,6 +2205,7 @@ function getGameYear(){return Math.floor(G.totalMonths/12)+1;}
 
 // ========== UI函数 ==========
 function showModal({title,content,showCancel,confirmText,cancelText,success}){
+  console.log('[DIAG] showModal called, title:', title, 'content length:', (content||'').length);
   document.getElementById('modalTitle').textContent=title||'';
   document.getElementById('modalContent').innerHTML=(content||'').replace(/\n/g,'<br>');
   const btns=document.getElementById('modalBtns');
@@ -2266,6 +2267,53 @@ document.addEventListener('click', function(e){
   }
   console.log('[modal] delegation fired:', action);
 }, true);
+
+// === 诊断日志：记录所有按钮点击（帮助定位弹窗按钮点不了的问题）===
+document.addEventListener('click', function(e){
+  var t = e.target;
+  // 只记录点击button或带click handler的元素
+  if(t.tagName === 'BUTTON' || t.getAttribute('onclick') || t.closest('[onclick]') || t.classList.contains('btn') || t.closest('.btn')){
+    var info = {
+      tag: t.tagName,
+      class: t.className,
+      text: t.textContent.trim().substring(0, 50),
+      id: t.id || '',
+      onclick: t.getAttribute('onclick') || '',
+      hasDataAction: !!t.getAttribute('data-modal-action'),
+      pointerEvents: getComputedStyle(t).pointerEvents,
+      visibility: getComputedStyle(t).visibility,
+      display: getComputedStyle(t).display,
+      disabled: t.disabled || false
+    };
+    console.log('[DIAG] button click:', JSON.stringify(info));
+    
+    // 检查是否有覆盖层遮挡
+    var rect = t.getBoundingClientRect();
+    var topElem = document.elementFromPoint(rect.left + rect.width/2, rect.top + rect.height/2);
+    if(topElem && topElem !== t && !t.contains(topElem)){
+      console.error('[DIAG] COVERED! Button is covered by:', topElem.tagName, topElem.className, topElem.id);
+    }
+  }
+}, true);
+
+// === 诊断日志：监听DOM变化，检测弹窗创建===
+var _diagObs = new MutationObserver(function(mutations){
+  mutations.forEach(function(m){
+    m.addedNodes.forEach(function(n){
+      if(n.nodeType === 1 && n.classList){
+        if(n.classList.contains('modal-overlay') || n.classList.contains('work-scenario-overlay') || 
+           n.classList.contains('choice-overlay') || n.classList.contains('guide-overlay') ||
+           n.classList.contains('forbes-overlay') || n.classList.contains('group-select-modal-overlay')){
+          console.log('[DIAG] overlay created:', n.tagName, n.className, n.id);
+        }
+        if(n.classList.contains('modal-box') || n.querySelector && n.querySelector('.modal-box')){
+          console.log('[DIAG] modal-box added, title:', n.querySelector('#modalTitle') ? n.querySelector('#modalTitle').textContent : 'N/A');
+        }
+      }
+    });
+  });
+});
+_diagObs.observe(document.body, {childList: true, subtree: true});
 let toastTimer=null;
 function showToast(msg,dur){const el=document.getElementById('toastEl');el.textContent=msg;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),dur||1800);}
 function showFloatText(text,positive){
@@ -3464,6 +3512,7 @@ function getFallbackWorkScenario(career,job){
   return list[randInt(0,list.length-1)];
 }
 function showWorkScenarioModal(data,career){
+  console.log('[DIAG] showWorkScenarioModal called, title:', data.title);
   var overlay=document.getElementById('workScenarioOverlay');
   if(!overlay){
     overlay=document.createElement('div');
@@ -5773,6 +5822,7 @@ function tryTriggerEncounter(){
 
 // ===== 启动场景对话 =====
 function startEncounterScene(sceneKey){
+  console.log('[DIAG] startEncounterScene called, key:', sceneKey);
   var scene = ENCOUNTER_SCENES[sceneKey];
   if(!scene) return;
   var namePool = {
